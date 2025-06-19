@@ -39,7 +39,7 @@ serve(async (req) => {
       conferenceData: {
         createRequest: {
           requestId: `${Date.now()}-${Math.random().toString(36).substring(7)}`,
-          conferenceSolutionKey: { type: 'hangoutsMeet' },
+          conferenceSolutionKey: { type: 'googleMeet' },
         },
       },
     }
