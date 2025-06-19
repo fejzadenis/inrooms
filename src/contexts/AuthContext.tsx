@@ -1,19 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  GoogleAuthProvider,
-  signOut, 
-  onAuthStateChanged,
-  updateProfile,
-  User as FirebaseUser
-} from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
-import { auth, db } from '../config/firebase';
+import { supabase } from '../config/supabase';
 import { toast } from 'react-hot-toast';
+import type { User, Session } from '@supabase/supabase-js';
 
-interface User {
+interface UserProfile {
   id: string;
   email: string;
   name: string;
@@ -41,7 +31,7 @@ interface User {
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: UserProfile | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
@@ -54,161 +44,157 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 const ADMIN_EMAIL = 'admin@inrooms.com';
-const ADMIN_PASSWORD = 'Admin123!';
-const ADMIN_NAME = 'Admin';
 
-async function createOrUpdateUser(firebaseUser: FirebaseUser, name?: string): Promise<User> {
+async function createOrUpdateUserProfile(user: User, name?: string): Promise<UserProfile> {
   try {
-    await firebaseUser.getIdToken(true);
-    
-    const userRef = doc(db, 'users', firebaseUser.uid);
-    const userSnap = await getDoc(userRef);
-    
-    let userData: User = {
-      id: firebaseUser.uid,
-      email: firebaseUser.email || '',
-      name: name || firebaseUser.displayName || '',
-      role: firebaseUser.email === ADMIN_EMAIL ? 'admin' : 'user',
-      subscription: {
-        status: 'inactive',
-        eventsQuota: 0,
-        eventsUsed: 0
-      },
-      profile: {
-        joinedAt: new Date(),
-        points: 0,
-        skills: []
-      },
-      connections: []
+    // Check if user profile exists
+    const { data: existingUser, error: fetchError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      throw fetchError;
+    }
+
+    const isAdmin = user.email === ADMIN_EMAIL;
+    const userData = {
+      id: user.id,
+      email: user.email || '',
+      name: name || user.user_metadata?.full_name || existingUser?.name || '',
+      role: isAdmin ? 'admin' : 'user',
+      photo_url: user.user_metadata?.avatar_url || existingUser?.photo_url,
+      subscription_status: isAdmin ? 'active' : (existingUser?.subscription_status || 'inactive'),
+      subscription_events_quota: isAdmin ? 999999 : (existingUser?.subscription_events_quota || 0),
+      subscription_events_used: existingUser?.subscription_events_used || 0,
+      profile_points: existingUser?.profile_points || 0,
+      connections: existingUser?.connections || [],
+      updated_at: new Date().toISOString(),
     };
 
-    // Only include photoURL if it exists and is not null/empty
-    if (firebaseUser.photoURL) {
-      userData.photoURL = firebaseUser.photoURL;
+    if (!existingUser) {
+      userData.created_at = new Date().toISOString();
     }
 
-    if (!userSnap.exists()) {
-      if (firebaseUser.email === ADMIN_EMAIL) {
-        userData.subscription.status = 'active';
-        userData.subscription.eventsQuota = Infinity;
-        userData.name = ADMIN_NAME;
-      }
-      await setDoc(userRef, userData);
-    } else {
-      const existingData = userSnap.data() as User;
-      userData = { ...existingData, ...userData };
-      await setDoc(userRef, userData, { merge: true });
-    }
+    const { data, error } = await supabase
+      .from('users')
+      .upsert(userData)
+      .select()
+      .single();
 
-    return userData;
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      email: data.email,
+      name: data.name,
+      role: data.role,
+      photoURL: data.photo_url,
+      subscription: {
+        status: data.subscription_status,
+        trialEndsAt: data.subscription_trial_ends_at ? new Date(data.subscription_trial_ends_at) : undefined,
+        eventsQuota: data.subscription_events_quota,
+        eventsUsed: data.subscription_events_used,
+      },
+      profile: {
+        title: data.profile_title,
+        company: data.profile_company,
+        location: data.profile_location,
+        about: data.profile_about,
+        phone: data.profile_phone,
+        website: data.profile_website,
+        linkedin: data.profile_linkedin,
+        skills: data.profile_skills || [],
+        points: data.profile_points,
+        joinedAt: data.created_at ? new Date(data.created_at) : undefined,
+      },
+      connections: data.connections || [],
+    };
   } catch (error) {
-    console.error('Error creating/updating user:', error);
+    console.error('Error creating/updating user profile:', error);
     throw error;
   }
 }
 
-async function ensureAdminExists() {
-  try {
-    const adminCredential = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await createOrUpdateUser(adminCredential.user);
-  } catch (error: any) {
-    if (error.code === 'auth/user-not-found') {
-      try {
-        const adminCredential = await createUserWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
-        await updateProfile(adminCredential.user, { displayName: ADMIN_NAME });
-        await createOrUpdateUser(adminCredential.user, ADMIN_NAME);
-      } catch (createError: any) {
-        if (createError.code === 'auth/email-already-in-use') {
-          console.log('Admin user already exists');
-          return;
-        }
-        console.error('Error creating admin account:', createError);
-        throw createError;
-      }
-    } else if (error.code === 'auth/invalid-credential') {
-      console.log('Admin exists but credentials are incorrect');
-      return;
-    } else {
-      console.error('Error checking admin account:', error);
-      throw error;
-    }
-  }
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    ensureAdminExists().catch(console.error);
-
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      try {
-        if (firebaseUser) {
-          const userData = await createOrUpdateUser(firebaseUser);
-          setUser(userData);
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        console.error('Error handling auth state change:', error);
-        toast.error('Error loading user data');
-      } finally {
-        setLoading(false);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        createOrUpdateUserProfile(session.user).then(setUser).catch(console.error);
       }
+      setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        try {
+          const userProfile = await createOrUpdateUserProfile(session.user);
+          setUser(userProfile);
+        } catch (error) {
+          console.error('Error handling auth state change:', error);
+          toast.error('Error loading user data');
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      const userData = await createOrUpdateUser(result.user);
-      setUser(userData);
-      toast.success(`Welcome back${userData.role === 'admin' ? ', Admin' : ''}!`);
-    } catch (error: any) {
-      console.error('Email/password login failed:', error);
-      if (error.code === 'auth/invalid-credential') {
-        toast.error('Invalid email or password');
-      } else {
-        toast.error('Login failed. Please try again.');
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        const userProfile = await createOrUpdateUserProfile(data.user);
+        setUser(userProfile);
+        toast.success(`Welcome back${userProfile.role === 'admin' ? ', Admin' : ''}!`);
       }
+    } catch (error: any) {
+      console.error('Login failed:', error);
+      toast.error(error.message || 'Login failed. Please try again.');
       throw error;
     }
   };
 
   const loginWithGoogle = async () => {
     try {
-      const provider = new GoogleAuthProvider();
-      provider.addScope('email');
-      provider.addScope('profile');
-      
-      const result = await signInWithPopup(auth, provider);
-      const userData = await createOrUpdateUser(result.user);
-      setUser(userData);
-      toast.success(`Welcome${userData.role === 'admin' ? ', Admin' : ''}!`);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/events`,
+        },
+      });
+
+      if (error) throw error;
     } catch (error: any) {
       console.error('Google login failed:', error);
-      if (error.code === 'auth/popup-closed-by-user') {
-        toast.error('Sign-in was cancelled');
-      } else if (error.code === 'auth/popup-blocked') {
-        toast.error('Popup was blocked. Please allow popups for this site in your browser settings and try again.');
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        toast.error('Sign-in was cancelled. Please try again.');
-      } else {
-        toast.error('Google sign-in failed. Please try again.');
-      }
+      toast.error('Google sign-in failed. Please try again.');
       throw error;
     }
   };
 
   const logout = async () => {
     try {
-      await signOut(auth);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
       setUser(null);
       toast.success('Successfully logged out');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Logout failed:', error);
       toast.error('Logout failed. Please try again.');
       throw error;
@@ -222,29 +208,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(result.user, { displayName: name });
-      const userData = await createOrUpdateUser(result.user, name);
-      setUser(userData);
-      toast.success('Account created successfully!');
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        const userProfile = await createOrUpdateUserProfile(data.user, name);
+        setUser(userProfile);
+        toast.success('Account created successfully!');
+      }
     } catch (error: any) {
       console.error('Signup failed:', error);
-      switch (error.code) {
-        case 'auth/email-already-in-use':
-          toast.error('This email is already registered. Please try logging in instead.');
-          break;
-        case 'auth/weak-password':
-          toast.error('Password is too weak. Please use a stronger password.');
-          break;
-        case 'auth/invalid-email':
-          toast.error('Invalid email address. Please check and try again.');
-          break;
-        case 'auth/network-request-failed':
-          toast.error('Network error. Please check your connection and try again.');
-          break;
-        default:
-          toast.error('Failed to create account. Please try again.');
-      }
+      toast.error(error.message || 'Failed to create account. Please try again.');
       throw error;
     }
   };
@@ -256,21 +239,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const trialEndsAt = new Date();
       trialEndsAt.setDate(trialEndsAt.getDate() + 7);
 
-      const updatedUser: User = {
+      const { error } = await supabase
+        .from('users')
+        .update({
+          subscription_status: 'trial',
+          subscription_trial_ends_at: trialEndsAt.toISOString(),
+          subscription_events_quota: 2,
+          subscription_events_used: 0,
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      const updatedUser: UserProfile = {
         ...user,
         subscription: {
           status: 'trial',
           trialEndsAt,
           eventsQuota: 2,
-          eventsUsed: 0
+          eventsUsed: 0,
         }
       };
 
-      const userRef = doc(db, 'users', user.id);
-      await setDoc(userRef, updatedUser, { merge: true });
       setUser(updatedUser);
       toast.success('Free trial activated successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to start trial:', error);
       toast.error('Failed to activate free trial. Please try again.');
       throw error;
@@ -279,20 +272,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateUserProfile = async (userId: string, profileData: any) => {
     try {
-      const userRef = doc(db, 'users', userId);
-      
-      // Update the user document with new profile data
-      await updateDoc(userRef, {
-        name: profileData.name,
-        'profile.title': profileData.title,
-        'profile.company': profileData.company,
-        'profile.location': profileData.location,
-        'profile.about': profileData.about,
-        'profile.phone': profileData.phone,
-        'profile.website': profileData.website,
-        'profile.linkedin': profileData.linkedin,
-        'profile.skills': profileData.skills,
-      });
+      const { error } = await supabase
+        .from('users')
+        .update({
+          name: profileData.name,
+          profile_title: profileData.title,
+          profile_company: profileData.company,
+          profile_location: profileData.location,
+          profile_about: profileData.about,
+          profile_phone: profileData.phone,
+          profile_website: profileData.website,
+          profile_linkedin: profileData.linkedin,
+          profile_skills: profileData.skills,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+
+      if (error) throw error;
 
       // Update local user state
       if (user && user.id === userId) {
@@ -313,7 +309,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
         setUser(updatedUser);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating user profile:', error);
       throw error;
     }
