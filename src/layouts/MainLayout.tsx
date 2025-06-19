@@ -105,7 +105,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center space-x-4">
               {user ? (
                 <>
-                  <div className="relative\" ref={notificationsRef}>
+                  <div className="relative" ref={notificationsRef}>
                     <button
                       onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                       className="p-2 rounded-full hover:bg-gray-100 relative"
@@ -143,6 +143,17 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                       onClick={() => setIsMenuOpen(!isMenuOpen)}
                       className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
                     >
+                      {user.photoURL ? (
+                        <img
+                          src={user.photoURL}
+                          alt={user.name}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                          <UserCircle className="w-5 h-5 text-indigo-600" />
+                        </div>
+                      )}
                       <div className="text-right">
                         <div className="text-sm font-medium text-gray-900">
                           {user.name}

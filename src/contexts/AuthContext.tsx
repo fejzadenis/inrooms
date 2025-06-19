@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut, 
   onAuthStateChanged,
   updateProfile,
@@ -16,6 +18,7 @@ interface User {
   email: string;
   name: string;
   role: 'user' | 'admin';
+  photoURL?: string;
   subscription: {
     status: 'trial' | 'active' | 'inactive';
     trialEndsAt?: Date;
@@ -28,6 +31,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   signup: (email: string, password: string, name: string) => Promise<void>;
   startFreeTrial: () => Promise<void>;
@@ -36,12 +40,11 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 const ADMIN_EMAIL = 'admin@inrooms.com';
-const ADMIN_PASSWORD = 'Admin123!'; // This is just for initial setup
+const ADMIN_PASSWORD = 'Admin123!';
 const ADMIN_NAME = 'Admin';
 
 async function createOrUpdateUser(firebaseUser: FirebaseUser, name?: string): Promise<User> {
   try {
-    // Force a refresh of the auth token to ensure it's current
     await firebaseUser.getIdToken(true);
     
     const userRef = doc(db, 'users', firebaseUser.uid);
@@ -51,6 +54,7 @@ async function createOrUpdateUser(firebaseUser: FirebaseUser, name?: string): Pr
       id: firebaseUser.uid,
       email: firebaseUser.email || '',
       name: name || firebaseUser.displayName || '',
+      photoURL: firebaseUser.photoURL || undefined,
       role: firebaseUser.email === ADMIN_EMAIL ? 'admin' : 'user',
       subscription: {
         status: 'inactive',
@@ -60,7 +64,6 @@ async function createOrUpdateUser(firebaseUser: FirebaseUser, name?: string): Pr
     };
 
     if (!userSnap.exists()) {
-      // For admin user, set special subscription status
       if (firebaseUser.email === ADMIN_EMAIL) {
         userData.subscription.status = 'active';
         userData.subscription.eventsQuota = Infinity;
@@ -80,21 +83,16 @@ async function createOrUpdateUser(firebaseUser: FirebaseUser, name?: string): Pr
   }
 }
 
-// Function to create admin account if it doesn't exist
 async function ensureAdminExists() {
   try {
-    // First try to sign in as admin
     const adminCredential = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
     await createOrUpdateUser(adminCredential.user);
-    // Removed signOut call here
   } catch (error: any) {
-    // Only create new admin if the user doesn't exist
     if (error.code === 'auth/user-not-found') {
       try {
         const adminCredential = await createUserWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
         await updateProfile(adminCredential.user, { displayName: ADMIN_NAME });
         await createOrUpdateUser(adminCredential.user, ADMIN_NAME);
-        // Removed signOut call here
       } catch (createError: any) {
         if (createError.code === 'auth/email-already-in-use') {
           console.log('Admin user already exists');
@@ -118,7 +116,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Ensure admin account exists when the app starts
     ensureAdminExists().catch(console.error);
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -152,6 +149,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         toast.error('Invalid email or password');
       } else {
         toast.error('Login failed. Please try again.');
+      }
+      throw error;
+    }
+  };
+
+  const loginWithGoogle = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.addScope('email');
+      provider.addScope('profile');
+      
+      const result = await signInWithPopup(auth, provider);
+      const userData = await createOrUpdateUser(result.user);
+      setUser(userData);
+      toast.success(`Welcome${userData.role === 'admin' ? ', Admin' : ''}!`);
+    } catch (error: any) {
+      console.error('Google login failed:', error);
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast.error('Sign-in was cancelled');
+      } else if (error.code === 'auth/popup-blocked') {
+        toast.error('Popup was blocked. Please allow popups and try again.');
+      } else {
+        toast.error('Google sign-in failed. Please try again.');
       }
       throw error;
     }
@@ -236,6 +256,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user, 
       loading, 
       login,
+      loginWithGoogle,
       logout, 
       signup,
       startFreeTrial 

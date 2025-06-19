@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/common/Button';
+import { GoogleSignInButton } from '../../components/auth/GoogleSignInButton';
 import { Logo } from '../../components/common/Logo';
 
 const loginSchema = z.object({
@@ -15,8 +16,10 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export function LoginPage() {
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
+  
   const {
     register,
     handleSubmit,
@@ -28,7 +31,6 @@ export function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       await login(data.email, data.password);
-      // Check if it's the admin email and redirect accordingly
       if (data.email === 'admin@inrooms.com') {
         navigate('/admin');
       } else {
@@ -39,74 +41,130 @@ export function LoginPage() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    try {
+      await loginWithGoogle();
+      navigate('/events');
+    } catch (error) {
+      // AuthContext handles error display
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <Logo />
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Sign in to your account
+          Welcome back
         </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Sign in to your account to continue networking
+        </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email address
-              </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  type="email"
-                  {...register('email')}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                />
-                {errors.email && (
-                  <p className="mt-2 text-sm text-red-600">
-                    {errors.email.message}
-                  </p>
-                )}
+        <div className="bg-white py-8 px-4 shadow-xl sm:rounded-xl sm:px-10 border border-gray-100">
+          <div className="space-y-6">
+            <GoogleSignInButton
+              onClick={handleGoogleSignIn}
+              isLoading={isGoogleLoading}
+              variant="signin"
+            />
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or continue with email</span>
               </div>
             </div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  type="password"
-                  {...register('password')}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                />
-                {errors.password && (
-                  <p className="mt-2 text-sm text-red-600">
-                    {errors.password.message}
-                  </p>
-                )}
+            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Email address
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    {...register('email')}
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors duration-200"
+                    placeholder="Enter your email"
+                  />
+                  {errors.email && (
+                    <p className="mt-2 text-sm text-red-600">
+                      {errors.email.message}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
 
-            <div>
-              <Button
-                type="submit"
-                className="w-full"
-                isLoading={isSubmitting}
-              >
-                Sign in
-              </Button>
-            </div>
-          </form>
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Password
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="password"
+                    type="password"
+                    autoComplete="current-password"
+                    {...register('password')}
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors duration-200"
+                    placeholder="Enter your password"
+                  />
+                  {errors.password && (
+                    <p className="mt-2 text-sm text-red-600">
+                      {errors.password.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <input
+                    id="remember-me"
+                    name="remember-me"
+                    type="checkbox"
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                    Remember me
+                  </label>
+                </div>
+
+                <div className="text-sm">
+                  <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200">
+                    Forgot your password?
+                  </a>
+                </div>
+              </div>
+
+              <div>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  isLoading={isSubmitting}
+                >
+                  Sign in
+                </Button>
+              </div>
+            </form>
+          </div>
 
           <div className="mt-6">
             <div className="relative">
@@ -115,7 +173,7 @@ export function LoginPage() {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white text-gray-500">
-                  Don't have an account?
+                  New to inrooms?
                 </span>
               </div>
             </div>
