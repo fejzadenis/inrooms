@@ -1,7 +1,24 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../config/supabase';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  signInWithPopup,
+  GoogleAuthProvider,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { 
+  doc, 
+  setDoc, 
+  getDoc, 
+  updateDoc, 
+  serverTimestamp,
+  collection,
+  addDoc
+} from 'firebase/firestore';
+import { auth, db } from '../config/firebase';
 import { toast } from 'react-hot-toast';
-import type { User, Session } from '@supabase/supabase-js';
 
 interface UserProfile {
   id: string;
@@ -45,71 +62,57 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 const ADMIN_EMAIL = 'admin@inrooms.com';
 
-async function createOrUpdateUserProfile(user: User, name?: string): Promise<UserProfile> {
+async function createOrUpdateUserProfile(firebaseUser: FirebaseUser, name?: string): Promise<UserProfile> {
   try {
-    // Check if user profile exists
-    const { data: existingUser, error: fetchError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      throw fetchError;
-    }
-
-    const isAdmin = user.email === ADMIN_EMAIL;
+    const userRef = doc(db, 'users', firebaseUser.uid);
+    const userDoc = await getDoc(userRef);
+    
+    const isAdmin = firebaseUser.email === ADMIN_EMAIL;
+    const existingData = userDoc.exists() ? userDoc.data() : {};
+    
     const userData = {
-      id: user.id,
-      email: user.email || '',
-      name: name || user.user_metadata?.full_name || existingUser?.name || '',
+      id: firebaseUser.uid,
+      email: firebaseUser.email || '',
+      name: name || firebaseUser.displayName || existingData.name || '',
       role: isAdmin ? 'admin' : 'user',
-      photo_url: user.user_metadata?.avatar_url || existingUser?.photo_url,
-      subscription_status: isAdmin ? 'active' : (existingUser?.subscription_status || 'inactive'),
-      subscription_events_quota: isAdmin ? 999999 : (existingUser?.subscription_events_quota || 0),
-      subscription_events_used: existingUser?.subscription_events_used || 0,
-      profile_points: existingUser?.profile_points || 0,
-      connections: existingUser?.connections || [],
-      updated_at: new Date().toISOString(),
-    };
-
-    if (!existingUser) {
-      userData.created_at = new Date().toISOString();
-    }
-
-    const { data, error } = await supabase
-      .from('users')
-      .upsert(userData)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return {
-      id: data.id,
-      email: data.email,
-      name: data.name,
-      role: data.role,
-      photoURL: data.photo_url,
+      photoURL: firebaseUser.photoURL || existingData.photoURL,
       subscription: {
-        status: data.subscription_status,
-        trialEndsAt: data.subscription_trial_ends_at ? new Date(data.subscription_trial_ends_at) : undefined,
-        eventsQuota: data.subscription_events_quota,
-        eventsUsed: data.subscription_events_used,
+        status: isAdmin ? 'active' : (existingData.subscription?.status || 'inactive'),
+        trialEndsAt: existingData.subscription?.trialEndsAt,
+        eventsQuota: isAdmin ? 999999 : (existingData.subscription?.eventsQuota || 0),
+        eventsUsed: existingData.subscription?.eventsUsed || 0,
       },
       profile: {
-        title: data.profile_title,
-        company: data.profile_company,
-        location: data.profile_location,
-        about: data.profile_about,
-        phone: data.profile_phone,
-        website: data.profile_website,
-        linkedin: data.profile_linkedin,
-        skills: data.profile_skills || [],
-        points: data.profile_points,
-        joinedAt: data.created_at ? new Date(data.created_at) : undefined,
+        title: existingData.profile?.title || '',
+        company: existingData.profile?.company || '',
+        location: existingData.profile?.location || '',
+        about: existingData.profile?.about || '',
+        phone: existingData.profile?.phone || '',
+        website: existingData.profile?.website || '',
+        linkedin: existingData.profile?.linkedin || '',
+        skills: existingData.profile?.skills || [],
+        points: existingData.profile?.points || 0,
+        joinedAt: existingData.profile?.joinedAt || new Date(),
       },
-      connections: data.connections || [],
+      connections: existingData.connections || [],
+      createdAt: existingData.createdAt || serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+
+    await setDoc(userRef, userData, { merge: true });
+
+    return {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      role: userData.role as 'user' | 'admin',
+      photoURL: userData.photoURL,
+      subscription: userData.subscription,
+      profile: {
+        ...userData.profile,
+        joinedAt: userData.profile.joinedAt instanceof Date ? userData.profile.joinedAt : new Date(),
+      },
+      connections: userData.connections,
     };
   } catch (error) {
     console.error('Error creating/updating user profile:', error);
@@ -122,19 +125,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        createOrUpdateUserProfile(session.user).then(setUser).catch(console.error);
-      }
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
         try {
-          const userProfile = await createOrUpdateUserProfile(session.user);
+          const userProfile = await createOrUpdateUserProfile(firebaseUser);
           setUser(userProfile);
         } catch (error) {
           console.error('Error handling auth state change:', error);
@@ -146,23 +140,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        const userProfile = await createOrUpdateUserProfile(data.user);
-        setUser(userProfile);
-        toast.success(`Welcome back${userProfile.role === 'admin' ? ', Admin' : ''}!`);
-      }
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const userProfile = await createOrUpdateUserProfile(result.user);
+      setUser(userProfile);
+      toast.success(`Welcome back${userProfile.role === 'admin' ? ', Admin' : ''}!`);
     } catch (error: any) {
       console.error('Login failed:', error);
       toast.error(error.message || 'Login failed. Please try again.');
@@ -172,14 +158,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/events`,
-        },
-      });
-
-      if (error) throw error;
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const userProfile = await createOrUpdateUserProfile(result.user);
+      setUser(userProfile);
+      toast.success(`Welcome${userProfile.role === 'admin' ? ', Admin' : ''}!`);
     } catch (error: any) {
       console.error('Google login failed:', error);
       toast.error('Google sign-in failed. Please try again.');
@@ -189,9 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
+      await signOut(auth);
       setUser(null);
       toast.success('Successfully logged out');
     } catch (error: any) {
@@ -208,23 +189,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name,
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        const userProfile = await createOrUpdateUserProfile(data.user, name);
-        setUser(userProfile);
-        toast.success('Account created successfully!');
-      }
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      const userProfile = await createOrUpdateUserProfile(result.user, name);
+      setUser(userProfile);
+      toast.success('Account created successfully!');
     } catch (error: any) {
       console.error('Signup failed:', error);
       toast.error(error.message || 'Failed to create account. Please try again.');
@@ -239,17 +207,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const trialEndsAt = new Date();
       trialEndsAt.setDate(trialEndsAt.getDate() + 7);
 
-      const { error } = await supabase
-        .from('users')
-        .update({
-          subscription_status: 'trial',
-          subscription_trial_ends_at: trialEndsAt.toISOString(),
-          subscription_events_quota: 2,
-          subscription_events_used: 0,
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
+      const userRef = doc(db, 'users', user.id);
+      await updateDoc(userRef, {
+        'subscription.status': 'trial',
+        'subscription.trialEndsAt': trialEndsAt,
+        'subscription.eventsQuota': 2,
+        'subscription.eventsUsed': 0,
+        updatedAt: serverTimestamp(),
+      });
 
       const updatedUser: UserProfile = {
         ...user,
@@ -272,23 +237,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateUserProfile = async (userId: string, profileData: any) => {
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({
-          name: profileData.name,
-          profile_title: profileData.title,
-          profile_company: profileData.company,
-          profile_location: profileData.location,
-          profile_about: profileData.about,
-          profile_phone: profileData.phone,
-          profile_website: profileData.website,
-          profile_linkedin: profileData.linkedin,
-          profile_skills: profileData.skills,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', userId);
-
-      if (error) throw error;
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, {
+        name: profileData.name,
+        'profile.title': profileData.title,
+        'profile.company': profileData.company,
+        'profile.location': profileData.location,
+        'profile.about': profileData.about,
+        'profile.phone': profileData.phone,
+        'profile.website': profileData.website,
+        'profile.linkedin': profileData.linkedin,
+        'profile.skills': profileData.skills,
+        updatedAt: serverTimestamp(),
+      });
 
       // Update local user state
       if (user && user.id === userId) {

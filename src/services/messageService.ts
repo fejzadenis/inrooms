@@ -1,4 +1,16 @@
-import { collection, addDoc, query, where, orderBy, onSnapshot, Timestamp, updateDoc, doc, setDoc } from 'firebase/firestore';
+import { 
+  collection, 
+  addDoc, 
+  query, 
+  where, 
+  orderBy, 
+  onSnapshot, 
+  serverTimestamp, 
+  updateDoc, 
+  doc, 
+  setDoc,
+  getDocs
+} from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type { Message, Chat } from '../types/messages';
 
@@ -7,11 +19,11 @@ export const messageService = {
     try {
       const chatId = [senderId, receiverId].sort().join('_');
       
-      // Create or update chat with explicit document ID
+      // Create or update chat
       const chatRef = doc(db, 'chats', chatId);
       await setDoc(chatRef, {
         participants: [senderId, receiverId],
-        updatedAt: Timestamp.now(),
+        updatedAt: serverTimestamp(),
       }, { merge: true });
 
       // Add message
@@ -19,7 +31,7 @@ export const messageService = {
         senderId,
         receiverId,
         content,
-        timestamp: Timestamp.now(),
+        timestamp: serverTimestamp(),
         read: false,
         chatId,
       });
@@ -40,7 +52,7 @@ export const messageService = {
       const messages = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-        timestamp: doc.data().timestamp.toDate(),
+        timestamp: doc.data().timestamp?.toDate() || new Date(),
       })) as Message[];
       callback(messages);
     });
@@ -63,13 +75,33 @@ export const messageService = {
       orderBy('updatedAt', 'desc')
     );
 
-    return onSnapshot(q, (snapshot) => {
-      const chats = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        updatedAt: doc.data().updatedAt.toDate(),
-      })) as Chat[];
-      callback(chats);
+    return onSnapshot(q, async (snapshot) => {
+      const chats = await Promise.all(
+        snapshot.docs.map(async (doc) => {
+          const chatData = doc.data();
+          
+          // Get last message for this chat
+          const messagesQuery = query(
+            collection(db, 'messages'),
+            where('chatId', '==', doc.id),
+            orderBy('timestamp', 'desc')
+          );
+          
+          const messagesSnapshot = await getDocs(messagesQuery);
+          const lastMessage = messagesSnapshot.docs[0]?.data();
+          
+          return {
+            id: doc.id,
+            ...chatData,
+            updatedAt: chatData.updatedAt?.toDate() || new Date(),
+            lastMessage: lastMessage ? {
+              ...lastMessage,
+              timestamp: lastMessage.timestamp?.toDate() || new Date(),
+            } : undefined,
+          };
+        })
+      );
+      callback(chats as Chat[]);
     });
   },
 };

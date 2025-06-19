@@ -1,4 +1,4 @@
-import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 export const connectionService = {
@@ -39,4 +39,19 @@ export const connectionService = {
       throw error;
     }
   },
+
+  async getUserConnections(userId: string): Promise<string[]> {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        return userDoc.data().connections || [];
+      }
+      return [];
+    } catch (error) {
+      console.error('Error getting user connections:', error);
+      throw error;
+    }
+  }
 };
