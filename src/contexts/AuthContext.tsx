@@ -54,7 +54,6 @@ async function createOrUpdateUser(firebaseUser: FirebaseUser, name?: string): Pr
       id: firebaseUser.uid,
       email: firebaseUser.email || '',
       name: name || firebaseUser.displayName || '',
-      photoURL: firebaseUser.photoURL || undefined,
       role: firebaseUser.email === ADMIN_EMAIL ? 'admin' : 'user',
       subscription: {
         status: 'inactive',
@@ -62,6 +61,11 @@ async function createOrUpdateUser(firebaseUser: FirebaseUser, name?: string): Pr
         eventsUsed: 0
       }
     };
+
+    // Only include photoURL if it exists and is not null/empty
+    if (firebaseUser.photoURL) {
+      userData.photoURL = firebaseUser.photoURL;
+    }
 
     if (!userSnap.exists()) {
       if (firebaseUser.email === ADMIN_EMAIL) {
@@ -169,7 +173,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error.code === 'auth/popup-closed-by-user') {
         toast.error('Sign-in was cancelled');
       } else if (error.code === 'auth/popup-blocked') {
-        toast.error('Popup was blocked. Please allow popups and try again.');
+        toast.error('Popup was blocked. Please allow popups for this site in your browser settings and try again.');
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        // User cancelled or multiple popups were triggered
+        toast.error('Sign-in was cancelled. Please try again.');
       } else {
         toast.error('Google sign-in failed. Please try again.');
       }
