@@ -9,7 +9,7 @@ import {
   updateProfile,
   User as FirebaseUser
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import { toast } from 'react-hot-toast';
 
@@ -25,6 +25,19 @@ interface User {
     eventsQuota: number;
     eventsUsed: number;
   };
+  profile?: {
+    title?: string;
+    company?: string;
+    location?: string;
+    about?: string;
+    phone?: string;
+    website?: string;
+    linkedin?: string;
+    skills?: string[];
+    points?: number;
+    joinedAt?: Date;
+  };
+  connections?: string[];
 }
 
 interface AuthContextType {
@@ -35,6 +48,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   signup: (email: string, password: string, name: string) => Promise<void>;
   startFreeTrial: () => Promise<void>;
+  updateUserProfile: (userId: string, profileData: any) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -59,7 +73,13 @@ async function createOrUpdateUser(firebaseUser: FirebaseUser, name?: string): Pr
         status: 'inactive',
         eventsQuota: 0,
         eventsUsed: 0
-      }
+      },
+      profile: {
+        joinedAt: new Date(),
+        points: 0,
+        skills: []
+      },
+      connections: []
     };
 
     // Only include photoURL if it exists and is not null/empty
@@ -175,7 +195,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else if (error.code === 'auth/popup-blocked') {
         toast.error('Popup was blocked. Please allow popups for this site in your browser settings and try again.');
       } else if (error.code === 'auth/cancelled-popup-request') {
-        // User cancelled or multiple popups were triggered
         toast.error('Sign-in was cancelled. Please try again.');
       } else {
         toast.error('Google sign-in failed. Please try again.');
@@ -258,6 +277,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateUserProfile = async (userId: string, profileData: any) => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      
+      // Update the user document with new profile data
+      await updateDoc(userRef, {
+        name: profileData.name,
+        'profile.title': profileData.title,
+        'profile.company': profileData.company,
+        'profile.location': profileData.location,
+        'profile.about': profileData.about,
+        'profile.phone': profileData.phone,
+        'profile.website': profileData.website,
+        'profile.linkedin': profileData.linkedin,
+        'profile.skills': profileData.skills,
+      });
+
+      // Update local user state
+      if (user && user.id === userId) {
+        const updatedUser = {
+          ...user,
+          name: profileData.name,
+          profile: {
+            ...user.profile,
+            title: profileData.title,
+            company: profileData.company,
+            location: profileData.location,
+            about: profileData.about,
+            phone: profileData.phone,
+            website: profileData.website,
+            linkedin: profileData.linkedin,
+            skills: profileData.skills,
+          }
+        };
+        setUser(updatedUser);
+      }
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -266,7 +327,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loginWithGoogle,
       logout, 
       signup,
-      startFreeTrial 
+      startFreeTrial,
+      updateUserProfile
     }}>
       {children}
     </AuthContext.Provider>
