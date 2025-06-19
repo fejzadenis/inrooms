@@ -1,5 +1,4 @@
-import { collection, addDoc, query, where, orderBy, onSnapshot, Timestamp, updateDoc, doc, setDoc } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { supabase } from '../config/supabase';
 import type { Message, Chat } from '../types/messages';
 
 export const messageService = {
@@ -7,22 +6,29 @@ export const messageService = {
     try {
       const chatId = [senderId, receiverId].sort().join('_');
       
-      // Create or update chat with explicit document ID
-      const chatRef = doc(db, 'chats', chatId);
-      await setDoc(chatRef, {
-        participants: [senderId, receiverId],
-        updatedAt: Timestamp.now(),
-      }, { merge: true });
+      // Create or update chat
+      const { error: chatError } = await supabase
+        .from('chats')
+        .upsert({
+          id: chatId,
+          participants: [senderId, receiverId],
+          updated_at: new Date().toISOString(),
+        });
+
+      if (chatError) throw chatError;
 
       // Add message
-      await addDoc(collection(db, 'messages'), {
-        senderId,
-        receiverId,
-        content,
-        timestamp: Timestamp.now(),
-        read: false,
-        chatId,
-      });
+      const { error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          sender_id: senderId,
+          receiver_id: receiverId,
+          content,
+          chat_id: chatId,
+          read: false,
+        });
+
+      if (messageError) throw messageError;
     } catch (error) {
       console.error('Error sending message:', error);
       throw error;
@@ -30,26 +36,50 @@ export const messageService = {
   },
 
   subscribeToChat(chatId: string, callback: (messages: Message[]) => void): () => void {
-    const q = query(
-      collection(db, 'messages'),
-      where('chatId', '==', chatId),
-      orderBy('timestamp', 'asc')
-    );
+    const subscription = supabase
+      .channel(`chat-${chatId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+          filter: `chat_id=eq.${chatId}`,
+        },
+        () => {
+          // Fetch updated messages
+          this.getChatMessages(chatId).then(callback);
+        }
+      )
+      .subscribe();
 
-    return onSnapshot(q, (snapshot) => {
-      const messages = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        timestamp: doc.data().timestamp.toDate(),
-      })) as Message[];
-      callback(messages);
-    });
+    // Initial fetch
+    this.getChatMessages(chatId).then(callback);
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  },
+
+  async getChatMessages(chatId: string): Promise<Message[]> {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('chat_id', chatId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
   },
 
   async markAsRead(messageId: string): Promise<void> {
     try {
-      const messageRef = doc(db, 'messages', messageId);
-      await updateDoc(messageRef, { read: true });
+      const { error } = await supabase
+        .from('messages')
+        .update({ read: true })
+        .eq('id', messageId);
+
+      if (error) throw error;
     } catch (error) {
       console.error('Error marking message as read:', error);
       throw error;
@@ -57,19 +87,39 @@ export const messageService = {
   },
 
   subscribeToUserChats(userId: string, callback: (chats: Chat[]) => void): () => void {
-    const q = query(
-      collection(db, 'chats'),
-      where('participants', 'array-contains', userId),
-      orderBy('updatedAt', 'desc')
-    );
+    const subscription = supabase
+      .channel(`user-chats-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'chats',
+          filter: `participants.cs.{${userId}}`,
+        },
+        () => {
+          // Fetch updated chats
+          this.getUserChats(userId).then(callback);
+        }
+      )
+      .subscribe();
 
-    return onSnapshot(q, (snapshot) => {
-      const chats = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        updatedAt: doc.data().updatedAt.toDate(),
-      })) as Chat[];
-      callback(chats);
-    });
+    // Initial fetch
+    this.getUserChats(userId).then(callback);
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  },
+
+  async getUserChats(userId: string): Promise<Chat[]> {
+    const { data, error } = await supabase
+      .from('chats')
+      .select('*')
+      .contains('participants', [userId])
+      .order('updated_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
   },
 };
