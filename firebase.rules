@@ -2,20 +2,28 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId} {
-      // Allow reading user documents only if it's their own document
-      allow read: if request.auth != null && request.auth.uid == userId;
+      // Allow reading user documents only if it's their own document or they're admin
+      allow read: if request.auth != null && (
+        request.auth.uid == userId ||
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
       
       // Allow users to create only their own documents
       allow create: if request.auth != null && request.auth.uid == userId;
       
-      // Allow users to update their own documents
-      allow update: if request.auth != null && request.auth.uid == userId;
+      // Allow users to update their own documents or admin can update any
+      allow update: if request.auth != null && (
+        request.auth.uid == userId ||
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
       
-      // Allow admin to read and write all user documents
-      allow read, write: if request.auth != null && 
-        (request.auth.token.email == 'admin@inrooms.com' ||
-         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+      // Allow admin to delete users
+      allow delete: if request.auth != null && (
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
     }
     
     match /messages/{messageId} {
@@ -27,10 +35,13 @@ service cloud.firestore {
         return chatId == [senderId, receiverId].sort().join('_');
       }
 
-      // Allow read if user is a participant in the associated chat
-      allow read: if request.auth != null && 
-        resource.data.chatId != null &&
-        request.auth.uid in getChatParticipants(resource.data.chatId);
+      // Allow read if user is a participant in the associated chat or admin
+      allow read: if request.auth != null && (
+        (resource.data.chatId != null &&
+         request.auth.uid in getChatParticipants(resource.data.chatId)) ||
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
 
       // Allow create if chat exists and the chatId is correctly formed from sender and receiver
       allow create: if request.auth != null && 
@@ -44,60 +55,90 @@ service cloud.firestore {
           request.resource.data.chatId
         );
 
-      // Allow update only for marking messages as read by the receiver
-      allow update: if request.auth != null && 
-        resource.data.chatId != null &&
-        request.auth.uid in getChatParticipants(resource.data.chatId) &&
-        (
-          // Only allow updating read status
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']) ||
-          // Or if you're the sender updating message content within a time limit
+      // Allow update only for marking messages as read by the receiver or admin
+      allow update: if request.auth != null && (
+        (resource.data.chatId != null &&
+         request.auth.uid in getChatParticipants(resource.data.chatId) &&
+         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']) ||
           (request.auth.uid == resource.data.senderId &&
-           request.time < resource.data.timestamp + duration.value(5, 'm'))
-        );
+           request.time < resource.data.timestamp + duration.value(5, 'm')))) ||
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
     }
     
     match /chats/{chatId} {
       allow read: if request.auth != null && (
-        request.auth.uid in resource.data.participants
+        request.auth.uid in resource.data.participants ||
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
       );
       allow create: if request.auth != null && (
         request.auth.uid in request.resource.data.participants
       );
       allow update: if request.auth != null && (
-        request.auth.uid in resource.data.participants
+        request.auth.uid in resource.data.participants ||
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
       );
     }
 
     match /achievements/{achievementId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && 
-        (request.auth.token.email == 'admin@inrooms.com' ||
-         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+      allow write: if request.auth != null && (
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
     }
 
     match /badges/{badgeId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && 
-        (request.auth.token.email == 'admin@inrooms.com' ||
-         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+      allow write: if request.auth != null && (
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
     }
     
-    // Add rules for other collections - FIXED: Added fallback admin check
+    // Events collection - admin can manage, users can read
     match /events/{eventId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && 
-        (request.auth.token.email == 'admin@inrooms.com' ||
-         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+      allow write: if request.auth != null && (
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
     }
     
+    // Registrations collection - users can manage their own, admin can view all
     match /registrations/{registrationId} {
-      allow read: if request.auth != null;
-      allow create, update: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
+      allow create, update: if request.auth != null && (
+        request.resource.data.userId == request.auth.uid ||
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
+      allow delete: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
+    }
+
+    // Reminders collection - users can manage their own
+    match /reminders/{reminderId} {
+      allow read, write: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
+      allow create: if request.auth != null && (
+        request.resource.data.userId == request.auth.uid ||
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
     }
   }
 }
