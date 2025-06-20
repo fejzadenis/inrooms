@@ -42,7 +42,6 @@ Deno.serve(async (req) => {
     privateKey = privateKey
       .trim()
       .replace(/\\n/g, '\n')
-      .replace(/\s+/g, ' ')
       .replace(/-----BEGIN PRIVATE KEY----- /g, '-----BEGIN PRIVATE KEY-----\n')
       .replace(/ -----END PRIVATE KEY-----/g, '\n-----END PRIVATE KEY-----')
       .replace(/([A-Za-z0-9+/=]{64})/g, '$1\n')
