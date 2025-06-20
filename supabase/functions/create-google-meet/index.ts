@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { google } from "npm:googleapis@128.0.0"
 
 const corsHeaders = {
@@ -7,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -15,10 +14,34 @@ serve(async (req) => {
   try {
     const { title, description, startTime, endTime } = await req.json()
 
+    // Check for required environment variables
+    const clientEmail = Deno.env.get('GOOGLE_CLIENT_EMAIL')
+    const privateKey = Deno.env.get('GOOGLE_PRIVATE_KEY')
+
+    if (!clientEmail || !privateKey) {
+      console.error('Missing Google credentials:', { 
+        hasClientEmail: !!clientEmail, 
+        hasPrivateKey: !!privateKey 
+      })
+      return new Response(
+        JSON.stringify({ 
+          error: 'Google service account credentials not configured',
+          details: 'Missing GOOGLE_CLIENT_EMAIL or GOOGLE_PRIVATE_KEY environment variables'
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+    }
+
     const auth = new google.auth.GoogleAuth({
       credentials: {
-        client_email: Deno.env.get('GOOGLE_CLIENT_EMAIL'),
-        private_key: Deno.env.get('GOOGLE_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
+        client_email: clientEmail,
+        private_key: privateKey.replace(/\\n/g, '\n'),
       },
       scopes: ['https://www.googleapis.com/auth/calendar'],
     })
@@ -44,11 +67,15 @@ serve(async (req) => {
       },
     }
 
+    console.log('Creating Google Calendar event with Meet link...')
+    
     const response = await calendar.events.insert({
       calendarId: 'primary',
       conferenceDataVersion: 1,
       requestBody: event,
     })
+
+    console.log('Google Calendar event created successfully')
 
     return new Response(
       JSON.stringify({
@@ -64,8 +91,21 @@ serve(async (req) => {
     )
   } catch (error) {
     console.error('Error creating Google Meet event:', error)
+    
+    // Provide more detailed error information
+    let errorMessage = 'Failed to create Google Meet event'
+    let errorDetails = error.message || 'Unknown error'
+    
+    if (error.code) {
+      errorDetails = `Google API Error (${error.code}): ${error.message}`
+    }
+    
     return new Response(
-      JSON.stringify({ error: 'Failed to create Google Meet event' }),
+      JSON.stringify({ 
+        error: errorMessage,
+        details: errorDetails,
+        timestamp: new Date().toISOString()
+      }),
       {
         status: 500,
         headers: {
