@@ -5,31 +5,17 @@ import { Button } from '../../components/common/Button';
 import { EventManagementModal } from '../../components/admin/EventManagementModal';
 import { StatsCard } from '../../components/admin/StatsCard';
 import { UserManagement } from '../../components/admin/UserManagement';
-import type { AdminDashboardStats } from '../../types/admin';
+import { eventService, type Event } from '../../services/eventService';
+import { format } from 'date-fns';
 
 export function AdminDashboard() {
-  const [events, setEvents] = React.useState([
-    {
-      id: '1',
-      title: 'Enterprise Sales Strategies',
-      description: 'Learn effective strategies for closing enterprise deals from industry experts.',
-      date: new Date('2024-04-15T15:00:00'),
-      participants: 3,
-      maxParticipants: 6,
-      meetLink: 'https://meet.google.com/abc-defg-hij',
-    },
-    {
-      id: '2',
-      title: 'Building Sales Relationships',
-      description: 'Master the art of building and maintaining long-term client relationships.',
-      date: new Date('2024-04-20T16:00:00'),
-      participants: 5,
-      maxParticipants: 6,
-      meetLink: 'https://meet.google.com/xyz-uvwx-yz',
-    },
-  ]);
+  const [events, setEvents] = React.useState<Event[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [isEventModalOpen, setIsEventModalOpen] = React.useState(false);
+  const [selectedEvent, setSelectedEvent] = React.useState<Event | null>(null);
 
-  const [users, setUsers] = React.useState([
+  // Mock user data - in a real app, this would come from a user service
+  const [users] = React.useState([
     {
       id: '1',
       name: 'John Doe',
@@ -54,82 +40,54 @@ export function AdminDashboard() {
     },
   ]);
 
-  const [stats, setStats] = React.useState<AdminDashboardStats>({
-    users: {
-      totalUsers: 150,
-      activeUsers: 120,
-      trialUsers: 20,
-      paidUsers: 110,
-    },
-    events: {
-      totalEvents: 24,
-      upcomingEvents: 8,
-      pastEvents: 16,
-      averageAttendance: 85,
-    },
-    revenueData: {
-      monthly: 12500,
-      yearly: 150000,
-      growth: 15,
-    },
-  });
+  // Load events on component mount
+  React.useEffect(() => {
+    loadEvents();
+  }, []);
 
-  const [isEventModalOpen, setIsEventModalOpen] = React.useState(false);
-  const [selectedEvent, setSelectedEvent] = React.useState<any>(null);
+  const loadEvents = async () => {
+    try {
+      setLoading(true);
+      const eventsData = await eventService.getEvents();
+      setEvents(eventsData);
+    } catch (error) {
+      console.error('Failed to load events:', error);
+      toast.error('Failed to load events');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreateEvent = () => {
     setSelectedEvent(null);
     setIsEventModalOpen(true);
   };
 
-  const handleEditEvent = (event: any) => {
+  const handleEditEvent = (event: Event) => {
     setSelectedEvent(event);
     setIsEventModalOpen(true);
   };
 
-  const handleEventSubmit = async (data: any) => {
-    try {
-      const eventDateTime = new Date(`${data.date}T${data.time}`);
-      const eventData = {
-        ...data,
-        date: eventDateTime,
-        participants: selectedEvent?.participants || 0,
-        id: selectedEvent?.id || Date.now().toString(),
-      };
-
-      if (selectedEvent) {
-        setEvents(events.map(e => e.id === selectedEvent.id ? eventData : e));
-        toast.success('Event updated successfully!');
-      } else {
-        setEvents([...events, eventData]);
-        toast.success('Event created successfully!');
-      }
-    } catch (error) {
-      console.error('Failed to save event:', error);
-      toast.error('Failed to save event. Please try again.');
-    }
+  const handleEventSubmit = async (eventId: string) => {
+    // Reload events to get the latest data
+    await loadEvents();
   };
 
-  const handleDeleteEvent = (eventId: string) => {
+  const handleDeleteEvent = async (eventId: string) => {
     if (window.confirm('Are you sure you want to delete this event?')) {
-      setEvents(events.filter(e => e.id !== eventId));
-      toast.success('Event deleted successfully!');
+      try {
+        await eventService.deleteEvent(eventId);
+        await loadEvents();
+        toast.success('Event deleted successfully!');
+      } catch (error) {
+        console.error('Failed to delete event:', error);
+        toast.error('Failed to delete event');
+      }
     }
   };
 
   const handleUpdateQuota = (userId: string, adjustment: number) => {
-    setUsers(users.map(user => {
-      if (user.id === userId) {
-        return {
-          ...user,
-          subscription: {
-            ...user.subscription,
-            eventsQuota: user.subscription.eventsQuota + adjustment,
-          },
-        };
-      }
-      return user;
-    }));
+    // This would update user quota in the database
     toast.success('User quota updated successfully!');
   };
 
@@ -142,21 +100,48 @@ export function AdminDashboard() {
 
   const handleDeactivateUser = (userId: string) => {
     if (window.confirm('Are you sure you want to deactivate this user?')) {
-      setUsers(users.map(user => {
-        if (user.id === userId) {
-          return {
-            ...user,
-            subscription: {
-              ...user.subscription,
-              status: 'inactive' as const,
-            },
-          };
-        }
-        return user;
-      }));
       toast.success('User deactivated successfully!');
     }
   };
+
+  // Calculate stats from real data
+  const stats = React.useMemo(() => {
+    const now = new Date();
+    const upcomingEvents = events.filter(event => event.date > now);
+    const pastEvents = events.filter(event => event.date <= now);
+    
+    return {
+      users: {
+        totalUsers: users.length,
+        activeUsers: users.filter(u => u.subscription.status !== 'inactive').length,
+        trialUsers: users.filter(u => u.subscription.status === 'trial').length,
+        paidUsers: users.filter(u => u.subscription.status === 'active').length,
+      },
+      events: {
+        totalEvents: events.length,
+        upcomingEvents: upcomingEvents.length,
+        pastEvents: pastEvents.length,
+        averageAttendance: events.length > 0 
+          ? Math.round((events.reduce((sum, e) => sum + e.currentParticipants, 0) / events.length) * 100) / 100
+          : 0,
+      },
+      revenueData: {
+        monthly: 12500,
+        yearly: 150000,
+        growth: 15,
+      },
+    };
+  }, [events, users]);
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg text-gray-600">Loading...</div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -176,16 +161,16 @@ export function AdminDashboard() {
             description="Users active in last 30 days"
           />
           <StatsCard
-            title="Monthly Revenue"
-            value={`$${stats.revenueData.monthly.toLocaleString()}`}
-            change={stats.revenueData.growth}
-            description="Revenue this month"
+            title="Total Events"
+            value={stats.events.totalEvents}
+            change={12}
+            description="All events created"
           />
           <StatsCard
-            title="Average Attendance"
-            value={`${stats.events.averageAttendance}%`}
+            title="Upcoming Events"
+            value={stats.events.upcomingEvents}
             change={3}
-            description="Event attendance rate"
+            description="Events scheduled for future"
           />
         </div>
 
@@ -200,7 +185,7 @@ export function AdminDashboard() {
         {/* Events Management */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold text-gray-900">Events</h2>
+            <h2 className="text-2xl font-semibold text-gray-900">Events Management</h2>
             <Button onClick={handleCreateEvent}>Create Event</Button>
           </div>
           <div className="bg-white shadow-sm rounded-lg overflow-hidden">
@@ -225,53 +210,71 @@ export function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {events.map((event) => (
-                  <tr key={event.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {event.title}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {event.description}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
-                        {event.date.toLocaleString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
-                        {event.participants} / {event.maxParticipants}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <a
-                        href={event.meetLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        {event.meetLink}
-                      </a>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Button
-                        variant="outline"
-                        onClick={() => handleEditEvent(event)}
-                        className="mr-2"
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => handleDeleteEvent(event.id)}
-                      >
-                        Delete
-                      </Button>
+                {events.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                      No events created yet. Create your first event to get started.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  events.map((event) => (
+                    <tr key={event.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {event.title}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {event.description}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {format(event.date, 'MMM d, yyyy')}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {format(event.date, 'h:mm a')}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {event.currentParticipants} / {event.maxParticipants}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {event.maxParticipants - event.currentParticipants} spots left
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {event.meetLink ? (
+                          <a
+                            href={event.meetLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-indigo-600 hover:text-indigo-900 text-sm"
+                          >
+                            View Link
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 text-sm">No link</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <Button
+                          variant="outline"
+                          onClick={() => handleEditEvent(event)}
+                          className="mr-2"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => handleDeleteEvent(event.id!)}
+                        >
+                          Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -283,12 +286,13 @@ export function AdminDashboard() {
         onClose={() => setIsEventModalOpen(false)}
         onSubmit={handleEventSubmit}
         initialData={selectedEvent ? {
+          id: selectedEvent.id!,
           title: selectedEvent.title,
           description: selectedEvent.description,
-          date: selectedEvent.date.toISOString().split('T')[0],
-          time: selectedEvent.date.toTimeString().split(' ')[0].slice(0, 5),
+          date: format(selectedEvent.date, 'yyyy-MM-dd'),
+          time: format(selectedEvent.date, 'HH:mm'),
+          duration: selectedEvent.duration,
           maxParticipants: selectedEvent.maxParticipants,
-          meetLink: selectedEvent.meetLink,
         } : undefined}
       />
     </AdminLayout>

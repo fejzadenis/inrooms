@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { X } from 'lucide-react';
 import { Button } from '../common/Button';
 import { createGoogleMeetEvent } from '../../utils/googleMeet';
+import { eventService } from '../../services/eventService';
+import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 
 const eventSchema = z.object({
@@ -21,8 +23,8 @@ type EventFormData = z.infer<typeof eventSchema>;
 interface EventManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: EventFormData & { meetLink: string }) => Promise<void>;
-  initialData?: Partial<EventFormData>;
+  onSubmit: (eventId: string) => Promise<void>;
+  initialData?: Partial<EventFormData & { id: string }>;
 }
 
 export function EventManagementModal({
@@ -31,6 +33,7 @@ export function EventManagementModal({
   onSubmit,
   initialData,
 }: EventManagementModalProps) {
+  const { user } = useAuth();
   const {
     register,
     handleSubmit,
@@ -42,24 +45,62 @@ export function EventManagementModal({
   });
 
   const handleFormSubmit = async (data: EventFormData) => {
+    if (!user) {
+      toast.error('You must be logged in to create events');
+      return;
+    }
+
     try {
       const startTime = new Date(`${data.date}T${data.time}`);
       const endTime = new Date(startTime.getTime() + data.duration * 60000);
 
-      const { meetLink } = await createGoogleMeetEvent({
+      let meetLink = '';
+      
+      try {
+        // Try to create Google Meet event
+        const meetResponse = await createGoogleMeetEvent({
+          title: data.title,
+          description: data.description,
+          startTime,
+          endTime,
+        });
+        meetLink = meetResponse.meetLink;
+      } catch (meetError) {
+        console.warn('Failed to create Google Meet link:', meetError);
+        // Continue without Meet link - the event can still be created
+        toast.warning('Event created successfully, but Google Meet link could not be generated');
+      }
+
+      const eventData = {
         title: data.title,
         description: data.description,
-        startTime,
-        endTime,
-      });
+        date: startTime,
+        duration: data.duration,
+        maxParticipants: data.maxParticipants,
+        currentParticipants: 0,
+        meetLink: meetLink || undefined,
+        createdBy: user.id,
+      };
 
-      await onSubmit({ ...data, meetLink });
+      let eventId: string;
+
+      if (initialData?.id) {
+        // Update existing event
+        await eventService.updateEvent(initialData.id, eventData);
+        eventId = initialData.id;
+        toast.success('Event updated successfully!');
+      } else {
+        // Create new event
+        eventId = await eventService.createEvent(eventData);
+        toast.success('Event created successfully!');
+      }
+
+      await onSubmit(eventId);
       reset();
       onClose();
-      toast.success('Event created successfully with Google Meet link!');
     } catch (error) {
-      console.error('Failed to create event:', error);
-      toast.error('Failed to create event. Please try again.');
+      console.error('Failed to save event:', error);
+      toast.error('Failed to save event. Please try again.');
     }
   };
 
@@ -76,7 +117,7 @@ export function EventManagementModal({
         </button>
 
         <h2 className="text-2xl font-semibold mb-4">
-          {initialData ? 'Edit Event' : 'Create New Event'}
+          {initialData?.id ? 'Edit Event' : 'Create New Event'}
         </h2>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
@@ -148,6 +189,7 @@ export function EventManagementModal({
               type="number"
               {...register('duration', { valueAsNumber: true })}
               min={1}
+              defaultValue={60}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
             {errors.duration && (
@@ -165,6 +207,7 @@ export function EventManagementModal({
               type="number"
               {...register('maxParticipants', { valueAsNumber: true })}
               min={1}
+              defaultValue={10}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
             {errors.maxParticipants && (
@@ -179,7 +222,7 @@ export function EventManagementModal({
               Cancel
             </Button>
             <Button type="submit" isLoading={isSubmitting}>
-              {initialData ? 'Update Event' : 'Create Event'}
+              {initialData?.id ? 'Update Event' : 'Create Event'}
             </Button>
           </div>
         </form>

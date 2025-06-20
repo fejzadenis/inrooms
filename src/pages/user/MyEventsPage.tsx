@@ -1,34 +1,72 @@
 import React from 'react';
 import { MainLayout } from '../../layouts/MainLayout';
 import { EventCard } from '../../components/common/EventCard';
+import { useAuth } from '../../contexts/AuthContext';
+import { eventService, type Event } from '../../services/eventService';
+import { toast } from 'react-hot-toast';
 
 export function MyEventsPage() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = React.useState<'upcoming' | 'past'>('upcoming');
-  
-  const mockEvents = {
-    upcoming: [
-      {
-        id: '1',
-        title: 'Enterprise Sales Workshop',
-        description: 'Learn effective strategies for enterprise sales',
-        date: new Date('2024-04-20T15:00:00'),
-        maxParticipants: 10,
-        currentParticipants: 8,
-        meetLink: 'https://meet.google.com/abc-def-ghi'
-      }
-    ],
-    past: [
-      {
-        id: '2',
-        title: 'Sales Networking Event',
-        description: 'Connect with other sales professionals',
-        date: new Date('2024-03-15T14:00:00'),
-        maxParticipants: 15,
-        currentParticipants: 15,
-        meetLink: 'https://meet.google.com/xyz-uvw-xyz'
-      }
-    ]
+  const [events, setEvents] = React.useState<{ upcoming: Event[]; past: Event[] }>({
+    upcoming: [],
+    past: []
+  });
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    if (user) {
+      loadUserEvents();
+    }
+  }, [user]);
+
+  const loadUserEvents = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      
+      // Get user's registrations
+      const registrations = await eventService.getUserRegistrations(user.id);
+      const registeredEventIds = registrations.map(reg => reg.eventId);
+
+      // Get all events
+      const allEvents = await eventService.getEvents();
+      
+      // Filter events user is registered for
+      const userEvents = allEvents.filter(event => registeredEventIds.includes(event.id!));
+      
+      // Separate into upcoming and past
+      const now = new Date();
+      const upcoming = userEvents.filter(event => event.date > now);
+      const past = userEvents.filter(event => event.date <= now);
+
+      setEvents({ upcoming, past });
+    } catch (error) {
+      console.error('Failed to load user events:', error);
+      toast.error('Failed to load your events');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleJoinMeeting = (meetLink: string) => {
+    if (meetLink) {
+      window.open(meetLink, '_blank', 'noopener,noreferrer');
+    } else {
+      toast.error('Meeting link not available');
+    }
+  };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg text-gray-600">Loading your events...</div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -43,7 +81,7 @@ export function MyEventsPage() {
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
-              Upcoming Events
+              Upcoming Events ({events.upcoming.length})
             </button>
             <button
               onClick={() => setActiveTab('past')}
@@ -53,25 +91,38 @@ export function MyEventsPage() {
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
-              Past Events
+              Past Events ({events.past.length})
             </button>
           </nav>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockEvents[activeTab].map((event) => (
-            <EventCard
-              key={event.id}
-              title={event.title}
-              description={event.description}
-              date={event.date}
-              maxParticipants={event.maxParticipants}
-              currentParticipants={event.currentParticipants}
-              meetLink={event.meetLink}
-              isRegistered={true}
-              onJoin={() => window.open(event.meetLink, '_blank')}
-            />
-          ))}
+          {events[activeTab].length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <h3 className="text-lg font-medium text-gray-900">
+                No {activeTab} events
+              </h3>
+              <p className="text-gray-500 mt-2">
+                {activeTab === 'upcoming' 
+                  ? 'Register for events to see them here' 
+                  : 'Your completed events will appear here'}
+              </p>
+            </div>
+          ) : (
+            events[activeTab].map((event) => (
+              <EventCard
+                key={event.id}
+                title={event.title}
+                description={event.description}
+                date={event.date}
+                maxParticipants={event.maxParticipants}
+                currentParticipants={event.currentParticipants}
+                meetLink={event.meetLink}
+                isRegistered={true}
+                onJoin={() => handleJoinMeeting(event.meetLink!)}
+              />
+            ))
+          )}
         </div>
       </div>
     </MainLayout>

@@ -3,46 +3,93 @@ import { MainLayout } from '../../layouts/MainLayout';
 import { EventCard } from '../../components/common/EventCard';
 import { Search, Filter } from 'lucide-react';
 import { Button } from '../../components/common/Button';
+import { eventService, type Event } from '../../services/eventService';
+import { useAuth } from '../../contexts/AuthContext';
+import { toast } from 'react-hot-toast';
 
 export function EventsPage() {
-  const [category, setCategory] = React.useState('all');
-  
-  const events = [
-    {
-      id: '1',
-      title: 'Enterprise Sales Summit',
-      description: 'Join industry leaders for insights on enterprise sales strategies',
-      date: new Date('2024-04-25T14:00:00'),
-      maxParticipants: 50,
-      currentParticipants: 35,
-      category: 'sales',
-      meetLink: 'https://meet.google.com/abc-def-ghi'
-    },
-    {
-      id: '2',
-      title: 'Tech Sales Networking',
-      description: 'Connect with fellow tech sales professionals',
-      date: new Date('2024-04-28T15:00:00'),
-      maxParticipants: 30,
-      currentParticipants: 20,
-      category: 'networking',
-      meetLink: 'https://meet.google.com/jkl-mno-pqr'
-    },
-    {
-      id: '3',
-      title: 'Sales Leadership Workshop',
-      description: 'Develop your sales leadership skills',
-      date: new Date('2024-05-02T16:00:00'),
-      maxParticipants: 25,
-      currentParticipants: 15,
-      category: 'workshop',
-      meetLink: 'https://meet.google.com/stu-vwx-yz'
-    }
-  ];
+  const { user } = useAuth();
+  const [events, setEvents] = React.useState<Event[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [registeredEvents, setRegisteredEvents] = React.useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = React.useState('');
 
-  const filteredEvents = category === 'all' 
-    ? events 
-    : events.filter(event => event.category === category);
+  React.useEffect(() => {
+    loadEvents();
+    if (user) {
+      loadUserRegistrations();
+    }
+  }, [user]);
+
+  const loadEvents = async () => {
+    try {
+      const eventsData = await eventService.getEvents();
+      // Filter to show only upcoming events
+      const upcomingEvents = eventsData.filter(event => event.date > new Date());
+      setEvents(upcomingEvents);
+    } catch (error) {
+      console.error('Failed to load events:', error);
+      toast.error('Failed to load events');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadUserRegistrations = async () => {
+    if (!user) return;
+    
+    try {
+      const registrations = await eventService.getUserRegistrations(user.id);
+      setRegisteredEvents(registrations.map(reg => reg.eventId));
+    } catch (error) {
+      console.error('Failed to load user registrations:', error);
+    }
+  };
+
+  const handleRegister = async (eventId: string) => {
+    if (!user) {
+      toast.error('Please log in to register for events');
+      return;
+    }
+
+    if (user.subscription.eventsUsed >= user.subscription.eventsQuota) {
+      toast.error('You have reached your event quota. Please upgrade your subscription.');
+      return;
+    }
+
+    try {
+      await eventService.registerForEvent(user.id, eventId);
+      setRegisteredEvents(prev => [...prev, eventId]);
+      await loadEvents(); // Reload to update participant counts
+      toast.success('Successfully registered for event!');
+    } catch (error) {
+      console.error('Failed to register for event:', error);
+      toast.error('Failed to register for event. Please try again.');
+    }
+  };
+
+  const handleJoinMeeting = (meetLink: string) => {
+    if (meetLink) {
+      window.open(meetLink, '_blank', 'noopener,noreferrer');
+    } else {
+      toast.error('Meeting link not available');
+    }
+  };
+
+  const filteredEvents = events.filter(event =>
+    event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    event.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg text-gray-600">Loading events...</div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -60,40 +107,55 @@ export function EventsPage() {
           <input
             type="text"
             placeholder="Search events..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 pr-4 py-2 w-full rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
 
-        <div className="flex space-x-2 overflow-x-auto pb-2">
-          {['all', 'sales', 'networking', 'workshop'].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setCategory(cat)}
-              className={`px-4 py-2 rounded-full text-sm font-medium ${
-                category === cat
-                  ? 'bg-indigo-100 text-indigo-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {cat.charAt(0).toUpperCase() + cat.slice(1)}
-            </button>
-          ))}
-        </div>
+        {user && (
+          <div className="bg-indigo-50 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-indigo-900">Your Event Quota</h3>
+                <p className="text-sm text-indigo-700">
+                  {user.subscription.eventsQuota - user.subscription.eventsUsed} events remaining this month
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-semibold text-indigo-900">
+                  {user.subscription.eventsUsed} / {user.subscription.eventsQuota}
+                </div>
+                <div className="text-sm text-indigo-600">Events Used</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.map((event) => (
-            <EventCard
-              key={event.id}
-              title={event.title}
-              description={event.description}
-              date={event.date}
-              maxParticipants={event.maxParticipants}
-              currentParticipants={event.currentParticipants}
-              meetLink={event.meetLink}
-              isRegistered={false}
-              onRegister={() => {}}
-            />
-          ))}
+          {filteredEvents.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <h3 className="text-lg font-medium text-gray-900">No events found</h3>
+              <p className="text-gray-500 mt-2">
+                {searchTerm ? 'Try adjusting your search terms' : 'Check back later for new events'}
+              </p>
+            </div>
+          ) : (
+            filteredEvents.map((event) => (
+              <EventCard
+                key={event.id}
+                title={event.title}
+                description={event.description}
+                date={event.date}
+                maxParticipants={event.maxParticipants}
+                currentParticipants={event.currentParticipants}
+                meetLink={event.meetLink}
+                isRegistered={registeredEvents.includes(event.id!)}
+                onRegister={() => handleRegister(event.id!)}
+                onJoin={() => handleJoinMeeting(event.meetLink!)}
+              />
+            ))
+          )}
         </div>
       </div>
     </MainLayout>
