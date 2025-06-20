@@ -6,10 +6,12 @@ import { z } from 'zod';
 import { MainLayout } from '../../layouts/MainLayout';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/common/Button';
-import { MessageSquare, UserPlus, Users, Briefcase, MapPin, Calendar, Edit3, Save, X, Camera } from 'lucide-react';
+import { MessageSquare, UserPlus, Users, Briefcase, MapPin, Calendar, Edit3, Save, X, Camera, Mail, Phone, Globe, Linkedin } from 'lucide-react';
 import { messageService } from '../../services/messageService';
-import { connectionService } from '../../services/connectionService';
+import { networkService, type NetworkProfile } from '../../services/networkService';
 import { toast } from 'react-hot-toast';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../config/firebase';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -30,8 +32,10 @@ export function ProfilePage() {
   const { user, updateUserProfile } = useAuth();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = React.useState(false);
-  const [profileData, setProfileData] = React.useState(user);
+  const [profileData, setProfileData] = React.useState<NetworkProfile | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isConnected, setIsConnected] = React.useState(false);
+  const [loadingProfile, setLoadingProfile] = React.useState(true);
   const isOwnProfile = !userId || userId === user?.id;
 
   const {
@@ -56,7 +60,7 @@ export function ProfilePage() {
   });
 
   React.useEffect(() => {
-    if (user && isOwnProfile) {
+    if (isOwnProfile && user) {
       reset({
         name: user.name || '',
         title: user.profile?.title || '',
@@ -68,11 +72,63 @@ export function ProfilePage() {
         linkedin: user.profile?.linkedin || '',
         skills: user.profile?.skills?.join(', ') || '',
       });
+      setLoadingProfile(false);
+    } else if (userId && user) {
+      loadUserProfile(userId);
     }
-  }, [user, isOwnProfile, reset]);
+  }, [user, userId, isOwnProfile, reset]);
+
+  const loadUserProfile = async (targetUserId: string) => {
+    try {
+      setLoadingProfile(true);
+      
+      // Get user profile data
+      const userRef = doc(db, 'users', targetUserId);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const profile: NetworkProfile = {
+          id: userDoc.id,
+          name: userData.name || '',
+          email: userData.email || '',
+          role: userData.role || 'user',
+          profile_title: userData.profile?.title || '',
+          profile_company: userData.profile?.company || '',
+          profile_location: userData.profile?.location || '',
+          profile_about: userData.profile?.about || '',
+          profile_skills: userData.profile?.skills || [],
+          photo_url: userData.photoURL || '',
+          connections: userData.connections || []
+        };
+        
+        setProfileData(profile);
+        
+        // Check if current user is connected to this profile
+        if (user) {
+          const userConnections = await networkService.getUserConnections(user.id);
+          setIsConnected(userConnections.includes(targetUserId));
+        }
+      } else {
+        toast.error('User profile not found');
+        navigate('/network');
+      }
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+      toast.error('Failed to load profile');
+      navigate('/network');
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
 
   const handleMessage = async () => {
     if (!user || !userId) return;
+    
+    if (!isConnected) {
+      toast.error('You can only message your connections');
+      return;
+    }
     
     try {
       await messageService.sendMessage(user.id, userId, '👋 Hi there!');
@@ -87,7 +143,8 @@ export function ProfilePage() {
     if (!user || !userId) return;
 
     try {
-      await connectionService.addConnection(user.id, userId);
+      await networkService.addConnection(user.id, userId);
+      setIsConnected(true);
       toast.success('Connection added successfully!');
     } catch (error) {
       console.error('Error adding connection:', error);
@@ -125,6 +182,16 @@ export function ProfilePage() {
     toast.info('Photo upload feature coming soon!');
   };
 
+  if (loadingProfile) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg text-gray-600">Loading profile...</div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   const currentUser = isOwnProfile ? user : profileData;
 
   return (
@@ -139,9 +206,9 @@ export function ProfilePage() {
           <div className="relative px-6 pb-6">
             <div className="flex flex-col sm:flex-row sm:items-end sm:space-x-6 -mt-16">
               <div className="relative">
-                {currentUser?.photoURL ? (
+                {currentUser?.photoURL || currentUser?.photo_url ? (
                   <img
-                    src={currentUser.photoURL}
+                    src={currentUser.photoURL || currentUser.photo_url}
                     alt={currentUser.name}
                     className="h-32 w-32 rounded-full border-4 border-white shadow-lg object-cover"
                   />
@@ -167,25 +234,37 @@ export function ProfilePage() {
                       {isEditing ? watch('name') : currentUser?.name}
                     </h1>
                     <p className="text-lg text-gray-600">
-                      {isEditing ? watch('title') : currentUser?.profile?.title || 'Sales Professional'}
+                      {isEditing ? watch('title') : (currentUser?.profile?.title || currentUser?.profile_title || 'Sales Professional')}
                     </p>
                     <p className="text-sm text-gray-500 flex items-center mt-1">
                       <Briefcase className="w-4 h-4 mr-1" />
-                      {isEditing ? watch('company') : currentUser?.profile?.company || 'Company'}
+                      {isEditing ? watch('company') : (currentUser?.profile?.company || currentUser?.profile_company || 'Company')}
                     </p>
                   </div>
                   
                   <div className="mt-4 sm:mt-0 flex space-x-3">
                     {!isOwnProfile ? (
                       <>
-                        <Button variant="outline" onClick={handleMessage}>
+                        <Button 
+                          variant="outline" 
+                          onClick={handleMessage}
+                          disabled={!isConnected}
+                          title={!isConnected ? 'Connect first to send messages' : 'Send message'}
+                        >
                           <MessageSquare className="w-4 h-4 mr-2" />
                           Message
                         </Button>
-                        <Button onClick={handleConnect}>
-                          <UserPlus className="w-4 h-4 mr-2" />
-                          Connect
-                        </Button>
+                        {!isConnected ? (
+                          <Button onClick={handleConnect}>
+                            <UserPlus className="w-4 h-4 mr-2" />
+                            Connect
+                          </Button>
+                        ) : (
+                          <Button variant="outline" disabled>
+                            <Users className="w-4 h-4 mr-2" />
+                            Connected
+                          </Button>
+                        )}
                       </>
                     ) : (
                       <>
@@ -361,7 +440,7 @@ export function ProfilePage() {
                     <div>
                       <h3 className="text-lg font-medium text-gray-900 mb-3">About</h3>
                       <p className="text-gray-700 leading-relaxed">
-                        {currentUser?.profile?.about || 
+                        {currentUser?.profile?.about || currentUser?.profile_about || 
                           'Experienced sales professional with a proven track record in enterprise software sales. Passionate about building long-term client relationships and delivering value-driven solutions.'}
                       </p>
                     </div>
@@ -369,7 +448,7 @@ export function ProfilePage() {
                     <div>
                       <h3 className="text-lg font-medium text-gray-900 mb-3">Skills</h3>
                       <div className="flex flex-wrap gap-2">
-                        {(currentUser?.profile?.skills || ['Enterprise Sales', 'SaaS', 'Lead Generation', 'CRM']).map((skill, index) => (
+                        {(currentUser?.profile?.skills || currentUser?.profile_skills || ['Enterprise Sales', 'SaaS', 'Lead Generation', 'CRM']).map((skill, index) => (
                           <span
                             key={index}
                             className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800"
@@ -379,6 +458,18 @@ export function ProfilePage() {
                         ))}
                       </div>
                     </div>
+
+                    {!isOwnProfile && isConnected && (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="flex items-center">
+                          <Users className="w-5 h-5 text-green-600 mr-2" />
+                          <span className="text-green-800 font-medium">You're connected</span>
+                        </div>
+                        <p className="text-green-700 text-sm mt-1">
+                          You can now send messages and view full contact information
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-6">
@@ -388,7 +479,7 @@ export function ProfilePage() {
                         <div className="flex items-center">
                           <MapPin className="w-4 h-4 text-gray-400 mr-3" />
                           <span className="text-sm text-gray-900">
-                            {currentUser?.profile?.location || 'San Francisco, CA'}
+                            {currentUser?.profile?.location || currentUser?.profile_location || 'San Francisco, CA'}
                           </span>
                         </div>
                         <div className="flex items-center">
@@ -405,38 +496,63 @@ export function ProfilePage() {
                             {currentUser?.connections?.length || 150}+ connections
                           </span>
                         </div>
-                        {currentUser?.profile?.phone && (
-                          <div className="flex items-center">
-                            <span className="w-4 h-4 text-gray-400 mr-3">📞</span>
-                            <span className="text-sm text-gray-900">
-                              {currentUser.profile.phone}
-                            </span>
-                          </div>
+                        
+                        {/* Show contact details only to connections or own profile */}
+                        {(isOwnProfile || isConnected) && (
+                          <>
+                            {currentUser?.profile?.phone && (
+                              <div className="flex items-center">
+                                <Phone className="w-4 h-4 text-gray-400 mr-3" />
+                                <span className="text-sm text-gray-900">
+                                  {currentUser.profile.phone}
+                                </span>
+                              </div>
+                            )}
+                            {currentUser?.email && (
+                              <div className="flex items-center">
+                                <Mail className="w-4 h-4 text-gray-400 mr-3" />
+                                <a
+                                  href={`mailto:${currentUser.email}`}
+                                  className="text-sm text-indigo-600 hover:text-indigo-500"
+                                >
+                                  {currentUser.email}
+                                </a>
+                              </div>
+                            )}
+                            {currentUser?.profile?.website && (
+                              <div className="flex items-center">
+                                <Globe className="w-4 h-4 text-gray-400 mr-3" />
+                                <a
+                                  href={currentUser.profile.website}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm text-indigo-600 hover:text-indigo-500"
+                                >
+                                  Visit Website
+                                </a>
+                              </div>
+                            )}
+                            {currentUser?.profile?.linkedin && (
+                              <div className="flex items-center">
+                                <Linkedin className="w-4 h-4 text-gray-400 mr-3" />
+                                <a
+                                  href={currentUser.profile.linkedin}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm text-indigo-600 hover:text-indigo-500"
+                                >
+                                  LinkedIn Profile
+                                </a>
+                              </div>
+                            )}
+                          </>
                         )}
-                        {currentUser?.profile?.website && (
-                          <div className="flex items-center">
-                            <span className="w-4 h-4 text-gray-400 mr-3">🌐</span>
-                            <a
-                              href={currentUser.profile.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-indigo-600 hover:text-indigo-500"
-                            >
-                              Visit Website
-                            </a>
-                          </div>
-                        )}
-                        {currentUser?.profile?.linkedin && (
-                          <div className="flex items-center">
-                            <span className="w-4 h-4 text-gray-400 mr-3">💼</span>
-                            <a
-                              href={currentUser.profile.linkedin}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-indigo-600 hover:text-indigo-500"
-                            >
-                              LinkedIn Profile
-                            </a>
+                        
+                        {!isOwnProfile && !isConnected && (
+                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                            <p className="text-sm text-gray-600">
+                              Connect to view contact information
+                            </p>
                           </div>
                         )}
                       </dl>

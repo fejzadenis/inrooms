@@ -1,5 +1,3 @@
-import { User } from './user';
-
 export interface Message {
   id: string;
   senderId: string;
@@ -7,6 +5,7 @@ export interface Message {
   content: string;
   timestamp: Date;
   read: boolean;
+  chatId: string;
 }
 
 export interface Chat {

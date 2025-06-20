@@ -95,6 +95,7 @@ export const messageService = {
             ...chatData,
             updatedAt: chatData.updatedAt?.toDate() || new Date(),
             lastMessage: lastMessage ? {
+              id: messagesSnapshot.docs[0].id,
               ...lastMessage,
               timestamp: lastMessage.timestamp?.toDate() || new Date(),
             } : undefined,
@@ -104,4 +105,17 @@ export const messageService = {
       callback(chats as Chat[]);
     });
   },
+
+  // Check if two users can message each other (are connected)
+  async canMessage(userId: string, targetUserId: string): Promise<boolean> {
+    try {
+      // Import here to avoid circular dependency
+      const { networkService } = await import('./networkService');
+      const connections = await networkService.getUserConnections(userId);
+      return connections.includes(targetUserId);
+    } catch (error) {
+      console.error('Error checking message permissions:', error);
+      return false;
+    }
+  }
 };
