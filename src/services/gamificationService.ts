@@ -1,4 +1,4 @@
-import { doc, updateDoc, increment, arrayUnion } from 'firebase/firestore';
+import { doc, updateDoc, increment, arrayUnion, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type { Badge } from '../types/user';
 
@@ -58,7 +58,30 @@ export const gamificationService = {
   },
 
   async checkAndAwardBadges(userId: string): Promise<void> {
-    // Implement badge checking logic based on user activities
-    // This would be called after relevant actions to check if any new badges should be awarded
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (!userDoc.exists()) return;
+      
+      const userData = userDoc.data();
+      const connections = userData.connections || [];
+      const eventsUsed = userData.subscription?.eventsUsed || 0;
+      const currentBadges = userData.profile?.badges || [];
+      const currentBadgeIds = currentBadges.map((badge: Badge) => badge.id);
+
+      // Check for networking starter badge
+      if (connections.length >= 1 && !currentBadgeIds.includes('networking_starter')) {
+        await this.awardBadge(userId, 'NETWORKING_STARTER');
+      }
+
+      // Check for event enthusiast badge
+      if (eventsUsed >= 5 && !currentBadgeIds.includes('event_enthusiast')) {
+        await this.awardBadge(userId, 'EVENT_ENTHUSIAST');
+      }
+    } catch (error) {
+      console.error('Error checking and awarding badges:', error);
+      throw error;
+    }
   }
 };

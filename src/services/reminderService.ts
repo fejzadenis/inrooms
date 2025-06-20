@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { toast } from 'react-hot-toast';
 
@@ -9,8 +9,8 @@ export const reminderService = {
       await addDoc(remindersRef, {
         userId,
         type: 'linkedin_connection',
-        createdAt: Timestamp.now(),
-        scheduledFor: Timestamp.fromDate(new Date(new Date().setHours(9, 0, 0, 0))), // 9 AM next day
+        createdAt: serverTimestamp(),
+        scheduledFor: new Date(new Date().setHours(9, 0, 0, 0)), // 9 AM next day
         status: 'pending'
       });
     } catch (error) {

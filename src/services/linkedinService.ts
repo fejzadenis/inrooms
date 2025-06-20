@@ -1,4 +1,4 @@
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 const LINKEDIN_API_URL = 'https://api.linkedin.com/v2';
@@ -29,8 +29,10 @@ export const linkedinService = {
           id: profileData.id,
           email: emailData.elements[0]['handle~'].emailAddress,
           connected: true,
-          lastSync: new Date(),
+          lastSync: serverTimestamp(),
+          accessToken: accessToken, // Store for future API calls
         },
+        updatedAt: serverTimestamp(),
       });
 
       return profileData;
@@ -55,7 +57,7 @@ export const linkedinService = {
       const userData = userDoc.data();
 
       const existingConnections = userData?.connections || [];
-      const linkedInConnections = connections.elements.map(conn => ({
+      const linkedInConnections = connections.elements.map((conn: any) => ({
         id: conn.id,
         name: `${conn.firstName} ${conn.lastName}`,
         title: conn.headline,
@@ -64,7 +66,8 @@ export const linkedinService = {
       }));
 
       await updateDoc(userRef, {
-        connections: [...existingConnections, ...linkedInConnections]
+        connections: [...existingConnections, ...linkedInConnections],
+        updatedAt: serverTimestamp(),
       });
 
       return linkedInConnections;
@@ -88,7 +91,8 @@ export const linkedinService = {
         'profile.title': profileData.headline,
         'profile.industry': profileData.industry,
         'profile.positions': profileData.positions.values,
-        'linkedinProfile.lastSync': new Date(),
+        'linkedinProfile.lastSync': serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
 
       return profileData;
