@@ -1,37 +1,22 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '../../layouts/MainLayout';
-import { Search, UserPlus, MessageSquare, Users } from 'lucide-react';
+import { Search, UserPlus, MessageSquare, Users, Filter, MapPin, Briefcase } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { messageService } from '../../services/messageService';
-import { connectionService } from '../../services/connectionService';
-import { recommendationService } from '../../services/recommendationService';
+import { networkService, type NetworkProfile } from '../../services/networkService';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../../config/firebase';
-
-interface NetworkUser {
-  id: string;
-  name: string;
-  email: string;
-  role?: string;
-  profile?: {
-    title?: string;
-    company?: string;
-    location?: string;
-  };
-  photoURL?: string;
-}
 
 export function NetworkPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [connections, setConnections] = React.useState<NetworkUser[]>([]);
-  const [recommendations, setRecommendations] = React.useState<NetworkUser[]>([]);
+  const [connections, setConnections] = React.useState<NetworkProfile[]>([]);
+  const [recommendations, setRecommendations] = React.useState<NetworkProfile[]>([]);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [loading, setLoading] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState<'connections' | 'discover'>('connections');
+  const [connectionIds, setConnectionIds] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     if (user) {
@@ -45,46 +30,20 @@ export function NetworkPage() {
     try {
       setLoading(true);
       
-      // Load user's connections
-      const connectionIds = await connectionService.getUserConnections(user.id);
+      // Load user's connection IDs
+      const userConnectionIds = await networkService.getUserConnections(user.id);
+      setConnectionIds(userConnectionIds);
       
-      if (connectionIds.length > 0) {
-        // Get connection user data
-        const usersRef = collection(db, 'users');
-        const connectionsData: NetworkUser[] = [];
-        
-        // Fetch connection details in batches (Firestore has a limit of 10 for 'in' queries)
-        for (let i = 0; i < connectionIds.length; i += 10) {
-          const batch = connectionIds.slice(i, i + 10);
-          const q = query(usersRef, where('__name__', 'in', batch));
-          const snapshot = await getDocs(q);
-          
-          snapshot.docs.forEach(doc => {
-            const userData = doc.data();
-            connectionsData.push({
-              id: doc.id,
-              name: userData.name,
-              email: userData.email,
-              role: userData.role,
-              profile: userData.profile,
-              photoURL: userData.photoURL,
-            });
-          });
-        }
-        
-        setConnections(connectionsData);
-      }
-
-      // Load recommendations
-      const userSkills = user.profile?.skills || [];
-      const recommendedUsers = await recommendationService.getConnectionRecommendations(user.id, userSkills);
+      // Load all network users
+      const allUsers = await networkService.getNetworkUsers(user.id);
       
-      // Filter out already connected users
-      const filteredRecommendations = recommendedUsers.filter(
-        recUser => !connectionIds.includes(recUser.id)
-      );
+      // Separate connections from recommendations
+      const userConnections = allUsers.filter(u => userConnectionIds.includes(u.id));
+      const userRecommendations = allUsers.filter(u => !userConnectionIds.includes(u.id));
       
-      setRecommendations(filteredRecommendations.slice(0, 10));
+      setConnections(userConnections);
+      setRecommendations(userRecommendations.slice(0, 20)); // Limit recommendations
+      
     } catch (error) {
       console.error('Failed to load network data:', error);
       toast.error('Failed to load network data');
@@ -110,24 +69,52 @@ export function NetworkPage() {
     navigate(`/profile/${connectionId}`);
   };
 
-  const handleConnect = async (connectionId: string) => {
+  const handleConnect = async (targetUserId: string) => {
     if (!user) return;
 
     try {
-      await connectionService.addConnection(user.id, connectionId);
+      await networkService.addConnection(user.id, targetUserId);
       toast.success('Connection added successfully!');
       
       // Move user from recommendations to connections
-      const connectedUser = recommendations.find(rec => rec.id === connectionId);
+      const connectedUser = recommendations.find(rec => rec.id === targetUserId);
       if (connectedUser) {
         setConnections(prev => [...prev, connectedUser]);
-        setRecommendations(prev => prev.filter(rec => rec.id !== connectionId));
+        setRecommendations(prev => prev.filter(rec => rec.id !== targetUserId));
+        setConnectionIds(prev => [...prev, targetUserId]);
       }
     } catch (error) {
       console.error('Error adding connection:', error);
       toast.error('Failed to add connection. Please try again.');
     }
   };
+
+  const handleSearch = async () => {
+    if (!user || !searchTerm.trim()) return;
+
+    try {
+      const searchResults = await networkService.searchUsers(searchTerm.trim(), user.id);
+      if (activeTab === 'connections') {
+        const filteredConnections = searchResults.filter(u => connectionIds.includes(u.id));
+        setConnections(filteredConnections);
+      } else {
+        const filteredRecommendations = searchResults.filter(u => !connectionIds.includes(u.id));
+        setRecommendations(filteredRecommendations);
+      }
+    } catch (error) {
+      console.error('Error searching users:', error);
+      toast.error('Search failed. Please try again.');
+    }
+  };
+
+  React.useEffect(() => {
+    if (searchTerm) {
+      const debounceTimer = setTimeout(handleSearch, 500);
+      return () => clearTimeout(debounceTimer);
+    } else if (user) {
+      loadNetworkData();
+    }
+  }, [searchTerm, activeTab]);
 
   const filteredConnections = connections.filter(connection =>
     connection.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -155,8 +142,15 @@ export function NetworkPage() {
     <MainLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-gray-900">My Network</h1>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">My Network</h1>
+            <p className="text-gray-600 mt-2">Connect with tech sales professionals and grow your network</p>
+          </div>
           <div className="flex space-x-4">
+            <Button variant="outline">
+              <Filter className="w-4 h-4 mr-2" />
+              Filter
+            </Button>
             <Button variant="outline">
               <Users className="w-4 h-4 mr-2" />
               Groups
@@ -168,11 +162,42 @@ export function NetworkPage() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
           <input
             type="text"
-            placeholder="Search network..."
+            placeholder="Search by name, company, title, or skills..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 w-full rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+            className="pl-10 pr-4 py-3 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm"
           />
+        </div>
+
+        {/* Network Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100">Total Connections</p>
+                <p className="text-3xl font-bold">{connections.length}</p>
+              </div>
+              <Users className="w-8 h-8 text-blue-200" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100">New This Month</p>
+                <p className="text-3xl font-bold">12</p>
+              </div>
+              <UserPlus className="w-8 h-8 text-green-200" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100">Messages Sent</p>
+                <p className="text-3xl font-bold">48</p>
+              </div>
+              <MessageSquare className="w-8 h-8 text-purple-200" />
+            </div>
+          </div>
         </div>
 
         {/* Tab Navigation */}
@@ -205,7 +230,8 @@ export function NetworkPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {activeTab === 'connections' ? (
             filteredConnections.length === 0 ? (
-              <div className="col-span-full text-center py-12">
+              <div className="col-span-full text-center py-12 bg-gray-50 rounded-lg">
+                <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900">
                   {searchTerm ? 'No connections found' : 'No connections yet'}
                 </h3>
@@ -214,11 +240,19 @@ export function NetworkPage() {
                     ? 'Try adjusting your search terms' 
                     : 'Start connecting with other professionals to build your network'}
                 </p>
+                {!searchTerm && (
+                  <Button 
+                    className="mt-4"
+                    onClick={() => setActiveTab('discover')}
+                  >
+                    Discover People
+                  </Button>
+                )}
               </div>
             ) : (
               filteredConnections.map((connection) => (
-                <div key={connection.id} className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex items-center space-x-4">
+                <div key={connection.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+                  <div className="flex items-start space-x-4">
                     {connection.photoURL ? (
                       <img
                         src={connection.photoURL}
@@ -230,12 +264,44 @@ export function NetworkPage() {
                         <Users className="h-8 w-8 text-indigo-600" />
                       </div>
                     )}
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">{connection.name}</h3>
-                      <p className="text-sm text-gray-500">{connection.profile?.title || 'Professional'}</p>
-                      <p className="text-sm text-gray-500">{connection.profile?.company || 'Company'}</p>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-semibold text-gray-900 truncate">{connection.name}</h3>
+                      <div className="flex items-center text-sm text-gray-500 mt-1">
+                        <Briefcase className="w-4 h-4 mr-1" />
+                        <span className="truncate">{connection.profile?.title || 'Professional'}</span>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500 mt-1">
+                        <span className="truncate">{connection.profile?.company || 'Company'}</span>
+                      </div>
+                      {connection.profile?.location && (
+                        <div className="flex items-center text-sm text-gray-500 mt-1">
+                          <MapPin className="w-4 h-4 mr-1" />
+                          <span className="truncate">{connection.profile.location}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
+                  
+                  {connection.profile?.skills && connection.profile.skills.length > 0 && (
+                    <div className="mt-4">
+                      <div className="flex flex-wrap gap-1">
+                        {connection.profile.skills.slice(0, 3).map((skill, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                        {connection.profile.skills.length > 3 && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            +{connection.profile.skills.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="mt-4 flex space-x-3">
                     <Button 
                       variant="outline" 
@@ -257,7 +323,8 @@ export function NetworkPage() {
             )
           ) : (
             filteredRecommendations.length === 0 ? (
-              <div className="col-span-full text-center py-12">
+              <div className="col-span-full text-center py-12 bg-gray-50 rounded-lg">
+                <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900">
                   {searchTerm ? 'No people found' : 'No recommendations available'}
                 </h3>
@@ -266,11 +333,19 @@ export function NetworkPage() {
                     ? 'Try adjusting your search terms' 
                     : 'Complete your profile to get better recommendations'}
                 </p>
+                {!searchTerm && (
+                  <Button 
+                    className="mt-4"
+                    onClick={() => navigate('/profile')}
+                  >
+                    Complete Profile
+                  </Button>
+                )}
               </div>
             ) : (
               filteredRecommendations.map((person) => (
-                <div key={person.id} className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex items-center space-x-4">
+                <div key={person.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+                  <div className="flex items-start space-x-4">
                     {person.photoURL ? (
                       <img
                         src={person.photoURL}
@@ -282,12 +357,44 @@ export function NetworkPage() {
                         <Users className="h-8 w-8 text-gray-400" />
                       </div>
                     )}
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">{person.name}</h3>
-                      <p className="text-sm text-gray-500">{person.profile?.title || 'Professional'}</p>
-                      <p className="text-sm text-gray-500">{person.profile?.company || 'Company'}</p>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-semibold text-gray-900 truncate">{person.name}</h3>
+                      <div className="flex items-center text-sm text-gray-500 mt-1">
+                        <Briefcase className="w-4 h-4 mr-1" />
+                        <span className="truncate">{person.profile?.title || 'Professional'}</span>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500 mt-1">
+                        <span className="truncate">{person.profile?.company || 'Company'}</span>
+                      </div>
+                      {person.profile?.location && (
+                        <div className="flex items-center text-sm text-gray-500 mt-1">
+                          <MapPin className="w-4 h-4 mr-1" />
+                          <span className="truncate">{person.profile.location}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
+                  
+                  {person.profile?.skills && person.profile.skills.length > 0 && (
+                    <div className="mt-4">
+                      <div className="flex flex-wrap gap-1">
+                        {person.profile.skills.slice(0, 3).map((skill, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                        {person.profile.skills.length > 3 && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            +{person.profile.skills.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="mt-4 flex space-x-3">
                     <Button 
                       variant="outline" 
