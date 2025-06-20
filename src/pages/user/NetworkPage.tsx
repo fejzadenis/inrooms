@@ -118,14 +118,14 @@ export function NetworkPage() {
 
   const filteredConnections = connections.filter(connection =>
     connection.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    connection.profile?.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    connection.profile?.title?.toLowerCase().includes(searchTerm.toLowerCase())
+    connection.profile_company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    connection.profile_title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredRecommendations = recommendations.filter(rec =>
     rec.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    rec.profile?.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    rec.profile?.title?.toLowerCase().includes(searchTerm.toLowerCase())
+    rec.profile_company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    rec.profile_title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -253,9 +253,9 @@ export function NetworkPage() {
               filteredConnections.map((connection) => (
                 <div key={connection.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
                   <div className="flex items-start space-x-4">
-                    {connection.photoURL ? (
+                    {connection.photo_url ? (
                       <img
-                        src={connection.photoURL}
+                        src={connection.photo_url}
                         alt={connection.name}
                         className="h-16 w-16 rounded-full object-cover"
                       />
@@ -268,24 +268,24 @@ export function NetworkPage() {
                       <h3 className="text-lg font-semibold text-gray-900 truncate">{connection.name}</h3>
                       <div className="flex items-center text-sm text-gray-500 mt-1">
                         <Briefcase className="w-4 h-4 mr-1" />
-                        <span className="truncate">{connection.profile?.title || 'Professional'}</span>
+                        <span className="truncate">{connection.profile_title || 'Professional'}</span>
                       </div>
                       <div className="flex items-center text-sm text-gray-500 mt-1">
-                        <span className="truncate">{connection.profile?.company || 'Company'}</span>
+                        <span className="truncate">{connection.profile_company || 'Company'}</span>
                       </div>
-                      {connection.profile?.location && (
+                      {connection.profile_location && (
                         <div className="flex items-center text-sm text-gray-500 mt-1">
                           <MapPin className="w-4 h-4 mr-1" />
-                          <span className="truncate">{connection.profile.location}</span>
+                          <span className="truncate">{connection.profile_location}</span>
                         </div>
                       )}
                     </div>
                   </div>
                   
-                  {connection.profile?.skills && connection.profile.skills.length > 0 && (
+                  {connection.profile_skills && connection.profile_skills.length > 0 && (
                     <div className="mt-4">
                       <div className="flex flex-wrap gap-1">
-                        {connection.profile.skills.slice(0, 3).map((skill, index) => (
+                        {connection.profile_skills.slice(0, 3).map((skill, index) => (
                           <span
                             key={index}
                             className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
@@ -293,9 +293,9 @@ export function NetworkPage() {
                             {skill}
                           </span>
                         ))}
-                        {connection.profile.skills.length > 3 && (
+                        {connection.profile_skills.length > 3 && (
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            +{connection.profile.skills.length - 3} more
+                            +{connection.profile_skills.length - 3} more
                           </span>
                         )}
                       </div>
@@ -346,9 +346,9 @@ export function NetworkPage() {
               filteredRecommendations.map((person) => (
                 <div key={person.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
                   <div className="flex items-start space-x-4">
-                    {person.photoURL ? (
+                    {person.photo_url ? (
                       <img
-                        src={person.photoURL}
+                        src={person.photo_url}
                         alt={person.name}
                         className="h-16 w-16 rounded-full object-cover"
                       />
@@ -361,24 +361,24 @@ export function NetworkPage() {
                       <h3 className="text-lg font-semibold text-gray-900 truncate">{person.name}</h3>
                       <div className="flex items-center text-sm text-gray-500 mt-1">
                         <Briefcase className="w-4 h-4 mr-1" />
-                        <span className="truncate">{person.profile?.title || 'Professional'}</span>
+                        <span className="truncate">{person.profile_title || 'Professional'}</span>
                       </div>
                       <div className="flex items-center text-sm text-gray-500 mt-1">
-                        <span className="truncate">{person.profile?.company || 'Company'}</span>
+                        <span className="truncate">{person.profile_company || 'Company'}</span>
                       </div>
-                      {person.profile?.location && (
+                      {person.profile_location && (
                         <div className="flex items-center text-sm text-gray-500 mt-1">
                           <MapPin className="w-4 h-4 mr-1" />
-                          <span className="truncate">{person.profile.location}</span>
+                          <span className="truncate">{person.profile_location}</span>
                         </div>
                       )}
                     </div>
                   </div>
                   
-                  {person.profile?.skills && person.profile.skills.length > 0 && (
+                  {person.profile_skills && person.profile_skills.length > 0 && (
                     <div className="mt-4">
                       <div className="flex flex-wrap gap-1">
-                        {person.profile.skills.slice(0, 3).map((skill, index) => (
+                        {person.profile_skills.slice(0, 3).map((skill, index) => (
                           <span
                             key={index}
                             className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
@@ -386,9 +386,9 @@ export function NetworkPage() {
                             {skill}
                           </span>
                         ))}
-                        {person.profile.skills.length > 3 && (
+                        {person.profile_skills.length > 3 && (
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            +{person.profile.skills.length - 3} more
+                            +{person.profile_skills.length - 3} more
                           </span>
                         )}
                       </div>

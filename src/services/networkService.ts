@@ -5,12 +5,10 @@ import {
   getDocs, 
   doc, 
   getDoc, 
-  setDoc, 
-  deleteDoc,
-  addDoc,
-  serverTimestamp,
-  limit,
-  orderBy
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+  limit
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
@@ -19,24 +17,13 @@ export interface NetworkProfile {
   name: string;
   email: string;
   role?: string;
-  profile?: {
-    title?: string;
-    company?: string;
-    location?: string;
-    skills?: string[];
-    about?: string;
-  };
-  photoURL?: string;
+  profile_title?: string;
+  profile_company?: string;
+  profile_location?: string;
+  profile_about?: string;
+  profile_skills?: string[];
+  photo_url?: string;
   connections?: string[];
-}
-
-export interface Connection {
-  id?: string;
-  userId: string;
-  connectedUserId: string;
-  status: 'pending' | 'accepted' | 'declined';
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export const networkService = {
@@ -47,15 +34,27 @@ export const networkService = {
       const q = query(
         usersRef,
         where('role', '==', 'user'),
-        limit(50)
+        limit(100)
       );
 
       const snapshot = await getDocs(q);
       const users = snapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as NetworkProfile))
+        .map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name || '',
+            email: data.email || '',
+            role: data.role || 'user',
+            profile_title: data.profile_title || '',
+            profile_company: data.profile_company || '',
+            profile_location: data.profile_location || '',
+            profile_about: data.profile_about || '',
+            profile_skills: data.profile_skills || [],
+            photo_url: data.photo_url || '',
+            connections: data.connections || []
+          } as NetworkProfile;
+        })
         .filter(user => user.id !== currentUserId);
 
       return users;
@@ -84,37 +83,18 @@ export const networkService = {
   // Add a connection
   async addConnection(userId: string, targetUserId: string): Promise<void> {
     try {
-      // Add connection record
-      await addDoc(collection(db, 'connections'), {
-        userId,
-        connectedUserId: targetUserId,
-        status: 'accepted', // For now, auto-accept connections
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-
-      // Update both users' connections arrays
       const userRef = doc(db, 'users', userId);
       const targetUserRef = doc(db, 'users', targetUserId);
 
-      // Get current connections
-      const userDoc = await getDoc(userRef);
-      const targetUserDoc = await getDoc(targetUserRef);
-
-      const userConnections = userDoc.exists() ? (userDoc.data().connections || []) : [];
-      const targetUserConnections = targetUserDoc.exists() ? (targetUserDoc.data().connections || []) : [];
-
-      // Add to connections if not already connected
-      if (!userConnections.includes(targetUserId)) {
-        userConnections.push(targetUserId);
-      }
-      if (!targetUserConnections.includes(userId)) {
-        targetUserConnections.push(userId);
-      }
-
-      // Update both users
-      await setDoc(userRef, { connections: userConnections }, { merge: true });
-      await setDoc(targetUserRef, { connections: targetUserConnections }, { merge: true });
+      // Add to both users' connections arrays
+      await Promise.all([
+        updateDoc(userRef, {
+          connections: arrayUnion(targetUserId)
+        }),
+        updateDoc(targetUserRef, {
+          connections: arrayUnion(userId)
+        })
+      ]);
 
     } catch (error) {
       console.error('Error adding connection:', error);
@@ -125,98 +105,21 @@ export const networkService = {
   // Remove a connection
   async removeConnection(userId: string, targetUserId: string): Promise<void> {
     try {
-      // Remove from connections collection
-      const connectionsRef = collection(db, 'connections');
-      const q1 = query(
-        connectionsRef,
-        where('userId', '==', userId),
-        where('connectedUserId', '==', targetUserId)
-      );
-      const q2 = query(
-        connectionsRef,
-        where('userId', '==', targetUserId),
-        where('connectedUserId', '==', userId)
-      );
-
-      const [snapshot1, snapshot2] = await Promise.all([getDocs(q1), getDocs(q2)]);
-      
-      const deletePromises = [];
-      snapshot1.docs.forEach(doc => deletePromises.push(deleteDoc(doc.ref)));
-      snapshot2.docs.forEach(doc => deletePromises.push(deleteDoc(doc.ref)));
-      
-      await Promise.all(deletePromises);
-
-      // Update both users' connections arrays
       const userRef = doc(db, 'users', userId);
       const targetUserRef = doc(db, 'users', targetUserId);
 
-      const userDoc = await getDoc(userRef);
-      const targetUserDoc = await getDoc(targetUserRef);
-
-      if (userDoc.exists()) {
-        const userConnections = (userDoc.data().connections || []).filter((id: string) => id !== targetUserId);
-        await setDoc(userRef, { connections: userConnections }, { merge: true });
-      }
-
-      if (targetUserDoc.exists()) {
-        const targetUserConnections = (targetUserDoc.data().connections || []).filter((id: string) => id !== userId);
-        await setDoc(targetUserRef, { connections: targetUserConnections }, { merge: true });
-      }
+      // Remove from both users' connections arrays
+      await Promise.all([
+        updateDoc(userRef, {
+          connections: arrayRemove(targetUserId)
+        }),
+        updateDoc(targetUserRef, {
+          connections: arrayRemove(userId)
+        })
+      ]);
 
     } catch (error) {
       console.error('Error removing connection:', error);
-      throw error;
-    }
-  },
-
-  // Get connection recommendations based on skills
-  async getConnectionRecommendations(userId: string, userSkills: string[]): Promise<NetworkProfile[]> {
-    try {
-      const usersRef = collection(db, 'users');
-      let recommendations: NetworkProfile[] = [];
-
-      if (userSkills.length > 0) {
-        // Get users with similar skills
-        const q = query(
-          usersRef,
-          where('profile.skills', 'array-contains-any', userSkills),
-          limit(20)
-        );
-
-        const snapshot = await getDocs(q);
-        recommendations = snapshot.docs
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          } as NetworkProfile))
-          .filter(user => user.id !== userId);
-      }
-
-      // If not enough recommendations, get random users
-      if (recommendations.length < 10) {
-        const q = query(
-          usersRef,
-          where('role', '==', 'user'),
-          limit(20)
-        );
-
-        const snapshot = await getDocs(q);
-        const additionalUsers = snapshot.docs
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          } as NetworkProfile))
-          .filter(user => 
-            user.id !== userId && 
-            !recommendations.some(rec => rec.id === user.id)
-          );
-
-        recommendations = [...recommendations, ...additionalUsers].slice(0, 10);
-      }
-
-      return recommendations;
-    } catch (error) {
-      console.error('Error getting connection recommendations:', error);
       throw error;
     }
   },
@@ -229,19 +132,31 @@ export const networkService = {
 
       const snapshot = await getDocs(q);
       const users = snapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as NetworkProfile))
+        .map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name || '',
+            email: data.email || '',
+            role: data.role || 'user',
+            profile_title: data.profile_title || '',
+            profile_company: data.profile_company || '',
+            profile_location: data.profile_location || '',
+            profile_about: data.profile_about || '',
+            profile_skills: data.profile_skills || [],
+            photo_url: data.photo_url || '',
+            connections: data.connections || []
+          } as NetworkProfile;
+        })
         .filter(user => {
           if (user.id === currentUserId) return false;
           
           const searchLower = searchTerm.toLowerCase();
           return (
             user.name?.toLowerCase().includes(searchLower) ||
-            user.profile?.company?.toLowerCase().includes(searchLower) ||
-            user.profile?.title?.toLowerCase().includes(searchLower) ||
-            user.profile?.skills?.some(skill => skill.toLowerCase().includes(searchLower))
+            user.profile_company?.toLowerCase().includes(searchLower) ||
+            user.profile_title?.toLowerCase().includes(searchLower) ||
+            user.profile_skills?.some(skill => skill.toLowerCase().includes(searchLower))
           );
         });
 
