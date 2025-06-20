@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
 
     // Check for required environment variables
     const clientEmail = Deno.env.get('GOOGLE_CLIENT_EMAIL')
-    const privateKey = Deno.env.get('GOOGLE_PRIVATE_KEY')
+    let privateKey = Deno.env.get('GOOGLE_PRIVATE_KEY')
 
     if (!clientEmail || !privateKey) {
       console.error('Missing Google credentials:', { 
@@ -38,10 +38,24 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Properly format the private key
+    privateKey = privateKey
+      .trim()
+      .replace(/\\n/g, '\n')
+      .replace(/\s+/g, ' ')
+      .replace(/-----BEGIN PRIVATE KEY----- /g, '-----BEGIN PRIVATE KEY-----\n')
+      .replace(/ -----END PRIVATE KEY-----/g, '\n-----END PRIVATE KEY-----')
+      .replace(/([A-Za-z0-9+/=]{64})/g, '$1\n')
+      .replace(/\n\n/g, '\n')
+      .trim()
+
+    console.log('Private key first 50 chars:', privateKey.substring(0, 50))
+    console.log('Private key last 50 chars:', privateKey.substring(privateKey.length - 50))
+
     const auth = new google.auth.GoogleAuth({
       credentials: {
         client_email: clientEmail,
-        private_key: privateKey.trim().replace(/\\n/g, '\n'),
+        private_key: privateKey,
       },
       scopes: ['https://www.googleapis.com/auth/calendar'],
     })
