@@ -75,7 +75,7 @@ async function createOrUpdateUserProfile(firebaseUser: FirebaseUser, name?: stri
       email: firebaseUser.email || '',
       name: name || firebaseUser.displayName || existingData.name || '',
       role: isAdmin ? 'admin' : 'user',
-      photoURL: firebaseUser.photoURL || existingData.photoURL,
+      photoURL: firebaseUser.photoURL || existingData.photoURL || null,
       subscription: {
         status: isAdmin ? 'active' : (existingData.subscription?.status || 'inactive'),
         trialEndsAt: existingData.subscription?.trialEndsAt,
