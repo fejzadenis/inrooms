@@ -13,14 +13,14 @@ import { toast } from 'react-hot-toast';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  title: z.string().min(2, 'Job title is required'),
-  company: z.string().min(2, 'Company is required'),
-  location: z.string().min(2, 'Location is required'),
-  about: z.string().min(10, 'About section must be at least 10 characters'),
+  title: z.string().optional(),
+  company: z.string().optional(),
+  location: z.string().optional(),
+  about: z.string().optional(),
   phone: z.string().optional(),
   website: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   linkedin: z.string().url('Must be a valid LinkedIn URL').optional().or(z.literal('')),
-  skills: z.string().min(1, 'At least one skill is required'),
+  skills: z.string().optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -102,15 +102,14 @@ export function ProfilePage() {
     try {
       const updatedProfile = {
         ...data,
-        skills: data.skills.split(',').map(skill => skill.trim()).filter(Boolean),
+        skills: data.skills ? data.skills.split(',').map(skill => skill.trim()).filter(Boolean) : [],
       };
 
       await updateUserProfile(user.id, updatedProfile);
       setIsEditing(false);
-      toast.success('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Failed to update profile. Please try again.');
+      // Error handling is done in the updateUserProfile function
     } finally {
       setIsLoading(false);
     }

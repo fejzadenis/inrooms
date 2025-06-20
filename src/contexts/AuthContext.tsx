@@ -14,8 +14,7 @@ import {
   getDoc, 
   updateDoc, 
   serverTimestamp,
-  collection,
-  addDoc
+  onSnapshot
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import { toast } from 'react-hot-toast';
@@ -130,17 +129,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const userProfile = await createOrUpdateUserProfile(firebaseUser);
           setUser(userProfile);
+          
+          // Set up real-time listener for user data changes
+          const userRef = doc(db, 'users', firebaseUser.uid);
+          const unsubscribeUser = onSnapshot(userRef, (doc) => {
+            if (doc.exists()) {
+              const userData = doc.data();
+              setUser({
+                id: userData.id,
+                email: userData.email,
+                name: userData.name,
+                role: userData.role,
+                photoURL: userData.photoURL,
+                subscription: userData.subscription,
+                profile: {
+                  ...userData.profile,
+                  joinedAt: userData.profile?.joinedAt?.toDate?.() || userData.profile?.joinedAt || new Date(),
+                },
+                connections: userData.connections || [],
+              });
+            }
+          });
+          
+          // Store the unsubscribe function to clean up later
+          (window as any).unsubscribeUser = unsubscribeUser;
         } catch (error) {
           console.error('Error handling auth state change:', error);
           toast.error('Error loading user data');
         }
       } else {
         setUser(null);
+        // Clean up user data listener
+        if ((window as any).unsubscribeUser) {
+          (window as any).unsubscribeUser();
+          (window as any).unsubscribeUser = null;
+        }
       }
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if ((window as any).unsubscribeUser) {
+        (window as any).unsubscribeUser();
+        (window as any).unsubscribeUser = null;
+      }
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -216,17 +250,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updatedAt: serverTimestamp(),
       });
 
-      const updatedUser: UserProfile = {
-        ...user,
-        subscription: {
-          status: 'trial',
-          trialEndsAt,
-          eventsQuota: 2,
-          eventsUsed: 0,
-        }
-      };
-
-      setUser(updatedUser);
       toast.success('Free trial activated successfully!');
     } catch (error: any) {
       console.error('Failed to start trial:', error);
@@ -238,40 +261,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateUserProfile = async (userId: string, profileData: any) => {
     try {
       const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
+      
+      // Prepare the update data
+      const updateData = {
         name: profileData.name,
-        'profile.title': profileData.title,
-        'profile.company': profileData.company,
-        'profile.location': profileData.location,
-        'profile.about': profileData.about,
-        'profile.phone': profileData.phone,
-        'profile.website': profileData.website,
-        'profile.linkedin': profileData.linkedin,
-        'profile.skills': profileData.skills,
+        'profile.title': profileData.title || '',
+        'profile.company': profileData.company || '',
+        'profile.location': profileData.location || '',
+        'profile.about': profileData.about || '',
+        'profile.phone': profileData.phone || '',
+        'profile.website': profileData.website || '',
+        'profile.linkedin': profileData.linkedin || '',
+        'profile.skills': profileData.skills || [],
         updatedAt: serverTimestamp(),
-      });
+      };
 
-      // Update local user state
-      if (user && user.id === userId) {
-        const updatedUser = {
-          ...user,
-          name: profileData.name,
-          profile: {
-            ...user.profile,
-            title: profileData.title,
-            company: profileData.company,
-            location: profileData.location,
-            about: profileData.about,
-            phone: profileData.phone,
-            website: profileData.website,
-            linkedin: profileData.linkedin,
-            skills: profileData.skills,
-          }
-        };
-        setUser(updatedUser);
-      }
+      await updateDoc(userRef, updateData);
+      
+      toast.success('Profile updated successfully!');
     } catch (error: any) {
       console.error('Error updating user profile:', error);
+      toast.error('Failed to update profile. Please try again.');
       throw error;
     }
   };
