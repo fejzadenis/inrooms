@@ -38,18 +38,10 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Properly format the private key
-    privateKey = privateKey
-      .trim()
-      .replace(/\\n/g, '\n')
-      .replace(/-----BEGIN PRIVATE KEY----- /g, '-----BEGIN PRIVATE KEY-----\n')
-      .replace(/ -----END PRIVATE KEY-----/g, '\n-----END PRIVATE KEY-----')
-      .replace(/([A-Za-z0-9+/=]{64})/g, '$1\n')
-      .replace(/\n\n/g, '\n')
-      .trim()
+    // Simply unescape newlines - don't do complex formatting
+    privateKey = privateKey.replace(/\\n/g, '\n')
 
-    console.log('Private key first 50 chars:', privateKey.substring(0, 50))
-    console.log('Private key last 50 chars:', privateKey.substring(privateKey.length - 50))
+    console.log('Using Google service account for calendar access')
 
     const auth = new google.auth.GoogleAuth({
       credentials: {
