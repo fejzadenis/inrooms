@@ -1,64 +1,60 @@
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  doc, 
-  getDoc, 
-  setDoc, 
-  deleteDoc,
-  addDoc,
-  serverTimestamp,
-  limit,
-  orderBy
-} from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { supabase } from '../config/supabase';
 
 export interface NetworkProfile {
   id: string;
   name: string;
   email: string;
   role?: string;
-  profile?: {
-    title?: string;
-    company?: string;
-    location?: string;
-    skills?: string[];
-    about?: string;
-  };
-  photoURL?: string;
+  profile_title?: string;
+  profile_company?: string;
+  profile_location?: string;
+  profile_skills?: string[];
+  profile_about?: string;
+  photo_url?: string;
   connections?: string[];
+  profile_points?: number;
 }
 
 export interface Connection {
   id?: string;
-  userId: string;
-  connectedUserId: string;
+  user_id: string;
+  connected_user_id: string;
   status: 'pending' | 'accepted' | 'declined';
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: string;
+  updated_at: string;
 }
 
 export const networkService = {
   // Get all users for networking (excluding current user)
   async getNetworkUsers(currentUserId: string): Promise<NetworkProfile[]> {
     try {
-      const usersRef = collection(db, 'users');
-      const q = query(
-        usersRef,
-        where('role', '==', 'user'),
-        limit(50)
-      );
+      // Query users table with public profile access
+      const { data: users, error } = await supabase
+        .from('users')
+        .select(`
+          id,
+          name,
+          email,
+          role,
+          profile_title,
+          profile_company,
+          profile_location,
+          profile_skills,
+          profile_about,
+          photo_url,
+          connections,
+          profile_points
+        `)
+        .neq('id', currentUserId)
+        .eq('role', 'user')
+        .limit(50);
 
-      const snapshot = await getDocs(q);
-      const users = snapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as NetworkProfile))
-        .filter(user => user.id !== currentUserId);
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
-      return users;
+      return users || [];
     } catch (error) {
       console.error('Error getting network users:', error);
       throw error;
@@ -68,13 +64,18 @@ export const networkService = {
   // Get user's connections
   async getUserConnections(userId: string): Promise<string[]> {
     try {
-      const userRef = doc(db, 'users', userId);
-      const userDoc = await getDoc(userRef);
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('connections')
+        .eq('id', userId)
+        .single();
       
-      if (userDoc.exists()) {
-        return userDoc.data().connections || [];
+      if (error) {
+        console.error('Error getting user connections:', error);
+        throw error;
       }
-      return [];
+
+      return user?.connections || [];
     } catch (error) {
       console.error('Error getting user connections:', error);
       throw error;
@@ -84,25 +85,21 @@ export const networkService = {
   // Add a connection
   async addConnection(userId: string, targetUserId: string): Promise<void> {
     try {
-      // Add connection record
-      await addDoc(collection(db, 'connections'), {
-        userId,
-        connectedUserId: targetUserId,
-        status: 'accepted', // For now, auto-accept connections
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
+      // Get current connections for both users
+      const { data: currentUser } = await supabase
+        .from('users')
+        .select('connections')
+        .eq('id', userId)
+        .single();
 
-      // Update both users' connections arrays
-      const userRef = doc(db, 'users', userId);
-      const targetUserRef = doc(db, 'users', targetUserId);
+      const { data: targetUser } = await supabase
+        .from('users')
+        .select('connections')
+        .eq('id', targetUserId)
+        .single();
 
-      // Get current connections
-      const userDoc = await getDoc(userRef);
-      const targetUserDoc = await getDoc(targetUserRef);
-
-      const userConnections = userDoc.exists() ? (userDoc.data().connections || []) : [];
-      const targetUserConnections = targetUserDoc.exists() ? (targetUserDoc.data().connections || []) : [];
+      const userConnections = currentUser?.connections || [];
+      const targetUserConnections = targetUser?.connections || [];
 
       // Add to connections if not already connected
       if (!userConnections.includes(targetUserId)) {
@@ -112,9 +109,20 @@ export const networkService = {
         targetUserConnections.push(userId);
       }
 
-      // Update both users
-      await setDoc(userRef, { connections: userConnections }, { merge: true });
-      await setDoc(targetUserRef, { connections: targetUserConnections }, { merge: true });
+      // Update both users' connections
+      const { error: userError } = await supabase
+        .from('users')
+        .update({ connections: userConnections })
+        .eq('id', userId);
+
+      const { error: targetError } = await supabase
+        .from('users')
+        .update({ connections: targetUserConnections })
+        .eq('id', targetUserId);
+
+      if (userError || targetError) {
+        throw userError || targetError;
+      }
 
     } catch (error) {
       console.error('Error adding connection:', error);
@@ -125,42 +133,35 @@ export const networkService = {
   // Remove a connection
   async removeConnection(userId: string, targetUserId: string): Promise<void> {
     try {
-      // Remove from connections collection
-      const connectionsRef = collection(db, 'connections');
-      const q1 = query(
-        connectionsRef,
-        where('userId', '==', userId),
-        where('connectedUserId', '==', targetUserId)
-      );
-      const q2 = query(
-        connectionsRef,
-        where('userId', '==', targetUserId),
-        where('connectedUserId', '==', userId)
-      );
+      // Get current connections for both users
+      const { data: currentUser } = await supabase
+        .from('users')
+        .select('connections')
+        .eq('id', userId)
+        .single();
 
-      const [snapshot1, snapshot2] = await Promise.all([getDocs(q1), getDocs(q2)]);
-      
-      const deletePromises = [];
-      snapshot1.docs.forEach(doc => deletePromises.push(deleteDoc(doc.ref)));
-      snapshot2.docs.forEach(doc => deletePromises.push(deleteDoc(doc.ref)));
-      
-      await Promise.all(deletePromises);
+      const { data: targetUser } = await supabase
+        .from('users')
+        .select('connections')
+        .eq('id', targetUserId)
+        .single();
 
-      // Update both users' connections arrays
-      const userRef = doc(db, 'users', userId);
-      const targetUserRef = doc(db, 'users', targetUserId);
+      const userConnections = (currentUser?.connections || []).filter((id: string) => id !== targetUserId);
+      const targetUserConnections = (targetUser?.connections || []).filter((id: string) => id !== userId);
 
-      const userDoc = await getDoc(userRef);
-      const targetUserDoc = await getDoc(targetUserRef);
+      // Update both users' connections
+      const { error: userError } = await supabase
+        .from('users')
+        .update({ connections: userConnections })
+        .eq('id', userId);
 
-      if (userDoc.exists()) {
-        const userConnections = (userDoc.data().connections || []).filter((id: string) => id !== targetUserId);
-        await setDoc(userRef, { connections: userConnections }, { merge: true });
-      }
+      const { error: targetError } = await supabase
+        .from('users')
+        .update({ connections: targetUserConnections })
+        .eq('id', targetUserId);
 
-      if (targetUserDoc.exists()) {
-        const targetUserConnections = (targetUserDoc.data().connections || []).filter((id: string) => id !== userId);
-        await setDoc(targetUserRef, { connections: targetUserConnections }, { merge: true });
+      if (userError || targetError) {
+        throw userError || targetError;
       }
 
     } catch (error) {
@@ -172,46 +173,66 @@ export const networkService = {
   // Get connection recommendations based on skills
   async getConnectionRecommendations(userId: string, userSkills: string[]): Promise<NetworkProfile[]> {
     try {
-      const usersRef = collection(db, 'users');
       let recommendations: NetworkProfile[] = [];
 
       if (userSkills.length > 0) {
-        // Get users with similar skills
-        const q = query(
-          usersRef,
-          where('profile.skills', 'array-contains-any', userSkills),
-          limit(20)
-        );
+        // Get users with similar skills using overlap operator
+        const { data: users, error } = await supabase
+          .from('users')
+          .select(`
+            id,
+            name,
+            email,
+            role,
+            profile_title,
+            profile_company,
+            profile_location,
+            profile_skills,
+            profile_about,
+            photo_url,
+            connections,
+            profile_points
+          `)
+          .neq('id', userId)
+          .eq('role', 'user')
+          .overlaps('profile_skills', userSkills)
+          .limit(20);
 
-        const snapshot = await getDocs(q);
-        recommendations = snapshot.docs
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          } as NetworkProfile))
-          .filter(user => user.id !== userId);
+        if (error) {
+          console.error('Error getting skill-based recommendations:', error);
+        } else {
+          recommendations = users || [];
+        }
       }
 
       // If not enough recommendations, get random users
       if (recommendations.length < 10) {
-        const q = query(
-          usersRef,
-          where('role', '==', 'user'),
-          limit(20)
-        );
+        const { data: additionalUsers, error } = await supabase
+          .from('users')
+          .select(`
+            id,
+            name,
+            email,
+            role,
+            profile_title,
+            profile_company,
+            profile_location,
+            profile_skills,
+            profile_about,
+            photo_url,
+            connections,
+            profile_points
+          `)
+          .neq('id', userId)
+          .eq('role', 'user')
+          .limit(20);
 
-        const snapshot = await getDocs(q);
-        const additionalUsers = snapshot.docs
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          } as NetworkProfile))
-          .filter(user => 
-            user.id !== userId && 
+        if (!error && additionalUsers) {
+          const filteredUsers = additionalUsers.filter(user => 
             !recommendations.some(rec => rec.id === user.id)
           );
-
-        recommendations = [...recommendations, ...additionalUsers].slice(0, 10);
+          recommendations = [...recommendations, ...filteredUsers].slice(0, 10);
+        }
       }
 
       return recommendations;
@@ -224,28 +245,35 @@ export const networkService = {
   // Search users by name, company, or title
   async searchUsers(searchTerm: string, currentUserId: string): Promise<NetworkProfile[]> {
     try {
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('role', '==', 'user'), limit(50));
+      const searchLower = searchTerm.toLowerCase();
+      
+      const { data: users, error } = await supabase
+        .from('users')
+        .select(`
+          id,
+          name,
+          email,
+          role,
+          profile_title,
+          profile_company,
+          profile_location,
+          profile_skills,
+          profile_about,
+          photo_url,
+          connections,
+          profile_points
+        `)
+        .neq('id', currentUserId)
+        .eq('role', 'user')
+        .or(`name.ilike.%${searchTerm}%,profile_company.ilike.%${searchTerm}%,profile_title.ilike.%${searchTerm}%`)
+        .limit(50);
 
-      const snapshot = await getDocs(q);
-      const users = snapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as NetworkProfile))
-        .filter(user => {
-          if (user.id === currentUserId) return false;
-          
-          const searchLower = searchTerm.toLowerCase();
-          return (
-            user.name?.toLowerCase().includes(searchLower) ||
-            user.profile?.company?.toLowerCase().includes(searchLower) ||
-            user.profile?.title?.toLowerCase().includes(searchLower) ||
-            user.profile?.skills?.some(skill => skill.toLowerCase().includes(searchLower))
-          );
-        });
+      if (error) {
+        console.error('Supabase search error:', error);
+        throw error;
+      }
 
-      return users;
+      return users || [];
     } catch (error) {
       console.error('Error searching users:', error);
       throw error;
