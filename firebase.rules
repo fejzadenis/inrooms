@@ -2,12 +2,8 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId} {
-      // Allow reading user documents only if it's their own document or they're admin
-      allow read: if request.auth != null && (
-        request.auth.uid == userId ||
-        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
-        request.auth.token.email == 'admin@inrooms.com'
-      );
+      // Allow reading user documents for networking - authenticated users can read basic profile info
+      allow read: if request.auth != null;
       
       // Allow users to create only their own documents
       allow create: if request.auth != null && request.auth.uid == userId;
@@ -21,32 +17,6 @@ service cloud.firestore {
       
       // Allow admin to delete users
       allow delete: if request.auth != null && (
-        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
-        request.auth.token.email == 'admin@inrooms.com'
-      );
-    }
-    
-    // Network visibility - allow authenticated users to read basic profile info for networking
-    match /network_profiles/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Connections collection - for managing user connections
-    match /connections/{connectionId} {
-      allow read: if request.auth != null && (
-        resource.data.userId == request.auth.uid ||
-        resource.data.connectedUserId == request.auth.uid ||
-        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
-        request.auth.token.email == 'admin@inrooms.com'
-      );
-      allow create: if request.auth != null && (
-        request.resource.data.userId == request.auth.uid ||
-        request.resource.data.connectedUserId == request.auth.uid
-      );
-      allow update, delete: if request.auth != null && (
-        resource.data.userId == request.auth.uid ||
-        resource.data.connectedUserId == request.auth.uid ||
         request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
         request.auth.token.email == 'admin@inrooms.com'
       );
