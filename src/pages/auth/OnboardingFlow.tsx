@@ -234,6 +234,7 @@ export function OnboardingFlow() {
         experienceLevel: allData.experienceLevel,
         primaryGoal: allData.primaryGoal,
         industry: allData.industry,
+        companySize: allData.companySize,
         specialization: allData.specializations,
         interests: allData.interests,
         eventPreferences: allData.eventPreferences,
