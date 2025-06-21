@@ -36,7 +36,8 @@ export function SignupPage() {
   const onSubmit = async (data: SignupFormData) => {
     try {
       await signup(data.email, data.password, data.name);
-      navigate('/subscription');
+      // Redirect to onboarding flow instead of subscription
+      navigate('/onboarding');
     } catch (error) {
       // AuthContext handles error display
     }
@@ -46,7 +47,8 @@ export function SignupPage() {
     setIsGoogleLoading(true);
     try {
       await loginWithGoogle();
-      navigate('/subscription');
+      // Redirect to onboarding flow instead of subscription
+      navigate('/onboarding');
     } catch (error) {
       // AuthContext handles error display
     } finally {

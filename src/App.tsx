@@ -7,6 +7,7 @@ import { AdminProtectedRoute } from './components/common/AdminProtectedRoute';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { SignupPage } from './pages/auth/SignupPage';
+import { OnboardingFlow } from './pages/auth/OnboardingFlow';
 import { SubscriptionPage } from './pages/subscription/SubscriptionPage';
 import { DashboardPage } from './pages/user/DashboardPage';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
@@ -33,10 +34,23 @@ function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/onboarding" element={
+            <ProtectedRoute>
+              <OnboardingFlow />
+            </ProtectedRoute>
+          } />
           <Route path="/subscription" element={<SubscriptionPage />} />
           <Route path="/linkedin-callback" element={<LinkedInCallback />} />
           <Route
             path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/:userId"
             element={
               <ProtectedRoute>
                 <ProfilePage />
