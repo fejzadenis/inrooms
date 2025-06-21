@@ -204,44 +204,59 @@ export function OnboardingFlow() {
 
     setIsSubmitting(true);
     try {
-      // Combine all form data
-      const allData = {
-        ...formData.step1,
-        ...formData.step2,
-        ...formData.step3,
-        ...formData.step4,
-        ...formData.step5,
-        ...formData.step6,
-        ...formData.step7,
-        ...formData.step8,
-      };
+      // Combine all form data with proper null checks and defaults
+      const step1Data = formData.step1 || {};
+      const step2Data = formData.step2 || {};
+      const step3Data = formData.step3 || {};
+      const step4Data = formData.step4 || {};
+      const step5Data = formData.step5 || {};
+      const step6Data = formData.step6 || {};
+      const step7Data = formData.step7 || {};
+      const step8Data = formData.step8 || {};
 
-      // Create comprehensive profile data
+      // Create comprehensive profile data with safe defaults
       const profileData = {
         name: user.name,
-        title: allData.title,
-        company: allData.company,
-        location: allData.location,
-        phone: allData.phone || '',
-        website: allData.website || '',
-        linkedin: allData.linkedin || '',
-        about: allData.about,
-        skills: allData.skills ? allData.skills.split(',').map((s: string) => s.trim()) : [],
+        title: step1Data.title || '',
+        company: step1Data.company || '',
+        location: step1Data.location || '',
+        phone: step2Data.phone || '',
+        website: step2Data.website || '',
+        linkedin: step2Data.linkedin || '',
+        about: step7Data.about || '',
+        skills: step4Data.skills ? step4Data.skills.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
       };
 
-      // Create onboarding data for role assignment and recommendations
+      // Create onboarding data for role assignment and recommendations with safe defaults
       const onboardingData = {
-        experienceLevel: allData.experienceLevel,
-        primaryGoal: allData.primaryGoal,
-        industry: allData.industry,
-        companySize: allData.companySize,
-        specialization: allData.specializations,
-        interests: allData.interests,
-        eventPreferences: allData.eventPreferences,
-        networkingStyle: allData.networkingStyle,
-        communicationPreference: allData.communicationPreference,
-        availability: allData.availability,
-        timeZone: allData.timeZone,
+        // Professional Background
+        yearsExperience: step1Data.yearsExperience || 0,
+        experienceLevel: step3Data.experienceLevel || 'entry',
+        industry: step3Data.industry || '',
+        companySize: step3Data.companySize || 'startup',
+        previousCompanies: step3Data.previousCompanies || '',
+        specializations: step4Data.specializations || [],
+        certifications: step4Data.certifications || '',
+        
+        // Goals & Motivations
+        primaryGoal: step5Data.primaryGoal || 'networking',
+        careerAspirations: step5Data.careerAspirations || '',
+        currentChallenges: step5Data.currentChallenges || [],
+        valueProposition: step7Data.valueProposition || '',
+        achievements: step7Data.achievements || '',
+        
+        // Networking & Communication
+        networkingStyle: step6Data.networkingStyle || 'ambivert',
+        communicationPreference: step6Data.communicationPreference || 'collaborative',
+        interests: step6Data.interests || [],
+        eventPreferences: step6Data.eventPreferences || [],
+        
+        // Availability & Preferences
+        availability: step8Data.availability || 'moderately_active',
+        timeZone: step8Data.timeZone || '',
+        preferredMeetingTimes: step8Data.preferredMeetingTimes || [],
+        
+        // Assigned Role
         assignedRole: selectedRole,
         completedAt: new Date().toISOString(),
       };

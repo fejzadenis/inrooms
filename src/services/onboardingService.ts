@@ -3,34 +3,35 @@ import { db } from '../config/firebase';
 
 export interface OnboardingData {
   // Professional Background
-  experienceLevel: 'entry' | 'mid' | 'senior' | 'executive';
-  industry: string;
-  companySize: 'startup' | 'small' | 'medium' | 'large' | 'enterprise';
+  yearsExperience?: number;
+  experienceLevel?: 'entry' | 'mid' | 'senior' | 'executive';
+  industry?: string;
+  companySize?: 'startup' | 'small' | 'medium' | 'large' | 'enterprise';
   previousCompanies?: string;
-  specializations: string[];
+  specializations?: string[];
   certifications?: string;
   
   // Goals & Motivations
-  primaryGoal: 'networking' | 'learning' | 'career_growth' | 'business_development' | 'mentoring';
-  careerAspirations: string;
-  currentChallenges: string[];
-  valueProposition: string;
+  primaryGoal?: 'networking' | 'learning' | 'career_growth' | 'business_development' | 'mentoring';
+  careerAspirations?: string;
+  currentChallenges?: string[];
+  valueProposition?: string;
   achievements?: string;
   
   // Networking & Communication
-  networkingStyle: 'introvert' | 'extrovert' | 'ambivert';
-  communicationPreference: 'direct' | 'collaborative' | 'analytical' | 'creative';
-  interests: string[];
-  eventPreferences: string[];
+  networkingStyle?: 'introvert' | 'extrovert' | 'ambivert';
+  communicationPreference?: 'direct' | 'collaborative' | 'analytical' | 'creative';
+  interests?: string[];
+  eventPreferences?: string[];
   
   // Availability & Preferences
-  availability: 'very_active' | 'moderately_active' | 'occasional';
-  timeZone: string;
-  preferredMeetingTimes: string[];
+  availability?: 'very_active' | 'moderately_active' | 'occasional';
+  timeZone?: string;
+  preferredMeetingTimes?: string[];
   
   // Assigned Role
-  assignedRole: string;
-  completedAt: string;
+  assignedRole?: string;
+  completedAt?: string;
 }
 
 export interface UserRole {
@@ -49,41 +50,84 @@ export const onboardingService = {
     try {
       const userRef = doc(db, 'users', userId);
       
-      // Update user profile with all onboarding data
-      const updateData = {
-        // Professional Background
-        'profile.experienceLevel': onboardingData.experienceLevel,
-        'profile.industry': onboardingData.industry,
-        'profile.companySize': onboardingData.companySize,
-        'profile.previousCompanies': onboardingData.previousCompanies || '',
-        'profile.specializations': onboardingData.specializations,
-        'profile.certifications': onboardingData.certifications || '',
-        
-        // Goals & Motivations
-        'profile.primaryGoal': onboardingData.primaryGoal,
-        'profile.careerAspirations': onboardingData.careerAspirations,
-        'profile.currentChallenges': onboardingData.currentChallenges,
-        'profile.valueProposition': onboardingData.valueProposition,
-        'profile.achievements': onboardingData.achievements || '',
-        
-        // Networking & Communication
-        'profile.networkingStyle': onboardingData.networkingStyle,
-        'profile.communicationPreference': onboardingData.communicationPreference,
-        'profile.interests': onboardingData.interests,
-        'profile.eventPreferences': onboardingData.eventPreferences,
-        
-        // Availability & Preferences
-        'profile.availability': onboardingData.availability,
-        'profile.timeZone': onboardingData.timeZone,
-        'profile.preferredMeetingTimes': onboardingData.preferredMeetingTimes,
-        
-        // Assigned Role & Completion
-        'profile.assignedRole': onboardingData.assignedRole,
-        'profile.onboardingCompleted': true,
-        'profile.onboardingCompletedAt': onboardingData.completedAt,
-        
+      // Prepare update data with safe defaults for all fields
+      const updateData: any = {
         updatedAt: serverTimestamp(),
       };
+
+      // Professional Background - with safe defaults
+      if (onboardingData.yearsExperience !== undefined) {
+        updateData['profile.yearsExperience'] = onboardingData.yearsExperience;
+      }
+      if (onboardingData.experienceLevel) {
+        updateData['profile.experienceLevel'] = onboardingData.experienceLevel;
+      }
+      if (onboardingData.industry) {
+        updateData['profile.industry'] = onboardingData.industry;
+      }
+      if (onboardingData.companySize) {
+        updateData['profile.companySize'] = onboardingData.companySize;
+      }
+      if (onboardingData.previousCompanies !== undefined) {
+        updateData['profile.previousCompanies'] = onboardingData.previousCompanies || '';
+      }
+      if (onboardingData.specializations) {
+        updateData['profile.specializations'] = onboardingData.specializations;
+      }
+      if (onboardingData.certifications !== undefined) {
+        updateData['profile.certifications'] = onboardingData.certifications || '';
+      }
+      
+      // Goals & Motivations - with safe defaults
+      if (onboardingData.primaryGoal) {
+        updateData['profile.primaryGoal'] = onboardingData.primaryGoal;
+      }
+      if (onboardingData.careerAspirations) {
+        updateData['profile.careerAspirations'] = onboardingData.careerAspirations;
+      }
+      if (onboardingData.currentChallenges) {
+        updateData['profile.currentChallenges'] = onboardingData.currentChallenges;
+      }
+      if (onboardingData.valueProposition) {
+        updateData['profile.valueProposition'] = onboardingData.valueProposition;
+      }
+      if (onboardingData.achievements !== undefined) {
+        updateData['profile.achievements'] = onboardingData.achievements || '';
+      }
+      
+      // Networking & Communication - with safe defaults
+      if (onboardingData.networkingStyle) {
+        updateData['profile.networkingStyle'] = onboardingData.networkingStyle;
+      }
+      if (onboardingData.communicationPreference) {
+        updateData['profile.communicationPreference'] = onboardingData.communicationPreference;
+      }
+      if (onboardingData.interests) {
+        updateData['profile.interests'] = onboardingData.interests;
+      }
+      if (onboardingData.eventPreferences) {
+        updateData['profile.eventPreferences'] = onboardingData.eventPreferences;
+      }
+      
+      // Availability & Preferences - with safe defaults
+      if (onboardingData.availability) {
+        updateData['profile.availability'] = onboardingData.availability;
+      }
+      if (onboardingData.timeZone) {
+        updateData['profile.timeZone'] = onboardingData.timeZone;
+      }
+      if (onboardingData.preferredMeetingTimes) {
+        updateData['profile.preferredMeetingTimes'] = onboardingData.preferredMeetingTimes;
+      }
+      
+      // Assigned Role & Completion - with safe defaults
+      if (onboardingData.assignedRole) {
+        updateData['profile.assignedRole'] = onboardingData.assignedRole;
+      }
+      updateData['profile.onboardingCompleted'] = true;
+      if (onboardingData.completedAt) {
+        updateData['profile.onboardingCompletedAt'] = onboardingData.completedAt;
+      }
 
       await updateDoc(userRef, updateData);
     } catch (error) {
@@ -159,16 +203,16 @@ export const onboardingService = {
     }
 
     // Score based on industry
-    if (data.industry.includes('Software') || data.industry.includes('Technology')) {
+    if (data.industry?.includes('Software') || data.industry?.includes('Technology')) {
       scores.saas_specialist += 3;
       scores.technical_seller += 2;
     }
-    if (data.industry.includes('Financial') || data.industry.includes('Healthcare')) {
+    if (data.industry?.includes('Financial') || data.industry?.includes('Healthcare')) {
       scores.enterprise_closer += 3;
     }
 
     // Score based on specializations
-    data.specializations.forEach(spec => {
+    data.specializations?.forEach(spec => {
       if (spec.includes('Enterprise')) scores.enterprise_closer += 2;
       if (spec.includes('Technical') || spec.includes('Engineering')) scores.technical_seller += 3;
       if (spec.includes('Customer Success') || spec.includes('Account Management')) scores.relationship_builder += 2;
@@ -278,7 +322,7 @@ export const onboardingService = {
     }
 
     // Connection recommendations based on interests and industry
-    data.interests.forEach(interest => {
+    data.interests?.forEach(interest => {
       if (interest.includes('AI')) {
         recommendations.connections.push('AI/ML Sales Professionals');
       }
