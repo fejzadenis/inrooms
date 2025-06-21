@@ -261,14 +261,16 @@ export function OnboardingFlow() {
         completedAt: new Date().toISOString(),
       };
 
-      // Update user profile
+      // Update user profile first
       await updateUserProfile(user.id, profileData);
       
-      // Complete onboarding
+      // Complete onboarding with all the detailed data
       await onboardingService.completeOnboarding(user.id, onboardingData);
 
       toast.success('Profile setup complete! Welcome to inrooms!');
-      navigate('/events');
+      
+      // Redirect to profile page
+      navigate('/profile');
     } catch (error) {
       console.error('Error completing onboarding:', error);
       toast.error('Failed to complete setup. Please try again.');
