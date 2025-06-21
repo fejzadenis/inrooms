@@ -1,214 +1,206 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { toast } from 'react-hot-toast';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MainLayout } from '../../layouts/MainLayout';
+import { PricingCard } from '../../components/billing/PricingCard';
 import { Button } from '../../components/common/Button';
 import { useAuth } from '../../contexts/AuthContext';
+import { stripeService, subscriptionPlans, type SubscriptionPlan } from '../../services/stripeService';
+import { toast } from 'react-hot-toast';
+import { CheckCircle, ArrowRight } from 'lucide-react';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
-
-const plans = [
-  {
-    id: 'starter',
-    name: 'Starter',
-    price: 49,
-    eventsPerMonth: 2,
-    features: [
-      '2 networking events per month',
-      'Access to event recordings',
-      'Basic profile features',
-    ],
-  },
-  {
-    id: 'professional',
-    name: 'Professional',
-    price: 99,
-    eventsPerMonth: 5,
-    features: [
-      '5 networking events per month',
-      'Access to event recordings',
-      'Enhanced profile features',
-      'Priority event registration',
-    ],
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    price: 199,
-    eventsPerMonth: 12,
-    features: [
-      '12 networking events per month',
-      'Access to event recordings',
-      'Premium profile features',
-      'Priority event registration',
-      'Custom event scheduling',
-    ],
-  },
-];
-
-function CheckoutForm() {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [isLoading, setIsLoading] = React.useState(false);
+export function SubscriptionPage() {
+  const { user, startFreeTrial } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [loading, setLoading] = React.useState(false);
+  const [selectedPlan, setSelectedPlan] = React.useState<SubscriptionPlan | null>(null);
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  // Check for success/cancel parameters from Stripe redirect
+  React.useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
 
-    if (!stripe || !elements) {
+    if (success === 'true') {
+      toast.success('Subscription activated successfully!');
+      navigate('/billing', { replace: true });
+    } else if (canceled === 'true') {
+      toast.error('Subscription canceled. You can try again anytime.');
+      // Clear the URL parameters
+      navigate('/subscription', { replace: true });
+    }
+  }, [searchParams, navigate]);
+
+  const handleFreeTrial = async () => {
+    if (!user) {
+      toast.error('Please log in to start your free trial');
+      navigate('/login');
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      const { error } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: `${window.location.origin}/dashboard`,
-        },
-      });
-
-      if (error) {
-        console.error('[error]', error);
-        toast.error('Payment failed. Please try again.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <PaymentElement />
-      <Button
-        type="submit"
-        className="w-full mt-4"
-        isLoading={isLoading}
-        disabled={!stripe}
-      >
-        Subscribe Now
-      </Button>
-    </form>
-  );
-}
-
-export function SubscriptionPage() {
-  const [selectedPlan, setSelectedPlan] = React.useState<string | null>(null);
-  const [showPayment, setShowPayment] = React.useState(false);
-  const { startFreeTrial } = useAuth();
-  const navigate = useNavigate();
-
-  const handleFreeTrial = async () => {
-    try {
+      setLoading(true);
       await startFreeTrial();
       toast.success('Free trial activated! Enjoy your 7-day trial.');
-      navigate('/dashboard');
+      navigate('/events');
     } catch (error) {
       console.error('Failed to start free trial:', error);
       toast.error('Failed to start free trial. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handlePlanSelect = (planId: string) => {
-    setSelectedPlan(planId);
-    setShowPayment(true);
+  const handleSelectPlan = async (plan: SubscriptionPlan) => {
+    if (!user) {
+      toast.error('Please log in to subscribe');
+      navigate('/login');
+      return;
+    }
+
+    setLoading(true);
+    setSelectedPlan(plan);
+
+    try {
+      const successUrl = `${window.location.origin}/subscription?success=true`;
+      const cancelUrl = `${window.location.origin}/subscription?canceled=true`;
+
+      await stripeService.createCheckoutSession(
+        user.id,
+        plan.stripePriceId,
+        successUrl,
+        cancelUrl
+      );
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      toast.error('Failed to start checkout process. Please try again.');
+    } finally {
+      setLoading(false);
+      setSelectedPlan(null);
+    }
   };
+
+  const features = [
+    'Access to exclusive networking events',
+    'Connect with verified tech sales professionals',
+    'Event recordings and resources',
+    'Advanced profile features',
+    'Priority customer support'
+  ];
 
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Choose your plan
-          </h2>
-          <p className="mt-4 text-lg text-gray-600">
-            Start with a 7-day free trial, then select the perfect plan for your networking needs
+        {/* Hero Section */}
+        <div className="text-center mb-16">
+          <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">
+            Choose Your Plan
+          </h1>
+          <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
+            Start with a 7-day free trial, then select the perfect plan for your networking needs. 
+            Join thousands of tech sales professionals growing their careers with inrooms.
           </p>
-          <div className="mt-6">
+          
+          {/* Free Trial CTA */}
+          <div className="mt-8 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl p-8 max-w-2xl mx-auto">
+            <div className="flex items-center justify-center mb-4">
+              <CheckCircle className="w-8 h-8 text-green-500 mr-3" />
+              <h3 className="text-2xl font-bold text-gray-900">Start Your Free Trial</h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              Get full access to all features for 7 days. No credit card required.
+            </p>
             <Button
               onClick={handleFreeTrial}
-              variant="outline"
+              isLoading={loading && !selectedPlan}
               className="text-lg px-8 py-3"
             >
               Start 7-Day Free Trial
+              <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </div>
         </div>
 
-        <div className="mt-12 space-y-4 sm:mt-16 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6 lg:max-w-4xl lg:mx-auto xl:max-w-none xl:mx-0">
-          {plans.map((plan) => (
-            <div
-              key={plan.id}
-              className={`rounded-lg shadow-sm divide-y divide-gray-200 ${
-                selectedPlan === plan.id
-                  ? 'ring-2 ring-indigo-600'
-                  : ''
-              }`}
-            >
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-gray-900">
-                  {plan.name}
-                </h3>
-                <p className="mt-4 text-sm text-gray-500">
-                  Perfect for {plan.eventsPerMonth} events per month
-                </p>
-                <p className="mt-8">
-                  <span className="text-4xl font-extrabold text-gray-900">
-                    ${plan.price}
-                  </span>
-                  <span className="text-base font-medium text-gray-500">
-                    /mo
-                  </span>
-                </p>
-                <Button
-                  className="mt-8 w-full"
-                  variant={selectedPlan === plan.id ? 'primary' : 'outline'}
-                  onClick={() => handlePlanSelect(plan.id)}
-                >
-                  {selectedPlan === plan.id ? 'Selected' : 'Select Plan'}
-                </Button>
+        {/* Features Overview */}
+        <div className="mb-16">
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
+            What's Included in Every Plan
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            {features.map((feature, index) => (
+              <div key={index} className="text-center">
+                <div className="bg-indigo-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="w-6 h-6 text-indigo-600" />
+                </div>
+                <p className="text-sm text-gray-700">{feature}</p>
               </div>
-              <div className="px-6 pt-6 pb-8">
-                <h4 className="text-sm font-medium text-gray-900 tracking-wide">
-                  What's included
-                </h4>
-                <ul className="mt-6 space-y-4">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex space-x-3">
-                      <svg
-                        className="flex-shrink-0 h-5 w-5 text-green-500"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <span className="text-sm text-gray-500">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        {showPayment && (
-          <div className="mt-12 max-w-lg mx-auto">
-            <div className="bg-white p-8 rounded-lg shadow">
-              <h3 className="text-xl font-semibold mb-4">Payment Details</h3>
-              <Elements stripe={stripePromise}>
-                <CheckoutForm />
-              </Elements>
+        {/* Pricing Plans */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+            Choose the Right Plan for You
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {subscriptionPlans.map((plan, index) => (
+              <PricingCard
+                key={plan.id}
+                plan={plan}
+                isPopular={index === 1} // Professional plan is popular
+                onSelectPlan={handleSelectPlan}
+                loading={loading && selectedPlan?.id === plan.id}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* FAQ Section */}
+        <div className="bg-gray-50 rounded-2xl p-8">
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
+            Frequently Asked Questions
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">Can I change my plan later?</h3>
+              <p className="text-gray-600 text-sm">
+                Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately for upgrades, 
+                or at the next billing cycle for downgrades.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">What happens to unused events?</h3>
+              <p className="text-gray-600 text-sm">
+                Unused events do not roll over to the next billing period. We recommend choosing a plan that 
+                matches your typical monthly networking activity.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">Can I cancel anytime?</h3>
+              <p className="text-gray-600 text-sm">
+                Yes, you can cancel your subscription at any time. You'll continue to have access until the 
+                end of your current billing period.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">Is there a setup fee?</h3>
+              <p className="text-gray-600 text-sm">
+                No setup fees, no hidden costs. The price you see is exactly what you'll pay. 
+                All plans include access to our full platform and features.
+              </p>
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Contact Support */}
+        <div className="text-center mt-12">
+          <p className="text-gray-600">
+            Have questions about our plans? 
+            <a href="mailto:support@inrooms.com" className="text-indigo-600 hover:text-indigo-500 ml-1">
+              Contact our support team
+            </a>
+          </p>
+        </div>
       </div>
     </MainLayout>
   );
