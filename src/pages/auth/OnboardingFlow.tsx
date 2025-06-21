@@ -4,37 +4,55 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Check, Sparkles, Target, Users, Briefcase, MapPin, Star, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Sparkles, Target, Users, Briefcase, MapPin, Star, ArrowRight, Phone, Globe, Linkedin, Mail } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { Logo } from '../../components/common/Logo';
 import { toast } from 'react-hot-toast';
 
 const onboardingSchema = z.object({
-  // Step 1: Basic Info
+  // Step 1: Professional Identity
   jobTitle: z.string().min(2, 'Job title is required'),
   company: z.string().min(2, 'Company is required'),
   location: z.string().min(2, 'Location is required'),
+  yearsExperience: z.number().min(0, 'Years of experience required'),
   
-  // Step 2: Experience & Goals
+  // Step 2: Contact & Social Presence
+  phone: z.string().optional(),
+  website: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  linkedin: z.string().url('Must be a valid LinkedIn URL').optional().or(z.literal('')),
+  
+  // Step 3: Professional Background
   experienceLevel: z.enum(['entry', 'mid', 'senior', 'executive']),
-  primaryGoal: z.enum(['networking', 'learning', 'career_growth', 'business_development', 'mentoring']),
-  
-  // Step 3: Industry & Specialization
   industry: z.string().min(1, 'Industry is required'),
-  specialization: z.array(z.string()).min(1, 'Select at least one specialization'),
+  companySize: z.enum(['startup', 'small', 'medium', 'large', 'enterprise']),
+  previousCompanies: z.string().optional(),
   
-  // Step 4: Interests & Preferences
+  // Step 4: Skills & Expertise
+  specialization: z.array(z.string()).min(1, 'Select at least one specialization'),
+  skills: z.array(z.string()).min(3, 'Select at least 3 skills'),
+  certifications: z.string().optional(),
+  
+  // Step 5: Goals & Motivations
+  primaryGoal: z.enum(['networking', 'learning', 'career_growth', 'business_development', 'mentoring', 'job_search']),
+  careerAspiration: z.string().min(10, 'Please describe your career aspirations (minimum 10 characters)'),
+  challengesFacing: z.array(z.string()).min(1, 'Select at least one challenge'),
+  
+  // Step 6: Networking & Communication
+  networkingStyle: z.enum(['introvert', 'extrovert', 'ambivert']),
+  communicationPreference: z.enum(['direct', 'collaborative', 'analytical', 'creative']),
   interests: z.array(z.string()).min(1, 'Select at least one interest'),
   eventPreferences: z.array(z.string()).min(1, 'Select at least one preference'),
   
-  // Step 5: Networking Style
-  networkingStyle: z.enum(['introvert', 'extrovert', 'ambivert']),
-  communicationPreference: z.enum(['direct', 'collaborative', 'analytical', 'creative']),
+  // Step 7: Personal Brand & Bio
+  personalBio: z.string().min(50, 'Please write a bio of at least 50 characters'),
+  achievements: z.string().optional(),
+  uniqueValue: z.string().min(20, 'Please describe what makes you unique (minimum 20 characters)'),
   
-  // Step 6: Availability & Commitment
+  // Step 8: Availability & Commitment
   availability: z.enum(['very_active', 'moderately_active', 'occasional']),
   timeZone: z.string().min(1, 'Time zone is required'),
+  preferredMeetingTimes: z.array(z.string()).min(1, 'Select at least one preferred time'),
 });
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>;
@@ -102,31 +120,64 @@ const USER_ROLES: UserRole[] = [
 const INDUSTRIES = [
   'Software/Technology', 'Financial Services', 'Healthcare', 'Manufacturing', 
   'Retail/E-commerce', 'Education', 'Real Estate', 'Consulting', 'Media/Entertainment',
-  'Telecommunications', 'Energy', 'Automotive', 'Aerospace', 'Other'
+  'Telecommunications', 'Energy', 'Automotive', 'Aerospace', 'Government', 'Non-profit', 'Other'
 ];
 
 const SPECIALIZATIONS = [
   'Enterprise Sales', 'Inside Sales', 'Field Sales', 'Channel Sales', 'Partner Sales',
   'Customer Success', 'Business Development', 'Account Management', 'Sales Engineering',
   'Sales Operations', 'Revenue Operations', 'Sales Enablement', 'Lead Generation',
-  'Demand Generation', 'Product Marketing', 'Growth Marketing'
+  'Demand Generation', 'Product Marketing', 'Growth Marketing', 'Sales Development'
+];
+
+const SKILLS = [
+  'CRM Management', 'Salesforce', 'HubSpot', 'Lead Qualification', 'Cold Calling',
+  'Email Marketing', 'Social Selling', 'LinkedIn Sales Navigator', 'Prospecting',
+  'Negotiation', 'Presentation Skills', 'Demo Skills', 'Objection Handling',
+  'Closing Techniques', 'Account Planning', 'Territory Management', 'Pipeline Management',
+  'Sales Forecasting', 'Data Analysis', 'Market Research', 'Competitive Analysis',
+  'Customer Relationship Management', 'Upselling', 'Cross-selling', 'Retention Strategies'
+];
+
+const CHALLENGES = [
+  'Finding qualified leads', 'Closing deals faster', 'Building stronger relationships',
+  'Understanding new technologies', 'Competing with larger companies', 'Remote selling',
+  'Managing sales pipeline', 'Improving conversion rates', 'Scaling sales processes',
+  'Team management', 'Career advancement', 'Work-life balance', 'Staying motivated',
+  'Learning new skills', 'Networking effectively', 'Personal branding'
 ];
 
 const INTERESTS = [
   'AI & Machine Learning', 'Cybersecurity', 'Cloud Computing', 'Data Analytics',
   'Digital Transformation', 'Fintech', 'Healthtech', 'Edtech', 'E-commerce',
-  'Mobile Technology', 'IoT', 'Blockchain', 'DevOps', 'API Economy'
+  'Mobile Technology', 'IoT', 'Blockchain', 'DevOps', 'API Economy', 'Automation',
+  'Virtual Reality', 'Augmented Reality', 'Sustainability Tech', 'Gaming', 'Social Media'
 ];
 
 const EVENT_PREFERENCES = [
-  'Small Group Discussions', 'Large Networking Events', 'Workshop Sessions',
-  'Panel Discussions', 'One-on-One Meetings', 'Industry Roundtables',
-  'Product Demos', 'Case Study Reviews', 'Skill Building Sessions', 'Mentorship Programs'
+  'Small Group Discussions (5-10 people)', 'Medium Groups (10-20 people)', 'Large Events (20+ people)',
+  'Workshop Sessions', 'Panel Discussions', 'One-on-One Meetings', 'Industry Roundtables',
+  'Product Demos', 'Case Study Reviews', 'Skill Building Sessions', 'Mentorship Programs',
+  'Networking Mixers', 'Lunch & Learns', 'Evening Events', 'Weekend Sessions'
 ];
 
 const TIME_ZONES = [
   'Pacific Time (PT)', 'Mountain Time (MT)', 'Central Time (CT)', 'Eastern Time (ET)',
   'GMT', 'CET', 'IST', 'JST', 'AEST', 'Other'
+];
+
+const MEETING_TIMES = [
+  'Early Morning (6-9 AM)', 'Morning (9-12 PM)', 'Lunch Time (12-2 PM)',
+  'Afternoon (2-5 PM)', 'Evening (5-8 PM)', 'Late Evening (8-10 PM)',
+  'Weekends', 'Flexible'
+];
+
+const COMPANY_SIZES = [
+  { value: 'startup', label: 'Startup (1-10 employees)' },
+  { value: 'small', label: 'Small (11-50 employees)' },
+  { value: 'medium', label: 'Medium (51-200 employees)' },
+  { value: 'large', label: 'Large (201-1000 employees)' },
+  { value: 'enterprise', label: 'Enterprise (1000+ employees)' }
 ];
 
 export function OnboardingFlow() {
@@ -149,7 +200,7 @@ export function OnboardingFlow() {
     mode: 'onChange'
   });
 
-  const totalSteps = 7; // Including role assignment step
+  const totalSteps = 9; // Including role assignment step
   const watchedValues = watch();
 
   // AI-powered role assignment based on user responses
@@ -179,14 +230,30 @@ export function OnboardingFlow() {
       scores.technical_seller += 3;
     }
 
-    // Score based on experience level
-    if (data.experienceLevel === 'executive' || data.experienceLevel === 'senior') {
-      scores.sales_leader += 2;
+    // Score based on experience level and years
+    if (data.experienceLevel === 'executive' || data.yearsExperience >= 10) {
+      scores.sales_leader += 3;
       scores.enterprise_closer += 2;
     }
-    if (data.experienceLevel === 'entry' || data.experienceLevel === 'mid') {
+    if (data.experienceLevel === 'entry' || data.yearsExperience <= 3) {
       scores.startup_hustler += 2;
       scores.saas_specialist += 1;
+    }
+
+    // Score based on company size
+    switch (data.companySize) {
+      case 'startup':
+        scores.startup_hustler += 3;
+        break;
+      case 'enterprise':
+        scores.enterprise_closer += 3;
+        scores.sales_leader += 2;
+        break;
+      case 'medium':
+      case 'large':
+        scores.saas_specialist += 2;
+        scores.relationship_builder += 1;
+        break;
     }
 
     // Score based on primary goal
@@ -204,15 +271,9 @@ export function OnboardingFlow() {
       case 'mentoring':
         scores.sales_leader += 3;
         break;
-    }
-
-    // Score based on industry
-    if (data.industry.includes('Software') || data.industry.includes('Technology')) {
-      scores.saas_specialist += 2;
-      scores.technical_seller += 2;
-    }
-    if (data.industry.includes('Financial') || data.industry.includes('Healthcare')) {
-      scores.enterprise_closer += 2;
+      case 'job_search':
+        scores.relationship_builder += 2;
+        break;
     }
 
     // Score based on specializations
@@ -221,25 +282,21 @@ export function OnboardingFlow() {
       if (spec.includes('Technical') || spec.includes('Engineering')) scores.technical_seller += 2;
       if (spec.includes('Customer Success') || spec.includes('Account Management')) scores.relationship_builder += 2;
       if (spec.includes('Business Development')) scores.startup_hustler += 1;
+      if (spec.includes('Operations') || spec.includes('Enablement')) scores.sales_leader += 2;
     });
 
-    // Score based on communication preference
-    switch (data.communicationPreference) {
-      case 'analytical':
-        scores.technical_seller += 2;
+    // Score based on skills
+    data.skills.forEach(skill => {
+      if (skill.includes('Technical') || skill.includes('Demo') || skill.includes('Engineering')) {
+        scores.technical_seller += 1;
+      }
+      if (skill.includes('Enterprise') || skill.includes('Account Planning')) {
         scores.enterprise_closer += 1;
-        break;
-      case 'collaborative':
-        scores.relationship_builder += 2;
-        break;
-      case 'direct':
-        scores.startup_hustler += 2;
-        break;
-      case 'creative':
-        scores.startup_hustler += 1;
-        scores.saas_specialist += 1;
-        break;
-    }
+      }
+      if (skill.includes('Relationship') || skill.includes('Customer')) {
+        scores.relationship_builder += 1;
+      }
+    });
 
     // Find the role with the highest score
     const topRole = Object.entries(scores).reduce((a, b) => scores[a[0]] > scores[b[0]] ? a : b);
@@ -268,25 +325,56 @@ export function OnboardingFlow() {
       const role = assignUserRole(data);
       setAssignedRole(role);
 
-      // Update user profile with onboarding data
+      // Create comprehensive bio from collected data
+      const generatedBio = data.personalBio || 
+        `${data.experienceLevel.charAt(0).toUpperCase() + data.experienceLevel.slice(1)}-level ${data.jobTitle} with ${data.yearsExperience} years of experience at ${data.company}. ${data.uniqueValue} Passionate about ${data.primaryGoal.replace('_', ' ')} in the ${data.industry} industry.`;
+
+      // Update user profile with comprehensive onboarding data
       const profileData = {
         name: user.name,
         title: data.jobTitle,
         company: data.company,
         location: data.location,
-        about: `${data.experienceLevel.charAt(0).toUpperCase() + data.experienceLevel.slice(1)}-level ${data.jobTitle} at ${data.company}. Passionate about ${data.primaryGoal.replace('_', ' ')} in the ${data.industry} industry.`,
-        skills: [...data.specialization, ...data.interests.slice(0, 3)],
+        phone: data.phone || '',
+        website: data.website || '',
+        linkedin: data.linkedin || '',
+        about: generatedBio,
+        skills: [...data.specialization, ...data.skills.slice(0, 8)], // Combine specializations and top skills
         onboardingData: {
+          // Professional Identity
+          yearsExperience: data.yearsExperience,
           experienceLevel: data.experienceLevel,
-          primaryGoal: data.primaryGoal,
           industry: data.industry,
+          companySize: data.companySize,
+          previousCompanies: data.previousCompanies || '',
+          
+          // Skills & Expertise
           specialization: data.specialization,
-          interests: data.interests,
-          eventPreferences: data.eventPreferences,
+          skills: data.skills,
+          certifications: data.certifications || '',
+          
+          // Goals & Motivations
+          primaryGoal: data.primaryGoal,
+          careerAspiration: data.careerAspiration,
+          challengesFacing: data.challengesFacing,
+          
+          // Networking & Communication
           networkingStyle: data.networkingStyle,
           communicationPreference: data.communicationPreference,
+          interests: data.interests,
+          eventPreferences: data.eventPreferences,
+          
+          // Personal Brand
+          personalBio: data.personalBio,
+          achievements: data.achievements || '',
+          uniqueValue: data.uniqueValue,
+          
+          // Availability
           availability: data.availability,
           timeZone: data.timeZone,
+          preferredMeetingTimes: data.preferredMeetingTimes,
+          
+          // System
           assignedRole: role.id,
           completedAt: new Date().toISOString()
         }
@@ -320,19 +408,19 @@ export function OnboardingFlow() {
           >
             <div className="text-center mb-8">
               <Briefcase className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900">Tell us about your role</h2>
-              <p className="text-gray-600 mt-2">Help us understand your professional background</p>
+              <h2 className="text-2xl font-bold text-gray-900">Your Professional Identity</h2>
+              <p className="text-gray-600 mt-2">Let's start with the basics about your current role</p>
             </div>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  What's your current job title?
+                  What's your current job title? *
                 </label>
                 <input
                   type="text"
                   {...register('jobTitle')}
-                  placeholder="e.g., Senior Sales Executive, Account Manager"
+                  placeholder="e.g., Senior Sales Executive, Account Manager, VP of Sales"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
                 {errors.jobTitle && (
@@ -342,7 +430,7 @@ export function OnboardingFlow() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Which company do you work for?
+                  Which company do you work for? *
                 </label>
                 <input
                   type="text"
@@ -355,19 +443,38 @@ export function OnboardingFlow() {
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Where are you located?
-                </label>
-                <input
-                  type="text"
-                  {...register('location')}
-                  placeholder="e.g., San Francisco, CA or Remote"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                />
-                {errors.location && (
-                  <p className="mt-1 text-sm text-red-600">{errors.location.message}</p>
-                )}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Location *
+                  </label>
+                  <input
+                    type="text"
+                    {...register('location')}
+                    placeholder="e.g., San Francisco, CA"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                  {errors.location && (
+                    <p className="mt-1 text-sm text-red-600">{errors.location.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Years of Experience *
+                  </label>
+                  <input
+                    type="number"
+                    {...register('yearsExperience', { valueAsNumber: true })}
+                    placeholder="e.g., 5"
+                    min="0"
+                    max="50"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                  {errors.yearsExperience && (
+                    <p className="mt-1 text-sm text-red-600">{errors.yearsExperience.message}</p>
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>
@@ -382,15 +489,80 @@ export function OnboardingFlow() {
             className="space-y-6"
           >
             <div className="text-center mb-8">
+              <Phone className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900">Contact & Social Presence</h2>
+              <p className="text-gray-600 mt-2">Help others connect with you (all optional but recommended)</p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Phone className="inline w-4 h-4 mr-1" />
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  {...register('phone')}
+                  placeholder="e.g., +1 (555) 123-4567"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                <p className="mt-1 text-xs text-gray-500">Only visible to your connections</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Globe className="inline w-4 h-4 mr-1" />
+                  Personal Website or Portfolio
+                </label>
+                <input
+                  type="url"
+                  {...register('website')}
+                  placeholder="https://yourwebsite.com"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                {errors.website && (
+                  <p className="mt-1 text-sm text-red-600">{errors.website.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Linkedin className="inline w-4 h-4 mr-1" />
+                  LinkedIn Profile
+                </label>
+                <input
+                  type="url"
+                  {...register('linkedin')}
+                  placeholder="https://linkedin.com/in/yourprofile"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                {errors.linkedin && (
+                  <p className="mt-1 text-sm text-red-600">{errors.linkedin.message}</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">We'll use this to enhance your profile and suggest connections</p>
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 3:
+        return (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <div className="text-center mb-8">
               <Target className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900">Your experience & goals</h2>
-              <p className="text-gray-600 mt-2">Help us tailor your experience</p>
+              <h2 className="text-2xl font-bold text-gray-900">Professional Background</h2>
+              <p className="text-gray-600 mt-2">Tell us about your experience and work environment</p>
             </div>
 
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  What's your experience level in sales?
+                  What's your experience level? *
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   {[
@@ -420,7 +592,159 @@ export function OnboardingFlow() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  What's your primary goal on inrooms?
+                  Which industry do you work in? *
+                </label>
+                <select
+                  {...register('industry')}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                  <option value="">Select your industry</option>
+                  {INDUSTRIES.map((industry) => (
+                    <option key={industry} value={industry}>{industry}</option>
+                  ))}
+                </select>
+                {errors.industry && (
+                  <p className="mt-1 text-sm text-red-600">{errors.industry.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  What's your company size? *
+                </label>
+                <div className="space-y-2">
+                  {COMPANY_SIZES.map((size) => (
+                    <label key={size.value} className="relative">
+                      <input
+                        type="radio"
+                        {...register('companySize')}
+                        value={size.value}
+                        className="sr-only peer"
+                      />
+                      <div className="flex items-center p-3 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:border-gray-300 transition-colors">
+                        <span className="font-medium text-gray-900">{size.label}</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                {errors.companySize && (
+                  <p className="mt-1 text-sm text-red-600">{errors.companySize.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Previous Companies (Optional)
+                </label>
+                <input
+                  type="text"
+                  {...register('previousCompanies')}
+                  placeholder="e.g., Google, Apple, Amazon (comma-separated)"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                <p className="mt-1 text-xs text-gray-500">This helps us connect you with alumni from similar companies</p>
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 4:
+        return (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <div className="text-center mb-8">
+              <Star className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900">Skills & Expertise</h2>
+              <p className="text-gray-600 mt-2">Showcase your professional capabilities</p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  What are your specializations? * (Select all that apply)
+                </label>
+                <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                  {SPECIALIZATIONS.map((spec) => (
+                    <label key={spec} className="relative">
+                      <input
+                        type="checkbox"
+                        value={spec}
+                        {...register('specialization')}
+                        className="sr-only peer"
+                      />
+                      <div className="p-3 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:border-gray-300 transition-colors text-sm">
+                        {spec}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                {errors.specialization && (
+                  <p className="mt-1 text-sm text-red-600">{errors.specialization.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  What are your key skills? * (Select at least 3)
+                </label>
+                <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                  {SKILLS.map((skill) => (
+                    <label key={skill} className="relative">
+                      <input
+                        type="checkbox"
+                        value={skill}
+                        {...register('skills')}
+                        className="sr-only peer"
+                      />
+                      <div className="p-3 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:border-gray-300 transition-colors text-sm">
+                        {skill}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                {errors.skills && (
+                  <p className="mt-1 text-sm text-red-600">{errors.skills.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Certifications & Achievements (Optional)
+                </label>
+                <textarea
+                  {...register('certifications')}
+                  rows={3}
+                  placeholder="e.g., Salesforce Certified Administrator, HubSpot Sales Certification, President's Club Winner 2023"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                <p className="mt-1 text-xs text-gray-500">List any relevant certifications, awards, or achievements</p>
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 5:
+        return (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <div className="text-center mb-8">
+              <Target className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900">Goals & Motivations</h2>
+              <p className="text-gray-600 mt-2">Help us understand what drives you</p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  What's your primary goal on inrooms? *
                 </label>
                 <div className="space-y-2">
                   {[
@@ -428,7 +752,8 @@ export function OnboardingFlow() {
                     { value: 'learning', label: 'Learn new sales techniques', icon: '📚' },
                     { value: 'career_growth', label: 'Advance my career', icon: '📈' },
                     { value: 'business_development', label: 'Find business opportunities', icon: '💼' },
-                    { value: 'mentoring', label: 'Mentor others or find mentors', icon: '🎯' }
+                    { value: 'mentoring', label: 'Mentor others or find mentors', icon: '🎯' },
+                    { value: 'job_search', label: 'Explore new job opportunities', icon: '🔍' }
                   ].map((option) => (
                     <label key={option.value} className="relative">
                       <input
@@ -448,137 +773,50 @@ export function OnboardingFlow() {
                   <p className="mt-1 text-sm text-red-600">{errors.primaryGoal.message}</p>
                 )}
               </div>
-            </div>
-          </motion.div>
-        );
 
-      case 3:
-        return (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
-          >
-            <div className="text-center mb-8">
-              <Briefcase className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900">Industry & specialization</h2>
-              <p className="text-gray-600 mt-2">Tell us about your expertise</p>
-            </div>
-
-            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Which industry do you work in?
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  What are your career aspirations? *
                 </label>
-                <select
-                  {...register('industry')}
+                <textarea
+                  {...register('careerAspiration')}
+                  rows={3}
+                  placeholder="e.g., I want to become a VP of Sales at a high-growth SaaS company and build a world-class sales team..."
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                >
-                  <option value="">Select your industry</option>
-                  {INDUSTRIES.map((industry) => (
-                    <option key={industry} value={industry}>{industry}</option>
-                  ))}
-                </select>
-                {errors.industry && (
-                  <p className="mt-1 text-sm text-red-600">{errors.industry.message}</p>
+                />
+                {errors.careerAspiration && (
+                  <p className="mt-1 text-sm text-red-600">{errors.careerAspiration.message}</p>
                 )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  What are your specializations? (Select all that apply)
+                  What challenges are you currently facing? * (Select all that apply)
                 </label>
-                <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
-                  {SPECIALIZATIONS.map((spec) => (
-                    <label key={spec} className="relative">
+                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                  {CHALLENGES.map((challenge) => (
+                    <label key={challenge} className="relative">
                       <input
                         type="checkbox"
-                        value={spec}
-                        {...register('specialization')}
+                        value={challenge}
+                        {...register('challengesFacing')}
                         className="sr-only peer"
                       />
                       <div className="p-3 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:border-gray-300 transition-colors text-sm">
-                        {spec}
+                        {challenge}
                       </div>
                     </label>
                   ))}
                 </div>
-                {errors.specialization && (
-                  <p className="mt-1 text-sm text-red-600">{errors.specialization.message}</p>
+                {errors.challengesFacing && (
+                  <p className="mt-1 text-sm text-red-600">{errors.challengesFacing.message}</p>
                 )}
               </div>
             </div>
           </motion.div>
         );
 
-      case 4:
-        return (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
-          >
-            <div className="text-center mb-8">
-              <Star className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900">Interests & preferences</h2>
-              <p className="text-gray-600 mt-2">What topics interest you most?</p>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Which topics are you most interested in?
-                </label>
-                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                  {INTERESTS.map((interest) => (
-                    <label key={interest} className="relative">
-                      <input
-                        type="checkbox"
-                        value={interest}
-                        {...register('interests')}
-                        className="sr-only peer"
-                      />
-                      <div className="p-3 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:border-gray-300 transition-colors text-sm">
-                        {interest}
-                      </div>
-                    </label>
-                  ))}
-                </div>
-                {errors.interests && (
-                  <p className="mt-1 text-sm text-red-600">{errors.interests.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  What types of events do you prefer?
-                </label>
-                <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
-                  {EVENT_PREFERENCES.map((pref) => (
-                    <label key={pref} className="relative">
-                      <input
-                        type="checkbox"
-                        value={pref}
-                        {...register('eventPreferences')}
-                        className="sr-only peer"
-                      />
-                      <div className="p-3 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:border-gray-300 transition-colors text-sm">
-                        {pref}
-                      </div>
-                    </label>
-                  ))}
-                </div>
-                {errors.eventPreferences && (
-                  <p className="mt-1 text-sm text-red-600">{errors.eventPreferences.message}</p>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        );
-
-      case 5:
+      case 6:
         return (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -588,14 +826,14 @@ export function OnboardingFlow() {
           >
             <div className="text-center mb-8">
               <Users className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900">Your networking style</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Networking & Communication</h2>
               <p className="text-gray-600 mt-2">Help us match you with the right people and events</p>
             </div>
 
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  How would you describe your networking style?
+                  How would you describe your networking style? *
                 </label>
                 <div className="space-y-3">
                   {[
@@ -624,7 +862,7 @@ export function OnboardingFlow() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  What's your communication preference?
+                  What's your communication preference? *
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   {[
@@ -651,11 +889,122 @@ export function OnboardingFlow() {
                   <p className="mt-1 text-sm text-red-600">{errors.communicationPreference.message}</p>
                 )}
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Which topics interest you most? * (Select all that apply)
+                </label>
+                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                  {INTERESTS.map((interest) => (
+                    <label key={interest} className="relative">
+                      <input
+                        type="checkbox"
+                        value={interest}
+                        {...register('interests')}
+                        className="sr-only peer"
+                      />
+                      <div className="p-3 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:border-gray-300 transition-colors text-sm">
+                        {interest}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                {errors.interests && (
+                  <p className="mt-1 text-sm text-red-600">{errors.interests.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  What types of events do you prefer? * (Select all that apply)
+                </label>
+                <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                  {EVENT_PREFERENCES.map((pref) => (
+                    <label key={pref} className="relative">
+                      <input
+                        type="checkbox"
+                        value={pref}
+                        {...register('eventPreferences')}
+                        className="sr-only peer"
+                      />
+                      <div className="p-3 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:border-gray-300 transition-colors text-sm">
+                        {pref}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                {errors.eventPreferences && (
+                  <p className="mt-1 text-sm text-red-600">{errors.eventPreferences.message}</p>
+                )}
+              </div>
             </div>
           </motion.div>
         );
 
-      case 6:
+      case 7:
+        return (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <div className="text-center mb-8">
+              <Star className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900">Personal Brand & Bio</h2>
+              <p className="text-gray-600 mt-2">Tell your professional story</p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Write a brief professional bio * (50+ characters)
+                </label>
+                <textarea
+                  {...register('personalBio')}
+                  rows={4}
+                  placeholder="e.g., Experienced enterprise sales professional with 8+ years driving $10M+ in annual revenue. Passionate about building long-term client relationships and helping startups scale their sales operations. Expert in SaaS, CRM implementation, and team leadership..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                {errors.personalBio && (
+                  <p className="mt-1 text-sm text-red-600">{errors.personalBio.message}</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">This will be your main profile description</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Notable Achievements (Optional)
+                </label>
+                <textarea
+                  {...register('achievements')}
+                  rows={3}
+                  placeholder="e.g., Exceeded quota by 150% for 3 consecutive years, Built and led a team of 12 sales reps, Closed the largest deal in company history ($2.5M)..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                <p className="mt-1 text-xs text-gray-500">Highlight your biggest wins and accomplishments</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  What makes you unique? * (20+ characters)
+                </label>
+                <textarea
+                  {...register('uniqueValue')}
+                  rows={3}
+                  placeholder="e.g., I combine technical expertise with sales acumen to help complex B2B companies simplify their sales process and accelerate growth..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                {errors.uniqueValue && (
+                  <p className="mt-1 text-sm text-red-600">{errors.uniqueValue.message}</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">What's your unique value proposition or approach?</p>
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 8:
         return (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -665,14 +1014,14 @@ export function OnboardingFlow() {
           >
             <div className="text-center mb-8">
               <MapPin className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900">Availability & preferences</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Availability & Preferences</h2>
               <p className="text-gray-600 mt-2">Help us schedule the perfect events for you</p>
             </div>
 
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  How active do you plan to be on inrooms?
+                  How active do you plan to be on inrooms? *
                 </label>
                 <div className="space-y-3">
                   {[
@@ -701,7 +1050,7 @@ export function OnboardingFlow() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  What's your time zone?
+                  What's your time zone? *
                 </label>
                 <select
                   {...register('timeZone')}
@@ -716,11 +1065,35 @@ export function OnboardingFlow() {
                   <p className="mt-1 text-sm text-red-600">{errors.timeZone.message}</p>
                 )}
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  When do you prefer to attend events? * (Select all that apply)
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {MEETING_TIMES.map((time) => (
+                    <label key={time} className="relative">
+                      <input
+                        type="checkbox"
+                        value={time}
+                        {...register('preferredMeetingTimes')}
+                        className="sr-only peer"
+                      />
+                      <div className="p-3 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:border-gray-300 transition-colors text-sm">
+                        {time}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                {errors.preferredMeetingTimes && (
+                  <p className="mt-1 text-sm text-red-600">{errors.preferredMeetingTimes.message}</p>
+                )}
+              </div>
             </div>
           </motion.div>
         );
 
-      case 7:
+      case 9:
         return showRoleAssignment && assignedRole ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -785,7 +1158,7 @@ export function OnboardingFlow() {
         <div className="text-center mb-8">
           <Logo />
           <h1 className="text-2xl font-bold text-gray-900 mt-4">Welcome to inrooms!</h1>
-          <p className="text-gray-600 mt-2">Let's personalize your experience</p>
+          <p className="text-gray-600 mt-2">Let's build your professional profile</p>
         </div>
 
         {/* Progress Bar */}
