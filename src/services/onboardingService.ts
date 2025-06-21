@@ -2,16 +2,33 @@ import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 export interface OnboardingData {
+  // Professional Background
   experienceLevel: 'entry' | 'mid' | 'senior' | 'executive';
-  primaryGoal: 'networking' | 'learning' | 'career_growth' | 'business_development' | 'mentoring';
   industry: string;
-  specialization: string[];
-  interests: string[];
-  eventPreferences: string[];
+  companySize: 'startup' | 'small' | 'medium' | 'large' | 'enterprise';
+  previousCompanies?: string;
+  specializations: string[];
+  certifications?: string;
+  
+  // Goals & Motivations
+  primaryGoal: 'networking' | 'learning' | 'career_growth' | 'business_development' | 'mentoring';
+  careerAspirations: string;
+  currentChallenges: string[];
+  valueProposition: string;
+  achievements?: string;
+  
+  // Networking & Communication
   networkingStyle: 'introvert' | 'extrovert' | 'ambivert';
   communicationPreference: 'direct' | 'collaborative' | 'analytical' | 'creative';
+  interests: string[];
+  eventPreferences: string[];
+  
+  // Availability & Preferences
   availability: 'very_active' | 'moderately_active' | 'occasional';
   timeZone: string;
+  preferredMeetingTimes: string[];
+  
+  // Assigned Role
   assignedRole: string;
   completedAt: string;
 }
@@ -31,11 +48,44 @@ export const onboardingService = {
   async completeOnboarding(userId: string, onboardingData: OnboardingData): Promise<void> {
     try {
       const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
-        onboardingData,
-        onboardingCompleted: true,
+      
+      // Update user profile with all onboarding data
+      const updateData = {
+        // Professional Background
+        'profile.experienceLevel': onboardingData.experienceLevel,
+        'profile.industry': onboardingData.industry,
+        'profile.companySize': onboardingData.companySize,
+        'profile.previousCompanies': onboardingData.previousCompanies || '',
+        'profile.specializations': onboardingData.specializations,
+        'profile.certifications': onboardingData.certifications || '',
+        
+        // Goals & Motivations
+        'profile.primaryGoal': onboardingData.primaryGoal,
+        'profile.careerAspirations': onboardingData.careerAspirations,
+        'profile.currentChallenges': onboardingData.currentChallenges,
+        'profile.valueProposition': onboardingData.valueProposition,
+        'profile.achievements': onboardingData.achievements || '',
+        
+        // Networking & Communication
+        'profile.networkingStyle': onboardingData.networkingStyle,
+        'profile.communicationPreference': onboardingData.communicationPreference,
+        'profile.interests': onboardingData.interests,
+        'profile.eventPreferences': onboardingData.eventPreferences,
+        
+        // Availability & Preferences
+        'profile.availability': onboardingData.availability,
+        'profile.timeZone': onboardingData.timeZone,
+        'profile.preferredMeetingTimes': onboardingData.preferredMeetingTimes,
+        
+        // Assigned Role & Completion
+        'profile.assignedRole': onboardingData.assignedRole,
+        'profile.onboardingCompleted': true,
+        'profile.onboardingCompletedAt': onboardingData.completedAt,
+        
         updatedAt: serverTimestamp(),
-      });
+      };
+
+      await updateDoc(userRef, updateData);
     } catch (error) {
       console.error('Error completing onboarding:', error);
       throw error;
@@ -46,7 +96,7 @@ export const onboardingService = {
     try {
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, {
-        'onboardingData.assignedRole': roleId,
+        'profile.assignedRole': roleId,
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
@@ -118,7 +168,7 @@ export const onboardingService = {
     }
 
     // Score based on specializations
-    data.specialization.forEach(spec => {
+    data.specializations.forEach(spec => {
       if (spec.includes('Enterprise')) scores.enterprise_closer += 2;
       if (spec.includes('Technical') || spec.includes('Engineering')) scores.technical_seller += 3;
       if (spec.includes('Customer Success') || spec.includes('Account Management')) scores.relationship_builder += 2;

@@ -6,7 +6,11 @@ import { z } from 'zod';
 import { MainLayout } from '../../layouts/MainLayout';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/common/Button';
-import { MessageSquare, UserPlus, Users, Briefcase, MapPin, Calendar, Edit3, Save, X, Camera, Mail, Phone, Globe, Linkedin } from 'lucide-react';
+import { 
+  MessageSquare, UserPlus, Users, Briefcase, MapPin, Calendar, Edit3, Save, X, Camera, 
+  Mail, Phone, Globe, Linkedin, Target, Award, Clock, Building, GraduationCap, Star,
+  TrendingUp, Activity, Zap, Heart, Brain, Coffee
+} from 'lucide-react';
 import { messageService } from '../../services/messageService';
 import { networkService, type NetworkProfile } from '../../services/networkService';
 import { toast } from 'react-hot-toast';
@@ -182,6 +186,49 @@ export function ProfilePage() {
     toast.info('Photo upload feature coming soon!');
   };
 
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'enterprise_closer': return <Building className="w-5 h-5" />;
+      case 'startup_hustler': return <Zap className="w-5 h-5" />;
+      case 'saas_specialist': return <TrendingUp className="w-5 h-5" />;
+      case 'relationship_builder': return <Heart className="w-5 h-5" />;
+      case 'sales_leader': return <Star className="w-5 h-5" />;
+      case 'technical_seller': return <Brain className="w-5 h-5" />;
+      default: return <Users className="w-5 h-5" />;
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'enterprise_closer': return 'Enterprise Closer';
+      case 'startup_hustler': return 'Startup Hustler';
+      case 'saas_specialist': return 'SaaS Specialist';
+      case 'relationship_builder': return 'Relationship Builder';
+      case 'sales_leader': return 'Sales Leader';
+      case 'technical_seller': return 'Technical Seller';
+      default: return 'Sales Professional';
+    }
+  };
+
+  const getExperienceLevelLabel = (level: string) => {
+    switch (level) {
+      case 'entry': return 'Entry Level (0-2 years)';
+      case 'mid': return 'Mid Level (3-5 years)';
+      case 'senior': return 'Senior (6-10 years)';
+      case 'executive': return 'Executive (10+ years)';
+      default: return 'Professional';
+    }
+  };
+
+  const getAvailabilityLabel = (availability: string) => {
+    switch (availability) {
+      case 'very_active': return 'Very Active (3+ events/week)';
+      case 'moderately_active': return 'Moderately Active (1-2 events/week)';
+      case 'occasional': return 'Occasional (1-2 events/month)';
+      default: return 'Available';
+    }
+  };
+
   if (loadingProfile) {
     return (
       <MainLayout>
@@ -196,7 +243,7 @@ export function ProfilePage() {
 
   return (
     <MainLayout>
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="bg-white shadow-sm rounded-lg overflow-hidden">
           {/* Profile Header */}
           <div className="relative bg-gradient-to-r from-indigo-500 to-purple-600 h-32">
@@ -230,9 +277,19 @@ export function ProfilePage() {
               <div className="mt-4 sm:mt-0 flex-1">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900">
-                      {isEditing ? watch('name') : currentUser?.name}
-                    </h1>
+                    <div className="flex items-center space-x-3">
+                      <h1 className="text-2xl font-bold text-gray-900">
+                        {isEditing ? watch('name') : currentUser?.name}
+                      </h1>
+                      {currentUser?.profile?.assignedRole && (
+                        <div className="flex items-center space-x-2 bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full">
+                          {getRoleIcon(currentUser.profile.assignedRole)}
+                          <span className="text-sm font-medium">
+                            {getRoleLabel(currentUser.profile.assignedRole)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                     <p className="text-lg text-gray-600">
                       {isEditing ? watch('title') : (currentUser?.profile?.title || currentUser?.profile_title || 'Sales Professional')}
                     </p>
@@ -436,7 +493,8 @@ export function ProfilePage() {
             ) : (
               <div className="p-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  <div className="lg:col-span-2 space-y-6">
+                  <div className="lg:col-span-2 space-y-8">
+                    {/* About Section */}
                     <div>
                       <h3 className="text-lg font-medium text-gray-900 mb-3">About</h3>
                       <p className="text-gray-700 leading-relaxed">
@@ -445,9 +503,58 @@ export function ProfilePage() {
                       </p>
                     </div>
 
+                    {/* Professional Background */}
+                    {currentUser?.profile && (
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Professional Background</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {currentUser.profile.experienceLevel && (
+                            <div className="bg-gray-50 rounded-lg p-4">
+                              <div className="flex items-center mb-2">
+                                <GraduationCap className="w-5 h-5 text-indigo-600 mr-2" />
+                                <span className="font-medium text-gray-900">Experience Level</span>
+                              </div>
+                              <p className="text-gray-700">{getExperienceLevelLabel(currentUser.profile.experienceLevel)}</p>
+                            </div>
+                          )}
+                          
+                          {currentUser.profile.industry && (
+                            <div className="bg-gray-50 rounded-lg p-4">
+                              <div className="flex items-center mb-2">
+                                <Building className="w-5 h-5 text-indigo-600 mr-2" />
+                                <span className="font-medium text-gray-900">Industry</span>
+                              </div>
+                              <p className="text-gray-700">{currentUser.profile.industry}</p>
+                            </div>
+                          )}
+
+                          {currentUser.profile.primaryGoal && (
+                            <div className="bg-gray-50 rounded-lg p-4">
+                              <div className="flex items-center mb-2">
+                                <Target className="w-5 h-5 text-indigo-600 mr-2" />
+                                <span className="font-medium text-gray-900">Primary Goal</span>
+                              </div>
+                              <p className="text-gray-700 capitalize">{currentUser.profile.primaryGoal.replace('_', ' ')}</p>
+                            </div>
+                          )}
+
+                          {currentUser.profile.availability && (
+                            <div className="bg-gray-50 rounded-lg p-4">
+                              <div className="flex items-center mb-2">
+                                <Clock className="w-5 h-5 text-indigo-600 mr-2" />
+                                <span className="font-medium text-gray-900">Availability</span>
+                              </div>
+                              <p className="text-gray-700">{getAvailabilityLabel(currentUser.profile.availability)}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Skills Section */}
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-3">Skills</h3>
-                      <div className="flex flex-wrap gap-2">
+                      <h3 className="text-lg font-medium text-gray-900 mb-3">Skills & Expertise</h3>
+                      <div className="flex flex-wrap gap-2 mb-4">
                         {(currentUser?.profile?.skills || currentUser?.profile_skills || ['Enterprise Sales', 'SaaS', 'Lead Generation', 'CRM']).map((skill, index) => (
                           <span
                             key={index}
@@ -457,8 +564,41 @@ export function ProfilePage() {
                           </span>
                         ))}
                       </div>
+                      
+                      {currentUser?.profile?.specializations && currentUser.profile.specializations.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900 mb-2">Specializations</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {currentUser.profile.specializations.map((spec, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800"
+                              >
+                                {spec}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
+                    {/* Career Aspirations */}
+                    {currentUser?.profile?.careerAspirations && (
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-3">Career Aspirations</h3>
+                        <p className="text-gray-700 leading-relaxed">{currentUser.profile.careerAspirations}</p>
+                      </div>
+                    )}
+
+                    {/* Value Proposition */}
+                    {currentUser?.profile?.valueProposition && (
+                      <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-6">
+                        <h3 className="text-lg font-medium text-indigo-900 mb-3">Unique Value Proposition</h3>
+                        <p className="text-indigo-800 leading-relaxed italic">"{currentUser.profile.valueProposition}"</p>
+                      </div>
+                    )}
+
+                    {/* Connection Status */}
                     {!isOwnProfile && isConnected && (
                       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                         <div className="flex items-center">
@@ -472,7 +612,9 @@ export function ProfilePage() {
                     )}
                   </div>
 
+                  {/* Sidebar */}
                   <div className="space-y-6">
+                    {/* Contact Information */}
                     <div>
                       <h3 className="text-lg font-medium text-gray-900 mb-4">Contact Information</h3>
                       <dl className="space-y-3">
@@ -558,6 +700,34 @@ export function ProfilePage() {
                       </dl>
                     </div>
 
+                    {/* Networking Preferences */}
+                    {currentUser?.profile && (
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Networking Style</h3>
+                        <div className="space-y-3">
+                          {currentUser.profile.networkingStyle && (
+                            <div className="bg-gray-50 rounded-lg p-3">
+                              <p className="text-sm font-medium text-gray-900">Style</p>
+                              <p className="text-sm text-gray-600 capitalize">{currentUser.profile.networkingStyle}</p>
+                            </div>
+                          )}
+                          {currentUser.profile.communicationPreference && (
+                            <div className="bg-gray-50 rounded-lg p-3">
+                              <p className="text-sm font-medium text-gray-900">Communication</p>
+                              <p className="text-sm text-gray-600 capitalize">{currentUser.profile.communicationPreference}</p>
+                            </div>
+                          )}
+                          {currentUser.profile.timeZone && (
+                            <div className="bg-gray-50 rounded-lg p-3">
+                              <p className="text-sm font-medium text-gray-900">Time Zone</p>
+                              <p className="text-sm text-gray-600">{currentUser.profile.timeZone}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Activity Stats */}
                     <div>
                       <h3 className="text-lg font-medium text-gray-900 mb-4">Activity</h3>
                       <div className="space-y-3">
@@ -575,6 +745,23 @@ export function ProfilePage() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Interests */}
+                    {currentUser?.profile?.interests && currentUser.profile.interests.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Interests</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {currentUser.profile.interests.map((interest, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-800"
+                            >
+                              {interest}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

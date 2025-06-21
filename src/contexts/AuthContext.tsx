@@ -32,6 +32,7 @@ interface UserProfile {
     eventsUsed: number;
   };
   profile?: {
+    // Basic Info
     title?: string;
     company?: string;
     location?: string;
@@ -42,6 +43,37 @@ interface UserProfile {
     skills?: string[];
     points?: number;
     joinedAt?: Date;
+    
+    // Professional Background
+    yearsExperience?: number;
+    experienceLevel?: 'entry' | 'mid' | 'senior' | 'executive';
+    industry?: string;
+    companySize?: 'startup' | 'small' | 'medium' | 'large' | 'enterprise';
+    previousCompanies?: string;
+    specializations?: string[];
+    certifications?: string;
+    
+    // Goals & Motivations
+    primaryGoal?: 'networking' | 'learning' | 'career_growth' | 'business_development' | 'mentoring';
+    careerAspirations?: string;
+    currentChallenges?: string[];
+    valueProposition?: string;
+    achievements?: string;
+    
+    // Networking & Communication
+    networkingStyle?: 'introvert' | 'extrovert' | 'ambivert';
+    communicationPreference?: 'direct' | 'collaborative' | 'analytical' | 'creative';
+    interests?: string[];
+    eventPreferences?: string[];
+    
+    // Availability & Preferences
+    availability?: 'very_active' | 'moderately_active' | 'occasional';
+    timeZone?: string;
+    preferredMeetingTimes?: string[];
+    
+    // Assigned Role
+    assignedRole?: string;
+    onboardingCompleted?: boolean;
   };
   connections?: string[];
 }
@@ -82,6 +114,7 @@ async function createOrUpdateUserProfile(firebaseUser: FirebaseUser, name?: stri
         eventsUsed: existingData.subscription?.eventsUsed || 0,
       },
       profile: {
+        // Basic Info
         title: existingData.profile?.title || '',
         company: existingData.profile?.company || '',
         location: existingData.profile?.location || '',
@@ -92,6 +125,37 @@ async function createOrUpdateUserProfile(firebaseUser: FirebaseUser, name?: stri
         skills: existingData.profile?.skills || [],
         points: existingData.profile?.points || 0,
         joinedAt: existingData.profile?.joinedAt || new Date(),
+        
+        // Professional Background
+        yearsExperience: existingData.profile?.yearsExperience || 0,
+        experienceLevel: existingData.profile?.experienceLevel || 'entry',
+        industry: existingData.profile?.industry || '',
+        companySize: existingData.profile?.companySize || 'startup',
+        previousCompanies: existingData.profile?.previousCompanies || '',
+        specializations: existingData.profile?.specializations || [],
+        certifications: existingData.profile?.certifications || '',
+        
+        // Goals & Motivations
+        primaryGoal: existingData.profile?.primaryGoal || 'networking',
+        careerAspirations: existingData.profile?.careerAspirations || '',
+        currentChallenges: existingData.profile?.currentChallenges || [],
+        valueProposition: existingData.profile?.valueProposition || '',
+        achievements: existingData.profile?.achievements || '',
+        
+        // Networking & Communication
+        networkingStyle: existingData.profile?.networkingStyle || 'ambivert',
+        communicationPreference: existingData.profile?.communicationPreference || 'collaborative',
+        interests: existingData.profile?.interests || [],
+        eventPreferences: existingData.profile?.eventPreferences || [],
+        
+        // Availability & Preferences
+        availability: existingData.profile?.availability || 'moderately_active',
+        timeZone: existingData.profile?.timeZone || '',
+        preferredMeetingTimes: existingData.profile?.preferredMeetingTimes || [],
+        
+        // Assigned Role
+        assignedRole: existingData.profile?.assignedRole || '',
+        onboardingCompleted: existingData.profile?.onboardingCompleted || false,
       },
       connections: existingData.connections || [],
       createdAt: existingData.createdAt || serverTimestamp(),
@@ -262,19 +326,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const userRef = doc(db, 'users', userId);
       
-      // Prepare the update data
-      const updateData = {
-        name: profileData.name,
-        'profile.title': profileData.title || '',
-        'profile.company': profileData.company || '',
-        'profile.location': profileData.location || '',
-        'profile.about': profileData.about || '',
-        'profile.phone': profileData.phone || '',
-        'profile.website': profileData.website || '',
-        'profile.linkedin': profileData.linkedin || '',
-        'profile.skills': profileData.skills || [],
+      // Prepare the update data with nested profile structure
+      const updateData: any = {
         updatedAt: serverTimestamp(),
       };
+
+      // Handle basic profile fields
+      if (profileData.name !== undefined) updateData.name = profileData.name;
+      if (profileData.title !== undefined) updateData['profile.title'] = profileData.title;
+      if (profileData.company !== undefined) updateData['profile.company'] = profileData.company;
+      if (profileData.location !== undefined) updateData['profile.location'] = profileData.location;
+      if (profileData.about !== undefined) updateData['profile.about'] = profileData.about;
+      if (profileData.phone !== undefined) updateData['profile.phone'] = profileData.phone;
+      if (profileData.website !== undefined) updateData['profile.website'] = profileData.website;
+      if (profileData.linkedin !== undefined) updateData['profile.linkedin'] = profileData.linkedin;
+      if (profileData.skills !== undefined) updateData['profile.skills'] = profileData.skills;
+
+      // Handle professional background
+      if (profileData.yearsExperience !== undefined) updateData['profile.yearsExperience'] = profileData.yearsExperience;
+      if (profileData.experienceLevel !== undefined) updateData['profile.experienceLevel'] = profileData.experienceLevel;
+      if (profileData.industry !== undefined) updateData['profile.industry'] = profileData.industry;
+      if (profileData.companySize !== undefined) updateData['profile.companySize'] = profileData.companySize;
+      if (profileData.previousCompanies !== undefined) updateData['profile.previousCompanies'] = profileData.previousCompanies;
+      if (profileData.specializations !== undefined) updateData['profile.specializations'] = profileData.specializations;
+      if (profileData.certifications !== undefined) updateData['profile.certifications'] = profileData.certifications;
+
+      // Handle goals & motivations
+      if (profileData.primaryGoal !== undefined) updateData['profile.primaryGoal'] = profileData.primaryGoal;
+      if (profileData.careerAspirations !== undefined) updateData['profile.careerAspirations'] = profileData.careerAspirations;
+      if (profileData.currentChallenges !== undefined) updateData['profile.currentChallenges'] = profileData.currentChallenges;
+      if (profileData.valueProposition !== undefined) updateData['profile.valueProposition'] = profileData.valueProposition;
+      if (profileData.achievements !== undefined) updateData['profile.achievements'] = profileData.achievements;
+
+      // Handle networking & communication
+      if (profileData.networkingStyle !== undefined) updateData['profile.networkingStyle'] = profileData.networkingStyle;
+      if (profileData.communicationPreference !== undefined) updateData['profile.communicationPreference'] = profileData.communicationPreference;
+      if (profileData.interests !== undefined) updateData['profile.interests'] = profileData.interests;
+      if (profileData.eventPreferences !== undefined) updateData['profile.eventPreferences'] = profileData.eventPreferences;
+
+      // Handle availability & preferences
+      if (profileData.availability !== undefined) updateData['profile.availability'] = profileData.availability;
+      if (profileData.timeZone !== undefined) updateData['profile.timeZone'] = profileData.timeZone;
+      if (profileData.preferredMeetingTimes !== undefined) updateData['profile.preferredMeetingTimes'] = profileData.preferredMeetingTimes;
+
+      // Handle assigned role
+      if (profileData.assignedRole !== undefined) updateData['profile.assignedRole'] = profileData.assignedRole;
+      if (profileData.onboardingCompleted !== undefined) updateData['profile.onboardingCompleted'] = profileData.onboardingCompleted;
 
       await updateDoc(userRef, updateData);
       
