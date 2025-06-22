@@ -60,7 +60,7 @@ export function PricingCard({
           <span className={`text-lg ${
             isPopular ? 'text-indigo-600' : isCurrentPlan ? 'text-green-600' : 'text-gray-500'
           }`}>
-            /{plan.interval}
+            /{plan.interval === 'month' ? 'mo' : 'yr'}
           </span>
         </div>
 

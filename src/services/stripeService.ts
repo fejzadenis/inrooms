@@ -27,7 +27,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Basic profile features',
       'Email support'
     ],
-    stripePriceId: 'price_starter_monthly' // Replace with actual Stripe price ID
+    stripePriceId: 'price_1234567890' // Replace with actual Stripe price ID
   },
   {
     id: 'professional',
@@ -43,7 +43,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Advanced networking tools',
       'Email support'
     ],
-    stripePriceId: 'price_professional_monthly' // Replace with actual Stripe price ID
+    stripePriceId: 'price_1234567891' // Replace with actual Stripe price ID
   },
   {
     id: 'enterprise',
@@ -61,14 +61,15 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Dedicated account manager',
       'Phone support'
     ],
-    stripePriceId: 'price_enterprise_monthly' // Replace with actual Stripe price ID
+    stripePriceId: 'price_1234567892' // Replace with actual Stripe price ID
   }
 ];
 
 export const stripeService = {
   async createCheckoutSession(userId: string, priceId: string, successUrl: string, cancelUrl: string) {
     try {
-      const response = await fetch('/api/create-checkout-session', {
+      // Create checkout session via your backend API
+      const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +83,8 @@ export const stripeService = {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create checkout session');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create checkout session');
       }
 
       const { sessionId } = await response.json();
@@ -105,7 +107,7 @@ export const stripeService = {
 
   async createCustomerPortalSession(customerId: string, returnUrl: string) {
     try {
-      const response = await fetch('/api/create-portal-session', {
+      const response = await fetch('/api/stripe/create-portal-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -117,7 +119,8 @@ export const stripeService = {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create portal session');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create portal session');
       }
 
       const { url } = await response.json();
@@ -153,5 +156,52 @@ export const stripeService = {
 
   getPlanById(planId: string): SubscriptionPlan | undefined {
     return subscriptionPlans.find(plan => plan.id === planId);
+  },
+
+  // Mock function for demo - replace with actual Stripe API calls
+  async getPaymentMethods(customerId: string) {
+    // This would normally call your backend to get payment methods from Stripe
+    return [
+      {
+        id: 'pm_1234567890',
+        type: 'card' as const,
+        card: {
+          brand: 'visa',
+          last4: '4242',
+          expMonth: 12,
+          expYear: 2025,
+        },
+        isDefault: true,
+      }
+    ];
+  },
+
+  async getInvoices(customerId: string) {
+    // This would normally call your backend to get invoices from Stripe
+    return [
+      {
+        id: 'in_1234567890',
+        date: new Date().toISOString(),
+        amount: 99,
+        status: 'paid',
+        description: 'Professional Plan - Current Month',
+        downloadUrl: '#'
+      }
+    ];
+  },
+
+  async addPaymentMethod(customerId: string) {
+    // This would normally integrate with Stripe Elements to add a payment method
+    throw new Error('Payment method management coming soon');
+  },
+
+  async setDefaultPaymentMethod(customerId: string, paymentMethodId: string) {
+    // This would normally call your backend to set default payment method
+    throw new Error('Payment method management coming soon');
+  },
+
+  async deletePaymentMethod(paymentMethodId: string) {
+    // This would normally call your backend to delete payment method
+    throw new Error('Payment method management coming soon');
   }
 };
