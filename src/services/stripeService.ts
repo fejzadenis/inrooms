@@ -169,15 +169,19 @@ export const annualPlans: SubscriptionPlan[] = subscriptionPlans
 export const allPlans = [...subscriptionPlans, ...annualPlans];
 
 export const stripeService = {
-  async createCheckoutSession(userId: string, priceId: string, successUrl: string, cancelUrl: string) {
+  async createCheckoutSession(userId: string, priceId: string, successUrl: string, cancelUrl: string, addOns: string[] = []) {
     try {
-      // For demo purposes, simulate the checkout process since backend API doesn't exist yet
-      console.warn('Stripe backend API not implemented yet. Simulating checkout process...');
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // In a real implementation, this would call your backend API
-      const response = await fetch('/api/stripe/create-checkout-session', {
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing. Please check your environment variables.');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -185,10 +189,8 @@ export const stripeService = {
           priceId,
           successUrl,
           cancelUrl,
+          addOns,
         }),
-      }).catch(() => {
-        // If the API endpoint doesn't exist, throw a helpful error
-        throw new Error('Stripe integration is not yet configured. Please contact support to set up billing.');
       });
 
       if (!response.ok) {
@@ -198,7 +200,6 @@ export const stripeService = {
           const errorData = await response.json();
           errorMessage = errorData.error || errorMessage;
         } catch (jsonError) {
-          // If response is not JSON, use the status text or a generic message
           errorMessage = response.statusText || 'Received an invalid response from the server. Please try again.';
         }
         
@@ -254,21 +255,25 @@ export const stripeService = {
     timeline: string;
   }) {
     try {
-      // In a real implementation, this would send the quote request to your backend
-      const response = await fetch('/api/custom-quote', {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing. Please check your environment variables.');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/custom-quote`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(companyInfo),
-      }).catch(() => {
-        // For demo purposes, simulate successful submission
-        console.log('Custom quote request:', companyInfo);
-        return { ok: true, json: () => Promise.resolve({ success: true }) };
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit quote request');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit quote request');
       }
 
       return await response.json();
@@ -280,13 +285,17 @@ export const stripeService = {
 
   async createCustomerPortalSession(customerId: string, returnUrl: string) {
     try {
-      // For demo purposes, show a helpful message since backend API doesn't exist yet
-      console.warn('Stripe backend API not implemented yet. Customer portal not available.');
-      throw new Error('Billing portal is not yet configured. Please contact support for billing management.');
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      const response = await fetch('/api/stripe/create-portal-session', {
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing. Please check your environment variables.');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-portal`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
