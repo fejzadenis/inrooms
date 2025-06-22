@@ -46,10 +46,14 @@ serve(async (req) => {
       )
     }
 
-    // Get user data from Supabase
-    const { data: userData, error: userError } = await supabaseClient.auth.admin.getUserById(userId)
+    // Get user data from the users table directly
+    const { data: userData, error: userError } = await supabaseClient
+      .from('users')
+      .select('email, stripe_customer_id')
+      .eq('id', userId)
+      .single()
     
-    if (userError || !userData.user) {
+    if (userError || !userData) {
       return new Response(
         JSON.stringify({ error: 'User not found' }),
         { 
@@ -78,19 +82,12 @@ serve(async (req) => {
     // Create or retrieve Stripe customer
     let customerId: string
     
-    // Check if user already has a Stripe customer ID
-    const { data: existingUser } = await supabaseClient
-      .from('users')
-      .select('stripe_customer_id')
-      .eq('id', userId)
-      .single()
-
-    if (existingUser?.stripe_customer_id) {
-      customerId = existingUser.stripe_customer_id
+    if (userData.stripe_customer_id) {
+      customerId = userData.stripe_customer_id
     } else {
       // Create new Stripe customer
       const customer = await stripe.customers.create({
-        email: userData.user.email,
+        email: userData.email,
         metadata: {
           supabase_user_id: userId,
         },
