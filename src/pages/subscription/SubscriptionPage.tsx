@@ -2,11 +2,13 @@ import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MainLayout } from '../../layouts/MainLayout';
 import { PricingCard } from '../../components/billing/PricingCard';
+import { CustomQuoteModal } from '../../components/billing/CustomQuoteModal';
+import { AddOnCard } from '../../components/billing/AddOnCard';
 import { Button } from '../../components/common/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { stripeService, type SubscriptionPlan } from '../../services/stripeService';
 import { toast } from 'react-hot-toast';
-import { CheckCircle, ArrowRight, Star, Zap, Users, Crown, DollarSign } from 'lucide-react';
+import { CheckCircle, ArrowRight, Star, Zap, Users, Crown, DollarSign, Plus } from 'lucide-react';
 
 export function SubscriptionPage() {
   const { user, startFreeTrial } = useAuth();
@@ -15,6 +17,8 @@ export function SubscriptionPage() {
   const [loading, setLoading] = React.useState(false);
   const [selectedPlan, setSelectedPlan] = React.useState<SubscriptionPlan | null>(null);
   const [billingInterval, setBillingInterval] = React.useState<'monthly' | 'yearly'>('monthly');
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = React.useState(false);
+  const [selectedAddOns, setSelectedAddOns] = React.useState<string[]>([]);
 
   // Check for success/cancel parameters from Stripe redirect
   React.useEffect(() => {
@@ -83,7 +87,20 @@ export function SubscriptionPage() {
     }
   };
 
+  const handleRequestQuote = (plan: SubscriptionPlan) => {
+    setIsQuoteModalOpen(true);
+  };
+
+  const handleToggleAddOn = (addOn: any) => {
+    setSelectedAddOns(prev => 
+      prev.includes(addOn.id) 
+        ? prev.filter(id => id !== addOn.id)
+        : [...prev, addOn.id]
+    );
+  };
+
   const plans = stripeService.getMonthlyPlans();
+  const addOns = stripeService.getAddOns();
 
   const features = [
     'Access to exclusive networking events',
@@ -115,6 +132,11 @@ export function SubscriptionPage() {
       description: 'Learn from industry leaders and top performers'
     }
   ];
+
+  const totalAddOnCost = selectedAddOns.reduce((total, addOnId) => {
+    const addOn = addOns.find(a => a.id === addOnId);
+    return total + (addOn?.price || 0);
+  }, 0);
 
   return (
     <MainLayout>
@@ -204,17 +226,63 @@ export function SubscriptionPage() {
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
             Choose the Right Plan for You
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
             {plans.map((plan) => (
               <PricingCard
                 key={plan.id}
                 plan={plan}
                 onSelectPlan={handleSelectPlan}
+                onRequestQuote={handleRequestQuote}
                 loading={loading && selectedPlan?.id === plan.id}
                 billingInterval={billingInterval}
               />
             ))}
           </div>
+        </div>
+
+        {/* Add-ons Section */}
+        <div className="mb-16">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Enhance Your Experience
+            </h2>
+            <p className="text-xl text-gray-600">
+              Add premium features to any plan for even better networking results
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {addOns.map((addOn) => (
+              <AddOnCard
+                key={addOn.id}
+                addOn={addOn}
+                isActive={selectedAddOns.includes(addOn.id)}
+                onToggle={handleToggleAddOn}
+                loading={false}
+              />
+            ))}
+          </div>
+
+          {selectedAddOns.length > 0 && (
+            <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md mx-auto">
+              <h3 className="font-semibold text-gray-900 mb-2">Selected Add-ons</h3>
+              <div className="space-y-2">
+                {selectedAddOns.map(addOnId => {
+                  const addOn = addOns.find(a => a.id === addOnId);
+                  return addOn ? (
+                    <div key={addOnId} className="flex justify-between text-sm">
+                      <span>{addOn.name}</span>
+                      <span>${addOn.price}/month</span>
+                    </div>
+                  ) : null;
+                })}
+                <div className="border-t border-yellow-300 pt-2 flex justify-between font-semibold">
+                  <span>Total Add-ons:</span>
+                  <span>${totalAddOnCost}/month</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Features Overview */}
@@ -306,6 +374,20 @@ export function SubscriptionPage() {
                 and can still cancel anytime with a prorated refund.
               </p>
             </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">What's the Premium Profile Badge?</h3>
+              <p className="text-gray-600 text-sm">
+                The Premium Profile Badge is a $29/month add-on that gives you a verified badge, higher search visibility, 
+                and priority in connection recommendations.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">How does custom pricing work?</h3>
+              <p className="text-gray-600 text-sm">
+                For large enterprises (50+ users), we create custom solutions with tailored pricing based on your specific 
+                needs, integrations, and usage requirements.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -319,6 +401,11 @@ export function SubscriptionPage() {
           </p>
         </div>
       </div>
+
+      <CustomQuoteModal 
+        isOpen={isQuoteModalOpen} 
+        onClose={() => setIsQuoteModalOpen(false)} 
+      />
     </MainLayout>
   );
 }

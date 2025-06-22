@@ -2,7 +2,9 @@ import React from 'react';
 import { MainLayout } from '../../layouts/MainLayout';
 import { PricingCard } from '../../components/billing/PricingCard';
 import { PaymentMethodCard } from '../../components/billing/PaymentMethodCard';
-import { CreditCard, Download, Plus, ExternalLink, AlertCircle, CheckCircle, TrendingUp } from 'lucide-react';
+import { AddOnCard } from '../../components/billing/AddOnCard';
+import { CustomQuoteModal } from '../../components/billing/CustomQuoteModal';
+import { CreditCard, Download, Plus, ExternalLink, AlertCircle, CheckCircle, TrendingUp, Crown } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { stripeService, type SubscriptionPlan } from '../../services/stripeService';
@@ -16,6 +18,8 @@ export function BillingPage() {
   const [invoices, setInvoices] = React.useState<any[]>([]);
   const [loadingData, setLoadingData] = React.useState(true);
   const [billingInterval, setBillingInterval] = React.useState<'monthly' | 'yearly'>('monthly');
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = React.useState(false);
+  const [activeAddOns, setActiveAddOns] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     if (user?.subscription?.stripeCustomerId) {
@@ -88,6 +92,10 @@ export function BillingPage() {
     }
   };
 
+  const handleRequestQuote = (plan: SubscriptionPlan) => {
+    setIsQuoteModalOpen(true);
+  };
+
   const handleManageBilling = async () => {
     if (!user?.subscription?.stripeCustomerId) {
       toast.error('No billing information found. Please subscribe to a plan first.');
@@ -156,6 +164,20 @@ export function BillingPage() {
     toast.success('Invoice download started');
   };
 
+  const handleToggleAddOn = (addOn: any) => {
+    setActiveAddOns(prev => 
+      prev.includes(addOn.id) 
+        ? prev.filter(id => id !== addOn.id)
+        : [...prev, addOn.id]
+    );
+    
+    if (activeAddOns.includes(addOn.id)) {
+      toast.success(`${addOn.name} removed from your plan`);
+    } else {
+      toast.success(`${addOn.name} added to your plan`);
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'paid':
@@ -170,6 +192,7 @@ export function BillingPage() {
   };
 
   const plans = stripeService.getMonthlyPlans();
+  const addOns = stripeService.getAddOns();
 
   if (loadingData) {
     return (
@@ -284,15 +307,42 @@ export function BillingPage() {
         {/* Subscription Plans */}
         <div id="plans">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Choose Your Plan</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
             {plans.map((plan) => (
               <PricingCard
                 key={plan.id}
                 plan={plan}
                 isCurrentPlan={currentPlan?.id === plan.id}
                 onSelectPlan={handleSelectPlan}
+                onRequestQuote={handleRequestQuote}
                 loading={loading && selectedPlan?.id === plan.id}
                 billingInterval={billingInterval}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Add-ons Section */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Premium Add-ons</h2>
+              <p className="text-gray-600">Enhance your networking experience with premium features</p>
+            </div>
+            <div className="flex items-center text-sm text-gray-500">
+              <Crown className="w-4 h-4 mr-1" />
+              Available for all plans
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {addOns.map((addOn) => (
+              <AddOnCard
+                key={addOn.id}
+                addOn={addOn}
+                isActive={activeAddOns.includes(addOn.id)}
+                onToggle={handleToggleAddOn}
+                loading={false}
               />
             ))}
           </div>
@@ -451,6 +501,7 @@ export function BillingPage() {
                   <li>You can cancel or change your plan at any time</li>
                   <li>Unused events do not roll over to the next billing period</li>
                   <li>Annual plans save 20% compared to monthly billing</li>
+                  <li>Add-ons can be added or removed at any time</li>
                   <li>All prices are in USD and exclude applicable taxes</li>
                   <li>Secure payments processed by Stripe</li>
                 </ul>
@@ -459,6 +510,11 @@ export function BillingPage() {
           </div>
         </div>
       </div>
+
+      <CustomQuoteModal 
+        isOpen={isQuoteModalOpen} 
+        onClose={() => setIsQuoteModalOpen(false)} 
+      />
     </MainLayout>
   );
 }

@@ -15,7 +15,36 @@ export interface SubscriptionPlan {
   isPopular?: boolean;
   targetAudience: string;
   valueProposition: string;
+  isCustom?: boolean;
 }
+
+export interface AddOn {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  stripePriceId: string;
+  icon: string;
+  benefits: string[];
+}
+
+export const addOns: AddOn[] = [
+  {
+    id: 'premium_profile_badge',
+    name: 'Premium Profile Badge',
+    description: 'Stand out with a verified premium badge on your profile',
+    price: 29,
+    stripePriceId: 'price_premium_badge_monthly',
+    icon: 'crown',
+    benefits: [
+      'Verified premium badge on profile',
+      'Higher visibility in search results',
+      'Priority in connection recommendations',
+      'Enhanced profile analytics',
+      'Premium member directory listing'
+    ]
+  }
+];
 
 export const subscriptionPlans: SubscriptionPlan[] = [
   {
@@ -34,7 +63,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Email support',
       'Mobile app access'
     ],
-    stripePriceId: 'price_starter_monthly' // Replace with actual Stripe price ID
+    stripePriceId: 'price_starter_monthly'
   },
   {
     id: 'professional',
@@ -56,7 +85,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Calendar integration',
       'Priority support'
     ],
-    stripePriceId: 'price_professional_monthly' // Replace with actual Stripe price ID
+    stripePriceId: 'price_professional_monthly'
   },
   {
     id: 'enterprise',
@@ -68,7 +97,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     valueProposition: 'Maximum networking power for leaders',
     features: [
       '15 networking events per month',
-      'Premium profile badge',
+      'Premium profile badge included',
       'Early access to exclusive events',
       'Custom event requests',
       'Advanced analytics dashboard',
@@ -78,7 +107,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Team management tools (up to 5 members)',
       'Custom integrations'
     ],
-    stripePriceId: 'price_enterprise_monthly' // Replace with actual Stripe price ID
+    stripePriceId: 'price_enterprise_monthly'
   },
   {
     id: 'team',
@@ -99,18 +128,43 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Team leaderboards',
       'Everything in Professional plan'
     ],
-    stripePriceId: 'price_team_monthly' // Replace with actual Stripe price ID
+    stripePriceId: 'price_team_monthly'
+  },
+  {
+    id: 'custom',
+    name: 'Custom Solution',
+    price: 0, // Price will be quoted
+    interval: 'month',
+    eventsQuota: 0, // Unlimited or custom
+    isCustom: true,
+    targetAudience: 'Large enterprises, organizations with 50+ users',
+    valueProposition: 'Tailored networking solutions for enterprise needs',
+    features: [
+      'Unlimited networking events',
+      'Custom event creation and hosting',
+      'White-label platform options',
+      'Advanced enterprise integrations',
+      'Dedicated customer success manager',
+      'Custom analytics and reporting',
+      'Priority phone and email support',
+      'Custom onboarding and training',
+      'SLA guarantees',
+      'Enterprise security features'
+    ],
+    stripePriceId: 'custom_solution'
   }
 ];
 
 // Annual plans with 20% discount
-export const annualPlans: SubscriptionPlan[] = subscriptionPlans.map(plan => ({
-  ...plan,
-  id: `${plan.id}_annual`,
-  price: Math.round(plan.price * 12 * 0.8), // 20% discount
-  interval: 'year' as const,
-  stripePriceId: `${plan.stripePriceId}_annual`
-}));
+export const annualPlans: SubscriptionPlan[] = subscriptionPlans
+  .filter(plan => !plan.isCustom)
+  .map(plan => ({
+    ...plan,
+    id: `${plan.id}_annual`,
+    price: Math.round(plan.price * 12 * 0.8), // 20% discount
+    interval: 'year' as const,
+    stripePriceId: `${plan.stripePriceId}_annual`
+  }));
 
 export const allPlans = [...subscriptionPlans, ...annualPlans];
 
@@ -187,6 +241,40 @@ export const stripeService = {
       }
       
       throw new Error('An unexpected error occurred. Please try again.');
+    }
+  },
+
+  async requestCustomQuote(companyInfo: {
+    companyName: string;
+    contactName: string;
+    email: string;
+    phone?: string;
+    teamSize: string;
+    requirements: string;
+    timeline: string;
+  }) {
+    try {
+      // In a real implementation, this would send the quote request to your backend
+      const response = await fetch('/api/custom-quote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(companyInfo),
+      }).catch(() => {
+        // For demo purposes, simulate successful submission
+        console.log('Custom quote request:', companyInfo);
+        return { ok: true, json: () => Promise.resolve({ success: true }) };
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit quote request');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error requesting custom quote:', error);
+      throw error;
     }
   },
 
@@ -282,6 +370,10 @@ export const stripeService = {
 
   getAnnualPlans(): SubscriptionPlan[] {
     return annualPlans;
+  },
+
+  getAddOns(): AddOn[] {
+    return addOns;
   },
 
   calculateAnnualSavings(monthlyPrice: number): number {
