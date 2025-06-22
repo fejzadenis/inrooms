@@ -83,11 +83,10 @@ export const messageService = {
   },
 
   subscribeToUserChats(userId: string, callback: (chats: Chat[]) => void): () => void {
-    // Use your existing index: participants (ascending), updatedAt (ascending)
+    // Remove orderBy to avoid composite index requirement - we'll sort client-side
     const q = query(
       collection(db, 'chats'),
-      where('participants', 'array-contains', userId),
-      orderBy('updatedAt', 'desc')
+      where('participants', 'array-contains', userId)
     );
 
     return onSnapshot(q, async (snapshot) => {
@@ -135,7 +134,10 @@ export const messageService = {
         })
       );
       
-      callback(chats as Chat[]);
+      // Sort chats by updatedAt client-side (most recent first)
+      const sortedChats = chats.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+      
+      callback(sortedChats as Chat[]);
     });
   },
 
