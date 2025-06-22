@@ -46,12 +46,12 @@ export const networkService = {
             name: data.name || '',
             email: data.email || '',
             role: data.role || 'user',
-            profile_title: data.profile_title || '',
-            profile_company: data.profile_company || '',
-            profile_location: data.profile_location || '',
-            profile_about: data.profile_about || '',
-            profile_skills: data.profile_skills || [],
-            photo_url: data.photo_url || '',
+            profile_title: data.profile?.title || '',
+            profile_company: data.profile?.company || '',
+            profile_location: data.profile?.location || '',
+            profile_about: data.profile?.about || '',
+            profile_skills: data.profile?.skills || [],
+            photo_url: data.photoURL || '',
             connections: data.connections || []
           } as NetworkProfile;
         })
@@ -139,12 +139,12 @@ export const networkService = {
             name: data.name || '',
             email: data.email || '',
             role: data.role || 'user',
-            profile_title: data.profile_title || '',
-            profile_company: data.profile_company || '',
-            profile_location: data.profile_location || '',
-            profile_about: data.profile_about || '',
-            profile_skills: data.profile_skills || [],
-            photo_url: data.photo_url || '',
+            profile_title: data.profile?.title || '',
+            profile_company: data.profile?.company || '',
+            profile_location: data.profile?.location || '',
+            profile_about: data.profile?.about || '',
+            profile_skills: data.profile?.skills || [],
+            photo_url: data.photoURL || '',
             connections: data.connections || []
           } as NetworkProfile;
         })

@@ -9,7 +9,8 @@ import {
   updateDoc, 
   doc, 
   setDoc,
-  getDocs
+  getDocs,
+  getDoc
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type { Message, Chat } from '../types/messages';
@@ -17,6 +18,12 @@ import type { Message, Chat } from '../types/messages';
 export const messageService = {
   async sendMessage(senderId: string, receiverId: string, content: string): Promise<void> {
     try {
+      // First check if users are connected
+      const canMessage = await this.canMessage(senderId, receiverId);
+      if (!canMessage) {
+        throw new Error('You can only message your connections');
+      }
+
       const chatId = [senderId, receiverId].sort().join('_');
       
       // Create or update chat
@@ -109,13 +116,43 @@ export const messageService = {
   // Check if two users can message each other (are connected)
   async canMessage(userId: string, targetUserId: string): Promise<boolean> {
     try {
-      // Import here to avoid circular dependency
-      const { networkService } = await import('./networkService');
-      const connections = await networkService.getUserConnections(userId);
-      return connections.includes(targetUserId);
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const connections = userDoc.data().connections || [];
+        return connections.includes(targetUserId);
+      }
+      return false;
     } catch (error) {
       console.error('Error checking message permissions:', error);
       return false;
+    }
+  },
+
+  // Create a chat between two connected users
+  async createChat(userId: string, targetUserId: string): Promise<string> {
+    try {
+      // Check if users are connected
+      const canMessage = await this.canMessage(userId, targetUserId);
+      if (!canMessage) {
+        throw new Error('You can only message your connections');
+      }
+
+      const chatId = [userId, targetUserId].sort().join('_');
+      
+      // Create chat document
+      const chatRef = doc(db, 'chats', chatId);
+      await setDoc(chatRef, {
+        participants: [userId, targetUserId],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+
+      return chatId;
+    } catch (error) {
+      console.error('Error creating chat:', error);
+      throw error;
     }
   }
 };

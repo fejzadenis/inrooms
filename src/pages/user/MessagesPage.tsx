@@ -226,7 +226,7 @@ export function MessagesPage() {
                         <h3 className="text-lg font-semibold text-gray-900">
                           {selectedChat.otherUserName}
                         </h3>
-                        <p className="text-sm text-gray-500">Online</p>
+                        <p className="text-sm text-gray-500">Connected</p>
                       </div>
                     </div>
                     <button className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200">

@@ -129,14 +129,20 @@ export function ProfilePage() {
   const handleMessage = async () => {
     if (!user || !userId) return;
     
-    if (!isConnected) {
-      toast.error('You can only message your connections');
-      return;
-    }
-    
     try {
-      await messageService.sendMessage(user.id, userId, '👋 Hi there!');
+      // Check if they can message (are connected)
+      const canMessage = await messageService.canMessage(user.id, userId);
+      if (!canMessage) {
+        toast.error('You can only message your connections');
+        return;
+      }
+
+      // Create or get existing chat
+      const chatId = await messageService.createChat(user.id, userId);
+      
+      // Navigate to messages page
       navigate('/messages');
+      toast.success('Chat opened successfully!');
     } catch (error) {
       console.error('Error starting chat:', error);
       toast.error('Failed to start chat. Please try again.');

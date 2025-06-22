@@ -56,9 +56,19 @@ export function NetworkPage() {
     if (!user) return;
     
     try {
+      // Check if they can message (are connected)
+      const canMessage = await messageService.canMessage(user.id, connectionId);
+      if (!canMessage) {
+        toast.error('You can only message your connections');
+        return;
+      }
+
       // Create or get existing chat
-      await messageService.sendMessage(user.id, connectionId, '👋 Hi there!');
+      const chatId = await messageService.createChat(user.id, connectionId);
+      
+      // Navigate to messages page
       navigate('/messages');
+      toast.success('Chat opened successfully!');
     } catch (error) {
       console.error('Error starting chat:', error);
       toast.error('Failed to start chat. Please try again.');
