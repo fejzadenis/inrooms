@@ -2,10 +2,10 @@ import React from 'react';
 import { MainLayout } from '../../layouts/MainLayout';
 import { PricingCard } from '../../components/billing/PricingCard';
 import { PaymentMethodCard } from '../../components/billing/PaymentMethodCard';
-import { CreditCard, Download, Plus, ExternalLink, AlertCircle, CheckCircle } from 'lucide-react';
+import { CreditCard, Download, Plus, ExternalLink, AlertCircle, CheckCircle, TrendingUp } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { useAuth } from '../../contexts/AuthContext';
-import { stripeService, subscriptionPlans, type SubscriptionPlan } from '../../services/stripeService';
+import { stripeService, type SubscriptionPlan } from '../../services/stripeService';
 import { toast } from 'react-hot-toast';
 
 export function BillingPage() {
@@ -15,6 +15,7 @@ export function BillingPage() {
   const [paymentMethods, setPaymentMethods] = React.useState<any[]>([]);
   const [invoices, setInvoices] = React.useState<any[]>([]);
   const [loadingData, setLoadingData] = React.useState(true);
+  const [billingInterval, setBillingInterval] = React.useState<'monthly' | 'yearly'>('monthly');
 
   React.useEffect(() => {
     if (user?.subscription?.stripeCustomerId) {
@@ -46,9 +47,9 @@ export function BillingPage() {
 
   const currentPlan = React.useMemo(() => {
     if (!user?.subscription) return null;
-    return subscriptionPlans.find(plan => 
+    return stripeService.getMonthlyPlans().find(plan => 
       plan.eventsQuota === user.subscription.eventsQuota
-    ) || subscriptionPlans[0];
+    ) || stripeService.getMonthlyPlans()[0];
   }, [user]);
 
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
@@ -69,9 +70,12 @@ export function BillingPage() {
       const successUrl = `${window.location.origin}/billing?success=true`;
       const cancelUrl = `${window.location.origin}/billing?canceled=true`;
 
+      const priceId = billingInterval === 'yearly' ? 
+        `${plan.stripePriceId}_annual` : plan.stripePriceId;
+
       await stripeService.createCheckoutSession(
         user.id,
-        plan.stripePriceId,
+        priceId,
         successUrl,
         cancelUrl
       );
@@ -150,7 +154,6 @@ export function BillingPage() {
 
   const handleDownloadInvoice = (invoiceId: string) => {
     toast.success('Invoice download started');
-    // In real app, this would download the invoice from Stripe
   };
 
   const getStatusIcon = (status: string) => {
@@ -165,6 +168,8 @@ export function BillingPage() {
         return null;
     }
   };
+
+  const plans = stripeService.getMonthlyPlans();
 
   if (loadingData) {
     return (
@@ -197,11 +202,14 @@ export function BillingPage() {
         {user && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Current Subscription</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-gray-500">Plan</h3>
                 <p className="text-lg font-semibold text-gray-900 capitalize">
                   {currentPlan?.name || 'Free Trial'}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  {currentPlan?.targetAudience || 'Trial user'}
                 </p>
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
@@ -230,22 +238,61 @@ export function BillingPage() {
                   />
                 </div>
               </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-500">Monthly Value</h3>
+                <p className="text-lg font-semibold text-green-600">
+                  ${currentPlan?.price || 0}
+                </p>
+                <div className="flex items-center text-sm text-green-600 mt-1">
+                  <TrendingUp className="w-4 h-4 mr-1" />
+                  <span>ROI: {currentPlan ? Math.round(10000 / currentPlan.price) : 0}x</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
+        {/* Billing Toggle */}
+        <div className="flex justify-center">
+          <div className="bg-gray-100 rounded-lg p-1 flex">
+            <button
+              onClick={() => setBillingInterval('monthly')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                billingInterval === 'monthly'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingInterval('yearly')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 relative ${
+                billingInterval === 'yearly'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Yearly
+              <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                Save 20%
+              </span>
+            </button>
+          </div>
+        </div>
+
         {/* Subscription Plans */}
-        <div>
+        <div id="plans">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Choose Your Plan</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {subscriptionPlans.map((plan, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {plans.map((plan) => (
               <PricingCard
                 key={plan.id}
                 plan={plan}
                 isCurrentPlan={currentPlan?.id === plan.id}
-                isPopular={index === 1} // Professional plan is popular
                 onSelectPlan={handleSelectPlan}
                 loading={loading && selectedPlan?.id === plan.id}
+                billingInterval={billingInterval}
               />
             ))}
           </div>
@@ -400,9 +447,10 @@ export function BillingPage() {
               <h3 className="text-sm font-medium text-blue-800">Billing Information</h3>
               <div className="mt-2 text-sm text-blue-700">
                 <ul className="list-disc list-inside space-y-1">
-                  <li>Your subscription will automatically renew each month</li>
+                  <li>Your subscription will automatically renew each billing period</li>
                   <li>You can cancel or change your plan at any time</li>
                   <li>Unused events do not roll over to the next billing period</li>
+                  <li>Annual plans save 20% compared to monthly billing</li>
                   <li>All prices are in USD and exclude applicable taxes</li>
                   <li>Secure payments processed by Stripe</li>
                 </ul>

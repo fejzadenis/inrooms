@@ -4,9 +4,9 @@ import { MainLayout } from '../../layouts/MainLayout';
 import { PricingCard } from '../../components/billing/PricingCard';
 import { Button } from '../../components/common/Button';
 import { useAuth } from '../../contexts/AuthContext';
-import { stripeService, subscriptionPlans, type SubscriptionPlan } from '../../services/stripeService';
+import { stripeService, type SubscriptionPlan } from '../../services/stripeService';
 import { toast } from 'react-hot-toast';
-import { CheckCircle, ArrowRight } from 'lucide-react';
+import { CheckCircle, ArrowRight, Star, Zap, Users, Crown, DollarSign } from 'lucide-react';
 
 export function SubscriptionPage() {
   const { user, startFreeTrial } = useAuth();
@@ -14,6 +14,7 @@ export function SubscriptionPage() {
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = React.useState(false);
   const [selectedPlan, setSelectedPlan] = React.useState<SubscriptionPlan | null>(null);
+  const [billingInterval, setBillingInterval] = React.useState<'monthly' | 'yearly'>('monthly');
 
   // Check for success/cancel parameters from Stripe redirect
   React.useEffect(() => {
@@ -25,7 +26,6 @@ export function SubscriptionPage() {
       navigate('/billing', { replace: true });
     } else if (canceled === 'true') {
       toast.error('Subscription canceled. You can try again anytime.');
-      // Clear the URL parameters
       navigate('/subscription', { replace: true });
     }
   }, [searchParams, navigate]);
@@ -40,7 +40,7 @@ export function SubscriptionPage() {
     try {
       setLoading(true);
       await startFreeTrial();
-      toast.success('Free trial activated! Enjoy your 7-day trial.');
+      toast.success('Free trial activated! Enjoy your 7-day trial with 2 events.');
       navigate('/events');
     } catch (error) {
       console.error('Failed to start free trial:', error);
@@ -64,9 +64,13 @@ export function SubscriptionPage() {
       const successUrl = `${window.location.origin}/subscription?success=true`;
       const cancelUrl = `${window.location.origin}/subscription?canceled=true`;
 
+      // Use the appropriate price ID based on billing interval
+      const priceId = billingInterval === 'yearly' ? 
+        `${plan.stripePriceId}_annual` : plan.stripePriceId;
+
       await stripeService.createCheckoutSession(
         user.id,
-        plan.stripePriceId,
+        priceId,
         successUrl,
         cancelUrl
       );
@@ -79,6 +83,8 @@ export function SubscriptionPage() {
     }
   };
 
+  const plans = stripeService.getMonthlyPlans();
+
   const features = [
     'Access to exclusive networking events',
     'Connect with verified tech sales professionals',
@@ -87,13 +93,36 @@ export function SubscriptionPage() {
     'Priority customer support'
   ];
 
+  const valueProps = [
+    {
+      icon: DollarSign,
+      title: 'ROI-Focused',
+      description: 'One good connection can generate $10K+ in deals'
+    },
+    {
+      icon: Users,
+      title: 'Quality Network',
+      description: 'Connect with verified sales professionals only'
+    },
+    {
+      icon: Zap,
+      title: 'Time Efficient',
+      description: 'Curated events save hours of cold outreach'
+    },
+    {
+      icon: Star,
+      title: 'Career Growth',
+      description: 'Learn from industry leaders and top performers'
+    }
+  ];
+
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Section */}
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">
-            Choose Your Plan
+            Choose Your Networking Plan
           </h1>
           <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
             Start with a 7-day free trial, then select the perfect plan for your networking needs. 
@@ -101,22 +130,90 @@ export function SubscriptionPage() {
           </p>
           
           {/* Free Trial CTA */}
-          <div className="mt-8 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl p-8 max-w-2xl mx-auto">
+          <div className="mt-8 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl p-8 max-w-2xl mx-auto border border-indigo-200">
             <div className="flex items-center justify-center mb-4">
               <CheckCircle className="w-8 h-8 text-green-500 mr-3" />
               <h3 className="text-2xl font-bold text-gray-900">Start Your Free Trial</h3>
             </div>
             <p className="text-gray-600 mb-6">
-              Get full access to all features for 7 days. No credit card required.
+              Get full access to all features for 7 days with 2 event credits. No credit card required.
             </p>
             <Button
               onClick={handleFreeTrial}
               isLoading={loading && !selectedPlan}
-              className="text-lg px-8 py-3"
+              className="text-lg px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
             >
               Start 7-Day Free Trial
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
+          </div>
+        </div>
+
+        {/* Value Propositions */}
+        <div className="mb-16">
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
+            Why inrooms Delivers Results
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {valueProps.map((prop, index) => {
+              const Icon = prop.icon;
+              return (
+                <div key={index} className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+                  <div className="bg-indigo-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <Icon className="w-8 h-8 text-indigo-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{prop.title}</h3>
+                  <p className="text-sm text-gray-600">{prop.description}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Billing Toggle */}
+        <div className="flex justify-center mb-12">
+          <div className="bg-gray-100 rounded-lg p-1 flex">
+            <button
+              onClick={() => setBillingInterval('monthly')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                billingInterval === 'monthly'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingInterval('yearly')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 relative ${
+                billingInterval === 'yearly'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Yearly
+              <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                Save 20%
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Pricing Plans */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+            Choose the Right Plan for You
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+            {plans.map((plan) => (
+              <PricingCard
+                key={plan.id}
+                plan={plan}
+                onSelectPlan={handleSelectPlan}
+                loading={loading && selectedPlan?.id === plan.id}
+                billingInterval={billingInterval}
+              />
+            ))}
           </div>
         </div>
 
@@ -137,21 +234,27 @@ export function SubscriptionPage() {
           </div>
         </div>
 
-        {/* Pricing Plans */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
-            Choose the Right Plan for You
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {subscriptionPlans.map((plan, index) => (
-              <PricingCard
-                key={plan.id}
-                plan={plan}
-                isPopular={index === 1} // Professional plan is popular
-                onSelectPlan={handleSelectPlan}
-                loading={loading && selectedPlan?.id === plan.id}
-              />
-            ))}
+        {/* ROI Calculator */}
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-8 mb-16 border border-green-200">
+          <div className="text-center">
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">Calculate Your ROI</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-green-600">$79</div>
+                <div className="text-sm text-gray-600">Monthly Investment</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-green-600">1</div>
+                <div className="text-sm text-gray-600">Quality Connection</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-green-600">$10K+</div>
+                <div className="text-sm text-gray-600">Potential Deal Value</div>
+              </div>
+            </div>
+            <p className="text-gray-600 mt-4">
+              Professional plan pays for itself with just one meaningful connection per year
+            </p>
           </div>
         </div>
 
@@ -187,6 +290,20 @@ export function SubscriptionPage() {
               <p className="text-gray-600 text-sm">
                 No setup fees, no hidden costs. The price you see is exactly what you'll pay. 
                 All plans include access to our full platform and features.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">What's included in the Team plan?</h3>
+              <p className="text-gray-600 text-sm">
+                Team plan includes everything in Professional plus team management tools, bulk registration, 
+                and dedicated account management. Minimum 3 users required.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">How does the annual discount work?</h3>
+              <p className="text-gray-600 text-sm">
+                Annual plans save you 20% compared to monthly billing. You'll be charged once per year 
+                and can still cancel anytime with a prorated refund.
               </p>
             </div>
           </div>

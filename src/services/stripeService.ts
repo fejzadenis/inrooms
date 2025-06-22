@@ -12,58 +12,107 @@ export interface SubscriptionPlan {
   eventsQuota: number;
   features: string[];
   stripePriceId: string;
+  isPopular?: boolean;
+  targetAudience: string;
+  valueProposition: string;
 }
 
 export const subscriptionPlans: SubscriptionPlan[] = [
   {
     id: 'starter',
     name: 'Starter',
-    price: 49,
+    price: 39,
     interval: 'month',
-    eventsQuota: 2,
+    eventsQuota: 3,
+    targetAudience: 'New sales professionals, individual contributors',
+    valueProposition: 'Affordable entry point for career growth',
     features: [
-      '2 networking events per month',
-      'Access to event recordings',
+      '3 networking events per month',
       'Basic profile features',
-      'Email support'
+      'Event recordings access (30 days)',
+      'Standard networking tools',
+      'Email support',
+      'Mobile app access'
     ],
-    stripePriceId: 'price_1234567890' // Replace with actual Stripe price ID
+    stripePriceId: 'price_starter_monthly' // Replace with actual Stripe price ID
   },
   {
     id: 'professional',
     name: 'Professional',
-    price: 99,
+    price: 79,
     interval: 'month',
-    eventsQuota: 5,
+    eventsQuota: 8,
+    isPopular: true,
+    targetAudience: 'Experienced sales professionals, account managers',
+    valueProposition: 'Comprehensive networking for serious professionals',
     features: [
-      '5 networking events per month',
-      'Access to event recordings',
-      'Enhanced profile features',
+      '8 networking events per month',
+      'Enhanced profile with skills verification',
       'Priority event registration',
-      'Advanced networking tools',
-      'Email support'
+      'Advanced networking analytics',
+      'Direct messaging with all connections',
+      'Event recordings access (90 days)',
+      'LinkedIn integration',
+      'Calendar integration',
+      'Priority support'
     ],
-    stripePriceId: 'price_1234567891' // Replace with actual Stripe price ID
+    stripePriceId: 'price_professional_monthly' // Replace with actual Stripe price ID
   },
   {
     id: 'enterprise',
     name: 'Enterprise',
-    price: 199,
+    price: 149,
     interval: 'month',
-    eventsQuota: 12,
+    eventsQuota: 15,
+    targetAudience: 'Sales leaders, executives, teams',
+    valueProposition: 'Maximum networking power for leaders',
     features: [
-      '12 networking events per month',
-      'Access to event recordings',
-      'Premium profile features',
-      'Priority event registration',
-      'Custom event scheduling',
-      'Advanced analytics',
-      'Dedicated account manager',
-      'Phone support'
+      '15 networking events per month',
+      'Premium profile badge',
+      'Early access to exclusive events',
+      'Custom event requests',
+      'Advanced analytics dashboard',
+      'Unlimited event recordings access',
+      'Personal networking concierge',
+      'Phone support',
+      'Team management tools (up to 5 members)',
+      'Custom integrations'
     ],
-    stripePriceId: 'price_1234567892' // Replace with actual Stripe price ID
+    stripePriceId: 'price_enterprise_monthly' // Replace with actual Stripe price ID
+  },
+  {
+    id: 'team',
+    name: 'Team',
+    price: 99,
+    interval: 'month',
+    eventsQuota: 10,
+    targetAudience: 'Sales teams, organizations (3+ users)',
+    valueProposition: 'Scale networking across entire sales teams',
+    features: [
+      '10 events per month per user',
+      'Team dashboard and analytics',
+      'Bulk event registration',
+      'Team networking insights',
+      'Admin controls',
+      'Dedicated account manager',
+      'Custom branding',
+      'Team leaderboards',
+      'Everything in Professional plan'
+    ],
+    stripePriceId: 'price_team_monthly' // Replace with actual Stripe price ID
   }
 ];
+
+// Annual plans with 20% discount
+export const annualPlans: SubscriptionPlan[] = subscriptionPlans.map(plan => ({
+  ...plan,
+  id: `${plan.id}_annual`,
+  price: Math.round(plan.price * 12 * 0.8), // 20% discount
+  interval: 'year' as const,
+  stripePriceId: `${plan.stripePriceId}_annual`
+}));
+
+export const allPlans = [...subscriptionPlans, ...annualPlans];
 
 export const stripeService = {
   async createCheckoutSession(userId: string, priceId: string, successUrl: string, cancelUrl: string) {
@@ -151,11 +200,25 @@ export const stripeService = {
   },
 
   getPlanByPriceId(priceId: string): SubscriptionPlan | undefined {
-    return subscriptionPlans.find(plan => plan.stripePriceId === priceId);
+    return allPlans.find(plan => plan.stripePriceId === priceId);
   },
 
   getPlanById(planId: string): SubscriptionPlan | undefined {
-    return subscriptionPlans.find(plan => plan.id === planId);
+    return allPlans.find(plan => plan.id === planId);
+  },
+
+  getMonthlyPlans(): SubscriptionPlan[] {
+    return subscriptionPlans;
+  },
+
+  getAnnualPlans(): SubscriptionPlan[] {
+    return annualPlans;
+  },
+
+  calculateAnnualSavings(monthlyPrice: number): number {
+    const annualPrice = monthlyPrice * 12 * 0.8; // 20% discount
+    const monthlyCost = monthlyPrice * 12;
+    return monthlyCost - annualPrice;
   },
 
   // Mock function for demo - replace with actual Stripe API calls
@@ -182,7 +245,7 @@ export const stripeService = {
       {
         id: 'in_1234567890',
         date: new Date().toISOString(),
-        amount: 99,
+        amount: 79,
         status: 'paid',
         description: 'Professional Plan - Current Month',
         downloadUrl: '#'
