@@ -10,7 +10,8 @@ import {
   doc, 
   setDoc,
   getDocs,
-  getDoc
+  getDoc,
+  limit
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type { Message, Chat } from '../types/messages';
@@ -49,10 +50,12 @@ export const messageService = {
   },
 
   subscribeToChat(chatId: string, callback: (messages: Message[]) => void): () => void {
+    // Use only where clause to avoid composite index requirement
+    // We'll sort the messages client-side
     const q = query(
       collection(db, 'messages'),
       where('chatId', '==', chatId),
-      orderBy('timestamp', 'asc')
+      limit(100) // Limit to prevent too much data
     );
 
     return onSnapshot(q, (snapshot) => {
@@ -61,7 +64,11 @@ export const messageService = {
         ...doc.data(),
         timestamp: doc.data().timestamp?.toDate() || new Date(),
       })) as Message[];
-      callback(messages);
+      
+      // Sort messages by timestamp client-side
+      const sortedMessages = messages.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      
+      callback(sortedMessages);
     });
   },
 
@@ -76,11 +83,11 @@ export const messageService = {
   },
 
   subscribeToUserChats(userId: string, callback: (chats: Chat[]) => void): () => void {
-    // Modified query to avoid composite index requirement
-    // We'll get all chats for the user and sort them client-side
+    // Use your existing index: participants (ascending), updatedAt (ascending)
     const q = query(
       collection(db, 'chats'),
-      where('participants', 'array-contains', userId)
+      where('participants', 'array-contains', userId),
+      orderBy('updatedAt', 'desc')
     );
 
     return onSnapshot(q, async (snapshot) => {
@@ -88,37 +95,47 @@ export const messageService = {
         snapshot.docs.map(async (doc) => {
           const chatData = doc.data();
           
-          // Get last message for this chat
+          // Get last message for this chat - use simple query without orderBy
           const messagesQuery = query(
             collection(db, 'messages'),
             where('chatId', '==', doc.id),
-            orderBy('timestamp', 'desc')
+            limit(1)
           );
           
           const messagesSnapshot = await getDocs(messagesQuery);
-          const lastMessage = messagesSnapshot.docs[0]?.data();
+          let lastMessage = null;
+          
+          if (!messagesSnapshot.empty) {
+            // Get all messages and find the most recent one client-side
+            const allMessagesQuery = query(
+              collection(db, 'messages'),
+              where('chatId', '==', doc.id)
+            );
+            const allMessagesSnapshot = await getDocs(allMessagesQuery);
+            
+            if (!allMessagesSnapshot.empty) {
+              const messages = allMessagesSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                timestamp: doc.data().timestamp?.toDate() || new Date(),
+              }));
+              
+              // Sort and get the last message
+              const sortedMessages = messages.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+              lastMessage = sortedMessages[0];
+            }
+          }
           
           return {
             id: doc.id,
             ...chatData,
             updatedAt: chatData.updatedAt?.toDate() || new Date(),
-            lastMessage: lastMessage ? {
-              id: messagesSnapshot.docs[0].id,
-              ...lastMessage,
-              timestamp: lastMessage.timestamp?.toDate() || new Date(),
-            } : undefined,
+            lastMessage: lastMessage || undefined,
           };
         })
       );
       
-      // Sort chats by updatedAt client-side to avoid index requirement
-      const sortedChats = chats.sort((a, b) => {
-        const aTime = a.updatedAt?.getTime() || 0;
-        const bTime = b.updatedAt?.getTime() || 0;
-        return bTime - aTime; // Descending order (most recent first)
-      });
-      
-      callback(sortedChats as Chat[]);
+      callback(chats as Chat[]);
     });
   },
 
