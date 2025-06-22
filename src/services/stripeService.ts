@@ -117,7 +117,10 @@ export const allPlans = [...subscriptionPlans, ...annualPlans];
 export const stripeService = {
   async createCheckoutSession(userId: string, priceId: string, successUrl: string, cancelUrl: string) {
     try {
-      // Create checkout session via your backend API
+      // For demo purposes, simulate the checkout process since backend API doesn't exist yet
+      console.warn('Stripe backend API not implemented yet. Simulating checkout process...');
+      
+      // In a real implementation, this would call your backend API
       const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: {
@@ -129,14 +132,38 @@ export const stripeService = {
           successUrl,
           cancelUrl,
         }),
+      }).catch(() => {
+        // If the API endpoint doesn't exist, throw a helpful error
+        throw new Error('Stripe integration is not yet configured. Please contact support to set up billing.');
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create checkout session');
+        let errorMessage = 'Failed to create checkout session';
+        
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (jsonError) {
+          // If response is not JSON, use the status text or a generic message
+          errorMessage = response.statusText || 'Received an invalid response from the server. Please try again.';
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      const { sessionId } = await response.json();
+      let sessionData;
+      try {
+        sessionData = await response.json();
+      } catch (jsonError) {
+        console.error('Failed to parse JSON response:', jsonError);
+        throw new Error('Received an invalid response from the server. Please try again.');
+      }
+
+      const { sessionId } = sessionData;
+      
+      if (!sessionId) {
+        throw new Error('No session ID received from server');
+      }
       
       const stripe = await stripePromise;
       if (!stripe) {
@@ -150,12 +177,25 @@ export const stripeService = {
       }
     } catch (error) {
       console.error('Error creating checkout session:', error);
-      throw error;
+      
+      // Provide more user-friendly error messages
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          throw new Error('Unable to connect to billing service. Please check your internet connection and try again.');
+        }
+        throw error;
+      }
+      
+      throw new Error('An unexpected error occurred. Please try again.');
     }
   },
 
   async createCustomerPortalSession(customerId: string, returnUrl: string) {
     try {
+      // For demo purposes, show a helpful message since backend API doesn't exist yet
+      console.warn('Stripe backend API not implemented yet. Customer portal not available.');
+      throw new Error('Billing portal is not yet configured. Please contact support for billing management.');
+      
       const response = await fetch('/api/stripe/create-portal-session', {
         method: 'POST',
         headers: {
@@ -168,15 +208,44 @@ export const stripeService = {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create portal session');
+        let errorMessage = 'Failed to create portal session';
+        
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (jsonError) {
+          errorMessage = response.statusText || 'Received an invalid response from the server. Please try again.';
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      const { url } = await response.json();
+      let portalData;
+      try {
+        portalData = await response.json();
+      } catch (jsonError) {
+        console.error('Failed to parse JSON response:', jsonError);
+        throw new Error('Received an invalid response from the server. Please try again.');
+      }
+
+      const { url } = portalData;
+      
+      if (!url) {
+        throw new Error('No portal URL received from server');
+      }
+      
       window.location.href = url;
     } catch (error) {
       console.error('Error creating portal session:', error);
-      throw error;
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          throw new Error('Unable to connect to billing service. Please check your internet connection and try again.');
+        }
+        throw error;
+      }
+      
+      throw new Error('An unexpected error occurred. Please try again.');
     }
   },
 
@@ -255,16 +324,16 @@ export const stripeService = {
 
   async addPaymentMethod(customerId: string) {
     // This would normally integrate with Stripe Elements to add a payment method
-    throw new Error('Payment method management coming soon');
+    throw new Error('Payment method management is not yet configured. Please contact support.');
   },
 
   async setDefaultPaymentMethod(customerId: string, paymentMethodId: string) {
     // This would normally call your backend to set default payment method
-    throw new Error('Payment method management coming soon');
+    throw new Error('Payment method management is not yet configured. Please contact support.');
   },
 
   async deletePaymentMethod(paymentMethodId: string) {
     // This would normally call your backend to delete payment method
-    throw new Error('Payment method management coming soon');
+    throw new Error('Payment method management is not yet configured. Please contact support.');
   }
 };
