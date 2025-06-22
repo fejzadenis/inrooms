@@ -7,6 +7,7 @@ import { networkService } from '../../services/networkService';
 import type { Message, Chat } from '../../types/messages';
 import { format, isToday, isYesterday } from 'date-fns';
 import { Button } from '../../components/common/Button';
+import { toast } from 'react-hot-toast';
 
 interface ChatWithUserInfo extends Chat {
   otherUserName?: string;
@@ -21,42 +22,48 @@ export function MessagesPage() {
   const [newMessage, setNewMessage] = React.useState('');
   const [searchTerm, setSearchTerm] = React.useState('');
   const [loading, setLoading] = React.useState(true);
+  const [sendingMessage, setSendingMessage] = React.useState(false);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     if (!user) return;
 
     const unsubscribe = messageService.subscribeToUserChats(user.id, async (updatedChats) => {
-      // Enhance chats with user information
-      const chatsWithUserInfo = await Promise.all(
-        updatedChats.map(async (chat) => {
-          const otherUserId = chat.participants.find(id => id !== user.id);
-          if (otherUserId) {
-            try {
-              // Get user info from network service
-              const connections = await networkService.getNetworkUsers(user.id);
-              const otherUser = connections.find(u => u.id === otherUserId);
-              
-              return {
-                ...chat,
-                otherUserName: otherUser?.name || 'Unknown User',
-                otherUserPhoto: otherUser?.photo_url || ''
-              };
-            } catch (error) {
-              console.error('Error getting user info:', error);
-              return {
-                ...chat,
-                otherUserName: 'Unknown User',
-                otherUserPhoto: ''
-              };
+      try {
+        // Enhance chats with user information
+        const chatsWithUserInfo = await Promise.all(
+          updatedChats.map(async (chat) => {
+            const otherUserId = chat.participants.find(id => id !== user.id);
+            if (otherUserId) {
+              try {
+                // Get user info from network service
+                const connections = await networkService.getNetworkUsers(user.id);
+                const otherUser = connections.find(u => u.id === otherUserId);
+                
+                return {
+                  ...chat,
+                  otherUserName: otherUser?.name || 'Unknown User',
+                  otherUserPhoto: otherUser?.photo_url || ''
+                };
+              } catch (error) {
+                console.error('Error getting user info:', error);
+                return {
+                  ...chat,
+                  otherUserName: 'Unknown User',
+                  otherUserPhoto: ''
+                };
+              }
             }
-          }
-          return chat;
-        })
-      );
-      
-      setChats(chatsWithUserInfo);
-      setLoading(false);
+            return chat;
+          })
+        );
+        
+        setChats(chatsWithUserInfo);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error processing chats:', error);
+        setLoading(false);
+      }
     });
 
     return () => unsubscribe();
@@ -81,21 +88,30 @@ export function MessagesPage() {
   }, [selectedChat, user]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !selectedChat || !newMessage.trim()) return;
+    if (!user || !selectedChat || !newMessage.trim() || sendingMessage) return;
 
     const receiverId = selectedChat.participants.find(id => id !== user.id);
     if (!receiverId) return;
 
+    const messageContent = newMessage.trim();
+    setNewMessage(''); // Clear input immediately for better UX
+    setSendingMessage(true);
+
     try {
-      await messageService.sendMessage(user.id, receiverId, newMessage.trim());
-      setNewMessage('');
+      await messageService.sendMessage(user.id, receiverId, messageContent);
     } catch (error) {
       console.error('Error sending message:', error);
+      toast.error('Failed to send message. Please try again.');
+      setNewMessage(messageContent); // Restore message on error
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -287,10 +303,12 @@ export function MessagesPage() {
                       onChange={(e) => setNewMessage(e.target.value)}
                       placeholder="Type your message..."
                       className="flex-1 rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                      disabled={sendingMessage}
                     />
                     <Button
                       type="submit"
-                      disabled={!newMessage.trim()}
+                      disabled={!newMessage.trim() || sendingMessage}
+                      isLoading={sendingMessage}
                       className="px-4 py-2"
                     >
                       <Send className="h-4 w-4" />
