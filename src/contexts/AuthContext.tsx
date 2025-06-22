@@ -93,6 +93,57 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 const ADMIN_EMAIL = 'admin@inrooms.com';
 
+// Function to sync user data to Supabase
+async function syncUserToSupabase(userData: {
+  id: string;
+  email: string;
+  name: string;
+  role: 'user' | 'admin';
+  photo_url?: string;
+  subscription_status: string;
+  subscription_trial_ends_at?: Date;
+  subscription_events_quota: number;
+  subscription_events_used: number;
+  profile_title?: string;
+  profile_company?: string;
+  profile_location?: string;
+  profile_about?: string;
+  profile_phone?: string;
+  profile_website?: string;
+  profile_linkedin?: string;
+  profile_skills?: string[];
+  profile_points?: number;
+  connections?: string[];
+}) {
+  try {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.warn('Supabase credentials not found, skipping user sync');
+      return;
+    }
+
+    const response = await fetch(`${supabaseUrl}/rest/v1/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+        'apikey': supabaseAnonKey,
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify(userData)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Failed to sync user to Supabase:', response.status, errorText);
+    }
+  } catch (error) {
+    console.error('Error syncing user to Supabase:', error);
+  }
+}
+
 async function createOrUpdateUserProfile(firebaseUser: FirebaseUser, name?: string): Promise<UserProfile> {
   try {
     const userRef = doc(db, 'users', firebaseUser.uid);
@@ -163,6 +214,29 @@ async function createOrUpdateUserProfile(firebaseUser: FirebaseUser, name?: stri
     };
 
     await setDoc(userRef, userData, { merge: true });
+
+    // Sync user data to Supabase for billing functionality
+    await syncUserToSupabase({
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      role: userData.role as 'user' | 'admin',
+      photo_url: userData.photoURL || undefined,
+      subscription_status: userData.subscription.status,
+      subscription_trial_ends_at: userData.subscription.trialEndsAt || undefined,
+      subscription_events_quota: userData.subscription.eventsQuota,
+      subscription_events_used: userData.subscription.eventsUsed,
+      profile_title: userData.profile.title || undefined,
+      profile_company: userData.profile.company || undefined,
+      profile_location: userData.profile.location || undefined,
+      profile_about: userData.profile.about || undefined,
+      profile_phone: userData.profile.phone || undefined,
+      profile_website: userData.profile.website || undefined,
+      profile_linkedin: userData.profile.linkedin || undefined,
+      profile_skills: userData.profile.skills,
+      profile_points: userData.profile.points,
+      connections: userData.connections,
+    });
 
     return {
       id: userData.id,
@@ -314,6 +388,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updatedAt: serverTimestamp(),
       });
 
+      // Also sync the updated subscription status to Supabase
+      await syncUserToSupabase({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        photo_url: user.photoURL || undefined,
+        subscription_status: 'trial',
+        subscription_trial_ends_at: trialEndsAt,
+        subscription_events_quota: 2,
+        subscription_events_used: 0,
+        profile_title: user.profile?.title || undefined,
+        profile_company: user.profile?.company || undefined,
+        profile_location: user.profile?.location || undefined,
+        profile_about: user.profile?.about || undefined,
+        profile_phone: user.profile?.phone || undefined,
+        profile_website: user.profile?.website || undefined,
+        profile_linkedin: user.profile?.linkedin || undefined,
+        profile_skills: user.profile?.skills || [],
+        profile_points: user.profile?.points || 0,
+        connections: user.connections || [],
+      });
+
       toast.success('Free trial activated successfully!');
     } catch (error: any) {
       console.error('Failed to start trial:', error);
@@ -374,6 +471,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (profileData.onboardingCompleted !== undefined) updateData['profile.onboardingCompleted'] = profileData.onboardingCompleted;
 
       await updateDoc(userRef, updateData);
+
+      // Get the current user data to sync to Supabase
+      if (user) {
+        const updatedUserData = { ...user };
+        
+        // Apply the updates to the local user data for syncing
+        if (profileData.name !== undefined) updatedUserData.name = profileData.name;
+        if (profileData.title !== undefined && updatedUserData.profile) updatedUserData.profile.title = profileData.title;
+        if (profileData.company !== undefined && updatedUserData.profile) updatedUserData.profile.company = profileData.company;
+        if (profileData.location !== undefined && updatedUserData.profile) updatedUserData.profile.location = profileData.location;
+        if (profileData.about !== undefined && updatedUserData.profile) updatedUserData.profile.about = profileData.about;
+        if (profileData.phone !== undefined && updatedUserData.profile) updatedUserData.profile.phone = profileData.phone;
+        if (profileData.website !== undefined && updatedUserData.profile) updatedUserData.profile.website = profileData.website;
+        if (profileData.linkedin !== undefined && updatedUserData.profile) updatedUserData.profile.linkedin = profileData.linkedin;
+        if (profileData.skills !== undefined && updatedUserData.profile) updatedUserData.profile.skills = profileData.skills;
+
+        // Sync updated data to Supabase
+        await syncUserToSupabase({
+          id: updatedUserData.id,
+          email: updatedUserData.email,
+          name: updatedUserData.name,
+          role: updatedUserData.role,
+          photo_url: updatedUserData.photoURL || undefined,
+          subscription_status: updatedUserData.subscription.status,
+          subscription_trial_ends_at: updatedUserData.subscription.trialEndsAt || undefined,
+          subscription_events_quota: updatedUserData.subscription.eventsQuota,
+          subscription_events_used: updatedUserData.subscription.eventsUsed,
+          profile_title: updatedUserData.profile?.title || undefined,
+          profile_company: updatedUserData.profile?.company || undefined,
+          profile_location: updatedUserData.profile?.location || undefined,
+          profile_about: updatedUserData.profile?.about || undefined,
+          profile_phone: updatedUserData.profile?.phone || undefined,
+          profile_website: updatedUserData.profile?.website || undefined,
+          profile_linkedin: updatedUserData.profile?.linkedin || undefined,
+          profile_skills: updatedUserData.profile?.skills || [],
+          profile_points: updatedUserData.profile?.points || 0,
+          connections: updatedUserData.connections || [],
+        });
+      }
       
       toast.success('Profile updated successfully!');
     } catch (error: any) {
