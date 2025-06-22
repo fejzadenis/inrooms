@@ -94,8 +94,25 @@ service cloud.firestore {
     
     match /chats/{chatId} {
       function areUsersConnected(userId1, userId2) {
+        // Check if both user documents exist
+        let user1Exists = exists(/databases/$(database)/documents/users/$(userId1));
+        let user2Exists = exists(/databases/$(database)/documents/users/$(userId2));
+        
+        if (!user1Exists || !user2Exists) {
+          return false;
+        }
+        
         let user1Data = get(/databases/$(database)/documents/users/$(userId1)).data;
         let user2Data = get(/databases/$(database)/documents/users/$(userId2)).data;
+        
+        // Check if connections field exists and is a list
+        let user1HasConnections = 'connections' in user1Data && user1Data.connections is list;
+        let user2HasConnections = 'connections' in user2Data && user2Data.connections is list;
+        
+        if (!user1HasConnections || !user2HasConnections) {
+          return false;
+        }
+        
         return userId1 in user2Data.connections && userId2 in user1Data.connections;
       }
 
