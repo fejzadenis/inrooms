@@ -1,12 +1,8 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import Stripe from 'https://esm.sh/stripe@14.21.0'
-
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
 
 interface RequestBody {
   userId: string
@@ -17,25 +13,62 @@ interface RequestBody {
   addOns?: string[]
 }
 
-serve(async (req) => {
+Deno.serve(async (req: Request) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      status: 200,
+      headers: corsHeaders,
+    });
   }
 
   try {
-    // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+    // Check for required environment variables
+    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!stripeSecretKey) {
+      console.error('STRIPE_SECRET_KEY environment variable is not set');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Server configuration error',
+          details: 'Stripe API key not configured'
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase environment variables are not set');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Server configuration error',
+          details: 'Database connection not configured'
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Dynamic imports
+    const { createClient } = await import('npm:@supabase/supabase-js@2');
+    const Stripe = (await import('npm:stripe@14.21.0')).default;
+
+    // Initialize Stripe with the secret key
+    const stripe = new Stripe(stripeSecretKey, {
       apiVersion: '2023-10-16',
-    })
+    });
 
     // Initialize Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { userId, userEmail, priceId, successUrl, cancelUrl, addOns = [] }: RequestBody = await req.json()
+    const { userId, userEmail, priceId, successUrl, cancelUrl, addOns = [] }: RequestBody = await req.json();
 
     if (!userId || !userEmail || !priceId || !successUrl || !cancelUrl) {
       return new Response(
@@ -44,64 +77,57 @@ serve(async (req) => {
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
-      )
+      );
     }
 
-    // Try to get user data from the users table
+    // Get user data from the users table
     const { data: userData, error: userError } = await supabaseClient
       .from('users')
-      .select('email, stripe_customer_id')
+      .select('email')
       .eq('id', userId)
-      .single()
+      .single();
+
+    if (userError && userError.code !== 'PGRST116') {
+      console.error('Error fetching user:', userError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Database error',
+          details: 'Failed to fetch user data'
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
     // Prepare line items for checkout
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+    const lineItems: any[] = [
       {
         price: priceId,
         quantity: 1,
       }
-    ]
+    ];
 
     // Add any selected add-ons
     for (const addOnPriceId of addOns) {
       lineItems.push({
         price: addOnPriceId,
         quantity: 1,
-      })
+      });
     }
 
-    // Create or retrieve Stripe customer
-    let customerId: string
-    
-    if (userData && userData.stripe_customer_id) {
-      // User exists and has a Stripe customer ID
-      customerId = userData.stripe_customer_id
-    } else {
-      // Create new Stripe customer using the provided email
-      const customer = await stripe.customers.create({
-        email: userEmail,
-        metadata: {
-          supabase_user_id: userId,
-        },
-      })
-      
-      customerId = customer.id
-
-      // Upsert user record with Stripe customer ID
-      await supabaseClient
-        .from('users')
-        .upsert({ 
-          id: userId,
-          email: userEmail,
-          stripe_customer_id: customerId 
-        }, {
-          onConflict: 'id'
-        })
-    }
+    // Create Stripe customer
+    const customer = await stripe.customers.create({
+      email: userEmail,
+      metadata: {
+        supabase_user_id: userId,
+      },
+    });
 
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
-      customer: customerId,
+      customer: customer.id,
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'subscription',
@@ -121,17 +147,17 @@ serve(async (req) => {
         address: 'auto',
         name: 'auto',
       },
-    })
+    });
 
     return new Response(
       JSON.stringify({ sessionId: session.id }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
-    )
+    );
 
   } catch (error) {
-    console.error('Error creating checkout session:', error)
+    console.error('Error creating checkout session:', error);
     
     return new Response(
       JSON.stringify({ 
@@ -142,6 +168,6 @@ serve(async (req) => {
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
-    )
+    );
   }
-})
+});
