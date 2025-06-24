@@ -22,7 +22,7 @@ export function BillingPage() {
   const [activeAddOns, setActiveAddOns] = React.useState<string[]>([]);
 
   React.useEffect(() => {
-    if (user?.subscription?.stripeCustomerId) {
+    if (user?.stripe_customer_id) {
       loadBillingData();
     } else {
       setLoadingData(false);
@@ -30,13 +30,13 @@ export function BillingPage() {
   }, [user]);
 
   const loadBillingData = async () => {
-    if (!user?.subscription?.stripeCustomerId) return;
+    if (!user?.stripe_customer_id) return;
 
     try {
       setLoadingData(true);
       const [paymentMethodsData, invoicesData] = await Promise.all([
-        stripeService.getPaymentMethods(user.subscription.stripeCustomerId),
-        stripeService.getInvoices(user.subscription.stripeCustomerId)
+        stripeService.getPaymentMethods(user.stripe_customer_id),
+        stripeService.getInvoices(user.stripe_customer_id)
       ]);
       
       setPaymentMethods(paymentMethodsData);
@@ -97,7 +97,7 @@ export function BillingPage() {
   };
 
   const handleManageBilling = async () => {
-    if (!user?.subscription?.stripeCustomerId) {
+    if (!user?.stripe_customer_id) {
       toast.error('No billing information found. Please subscribe to a plan first.');
       return;
     }
@@ -105,7 +105,7 @@ export function BillingPage() {
     try {
       const returnUrl = `${window.location.origin}/billing`;
       await stripeService.createCustomerPortalSession(
-        user.subscription.stripeCustomerId,
+        user.stripe_customer_id,
         returnUrl
       );
     } catch (error) {
@@ -115,10 +115,10 @@ export function BillingPage() {
   };
 
   const handleSetDefaultPaymentMethod = async (paymentMethodId: string) => {
-    if (!user?.subscription?.stripeCustomerId) return;
+    if (!user?.stripe_customer_id) return;
 
     try {
-      await stripeService.setDefaultPaymentMethod(user.subscription.stripeCustomerId, paymentMethodId);
+      await stripeService.setDefaultPaymentMethod(user.stripe_customer_id, paymentMethodId);
       toast.success('Default payment method updated');
       await loadBillingData();
     } catch (error) {
@@ -147,21 +147,25 @@ export function BillingPage() {
   };
 
   const handleAddPaymentMethod = async () => {
-    if (!user?.subscription?.stripeCustomerId) {
+    if (!user?.stripe_customer_id) {
       toast.error('Please subscribe to a plan first');
       return;
     }
 
     try {
-      await stripeService.addPaymentMethod(user.subscription.stripeCustomerId);
+      await stripeService.addPaymentMethod(user.stripe_customer_id);
     } catch (error) {
       console.error('Error adding payment method:', error);
       toast.error('Payment method management coming soon');
     }
   };
 
-  const handleDownloadInvoice = (invoiceId: string) => {
-    toast.success('Invoice download started');
+  const handleDownloadInvoice = (invoiceUrl: string) => {
+    if (invoiceUrl) {
+      window.open(invoiceUrl, '_blank');
+    } else {
+      toast.error('Invoice download not available');
+    }
   };
 
   const handleToggleAddOn = (addOn: any) => {
@@ -213,7 +217,7 @@ export function BillingPage() {
             <h1 className="text-3xl font-bold text-gray-900">Billing & Subscription</h1>
             <p className="text-gray-600 mt-2">Manage your subscription, payment methods, and billing history</p>
           </div>
-          {user?.subscription?.stripeCustomerId && (
+          {user?.stripe_customer_id && (
             <Button onClick={handleManageBilling} className="flex items-center">
               <ExternalLink className="w-4 h-4 mr-2" />
               Manage Billing
@@ -349,7 +353,7 @@ export function BillingPage() {
         </div>
 
         {/* Payment Methods */}
-        {user?.subscription?.stripeCustomerId && (
+        {user?.stripe_customer_id && (
           <div>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Payment Methods</h2>
@@ -386,7 +390,7 @@ export function BillingPage() {
         )}
 
         {/* Billing History */}
-        {user?.subscription?.stripeCustomerId && (
+        {user?.stripe_customer_id && (
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Billing History</h2>
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -446,7 +450,7 @@ export function BillingPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleDownloadInvoice(invoice.id)}
+                              onClick={() => handleDownloadInvoice(invoice.downloadUrl)}
                             >
                               <Download className="w-4 h-4 mr-2" />
                               Download
@@ -463,7 +467,7 @@ export function BillingPage() {
         )}
 
         {/* No Subscription State */}
-        {!user?.subscription?.stripeCustomerId && (
+        {!user?.stripe_customer_id && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
             <div className="flex items-start">
               <div className="flex-shrink-0">

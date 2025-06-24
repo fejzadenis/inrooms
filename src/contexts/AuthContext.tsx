@@ -25,6 +25,10 @@ interface UserProfile {
   name: string;
   role: 'user' | 'admin';
   photoURL?: string;
+  stripe_customer_id?: string;
+  stripe_subscription_id?: string;
+  stripe_subscription_status?: string;
+  stripe_current_period_end?: Date;
   subscription: {
     status: 'trial' | 'active' | 'inactive';
     trialEndsAt?: Date;
@@ -100,6 +104,9 @@ async function syncUserToSupabase(userData: {
   name: string;
   role: 'user' | 'admin';
   photo_url?: string;
+  stripe_customer_id?: string;
+  stripe_subscription_id?: string;
+  stripe_subscription_status?: string;
   subscription_status: string;
   subscription_trial_ends_at?: Date;
   subscription_events_quota: number;
@@ -157,6 +164,10 @@ async function createOrUpdateUserProfile(firebaseUser: FirebaseUser, name?: stri
       name: name || firebaseUser.displayName || existingData.name || '',
       role: isAdmin ? 'admin' : 'user',
       photoURL: firebaseUser.photoURL || existingData.photoURL || null,
+      stripe_customer_id: existingData.stripe_customer_id || null,
+      stripe_subscription_id: existingData.stripe_subscription_id || null,
+      stripe_subscription_status: existingData.stripe_subscription_status || null,
+      stripe_current_period_end: existingData.stripe_current_period_end || null,
       subscription: {
         status: isAdmin ? 'active' : (existingData.subscription?.status || 'inactive'),
         trialEndsAt: existingData.subscription?.trialEndsAt ?? null,
@@ -221,6 +232,9 @@ async function createOrUpdateUserProfile(firebaseUser: FirebaseUser, name?: stri
       name: userData.name,
       role: userData.role as 'user' | 'admin',
       photo_url: userData.photoURL || undefined,
+      stripe_customer_id: userData.stripe_customer_id || undefined,
+      stripe_subscription_id: userData.stripe_subscription_id || undefined,
+      stripe_subscription_status: userData.stripe_subscription_status || undefined,
       subscription_status: userData.subscription.status,
       subscription_trial_ends_at: userData.subscription.trialEndsAt || undefined,
       subscription_events_quota: userData.subscription.eventsQuota,
@@ -243,6 +257,10 @@ async function createOrUpdateUserProfile(firebaseUser: FirebaseUser, name?: stri
       name: userData.name,
       role: userData.role as 'user' | 'admin',
       photoURL: userData.photoURL,
+      stripe_customer_id: userData.stripe_customer_id,
+      stripe_subscription_id: userData.stripe_subscription_id,
+      stripe_subscription_status: userData.stripe_subscription_status,
+      stripe_current_period_end: userData.stripe_current_period_end,
       subscription: userData.subscription,
       profile: {
         ...userData.profile,
@@ -278,6 +296,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 name: userData.name,
                 role: userData.role,
                 photoURL: userData.photoURL,
+                stripe_customer_id: userData.stripe_customer_id,
+                stripe_subscription_id: userData.stripe_subscription_id,
+                stripe_subscription_status: userData.stripe_subscription_status,
+                stripe_current_period_end: userData.stripe_current_period_end,
                 subscription: userData.subscription,
                 profile: {
                   ...userData.profile,
@@ -394,6 +416,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         name: user.name,
         role: user.role,
         photo_url: user.photoURL || undefined,
+        stripe_customer_id: user.stripe_customer_id,
+        stripe_subscription_id: user.stripe_subscription_id,
+        stripe_subscription_status: user.stripe_subscription_status,
         subscription_status: 'trial',
         subscription_trial_ends_at: trialEndsAt,
         subscription_events_quota: 2,
@@ -493,6 +518,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           name: updatedUserData.name,
           role: updatedUserData.role,
           photo_url: updatedUserData.photoURL || undefined,
+          stripe_customer_id: updatedUserData.stripe_customer_id,
+          stripe_subscription_id: updatedUserData.stripe_subscription_id,
+          stripe_subscription_status: updatedUserData.stripe_subscription_status,
           subscription_status: updatedUserData.subscription.status,
           subscription_trial_ends_at: updatedUserData.subscription.trialEndsAt || undefined,
           subscription_events_quota: updatedUserData.subscription.eventsQuota,

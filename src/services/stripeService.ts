@@ -1,6 +1,4 @@
 import { loadStripe } from '@stripe/stripe-js';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../config/firebase';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
@@ -346,22 +344,53 @@ export const stripeService = {
     }
   },
 
-  async updateSubscriptionInFirestore(userId: string, subscriptionData: any) {
+  async getPaymentMethods(customerId: string) {
     try {
-      const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
-        'subscription.status': subscriptionData.status,
-        'subscription.stripeCustomerId': subscriptionData.customerId,
-        'subscription.stripeSubscriptionId': subscriptionData.subscriptionId,
-        'subscription.currentPeriodStart': new Date(subscriptionData.currentPeriodStart * 1000),
-        'subscription.currentPeriodEnd': new Date(subscriptionData.currentPeriodEnd * 1000),
-        'subscription.eventsQuota': subscriptionData.eventsQuota,
-        'subscription.planId': subscriptionData.planId,
-        updatedAt: serverTimestamp(),
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-payment-methods`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ customerId }),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch payment methods');
+      }
+
+      return await response.json();
     } catch (error) {
-      console.error('Error updating subscription in Firestore:', error);
-      throw error;
+      console.error('Error fetching payment methods:', error);
+      return [];
+    }
+  },
+
+  async getInvoices(customerId: string) {
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-invoices`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ customerId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch invoices');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+      return [];
     }
   },
 
@@ -391,50 +420,15 @@ export const stripeService = {
     return monthlyCost - annualPrice;
   },
 
-  // Mock function for demo - replace with actual Stripe API calls
-  async getPaymentMethods(customerId: string) {
-    // This would normally call your backend to get payment methods from Stripe
-    return [
-      {
-        id: 'pm_1234567890',
-        type: 'card' as const,
-        card: {
-          brand: 'visa',
-          last4: '4242',
-          expMonth: 12,
-          expYear: 2025,
-        },
-        isDefault: true,
-      }
-    ];
-  },
-
-  async getInvoices(customerId: string) {
-    // This would normally call your backend to get invoices from Stripe
-    return [
-      {
-        id: 'in_1234567890',
-        date: new Date().toISOString(),
-        amount: 79,
-        status: 'paid',
-        description: 'Professional Plan - Current Month',
-        downloadUrl: '#'
-      }
-    ];
-  },
-
   async addPaymentMethod(customerId: string) {
-    // This would normally integrate with Stripe Elements to add a payment method
-    throw new Error('Payment method management is not yet configured. Please contact support.');
+    throw new Error('Payment method management requires Stripe Elements integration. Please contact support.');
   },
 
   async setDefaultPaymentMethod(customerId: string, paymentMethodId: string) {
-    // This would normally call your backend to set default payment method
-    throw new Error('Payment method management is not yet configured. Please contact support.');
+    throw new Error('Payment method management requires backend integration. Please contact support.');
   },
 
   async deletePaymentMethod(paymentMethodId: string) {
-    // This would normally call your backend to delete payment method
-    throw new Error('Payment method management is not yet configured. Please contact support.');
+    throw new Error('Payment method management requires backend integration. Please contact support.');
   }
 };

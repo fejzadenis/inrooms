@@ -37,6 +37,10 @@ serve(async (request) => {
         await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session)
         break
       
+      case 'customer.created':
+        await handleCustomerCreated(event.data.object as Stripe.Customer)
+        break
+      
       case 'customer.subscription.created':
         await handleSubscriptionCreated(event.data.object as Stripe.Subscription)
         break
@@ -55,6 +59,14 @@ serve(async (request) => {
       
       case 'invoice.payment_failed':
         await handlePaymentFailed(event.data.object as Stripe.Invoice)
+        break
+
+      case 'payment_method.attached':
+        await handlePaymentMethodAttached(event.data.object as Stripe.PaymentMethod)
+        break
+
+      case 'payment_method.detached':
+        await handlePaymentMethodDetached(event.data.object as Stripe.PaymentMethod)
         break
       
       default:
@@ -83,15 +95,38 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const { error } = await supabaseClient
     .from('users')
     .update({
-      'subscription.status': 'active',
-      'subscription.stripe_customer_id': session.customer,
-      'subscription.stripe_subscription_id': session.subscription,
+      stripe_customer_id: session.customer as string,
+      stripe_subscription_id: session.subscription as string,
+      subscription_status: 'active',
       updated_at: new Date().toISOString(),
     })
     .eq('id', userId)
 
   if (error) {
     console.error('Error updating user subscription:', error)
+  }
+}
+
+async function handleCustomerCreated(customer: Stripe.Customer) {
+  const userId = customer.metadata?.user_id
+  
+  if (!userId) {
+    console.error('No user_id in customer metadata')
+    return
+  }
+
+  // Store customer in stripe_customers table
+  const { error } = await supabaseClient
+    .from('stripe_customers')
+    .insert({
+      id: customer.id,
+      user_id: userId,
+      email: customer.email || '',
+      name: customer.name || '',
+    })
+
+  if (error) {
+    console.error('Error storing customer:', error)
   }
 }
 
@@ -107,15 +142,30 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   const priceId = subscription.items.data[0]?.price.id
   const planDetails = getPlanDetailsByPriceId(priceId)
 
+  // Store subscription in stripe_subscriptions table
+  await supabaseClient
+    .from('stripe_subscriptions')
+    .insert({
+      id: subscription.id,
+      customer_id: subscription.customer as string,
+      user_id: userId,
+      status: subscription.status,
+      price_id: priceId,
+      quantity: subscription.items.data[0]?.quantity || 1,
+      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      cancel_at_period_end: subscription.cancel_at_period_end,
+    })
+
+  // Update user subscription info
   const { error } = await supabaseClient
     .from('users')
     .update({
-      'subscription.status': subscription.status === 'active' ? 'active' : 'inactive',
-      'subscription.stripe_subscription_id': subscription.id,
-      'subscription.current_period_start': new Date(subscription.current_period_start * 1000).toISOString(),
-      'subscription.current_period_end': new Date(subscription.current_period_end * 1000).toISOString(),
-      'subscription.events_quota': planDetails.eventsQuota,
-      'subscription.plan_id': planDetails.planId,
+      stripe_subscription_id: subscription.id,
+      stripe_subscription_status: subscription.status,
+      stripe_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      subscription_status: subscription.status === 'active' ? 'active' : 'inactive',
+      subscription_events_quota: planDetails.eventsQuota,
       updated_at: new Date().toISOString(),
     })
     .eq('id', userId)
@@ -137,14 +187,29 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const priceId = subscription.items.data[0]?.price.id
   const planDetails = getPlanDetailsByPriceId(priceId)
 
+  // Update subscription in stripe_subscriptions table
+  await supabaseClient
+    .from('stripe_subscriptions')
+    .update({
+      status: subscription.status,
+      price_id: priceId,
+      quantity: subscription.items.data[0]?.quantity || 1,
+      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      cancel_at_period_end: subscription.cancel_at_period_end,
+      canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', subscription.id)
+
+  // Update user subscription info
   const { error } = await supabaseClient
     .from('users')
     .update({
-      'subscription.status': subscription.status === 'active' ? 'active' : 'inactive',
-      'subscription.current_period_start': new Date(subscription.current_period_start * 1000).toISOString(),
-      'subscription.current_period_end': new Date(subscription.current_period_end * 1000).toISOString(),
-      'subscription.events_quota': planDetails.eventsQuota,
-      'subscription.plan_id': planDetails.planId,
+      stripe_subscription_status: subscription.status,
+      stripe_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      subscription_status: subscription.status === 'active' ? 'active' : 'inactive',
+      subscription_events_quota: planDetails.eventsQuota,
       updated_at: new Date().toISOString(),
     })
     .eq('id', userId)
@@ -162,11 +227,23 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     return
   }
 
+  // Update subscription status
+  await supabaseClient
+    .from('stripe_subscriptions')
+    .update({
+      status: 'canceled',
+      canceled_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', subscription.id)
+
+  // Update user subscription info
   const { error } = await supabaseClient
     .from('users')
     .update({
-      'subscription.status': 'inactive',
-      'subscription.events_quota': 0,
+      stripe_subscription_status: 'canceled',
+      subscription_status: 'inactive',
+      subscription_events_quota: 0,
       updated_at: new Date().toISOString(),
     })
     .eq('id', userId)
@@ -177,21 +254,44 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
-  const userId = invoice.subscription_details?.metadata?.user_id
+  const customerId = invoice.customer as string
   
-  if (!userId) {
-    console.error('No user_id in invoice metadata')
+  // Get user ID from customer
+  const { data: customer } = await supabaseClient
+    .from('stripe_customers')
+    .select('user_id')
+    .eq('id', customerId)
+    .single()
+
+  if (!customer) {
+    console.error('Customer not found for invoice')
     return
   }
+
+  // Store invoice
+  await supabaseClient
+    .from('stripe_invoices')
+    .insert({
+      id: invoice.id,
+      customer_id: customerId,
+      subscription_id: invoice.subscription as string || null,
+      user_id: customer.user_id,
+      amount_paid: invoice.amount_paid,
+      amount_due: invoice.amount_due,
+      currency: invoice.currency,
+      status: invoice.status || 'paid',
+      hosted_invoice_url: invoice.hosted_invoice_url,
+      invoice_pdf: invoice.invoice_pdf,
+    })
 
   // Reset events used count for new billing period
   const { error } = await supabaseClient
     .from('users')
     .update({
-      'subscription.events_used': 0,
+      subscription_events_used: 0,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', userId)
+    .eq('id', customer.user_id)
 
   if (error) {
     console.error('Error resetting events count:', error)
@@ -199,15 +299,80 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
-  const userId = invoice.subscription_details?.metadata?.user_id
+  const customerId = invoice.customer as string
   
-  if (!userId) {
-    console.error('No user_id in invoice metadata')
+  // Get user ID from customer
+  const { data: customer } = await supabaseClient
+    .from('stripe_customers')
+    .select('user_id')
+    .eq('id', customerId)
+    .single()
+
+  if (!customer) {
+    console.error('Customer not found for failed payment')
     return
   }
 
-  // Optionally handle payment failures (e.g., send notification)
-  console.log(`Payment failed for user ${userId}`)
+  // Store failed invoice
+  await supabaseClient
+    .from('stripe_invoices')
+    .insert({
+      id: invoice.id,
+      customer_id: customerId,
+      subscription_id: invoice.subscription as string || null,
+      user_id: customer.user_id,
+      amount_paid: invoice.amount_paid,
+      amount_due: invoice.amount_due,
+      currency: invoice.currency,
+      status: invoice.status || 'open',
+      hosted_invoice_url: invoice.hosted_invoice_url,
+      invoice_pdf: invoice.invoice_pdf,
+    })
+
+  console.log(`Payment failed for user ${customer.user_id}`)
+}
+
+async function handlePaymentMethodAttached(paymentMethod: Stripe.PaymentMethod) {
+  const customerId = paymentMethod.customer as string
+  
+  if (!customerId) {
+    console.error('No customer ID in payment method')
+    return
+  }
+
+  // Get user ID from customer
+  const { data: customer } = await supabaseClient
+    .from('stripe_customers')
+    .select('user_id')
+    .eq('id', customerId)
+    .single()
+
+  if (!customer) {
+    console.error('Customer not found for payment method')
+    return
+  }
+
+  // Store payment method
+  await supabaseClient
+    .from('stripe_payment_methods')
+    .insert({
+      id: paymentMethod.id,
+      customer_id: customerId,
+      user_id: customer.user_id,
+      type: paymentMethod.type,
+      card_brand: paymentMethod.card?.brand,
+      card_last4: paymentMethod.card?.last4,
+      card_exp_month: paymentMethod.card?.exp_month,
+      card_exp_year: paymentMethod.card?.exp_year,
+    })
+}
+
+async function handlePaymentMethodDetached(paymentMethod: Stripe.PaymentMethod) {
+  // Remove payment method from database
+  await supabaseClient
+    .from('stripe_payment_methods')
+    .delete()
+    .eq('id', paymentMethod.id)
 }
 
 function getPlanDetailsByPriceId(priceId: string): { planId: string; eventsQuota: number } {
