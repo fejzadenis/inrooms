@@ -30,7 +30,7 @@ export function AboutPage() {
 
   const testimonials = [
     {
-      quote: "inrooms has transformed how I network in the tech sales space. The connections I've made are invaluable.",
+      quote: "inRooms has transformed how I network in the tech sales space. The connections I've made are invaluable.",
       author: "Sarah Johnson",
       role: "Enterprise Sales Director",
       company: "TechCorp"
@@ -52,7 +52,7 @@ export function AboutPage() {
             Elevate Your Tech Sales Career
           </h1>
           <p className="mt-6 text-xl text-gray-600 max-w-2xl mx-auto">
-            inrooms is the premier networking platform designed exclusively for tech sales professionals. 
+            inRooms is the premier networking platform designed exclusively for tech sales professionals. 
             Connect, learn, and grow with peers who understand your challenges.
           </p>
           <div className="mt-8 flex justify-center gap-4">
@@ -71,7 +71,7 @@ export function AboutPage() {
         {/* Features Grid */}
         <div>
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
-            Why Choose inrooms?
+            Why Choose inRooms?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {features.map((feature) => {
@@ -117,7 +117,7 @@ export function AboutPage() {
             Ready to Transform Your Network?
           </h2>
           <p className="mt-4 text-xl text-gray-600">
-            Join thousands of tech sales professionals who are already growing their careers with inrooms.
+            Join thousands of tech sales professionals who are already growing their careers with inRooms.
           </p>
           <div className="mt-8">
             <Link to="/signup">

@@ -74,6 +74,7 @@ export function SubscriptionPage() {
 
       await stripeService.createCheckoutSession(
         user.id,
+        user.email,
         priceId,
         successUrl,
         cancelUrl
@@ -148,7 +149,7 @@ export function SubscriptionPage() {
           </h1>
           <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
             Start with a 7-day free trial, then select the perfect plan for your networking needs. 
-            Join thousands of tech sales professionals growing their careers with inrooms.
+            Join thousands of tech sales professionals growing their careers with inRooms.
           </p>
           
           {/* Free Trial CTA */}
@@ -174,7 +175,7 @@ export function SubscriptionPage() {
         {/* Value Propositions */}
         <div className="mb-16">
           <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
-            Why inrooms Delivers Results
+            Why inRooms Delivers Results
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {valueProps.map((prop, index) => {

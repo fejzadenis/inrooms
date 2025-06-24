@@ -267,7 +267,7 @@ export function OnboardingFlow() {
       // Complete onboarding with all the detailed data
       await onboardingService.completeOnboarding(user.id, onboardingData);
 
-      toast.success('Profile setup complete! Welcome to inrooms!');
+      toast.success('Profile setup complete! Welcome to inRooms!');
       
       // Redirect to profile page
       navigate('/profile');
@@ -991,7 +991,7 @@ export function OnboardingFlow() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Complete Your Profile</h1>
-          <p className="text-gray-600 mt-2">Help us personalize your inrooms experience</p>
+          <p className="text-gray-600 mt-2">Help us personalize your inRooms experience</p>
         </div>
 
         <ProgressIndicator 
