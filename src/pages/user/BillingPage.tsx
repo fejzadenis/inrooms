@@ -79,6 +79,7 @@ export function BillingPage() {
 
       await stripeService.createCheckoutSession(
         user.id,
+        user.email, // Pass user email directly
         priceId,
         successUrl,
         cancelUrl

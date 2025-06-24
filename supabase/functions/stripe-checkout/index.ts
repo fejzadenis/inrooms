@@ -10,6 +10,7 @@ const corsHeaders = {
 
 interface RequestBody {
   userId: string
+  userEmail: string
   priceId: string
   successUrl: string
   cancelUrl: string
@@ -34,9 +35,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { userId, priceId, successUrl, cancelUrl, addOns = [] }: RequestBody = await req.json()
+    const { userId, userEmail, priceId, successUrl, cancelUrl, addOns = [] }: RequestBody = await req.json()
 
-    if (!userId || !priceId || !successUrl || !cancelUrl) {
+    if (!userId || !userEmail || !priceId || !successUrl || !cancelUrl) {
       return new Response(
         JSON.stringify({ error: 'Missing required parameters' }),
         { 
@@ -46,22 +47,12 @@ serve(async (req) => {
       )
     }
 
-    // Get user data from the users table directly
+    // Try to get user data from the users table
     const { data: userData, error: userError } = await supabaseClient
       .from('users')
       .select('email, stripe_customer_id')
       .eq('id', userId)
       .single()
-    
-    if (userError || !userData) {
-      return new Response(
-        JSON.stringify({ error: 'User not found' }),
-        { 
-          status: 404, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
 
     // Prepare line items for checkout
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
@@ -82,12 +73,13 @@ serve(async (req) => {
     // Create or retrieve Stripe customer
     let customerId: string
     
-    if (userData.stripe_customer_id) {
+    if (userData && userData.stripe_customer_id) {
+      // User exists and has a Stripe customer ID
       customerId = userData.stripe_customer_id
     } else {
-      // Create new Stripe customer
+      // Create new Stripe customer using the provided email
       const customer = await stripe.customers.create({
-        email: userData.email,
+        email: userEmail,
         metadata: {
           supabase_user_id: userId,
         },
@@ -95,11 +87,16 @@ serve(async (req) => {
       
       customerId = customer.id
 
-      // Update user record with Stripe customer ID
+      // Upsert user record with Stripe customer ID
       await supabaseClient
         .from('users')
-        .update({ stripe_customer_id: customerId })
-        .eq('id', userId)
+        .upsert({ 
+          id: userId,
+          email: userEmail,
+          stripe_customer_id: customerId 
+        }, {
+          onConflict: 'id'
+        })
     }
 
     // Create Stripe checkout session

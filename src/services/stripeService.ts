@@ -167,7 +167,7 @@ export const annualPlans: SubscriptionPlan[] = subscriptionPlans
 export const allPlans = [...subscriptionPlans, ...annualPlans];
 
 export const stripeService = {
-  async createCheckoutSession(userId: string, priceId: string, successUrl: string, cancelUrl: string, addOns: string[] = []) {
+  async createCheckoutSession(userId: string, userEmail: string, priceId: string, successUrl: string, cancelUrl: string, addOns: string[] = []) {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -184,6 +184,7 @@ export const stripeService = {
         },
         body: JSON.stringify({
           userId,
+          userEmail,
           priceId,
           successUrl,
           cancelUrl,
