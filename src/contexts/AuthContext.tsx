@@ -93,7 +93,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 const ADMIN_EMAIL = 'admin@inrooms.com';
 
-// Function to sync user data to Supabase
+// Function to sync user data to Supabase via Edge Function
 async function syncUserToSupabase(userData: {
   id: string;
   email: string;
@@ -117,30 +117,29 @@ async function syncUserToSupabase(userData: {
 }) {
   try {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     
-    if (!supabaseUrl || !supabaseAnonKey) {
-      console.warn('Supabase credentials not found, skipping user sync');
+    if (!supabaseUrl) {
+      console.warn('Supabase URL not found, skipping user sync');
       return;
     }
 
-    const response = await fetch(`${supabaseUrl}/rest/v1/users`, {
+    // Use Edge Function for secure user sync instead of direct API call
+    const response = await fetch(`${supabaseUrl}/functions/v1/sync-user`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-        'apikey': supabaseAnonKey,
-        'Prefer': 'resolution=merge-duplicates'
       },
       body: JSON.stringify(userData)
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Failed to sync user to Supabase:', response.status, errorText);
+      console.warn('Failed to sync user to Supabase via Edge Function:', response.status, errorText);
+      // Don't throw error to prevent blocking user authentication
     }
   } catch (error) {
-    console.error('Error syncing user to Supabase:', error);
+    console.warn('Error syncing user to Supabase:', error);
+    // Don't throw error to prevent blocking user authentication
   }
 }
 
@@ -215,8 +214,8 @@ async function createOrUpdateUserProfile(firebaseUser: FirebaseUser, name?: stri
 
     await setDoc(userRef, userData, { merge: true });
 
-    // Sync user data to Supabase for billing functionality
-    await syncUserToSupabase({
+    // Sync user data to Supabase for billing functionality (non-blocking)
+    syncUserToSupabase({
       id: userData.id,
       email: userData.email,
       name: userData.name,
@@ -388,8 +387,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updatedAt: serverTimestamp(),
       });
 
-      // Also sync the updated subscription status to Supabase
-      await syncUserToSupabase({
+      // Also sync the updated subscription status to Supabase (non-blocking)
+      syncUserToSupabase({
         id: user.id,
         email: user.email,
         name: user.name,
@@ -487,8 +486,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (profileData.linkedin !== undefined && updatedUserData.profile) updatedUserData.profile.linkedin = profileData.linkedin;
         if (profileData.skills !== undefined && updatedUserData.profile) updatedUserData.profile.skills = profileData.skills;
 
-        // Sync updated data to Supabase
-        await syncUserToSupabase({
+        // Sync updated data to Supabase (non-blocking)
+        syncUserToSupabase({
           id: updatedUserData.id,
           email: updatedUserData.email,
           name: updatedUserData.name,

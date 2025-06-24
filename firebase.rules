@@ -94,9 +94,12 @@ service cloud.firestore {
     
     match /chats/{chatId} {
       function areUsersConnected(userId1, userId2) {
-        let user1Data = get(/databases/$(database)/documents/users/$(userId1)).data;
-        let user2Data = get(/databases/$(database)/documents/users/$(userId2)).data;
-        return userId1 in user2Data.connections && userId2 in user1Data.connections;
+        let user1Doc = get(/databases/$(database)/documents/users/$(userId1));
+        let user2Doc = get(/databases/$(database)/documents/users/$(userId2));
+        return user1Doc.exists && user2Doc.exists &&
+               user1Doc.data.keys().hasAll(['connections']) && user2Doc.data.keys().hasAll(['connections']) &&
+               user1Doc.data.connections is list && user2Doc.data.connections is list &&
+               userId1 in user2Doc.data.connections && userId2 in user1Doc.data.connections;
       }
 
       allow read: if request.auth != null && (
