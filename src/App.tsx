@@ -24,6 +24,7 @@ import { ResourcesPage } from './pages/user/ResourcesPage';
 import { NotificationsPage } from './pages/user/NotificationsPage';
 import { AboutPage } from './pages/AboutPage';
 import { LinkedInCallback } from './pages/LinkedInCallback';
+import { SolutionsPage } from './pages/SolutionsPage';
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
           } />
           <Route path="/subscription" element={<SubscriptionPage />} />
           <Route path="/linkedin-callback" element={<LinkedInCallback />} />
+          <Route path="/solutions" element={<SolutionsPage />} />
           <Route
             path="/profile"
             element={

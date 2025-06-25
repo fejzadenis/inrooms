@@ -13,7 +13,8 @@ import {
   Bookmark,
   HelpCircle,
   FileText,
-  CreditCard
+  CreditCard,
+  Sparkles
 } from 'lucide-react';
 import { Logo } from '../components/common/Logo';
 import { useAuth } from '../contexts/AuthContext';
@@ -95,6 +96,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 </Link>
                 <Link to="/network" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
                   Network
+                </Link>
+                <Link to="/solutions" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                  Solutions
                 </Link>
                 <Link to="/resources" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
                   Resources

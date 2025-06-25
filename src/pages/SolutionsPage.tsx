@@ -1,0 +1,410 @@
+import React from 'react';
+import { MainLayout } from '../layouts/MainLayout';
+import { DemoCard } from '../components/solutions/DemoCard';
+import { DemoScheduleModal } from '../components/solutions/DemoScheduleModal';
+import { DemoRegistrationModal } from '../components/solutions/DemoRegistrationModal';
+import { RecordingUploadModal } from '../components/solutions/RecordingUploadModal';
+import { 
+  Plus, 
+  Search, 
+  Filter, 
+  Star, 
+  Video, 
+  Calendar,
+  Users,
+  Play,
+  Upload,
+  Sparkles
+} from 'lucide-react';
+import { Button } from '../components/common/Button';
+import { useAuth } from '../contexts/AuthContext';
+import { demoService } from '../services/demoService';
+import { toast } from 'react-hot-toast';
+import type { Demo } from '../types/demo';
+
+export function SolutionsPage() {
+  const { user } = useAuth();
+  const [demos, setDemos] = React.useState<Demo[]>([]);
+  const [featuredDemos, setFeaturedDemos] = React.useState<Demo[]>([]);
+  const [recordings, setRecordings] = React.useState<Demo[]>([]);
+  const [userRegistrations, setUserRegistrations] = React.useState<string[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [activeTab, setActiveTab] = React.useState<'all' | 'featured' | 'recordings' | 'my-demos'>('featured');
+  
+  // Modal states
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = React.useState(false);
+  const [isRegistrationModalOpen, setIsRegistrationModalOpen] = React.useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = React.useState(false);
+  const [selectedDemo, setSelectedDemo] = React.useState<Demo | null>(null);
+
+  React.useEffect(() => {
+    loadDemos();
+    if (user) {
+      loadUserRegistrations();
+    }
+  }, [user]);
+
+  const loadDemos = async () => {
+    try {
+      setLoading(true);
+      
+      // Load all public demos
+      const allDemos = await demoService.getDemos({ isPublic: true });
+      setDemos(allDemos);
+
+      // Load featured demos
+      const featured = await demoService.getFeaturedDemos();
+      setFeaturedDemos(featured);
+
+      // Load demos with recordings
+      const withRecordings = allDemos.filter(demo => demo.recordingUrl && demo.status === 'completed');
+      setRecordings(withRecordings);
+      
+    } catch (error) {
+      console.error('Failed to load demos:', error);
+      toast.error('Failed to load demos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadUserRegistrations = async () => {
+    if (!user) return;
+    
+    try {
+      const registrations = await demoService.getUserDemoRegistrations(user.id);
+      setUserRegistrations(registrations.map(reg => reg.demoId));
+    } catch (error) {
+      console.error('Failed to load user registrations:', error);
+    }
+  };
+
+  const handleScheduleDemo = () => {
+    if (!user) {
+      toast.error('Please log in to schedule demos');
+      return;
+    }
+
+    // Check if user can schedule demos (enterprise subscription)
+    if (user.subscription.status !== 'active' || user.role !== 'admin') {
+      toast.error('Demo scheduling is available for enterprise members only');
+      return;
+    }
+
+    setIsScheduleModalOpen(true);
+  };
+
+  const handleRegisterForDemo = (demo: Demo) => {
+    setSelectedDemo(demo);
+    setIsRegistrationModalOpen(true);
+  };
+
+  const handleUploadRecording = (demo: Demo) => {
+    setSelectedDemo(demo);
+    setIsUploadModalOpen(true);
+  };
+
+  const handleJoinDemo = (demo: Demo) => {
+    if (demo.meetingLink) {
+      window.open(demo.meetingLink, '_blank', 'noopener,noreferrer');
+    } else {
+      toast.error('Meeting link not available');
+    }
+  };
+
+  const handleViewRecording = (demo: Demo) => {
+    if (demo.recordingUrl) {
+      window.open(demo.recordingUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      toast.error('Recording not available');
+    }
+  };
+
+  const handleToggleFeatured = async (demo: Demo) => {
+    if (!user || user.role !== 'admin') {
+      toast.error('Only admins can feature demos');
+      return;
+    }
+
+    try {
+      await demoService.toggleFeaturedStatus(demo.id!, !demo.isFeatured);
+      toast.success(`Demo ${demo.isFeatured ? 'removed from' : 'added to'} featured`);
+      loadDemos();
+    } catch (error) {
+      console.error('Failed to toggle featured status:', error);
+      toast.error('Failed to update demo');
+    }
+  };
+
+  const getFilteredDemos = () => {
+    let filteredDemos: Demo[] = [];
+    
+    switch (activeTab) {
+      case 'featured':
+        filteredDemos = featuredDemos;
+        break;
+      case 'recordings':
+        filteredDemos = recordings;
+        break;
+      case 'my-demos':
+        filteredDemos = user ? demos.filter(demo => demo.hostId === user.id) : [];
+        break;
+      default:
+        filteredDemos = demos;
+    }
+
+    if (searchTerm) {
+      filteredDemos = filteredDemos.filter(demo =>
+        demo.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        demo.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        demo.hostCompany.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        demo.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    return filteredDemos;
+  };
+
+  const canScheduleDemos = user && (user.role === 'admin' || user.subscription.status === 'active');
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg text-gray-600">Loading solutions...</div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  return (
+    <MainLayout>
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="text-center">
+          <div className="flex items-center justify-center mb-4">
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full p-3">
+              <Sparkles className="w-8 h-8 text-white" />
+            </div>
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900">Solutions Showcase</h1>
+          <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
+            Discover innovative solutions through live product demos and recorded sessions. 
+            See how industry leaders solve real business challenges.
+          </p>
+        </div>
+
+        {/* Action Bar */}
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <input
+              type="text"
+              placeholder="Search demos, companies, or topics..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-3 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm"
+            />
+          </div>
+          
+          <div className="flex space-x-3">
+            <Button variant="outline">
+              <Filter className="w-4 h-4 mr-2" />
+              Filter
+            </Button>
+            {canScheduleDemos && (
+              <Button onClick={handleScheduleDemo}>
+                <Plus className="w-4 h-4 mr-2" />
+                Schedule Demo
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100">Total Demos</p>
+                <p className="text-3xl font-bold">{demos.length}</p>
+              </div>
+              <Video className="w-8 h-8 text-blue-200" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-100">Featured</p>
+                <p className="text-3xl font-bold">{featuredDemos.length}</p>
+              </div>
+              <Star className="w-8 h-8 text-yellow-200" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100">Recordings</p>
+                <p className="text-3xl font-bold">{recordings.length}</p>
+              </div>
+              <Play className="w-8 h-8 text-green-200" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100">This Month</p>
+                <p className="text-3xl font-bold">
+                  {demos.filter(demo => {
+                    const now = new Date();
+                    const demoDate = new Date(demo.scheduledDate);
+                    return demoDate.getMonth() === now.getMonth() && demoDate.getFullYear() === now.getFullYear();
+                  }).length}
+                </p>
+              </div>
+              <Calendar className="w-8 h-8 text-purple-200" />
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('featured')}
+              className={`${
+                activeTab === 'featured'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+            >
+              <Star className="w-4 h-4 mr-2" />
+              Featured ({featuredDemos.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`${
+                activeTab === 'all'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+            >
+              <Video className="w-4 h-4 mr-2" />
+              All Demos ({demos.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('recordings')}
+              className={`${
+                activeTab === 'recordings'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+            >
+              <Play className="w-4 h-4 mr-2" />
+              Recordings ({recordings.length})
+            </button>
+            {user && (
+              <button
+                onClick={() => setActiveTab('my-demos')}
+                className={`${
+                  activeTab === 'my-demos'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+              >
+                <Users className="w-4 h-4 mr-2" />
+                My Demos ({demos.filter(demo => demo.hostId === user.id).length})
+              </button>
+            )}
+          </nav>
+        </div>
+
+        {/* Demo Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {getFilteredDemos().length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <Video className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900">
+                {searchTerm ? 'No demos found' : 'No demos available'}
+              </h3>
+              <p className="text-gray-500 mt-2">
+                {searchTerm 
+                  ? 'Try adjusting your search terms' 
+                  : activeTab === 'my-demos'
+                  ? 'You haven\'t scheduled any demos yet'
+                  : 'Check back later for new demos'}
+              </p>
+              {activeTab === 'my-demos' && canScheduleDemos && (
+                <Button className="mt-4" onClick={handleScheduleDemo}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Schedule Your First Demo
+                </Button>
+              )}
+            </div>
+          ) : (
+            getFilteredDemos().map((demo) => (
+              <DemoCard
+                key={demo.id}
+                demo={demo}
+                isRegistered={userRegistrations.includes(demo.id!)}
+                canManage={user?.id === demo.hostId || user?.role === 'admin'}
+                onRegister={() => handleRegisterForDemo(demo)}
+                onJoin={() => handleJoinDemo(demo)}
+                onViewRecording={() => handleViewRecording(demo)}
+                onUploadRecording={() => handleUploadRecording(demo)}
+                onToggleFeatured={() => handleToggleFeatured(demo)}
+              />
+            ))
+          )}
+        </div>
+
+        {/* Enterprise CTA */}
+        {!canScheduleDemos && (
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-8 text-white">
+            <div className="text-center">
+              <h3 className="text-2xl font-bold mb-4">Showcase Your Solutions</h3>
+              <p className="text-indigo-100 mb-6 max-w-2xl mx-auto">
+                Upgrade to an Enterprise plan to schedule your own product demos, 
+                share recordings, and reach potential customers.
+              </p>
+              <Button className="bg-white text-indigo-600 hover:bg-gray-100">
+                Upgrade to Enterprise
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Modals */}
+      <DemoScheduleModal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        onSuccess={loadDemos}
+      />
+
+      <DemoRegistrationModal
+        demo={selectedDemo}
+        isOpen={isRegistrationModalOpen}
+        onClose={() => {
+          setIsRegistrationModalOpen(false);
+          setSelectedDemo(null);
+        }}
+        onSuccess={() => {
+          loadDemos();
+          loadUserRegistrations();
+        }}
+      />
+
+      <RecordingUploadModal
+        demo={selectedDemo}
+        isOpen={isUploadModalOpen}
+        onClose={() => {
+          setIsUploadModalOpen(false);
+          setSelectedDemo(null);
+        }}
+        onSuccess={loadDemos}
+      />
+    </MainLayout>
+  );
+}
