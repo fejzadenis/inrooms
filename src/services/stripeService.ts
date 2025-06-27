@@ -120,7 +120,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Team management tools (up to 5 members)',
       'Custom integrations'
     ],
-    stripePriceId: 'price_enterprise_monthly'
+    stripePriceId: 'prod_SYgcDdxKmebmLV'
   },
   {
     id: 'team',
