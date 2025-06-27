@@ -57,9 +57,9 @@ export function SolutionsPage() {
     const checkTourStatus = async () => {
       if (user && !loading) {
         // Complete the tour journey
-        await completeTour('main');
-        await completeTour('events');
-        await completeTour('network');
+        await completeTour('main', user.id);
+        await completeTour('events', user.id);
+        await completeTour('network', user.id);
         
         toast.success('Tour completed! You now know the basics of inRooms. Explore and enjoy the platform!', {
           duration: 5000,
@@ -68,7 +68,7 @@ export function SolutionsPage() {
     };
 
     checkTourStatus();
-  }, [user, loading]);
+  }, [user, loading, completeTour]);
 
   React.useEffect(() => {
     // Check for success/cancel parameters from Stripe redirect
