@@ -109,25 +109,30 @@ export const messageService = {
           snapshot.docs.map(async (doc) => {
             const chatData = doc.data();
             
-            // Get the most recent message for this chat
+            // Get the most recent message for this chat - remove orderBy to avoid composite index requirement
             const messagesQuery = query(
               collection(db, 'messages'),
               where('chatId', '==', doc.id),
-              orderBy('timestamp', 'desc'),
-              limit(1)
+              limit(50) // Get more messages and sort in memory
             );
             
             const messagesSnapshot = await getDocs(messagesQuery);
             let lastMessage = null;
             
             if (!messagesSnapshot.empty) {
-              const messageDoc = messagesSnapshot.docs[0];
-              const messageData = messageDoc.data();
-              lastMessage = {
-                id: messageDoc.id,
-                ...messageData,
-                timestamp: messageData.timestamp?.toDate() || new Date(),
-              };
+              // Sort messages by timestamp in memory and get the most recent
+              const messages = messagesSnapshot.docs
+                .map(messageDoc => {
+                  const messageData = messageDoc.data();
+                  return {
+                    id: messageDoc.id,
+                    ...messageData,
+                    timestamp: messageData.timestamp?.toDate() || new Date(),
+                  };
+                })
+                .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+              
+              lastMessage = messages[0];
             }
             
             return {
