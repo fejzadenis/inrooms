@@ -11,7 +11,7 @@ import { generateCalendarEvent } from '../../utils/calendar';
 
 export function EventsPage() {
   const { user } = useAuth();
-  const { shouldShowTour, startTour } = useTour();
+  const { askForTourPermission, startTour } = useTour();
   const [events, setEvents] = React.useState<Event[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [registeredEvents, setRegisteredEvents] = React.useState<string[]>([]);
@@ -28,8 +28,8 @@ export function EventsPage() {
   useEffect(() => {
     const checkTourStatus = async () => {
       if (user && !loading) {
-        const shouldShow = await shouldShowTour('events');
-        if (shouldShow) {
+        const shouldStart = await askForTourPermission('events');
+        if (shouldStart) {
           // Small delay to ensure the UI is fully rendered
           setTimeout(() => {
             startTour('events');
@@ -39,7 +39,7 @@ export function EventsPage() {
     };
 
     checkTourStatus();
-  }, [user, loading, shouldShowTour, startTour]);
+  }, [user, loading, askForTourPermission, startTour]);
 
   const loadEvents = async () => {
     try {

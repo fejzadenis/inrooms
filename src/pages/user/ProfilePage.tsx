@@ -37,7 +37,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 export function ProfilePage() {
   const { userId } = useParams();
   const { user, updateUserProfile } = useAuth();
-  const { shouldShowTour, startTour } = useTour();
+  const { askForTourPermission, startTour } = useTour();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = React.useState(false);
   const [profileData, setProfileData] = React.useState<NetworkProfile | null>(null);
@@ -91,8 +91,8 @@ export function ProfilePage() {
   useEffect(() => {
     const checkTourStatus = async () => {
       if (user && !loadingProfile && isOwnProfile) {
-        const shouldShow = await shouldShowTour('profile');
-        if (shouldShow) {
+        const shouldStart = await askForTourPermission('profile');
+        if (shouldStart) {
           // Small delay to ensure the UI is fully rendered
           setTimeout(() => {
             startTour('profile');
@@ -102,7 +102,7 @@ export function ProfilePage() {
     };
 
     checkTourStatus();
-  }, [user, loadingProfile, isOwnProfile, shouldShowTour, startTour]);
+  }, [user, loadingProfile, isOwnProfile, askForTourPermission, startTour]);
 
   const loadUserProfile = async (targetUserId: string) => {
     try {

@@ -147,7 +147,7 @@ const roles = [
 
 export function OnboardingFlow() {
   const { user, updateUserProfile } = useAuth();
-  const { startTour } = useTour();
+  const { askForTourPermission, startTour } = useTour();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = React.useState(1);
   const [selectedRole, setSelectedRole] = React.useState<string | null>(null);
@@ -288,10 +288,15 @@ export function OnboardingFlow() {
 
       toast.success('Profile setup complete! Welcome to inRooms!');
       
-      // Start the main tour after a short delay
-      setTimeout(() => {
-        startTour('main');
-      }, 1000);
+      // Ask if the user wants a tour
+      const shouldStartTour = await askForTourPermission('main');
+      
+      if (shouldStartTour) {
+        // Start the main tour after a short delay
+        setTimeout(() => {
+          startTour('main');
+        }, 1000);
+      }
       
       // Redirect to events page
       navigate('/events');

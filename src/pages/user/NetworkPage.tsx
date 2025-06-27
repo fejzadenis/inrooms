@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '../../layouts/MainLayout';
-import { Search, UserPlus, MessageSquare, Users, Filter, MapPin, Briefcase, Bell, Clock } from 'lucide-react';
+import { Search, UserPlus, MessageSquare, Users, Filter, MapPin, Briefcase, Bell, Clock, Check } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { messageService } from '../../services/messageService';
 import { networkService, type NetworkProfile } from '../../services/networkService';
@@ -14,7 +14,7 @@ import { toast } from 'react-hot-toast';
 
 export function NetworkPage() {
   const { user } = useAuth();
-  const { shouldShowTour, startTour } = useTour();
+  const { askForTourPermission, startTour } = useTour();
   const navigate = useNavigate();
   const [connections, setConnections] = React.useState<NetworkProfile[]>([]);
   const [recommendations, setRecommendations] = React.useState<NetworkProfile[]>([]);
@@ -39,8 +39,8 @@ export function NetworkPage() {
   useEffect(() => {
     const checkTourStatus = async () => {
       if (user && !loading) {
-        const shouldShow = await shouldShowTour('network');
-        if (shouldShow) {
+        const shouldStart = await askForTourPermission('network');
+        if (shouldStart) {
           // Small delay to ensure the UI is fully rendered
           setTimeout(() => {
             startTour('network');
@@ -50,7 +50,7 @@ export function NetworkPage() {
     };
 
     checkTourStatus();
-  }, [user, loading, shouldShowTour, startTour]);
+  }, [user, loading, askForTourPermission, startTour]);
 
   const loadNetworkData = async () => {
     if (!user) return;
@@ -388,8 +388,12 @@ export function NetworkPage() {
                 )}
               </div>
             ) : (
-              filteredRecommendations.map((person) => (
-                <div key={person.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+              filteredRecommendations.map((person, index) => (
+                <div 
+                  key={person.id} 
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200"
+                  data-tour={index === 0 ? "connection-card" : undefined}
+                >
                   <div className="flex items-start space-x-4">
                     {person.photo_url ? (
                       <img

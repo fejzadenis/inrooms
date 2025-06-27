@@ -20,12 +20,12 @@ import {
 } from 'lucide-react';
 import { Logo } from '../components/common/Logo';
 import { useAuth } from '../contexts/AuthContext';
-import { Button } from '../components/common/Button';
 import { useTour } from '../contexts/TourContext';
+import { Button } from '../components/common/Button';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
-  const { startTour, shouldShowTour } = useTour();
+  const { askForTourPermission, startTour } = useTour();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -39,8 +39,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     const checkTourStatus = async () => {
       if (user && location.pathname !== '/onboarding') {
-        const shouldShow = await shouldShowTour('main');
-        if (shouldShow) {
+        // Ask for permission before starting the tour
+        const shouldStart = await askForTourPermission('main');
+        if (shouldStart) {
           // Small delay to ensure the UI is fully rendered
           setTimeout(() => {
             startTour('main');
@@ -50,7 +51,35 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     };
 
     checkTourStatus();
-  }, [user, location.pathname, shouldShowTour, startTour]);
+  }, [user, location.pathname, askForTourPermission, startTour]);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setIsNotificationsOpen(false);
+      }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node) && 
+          !(event.target as Element).closest('[data-mobile-menu-toggle]')) {
+        setIsMobileMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Close mobile menu when route changes
+  React.useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   const userMenuItems = [
     { name: 'Profile', href: '/profile', icon: UserCircle },
@@ -90,34 +119,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       time: '1 hour ago',
     },
   ];
-
-  React.useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
-        setIsNotificationsOpen(false);
-      }
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node) && 
-          !(event.target as Element).closest('[data-mobile-menu-toggle]')) {
-        setIsMobileMenuOpen(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Close mobile menu when route changes
-  React.useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [location.pathname]);
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">

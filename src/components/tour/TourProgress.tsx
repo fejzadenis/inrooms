@@ -1,7 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { Button } from '../common/Button';
-import { useTour } from '../../contexts/TourContext';
 
 interface TourProgressProps {
   currentStep: number;
