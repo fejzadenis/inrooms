@@ -75,15 +75,10 @@ export function RecordingUploadModal({
     if (!demo?.id) return;
 
     try {
-      // Ensure thumbnailUrl is either a valid string or null, never undefined
-      const thumbnailUrl = data.thumbnailUrl && data.thumbnailUrl.trim() !== '' 
-        ? data.thumbnailUrl 
-        : null;
-
       await demoService.uploadRecording(demo.id, {
         recordingUrl: data.recordingUrl,
         recordingDuration: data.recordingDuration,
-        thumbnailUrl,
+        thumbnailUrl: data.thumbnailUrl || undefined,
         visibilityDuration: data.visibilityDuration,
       });
 
