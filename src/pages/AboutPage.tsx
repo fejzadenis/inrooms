@@ -229,13 +229,17 @@ export function AboutPage() {
             Join thousands of tech sales professionals who are already growing their careers with inRooms.
             Your next big opportunity could be just one connection away.
           </p>
-          <div className="mt-8">
+          <div className="mt-8 text-center">
             <Link to="/signup">
-              <Button size="lg" className="text-lg px-8 bg-white text-indigo-600 hover:bg-gray-100">
+              <Button
+                size="lg"
+                className="text-lg px-8 bg-white text-indigo-600 hover:bg-gray-100 inline-block"
+              >
                 Get Started Today
               </Button>
             </Link>
           </div>
+
           <p className="mt-4 text-indigo-200">
             No credit card required to start your 7-day free trial
           </p>
