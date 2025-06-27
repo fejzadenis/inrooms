@@ -51,36 +51,26 @@ service cloud.firestore {
       );
     }
     
-    // Messages collection - for direct messaging between users
+    // Messages collection - simplified rules for direct messaging between users
     match /messages/{messageId} {
-      function getChatParticipants(chatId) {
-        return get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
-      }
-
-      // Allow read if user is a participant in the associated chat or admin
+      // Allow read if user is sender or receiver, or admin
       allow read: if request.auth != null && (
-        (resource.data.chatId != null &&
-         request.auth.uid in getChatParticipants(resource.data.chatId)) ||
+        resource.data.senderId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid ||
         request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
         request.auth.token.email == 'admin@inrooms.com'
       );
 
-      // Allow create if both sender and receiver are participants in the chat
+      // Allow create if user is the sender
       allow create: if request.auth != null && 
-        request.resource.data.chatId != null &&
-        request.resource.data.senderId != null &&
-        request.resource.data.receiverId != null &&
-        request.auth.uid == request.resource.data.senderId &&
-        request.resource.data.senderId in getChatParticipants(request.resource.data.chatId) &&
-        request.resource.data.receiverId in getChatParticipants(request.resource.data.chatId);
+        request.resource.data.senderId == request.auth.uid;
 
-      // Allow update only for marking messages as read by the receiver or admin
+      // Allow update for marking messages as read by the receiver, editing by sender within 5 minutes, or admin
       allow update: if request.auth != null && (
-        (resource.data.chatId != null &&
-         request.auth.uid in getChatParticipants(resource.data.chatId) &&
-         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']) ||
-          (request.auth.uid == resource.data.senderId &&
-           request.time < resource.data.timestamp + duration.value(5, 'm')))) ||
+        (resource.data.receiverId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])) ||
+        (resource.data.senderId == request.auth.uid &&
+         request.time < resource.data.timestamp + duration.value(5, 'm')) ||
         request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
         request.auth.token.email == 'admin@inrooms.com'
       );
@@ -165,8 +155,13 @@ service cloud.firestore {
         request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
         request.auth.token.email == 'admin@inrooms.com'
       );
-      allow create, update: if request.auth != null && (
+      allow create: if request.auth != null && (
         request.resource.data.userId == request.auth.uid ||
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
+      allow update: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
         request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
         request.auth.token.email == 'admin@inrooms.com'
       );
