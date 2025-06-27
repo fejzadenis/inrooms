@@ -158,10 +158,10 @@ export const connectionService = {
   // Get all pending connection requests for a user (both sent and received)
   async getPendingConnectionRequests(userId: string): Promise<ConnectionRequest[]> {
     try {
+      // Get all connection requests without ordering to avoid index requirement
       const q = query(
         collection(db, 'connection_requests'),
-        where('status', '==', 'pending'),
-        orderBy('createdAt', 'desc')
+        where('status', '==', 'pending')
       );
 
       const querySnapshot = await getDocs(q);
@@ -182,7 +182,8 @@ export const connectionService = {
         }
       });
 
-      return requests;
+      // Sort in memory by createdAt (most recent first)
+      return requests.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     } catch (error) {
       console.error('Error getting pending connection requests:', error);
       throw error;
@@ -192,20 +193,23 @@ export const connectionService = {
   // Get incoming connection requests for a user
   async getIncomingConnectionRequests(userId: string): Promise<ConnectionRequest[]> {
     try {
+      // Simplified query without ordering to avoid index requirement
       const q = query(
         collection(db, 'connection_requests'),
         where('toUserId', '==', userId),
-        where('status', '==', 'pending'),
-        orderBy('createdAt', 'desc')
+        where('status', '==', 'pending')
       );
 
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      const requests = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date(),
         updatedAt: doc.data().updatedAt?.toDate()
       })) as ConnectionRequest[];
+
+      // Sort in memory by createdAt (most recent first)
+      return requests.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     } catch (error) {
       console.error('Error getting incoming connection requests:', error);
       throw error;
@@ -215,20 +219,23 @@ export const connectionService = {
   // Get outgoing connection requests from a user
   async getOutgoingConnectionRequests(userId: string): Promise<ConnectionRequest[]> {
     try {
+      // Simplified query without ordering to avoid index requirement
       const q = query(
         collection(db, 'connection_requests'),
         where('fromUserId', '==', userId),
-        where('status', '==', 'pending'),
-        orderBy('createdAt', 'desc')
+        where('status', '==', 'pending')
       );
 
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      const requests = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date(),
         updatedAt: doc.data().updatedAt?.toDate()
       })) as ConnectionRequest[];
+
+      // Sort in memory by createdAt (most recent first)
+      return requests.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     } catch (error) {
       console.error('Error getting outgoing connection requests:', error);
       throw error;
@@ -394,18 +401,21 @@ export const connectionService = {
   // Get user's notifications
   async getUserNotifications(userId: string): Promise<Notification[]> {
     try {
+      // Simplified query without ordering to avoid index requirement
       const q = query(
         collection(db, 'notifications'),
-        where('userId', '==', userId),
-        orderBy('createdAt', 'desc')
+        where('userId', '==', userId)
       );
 
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      const notifications = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date()
       })) as Notification[];
+
+      // Sort in memory by createdAt (most recent first)
+      return notifications.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     } catch (error) {
       console.error('Error getting user notifications:', error);
       throw error;
