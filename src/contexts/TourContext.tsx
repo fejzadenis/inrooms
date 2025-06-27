@@ -1,20 +1,22 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../config/firebase';
 import { toast } from 'react-hot-toast';
+
+type TourType = 'main' | 'events' | 'network' | 'profile' | 'solutions';
 
 interface TourContextType {
   isTourOpen: boolean;
-  currentTour: string | null;
+  currentTour: TourType | null;
   tourStep: number;
-  openTour: (tourName: string) => void;
+  openTour: (tourType: TourType) => void;
   closeTour: () => void;
-  startTour: (tourName: string) => void;
-  completeTour: (tourName: string, userId?: string) => Promise<void>;
-  askForTourPermission: (tourName: string) => Promise<boolean>;
-  setTourStep: (step: number) => void;
+  startTour: (tourType: TourType) => void;
+  completeTour: (tourType: TourType, userId?: string) => Promise<void>;
   skipTour: () => void;
+  setTourStep: (step: number) => void;
+  askForTourPermission: (tourType: TourType) => Promise<boolean>;
 }
 
 const TourContext = createContext<TourContextType>({
@@ -25,140 +27,120 @@ const TourContext = createContext<TourContextType>({
   closeTour: () => {},
   startTour: () => {},
   completeTour: async () => {},
-  askForTourPermission: async () => false,
-  setTourStep: () => {},
   skipTour: () => {},
+  setTourStep: () => {},
+  askForTourPermission: async () => false,
 });
 
 export const useTour = () => useContext(TourContext);
 
-interface TourProviderProps {
-  children: React.ReactNode;
-}
-
-export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
+export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [isTourOpen, setIsTourOpen] = useState(false);
-  const [currentTour, setCurrentTour] = useState<string | null>(null);
+  const [currentTour, setCurrentTour] = useState<TourType | null>(null);
   const [tourStep, setTourStep] = useState(0);
-  const [askedForPermission, setAskedForPermission] = useState<Record<string, boolean>>({});
-  const [hasShownInitialTour, setHasShownInitialTour] = useState(false);
+  const [completedTours, setCompletedTours] = useState<Record<string, boolean>>({});
 
-  // Check if user is newly registered
+  // Load completed tours from user profile
   useEffect(() => {
-    const checkIfNewUser = async () => {
-      if (user && !hasShownInitialTour) {
+    const loadCompletedTours = async () => {
+      if (user?.id) {
         try {
-          // Check if user has completedTours field
           const userRef = doc(db, 'users', user.id);
           const userDoc = await getDoc(userRef);
           
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            // If user has no completedTours field or it's empty, they're considered new
-            const isNewUser = !userData.profile?.completedTours || 
-                             Object.keys(userData.profile?.completedTours || {}).length === 0;
-            
-            // Only show tour for new users
-            if (isNewUser) {
-              setHasShownInitialTour(true);
+            if (userData.profile?.completedTours) {
+              setCompletedTours(userData.profile.completedTours);
             }
           }
         } catch (error) {
-          console.error('Error checking if user is new:', error);
+          console.error('Error loading completed tours:', error);
         }
       }
     };
-    
-    checkIfNewUser();
-  }, [user, hasShownInitialTour]);
 
-  const openTour = useCallback((tourName: string) => {
-    setCurrentTour(tourName);
-    setIsTourOpen(true);
-    setTourStep(0);
-  }, []);
-
-  const closeTour = useCallback(() => {
-    setIsTourOpen(false);
-    setCurrentTour(null);
-  }, []);
-
-  const startTour = useCallback((tourName: string) => {
-    openTour(tourName);
-  }, [openTour]);
-
-  const completeTour = useCallback(async (tourName: string, userId?: string) => {
-    try {
-      const id = userId || user?.id;
-      if (!id) {
-        throw new Error('userId is not defined');
-      }
-
-      const userRef = doc(db, 'users', id);
-      const userDoc = await getDoc(userRef);
-      
-      if (userDoc.exists()) {
-        // Update the completedTours field
-        await updateDoc(userRef, {
-          [`profile.completedTours.${tourName}`]: new Date().toISOString()
-        });
-      }
-    } catch (error) {
-      console.error('Error marking tour as completed:', error);
-      throw error;
-    }
+    loadCompletedTours();
   }, [user]);
 
-  const askForTourPermission = useCallback(async (tourName: string): Promise<boolean> => {
-    // If we've already asked for this tour, don't ask again
-    if (askedForPermission[tourName]) {
-      return false;
+  const openTour = (tourType: TourType) => {
+    setCurrentTour(tourType);
+    setTourStep(0);
+    setIsTourOpen(true);
+  };
+
+  const closeTour = () => {
+    setIsTourOpen(false);
+  };
+
+  const startTour = (tourType: TourType) => {
+    openTour(tourType);
+  };
+
+  const completeTour = async (tourType: TourType, userId?: string) => {
+    const targetUserId = userId || user?.id;
+    
+    if (!targetUserId) return;
+    
+    try {
+      // Update local state
+      setCompletedTours(prev => ({
+        ...prev,
+        [tourType]: true
+      }));
+      
+      // Update in Firestore
+      const userRef = doc(db, 'users', targetUserId);
+      await updateDoc(userRef, {
+        [`profile.completedTours.${tourType}`]: true
+      });
+    } catch (error) {
+      console.error(`Error completing ${tourType} tour:`, error);
     }
+  };
 
-    // Only show tour for new users
-    if (!hasShownInitialTour && tourName === 'main') {
-      return false;
-    }
-
-    // Check if the tour has already been completed
-    if (user) {
-      try {
-        const userRef = doc(db, 'users', user.id);
-        const userDoc = await getDoc(userRef);
-        
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          // If the tour is already completed, don't show it
-          if (userData.profile?.completedTours?.[tourName]) {
-            setAskedForPermission(prev => ({ ...prev, [tourName]: true }));
-            return false;
-          }
-        }
-      } catch (error) {
-        console.error('Error checking tour completion status:', error);
-        return false;
-      }
-    }
-
-    // For newly registered users, automatically start the tour without asking
-    if (user && user.profile?.onboardingCompleted && !user.profile?.completedTours?.[tourName]) {
-      setAskedForPermission(prev => ({ ...prev, [tourName]: true }));
-      return true;
-    }
-
-    // For all other cases, don't show the tour
-    setAskedForPermission(prev => ({ ...prev, [tourName]: true }));
-    return false;
-  }, [user, askedForPermission, hasShownInitialTour]);
-
-  const skipTour = useCallback(() => {
+  const skipTour = () => {
     if (currentTour && user) {
-      completeTour(currentTour, user.id).catch(console.error);
-      toast.success('Tour skipped. You can restart it from the help menu anytime.');
+      completeTour(currentTour).catch(console.error);
     }
     closeTour();
-  }, [currentTour, user, completeTour, closeTour]);
+  };
+
+  const askForTourPermission = async (tourType: TourType): Promise<boolean> => {
+    // If user is not logged in, don't show tour
+    if (!user) return false;
+    
+    // Check if this tour has already been completed
+    if (completedTours[tourType]) return false;
+    
+    // For newly registered users, automatically show the tour without asking
+    if (user.isNewUser) {
+      return true;
+    }
+    
+    // For existing users, ask for permission
+    try {
+      // Check if we've already asked about this tour
+      const tourAskedKey = `tourAsked_${tourType}`;
+      const hasAskedBefore = localStorage.getItem(tourAskedKey);
+      
+      if (hasAskedBefore) return false;
+      
+      // Ask user if they want to see the tour
+      const userWantsTour = window.confirm(
+        `Would you like to see a quick tour of the ${tourType} features?`
+      );
+      
+      // Remember that we've asked
+      localStorage.setItem(tourAskedKey, 'true');
+      
+      return userWantsTour;
+    } catch (error) {
+      console.error('Error asking for tour permission:', error);
+      return false;
+    }
+  };
 
   return (
     <TourContext.Provider
@@ -170,9 +152,9 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
         closeTour,
         startTour,
         completeTour,
-        askForTourPermission,
-        setTourStep,
         skipTour,
+        setTourStep,
+        askForTourPermission,
       }}
     >
       {children}

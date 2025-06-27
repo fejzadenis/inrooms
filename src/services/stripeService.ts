@@ -518,14 +518,90 @@ export const stripeService = {
   },
 
   async addPaymentMethod(customerId: string) {
-    throw new Error('Payment method management requires Stripe Elements integration. Please contact support.');
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/create-payment-intent`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ customerId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create setup intent');
+      }
+
+      const { clientSecret } = await response.json();
+      
+      if (!clientSecret) {
+        throw new Error('No client secret received');
+      }
+      
+      const stripe = await stripePromise;
+      if (!stripe) {
+        throw new Error('Stripe failed to load');
+      }
+
+      // This would typically open Stripe Elements UI for payment method entry
+      // For now, we'll just throw an error since we don't have the UI components set up
+      throw new Error('Payment method management requires Stripe Elements integration');
+    } catch (error) {
+      console.error('Error adding payment method:', error);
+      throw error;
+    }
   },
 
   async setDefaultPaymentMethod(customerId: string, paymentMethodId: string) {
-    throw new Error('Payment method management requires backend integration. Please contact support.');
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/set-default-payment-method`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ customerId, paymentMethodId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to set default payment method');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error setting default payment method:', error);
+      throw error;
+    }
   },
 
   async deletePaymentMethod(paymentMethodId: string) {
-    throw new Error('Payment method management requires backend integration. Please contact support.');
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/delete-payment-method`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ paymentMethodId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete payment method');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error deleting payment method:', error);
+      throw error;
+    }
   }
 };

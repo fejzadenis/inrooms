@@ -19,7 +19,7 @@ export function BillingPage() {
   const [loadingData, setLoadingData] = React.useState(true);
   const [billingInterval, setBillingInterval] = React.useState<'monthly' | 'yearly'>('monthly');
   const [isQuoteModalOpen, setIsQuoteModalOpen] = React.useState(false);
-  const [activeAddOns, setActiveAddOns] = React.useState<string[]>([]);
+  const [selectedAddOns, setSelectedAddOns] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     if (user?.stripe_customer_id) {
@@ -170,13 +170,13 @@ export function BillingPage() {
   };
 
   const handleToggleAddOn = (addOn: any) => {
-    setActiveAddOns(prev => 
+    setSelectedAddOns(prev => 
       prev.includes(addOn.id) 
         ? prev.filter(id => id !== addOn.id)
         : [...prev, addOn.id]
     );
     
-    if (activeAddOns.includes(addOn.id)) {
+    if (selectedAddOns.includes(addOn.id)) {
       toast.success(`${addOn.name} removed from your plan`);
     } else {
       toast.success(`${addOn.name} added to your plan`);
@@ -198,6 +198,11 @@ export function BillingPage() {
 
   const plans = stripeService.getMonthlyPlans();
   const addOns = stripeService.getAddOns();
+
+  const totalAddOnCost = selectedAddOns.reduce((total, addOnId) => {
+    const addOn = addOns.find(a => a.id === addOnId);
+    return total + (addOn?.price || 0);
+  }, 0);
 
   if (loadingData) {
     return (
@@ -345,7 +350,7 @@ export function BillingPage() {
               <AddOnCard
                 key={addOn.id}
                 addOn={addOn}
-                isActive={activeAddOns.includes(addOn.id)}
+                isActive={selectedAddOns.includes(addOn.id)}
                 onToggle={handleToggleAddOn}
                 loading={false}
               />
