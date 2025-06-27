@@ -56,14 +56,16 @@ export function SolutionsPage() {
   useEffect(() => {
     const checkTourStatus = async () => {
       if (user && !loading) {
-        // Complete the tour journey
-        await completeTour('main', user.id);
-        await completeTour('events', user.id);
-        await completeTour('network', user.id);
-        
-        toast.success('Tour completed! You now know the basics of inRooms. Explore and enjoy the platform!', {
-          duration: 5000,
-        });
+        // Complete the tour journey if user has reached this page
+        if (user.id) {
+          await completeTour('main', user.id);
+          await completeTour('events', user.id);
+          await completeTour('network', user.id);
+          
+          toast.success('Tour completed! You now know the basics of inRooms. Explore and enjoy the platform!', {
+            duration: 5000,
+          });
+        }
       }
     };
 

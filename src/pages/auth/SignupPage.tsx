@@ -35,8 +35,9 @@ export function SignupPage() {
 
   const onSubmit = async (data: SignupFormData) => {
     try {
-      await signup(data.email, data.password, data.name);
-      // Redirect to onboarding flow instead of subscription
+      // Set isNewUser flag to true for newly registered users
+      await signup(data.email, data.password, data.name, true);
+      // Redirect to onboarding flow
       navigate('/onboarding');
     } catch (error) {
       // AuthContext handles error display
@@ -46,8 +47,9 @@ export function SignupPage() {
   const handleGoogleSignUp = async () => {
     setIsGoogleLoading(true);
     try {
-      await loginWithGoogle();
-      // Redirect to onboarding flow instead of subscription
+      // Set isNewUser flag to true for newly registered users
+      await loginWithGoogle(true);
+      // Redirect to onboarding flow
       navigate('/onboarding');
     } catch (error) {
       // AuthContext handles error display
