@@ -76,7 +76,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Email support',
       'Mobile app access'
     ],
-    stripePriceId: 'price_starter_monthly'
+    stripePriceId: 'prod_SYgc58zji9a6yZ'
   },
   {
     id: 'professional',
