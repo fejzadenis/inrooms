@@ -76,7 +76,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Email support',
       'Mobile app access'
     ],
-    stripePriceId: 'prod_SYgc58zji9a6yZ'
+    stripePriceId: 'price_1RdZFEGCopIxkzs6S2tcV157'
   },
   {
     id: 'professional',
@@ -98,7 +98,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Calendar integration',
       'Priority support'
     ],
-    stripePriceId: 'prod_SYgcU61DZSEXMM'
+    stripePriceId: 'price_1RdZFQGCopIxkzs6wvAEnJAr'
   },
   {
     id: 'enterprise',
