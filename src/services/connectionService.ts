@@ -1,20 +1,4 @@
-import { 
-  collection, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  getDocs, 
-  getDoc,
-  query, 
-  where, 
-  orderBy, 
-  serverTimestamp,
-  arrayUnion,
-  arrayRemove,
-  Timestamp
-} from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { supabase } from '../config/supabase';
 import type { ConnectionRequest, Notification } from '../types/connections';
 
 export const connectionService = {
@@ -34,21 +18,23 @@ export const connectionService = {
       }
 
       // Create the connection request
-      const requestData = {
-        fromUserId,
-        toUserId,
-        status: 'pending',
-        message: message || '',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      };
+      const { data, error } = await supabase
+        .from('connection_requests')
+        .insert({
+          from_user_id: fromUserId,
+          to_user_id: toUserId,
+          status: 'pending',
+          message: message || '',
+        })
+        .select()
+        .single();
 
-      const docRef = await addDoc(collection(db, 'connection_requests'), requestData);
+      if (error) throw error;
 
       // Create notification for the recipient
-      await this.createConnectionRequestNotification(fromUserId, toUserId, docRef.id);
+      await this.createConnectionRequestNotification(fromUserId, toUserId, data.id);
 
-      return docRef.id;
+      return data.id;
     } catch (error) {
       console.error('Error sending connection request:', error);
       throw error;
@@ -58,41 +44,87 @@ export const connectionService = {
   // Accept a connection request
   async acceptConnectionRequest(requestId: string): Promise<void> {
     try {
-      const requestRef = doc(db, 'connection_requests', requestId);
-      const requestDoc = await getDoc(requestRef);
+      // Get the connection request
+      const { data: request, error: fetchError } = await supabase
+        .from('connection_requests')
+        .select('*')
+        .eq('id', requestId)
+        .single();
 
-      if (!requestDoc.exists()) {
-        throw new Error('Connection request not found');
-      }
-
-      const requestData = requestDoc.data();
-      if (requestData.status !== 'pending') {
+      if (fetchError) throw fetchError;
+      if (!request) throw new Error('Connection request not found');
+      if (request.status !== 'pending') {
         throw new Error('Connection request has already been processed');
       }
 
-      const fromUserId = requestData.fromUserId;
-      const toUserId = requestData.toUserId;
-
       // Update request status
-      await updateDoc(requestRef, {
-        status: 'accepted',
-        updatedAt: serverTimestamp()
-      });
+      const { error: updateError } = await supabase
+        .from('connection_requests')
+        .update({ 
+          status: 'accepted',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
+
+      if (updateError) throw updateError;
 
       // Add each user to the other's connections array
-      const fromUserRef = doc(db, 'users', fromUserId);
-      const toUserRef = doc(db, 'users', toUserId);
+      const { error: fromUserError } = await supabase
+        .from('users')
+        .update({
+          connections: supabase.rpc('array_append', {
+            arr: 'connections',
+            elem: request.to_user_id
+          })
+        })
+        .eq('id', request.from_user_id);
 
-      await updateDoc(fromUserRef, {
-        connections: arrayUnion(toUserId)
-      });
+      if (fromUserError) {
+        // Fallback: get current connections and append
+        const { data: fromUser } = await supabase
+          .from('users')
+          .select('connections')
+          .eq('id', request.from_user_id)
+          .single();
 
-      await updateDoc(toUserRef, {
-        connections: arrayUnion(fromUserId)
-      });
+        const fromConnections = fromUser?.connections || [];
+        if (!fromConnections.includes(request.to_user_id)) {
+          await supabase
+            .from('users')
+            .update({ connections: [...fromConnections, request.to_user_id] })
+            .eq('id', request.from_user_id);
+        }
+      }
+
+      const { error: toUserError } = await supabase
+        .from('users')
+        .update({
+          connections: supabase.rpc('array_append', {
+            arr: 'connections',
+            elem: request.from_user_id
+          })
+        })
+        .eq('id', request.to_user_id);
+
+      if (toUserError) {
+        // Fallback: get current connections and append
+        const { data: toUser } = await supabase
+          .from('users')
+          .select('connections')
+          .eq('id', request.to_user_id)
+          .single();
+
+        const toConnections = toUser?.connections || [];
+        if (!toConnections.includes(request.from_user_id)) {
+          await supabase
+            .from('users')
+            .update({ connections: [...toConnections, request.from_user_id] })
+            .eq('id', request.to_user_id);
+        }
+      }
 
       // Create notification for the sender
-      await this.createConnectionAcceptedNotification(fromUserId, toUserId);
+      await this.createConnectionAcceptedNotification(request.from_user_id, request.to_user_id);
     } catch (error) {
       console.error('Error accepting connection request:', error);
       throw error;
@@ -102,23 +134,15 @@ export const connectionService = {
   // Reject a connection request
   async rejectConnectionRequest(requestId: string): Promise<void> {
     try {
-      const requestRef = doc(db, 'connection_requests', requestId);
-      const requestDoc = await getDoc(requestRef);
+      const { error } = await supabase
+        .from('connection_requests')
+        .update({ 
+          status: 'rejected',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
 
-      if (!requestDoc.exists()) {
-        throw new Error('Connection request not found');
-      }
-
-      const requestData = requestDoc.data();
-      if (requestData.status !== 'pending') {
-        throw new Error('Connection request has already been processed');
-      }
-
-      // Update request status
-      await updateDoc(requestRef, {
-        status: 'rejected',
-        updatedAt: serverTimestamp()
-      });
+      if (error) throw error;
     } catch (error) {
       console.error('Error rejecting connection request:', error);
       throw error;
@@ -128,7 +152,12 @@ export const connectionService = {
   // Cancel a connection request (sender withdraws request)
   async cancelConnectionRequest(requestId: string): Promise<void> {
     try {
-      await deleteDoc(doc(db, 'connection_requests', requestId));
+      const { error } = await supabase
+        .from('connection_requests')
+        .delete()
+        .eq('id', requestId);
+
+      if (error) throw error;
     } catch (error) {
       console.error('Error canceling connection request:', error);
       throw error;
@@ -138,17 +167,35 @@ export const connectionService = {
   // Remove a connection
   async removeConnection(userId: string, connectionId: string): Promise<void> {
     try {
-      const userRef = doc(db, 'users', userId);
-      const connectionRef = doc(db, 'users', connectionId);
+      // Get current connections for both users
+      const { data: user1 } = await supabase
+        .from('users')
+        .select('connections')
+        .eq('id', userId)
+        .single();
+
+      const { data: user2 } = await supabase
+        .from('users')
+        .select('connections')
+        .eq('id', connectionId)
+        .single();
 
       // Remove each user from the other's connections array
-      await updateDoc(userRef, {
-        connections: arrayRemove(connectionId)
-      });
+      if (user1?.connections) {
+        const updatedConnections1 = user1.connections.filter((id: string) => id !== connectionId);
+        await supabase
+          .from('users')
+          .update({ connections: updatedConnections1 })
+          .eq('id', userId);
+      }
 
-      await updateDoc(connectionRef, {
-        connections: arrayRemove(userId)
-      });
+      if (user2?.connections) {
+        const updatedConnections2 = user2.connections.filter((id: string) => id !== userId);
+        await supabase
+          .from('users')
+          .update({ connections: updatedConnections2 })
+          .eq('id', connectionId);
+      }
     } catch (error) {
       console.error('Error removing connection:', error);
       throw error;
@@ -158,32 +205,15 @@ export const connectionService = {
   // Get all pending connection requests for a user (both sent and received)
   async getPendingConnectionRequests(userId: string): Promise<ConnectionRequest[]> {
     try {
-      // Get all connection requests without ordering to avoid index requirement
-      const q = query(
-        collection(db, 'connection_requests'),
-        where('status', '==', 'pending')
-      );
+      // Get both incoming and outgoing requests efficiently
+      const [incoming, outgoing] = await Promise.all([
+        this.getIncomingConnectionRequests(userId),
+        this.getOutgoingConnectionRequests(userId)
+      ]);
 
-      const querySnapshot = await getDocs(q);
-      const requests: ConnectionRequest[] = [];
-
-      querySnapshot.forEach(doc => {
-        const data = doc.data();
-        if (data.fromUserId === userId || data.toUserId === userId) {
-          requests.push({
-            id: doc.id,
-            fromUserId: data.fromUserId,
-            toUserId: data.toUserId,
-            status: data.status,
-            message: data.message || '',
-            createdAt: data.createdAt?.toDate() || new Date(),
-            updatedAt: data.updatedAt?.toDate()
-          });
-        }
-      });
-
-      // Sort in memory by createdAt (most recent first)
-      return requests.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      // Combine and sort by creation date
+      const allRequests = [...incoming, ...outgoing];
+      return allRequests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     } catch (error) {
       console.error('Error getting pending connection requests:', error);
       throw error;
@@ -193,23 +223,24 @@ export const connectionService = {
   // Get incoming connection requests for a user
   async getIncomingConnectionRequests(userId: string): Promise<ConnectionRequest[]> {
     try {
-      // Simplified query without ordering to avoid index requirement
-      const q = query(
-        collection(db, 'connection_requests'),
-        where('toUserId', '==', userId),
-        where('status', '==', 'pending')
-      );
+      const { data, error } = await supabase
+        .from('connection_requests')
+        .select('*')
+        .eq('to_user_id', userId)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
 
-      const querySnapshot = await getDocs(q);
-      const requests = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate()
-      })) as ConnectionRequest[];
+      if (error) throw error;
 
-      // Sort in memory by createdAt (most recent first)
-      return requests.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      return (data || []).map(request => ({
+        id: request.id,
+        fromUserId: request.from_user_id,
+        toUserId: request.to_user_id,
+        status: request.status,
+        message: request.message || '',
+        createdAt: new Date(request.created_at),
+        updatedAt: request.updated_at ? new Date(request.updated_at) : undefined
+      }));
     } catch (error) {
       console.error('Error getting incoming connection requests:', error);
       throw error;
@@ -219,23 +250,24 @@ export const connectionService = {
   // Get outgoing connection requests from a user
   async getOutgoingConnectionRequests(userId: string): Promise<ConnectionRequest[]> {
     try {
-      // Simplified query without ordering to avoid index requirement
-      const q = query(
-        collection(db, 'connection_requests'),
-        where('fromUserId', '==', userId),
-        where('status', '==', 'pending')
-      );
+      const { data, error } = await supabase
+        .from('connection_requests')
+        .select('*')
+        .eq('from_user_id', userId)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
 
-      const querySnapshot = await getDocs(q);
-      const requests = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate()
-      })) as ConnectionRequest[];
+      if (error) throw error;
 
-      // Sort in memory by createdAt (most recent first)
-      return requests.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      return (data || []).map(request => ({
+        id: request.id,
+        fromUserId: request.from_user_id,
+        toUserId: request.to_user_id,
+        status: request.status,
+        message: request.message || '',
+        createdAt: new Date(request.created_at),
+        updatedAt: request.updated_at ? new Date(request.updated_at) : undefined
+      }));
     } catch (error) {
       console.error('Error getting outgoing connection requests:', error);
       throw error;
@@ -245,23 +277,26 @@ export const connectionService = {
   // Get a specific connection request by ID
   async getConnectionRequest(requestId: string): Promise<ConnectionRequest | null> {
     try {
-      const docRef = doc(db, 'connection_requests', requestId);
-      const docSnap = await getDoc(docRef);
+      const { data, error } = await supabase
+        .from('connection_requests')
+        .select('*')
+        .eq('id', requestId)
+        .single();
 
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        return {
-          id: docSnap.id,
-          fromUserId: data.fromUserId,
-          toUserId: data.toUserId,
-          status: data.status,
-          message: data.message || '',
-          createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate()
-        };
+      if (error) {
+        if (error.code === 'PGRST116') return null; // Not found
+        throw error;
       }
 
-      return null;
+      return {
+        id: data.id,
+        fromUserId: data.from_user_id,
+        toUserId: data.to_user_id,
+        status: data.status,
+        message: data.message || '',
+        createdAt: new Date(data.created_at),
+        updatedAt: data.updated_at ? new Date(data.updated_at) : undefined
+      };
     } catch (error) {
       console.error('Error getting connection request:', error);
       throw error;
@@ -271,60 +306,49 @@ export const connectionService = {
   // Check if a connection request exists between two users
   async getConnectionRequestBetweenUsers(userId1: string, userId2: string): Promise<ConnectionRequest | null> {
     try {
-      // Check for requests in both directions
-      const q1 = query(
-        collection(db, 'connection_requests'),
-        where('fromUserId', '==', userId1),
-        where('toUserId', '==', userId2)
-      );
+      const { data, error } = await supabase
+        .from('connection_requests')
+        .select('*')
+        .or(`and(from_user_id.eq.${userId1},to_user_id.eq.${userId2}),and(from_user_id.eq.${userId2},to_user_id.eq.${userId1})`)
+        .limit(1)
+        .single();
 
-      const q2 = query(
-        collection(db, 'connection_requests'),
-        where('fromUserId', '==', userId2),
-        where('toUserId', '==', userId1)
-      );
-
-      const [snapshot1, snapshot2] = await Promise.all([getDocs(q1), getDocs(q2)]);
-
-      // Combine results
-      const docs = [...snapshot1.docs, ...snapshot2.docs];
-      
-      if (docs.length > 0) {
-        const data = docs[0].data();
-        return {
-          id: docs[0].id,
-          fromUserId: data.fromUserId,
-          toUserId: data.toUserId,
-          status: data.status,
-          message: data.message || '',
-          createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate()
-        };
+      if (error) {
+        if (error.code === 'PGRST116') return null; // Not found
+        throw error;
       }
 
-      return null;
+      return {
+        id: data.id,
+        fromUserId: data.from_user_id,
+        toUserId: data.to_user_id,
+        status: data.status,
+        message: data.message || '',
+        createdAt: new Date(data.created_at),
+        updatedAt: data.updated_at ? new Date(data.updated_at) : undefined
+      };
     } catch (error) {
       console.error('Error checking connection request between users:', error);
-      throw error;
+      return null;
     }
   },
 
   // Check if two users are connected
   async checkIfUsersAreConnected(userId1: string, userId2: string): Promise<boolean> {
     try {
-      const userRef = doc(db, 'users', userId1);
-      const userDoc = await getDoc(userRef);
+      const { data, error } = await supabase
+        .from('users')
+        .select('connections')
+        .eq('id', userId1)
+        .single();
 
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        const connections = userData.connections || [];
-        return connections.includes(userId2);
-      }
+      if (error) throw error;
 
-      return false;
+      const connections = data?.connections || [];
+      return connections.includes(userId2);
     } catch (error) {
       console.error('Error checking if users are connected:', error);
-      throw error;
+      return false;
     }
   },
 
@@ -346,7 +370,7 @@ export const connectionService = {
       return 'none';
     } catch (error) {
       console.error('Error getting connection status:', error);
-      throw error;
+      return 'none';
     }
   },
 
@@ -354,20 +378,27 @@ export const connectionService = {
   async createConnectionRequestNotification(fromUserId: string, toUserId: string, requestId: string): Promise<void> {
     try {
       // Get sender's name
-      const senderRef = doc(db, 'users', fromUserId);
-      const senderDoc = await getDoc(senderRef);
-      const senderName = senderDoc.exists() ? senderDoc.data().name : 'Someone';
+      const { data: sender } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', fromUserId)
+        .single();
+
+      const senderName = sender?.name || 'Someone';
 
       // Create notification
-      await addDoc(collection(db, 'notifications'), {
-        userId: toUserId,
-        type: 'connection_request',
-        title: 'New Connection Request',
-        message: `${senderName} wants to connect with you`,
-        relatedId: requestId,
-        read: false,
-        createdAt: serverTimestamp()
-      });
+      const { error } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: toUserId,
+          type: 'connection_request',
+          title: 'New Connection Request',
+          message: `${senderName} wants to connect with you`,
+          related_id: requestId,
+          read: false
+        });
+
+      if (error) throw error;
     } catch (error) {
       console.error('Error creating connection request notification:', error);
       // Don't throw - notification failure shouldn't block the connection request
@@ -378,20 +409,27 @@ export const connectionService = {
   async createConnectionAcceptedNotification(toUserId: string, fromUserId: string): Promise<void> {
     try {
       // Get accepter's name
-      const accepterRef = doc(db, 'users', fromUserId);
-      const accepterDoc = await getDoc(accepterRef);
-      const accepterName = accepterDoc.exists() ? accepterDoc.data().name : 'Someone';
+      const { data: accepter } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', fromUserId)
+        .single();
+
+      const accepterName = accepter?.name || 'Someone';
 
       // Create notification
-      await addDoc(collection(db, 'notifications'), {
-        userId: toUserId,
-        type: 'connection_accepted',
-        title: 'Connection Request Accepted',
-        message: `${accepterName} accepted your connection request`,
-        relatedId: fromUserId,
-        read: false,
-        createdAt: serverTimestamp()
-      });
+      const { error } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: toUserId,
+          type: 'connection_accepted',
+          title: 'Connection Request Accepted',
+          message: `${accepterName} accepted your connection request`,
+          related_id: fromUserId,
+          read: false
+        });
+
+      if (error) throw error;
     } catch (error) {
       console.error('Error creating connection accepted notification:', error);
       // Don't throw - notification failure shouldn't block the connection acceptance
@@ -401,21 +439,24 @@ export const connectionService = {
   // Get user's notifications
   async getUserNotifications(userId: string): Promise<Notification[]> {
     try {
-      // Simplified query without ordering to avoid index requirement
-      const q = query(
-        collection(db, 'notifications'),
-        where('userId', '==', userId)
-      );
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
-      const querySnapshot = await getDocs(q);
-      const notifications = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date()
-      })) as Notification[];
+      if (error) throw error;
 
-      // Sort in memory by createdAt (most recent first)
-      return notifications.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      return (data || []).map(notification => ({
+        id: notification.id,
+        userId: notification.user_id,
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        relatedId: notification.related_id,
+        read: notification.read,
+        createdAt: new Date(notification.created_at)
+      }));
     } catch (error) {
       console.error('Error getting user notifications:', error);
       throw error;
@@ -425,10 +466,12 @@ export const connectionService = {
   // Mark notification as read
   async markNotificationAsRead(notificationId: string): Promise<void> {
     try {
-      const notificationRef = doc(db, 'notifications', notificationId);
-      await updateDoc(notificationRef, {
-        read: true
-      });
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', notificationId);
+
+      if (error) throw error;
     } catch (error) {
       console.error('Error marking notification as read:', error);
       throw error;
