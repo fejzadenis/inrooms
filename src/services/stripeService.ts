@@ -184,12 +184,13 @@ export const allPlans = [...subscriptionPlans, ...annualPlans];
 export const stripeService = {
   async createCheckoutSession(userId: string, userEmail: string, priceId: string, successUrl: string, cancelUrl: string, addOns: string[] = []) {
     try {
+      // Direct Stripe Checkout integration
       const stripe = await stripePromise;
       if (!stripe) {
         throw new Error('Stripe failed to load');
       }
 
-      // Create a checkout session
+      // Create a checkout session on the server
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: {
@@ -246,12 +247,13 @@ export const stripeService = {
       const successUrl = `${window.location.origin}/solutions?success=true&demoId=${demoId}&feature=${featureType}`;
       const cancelUrl = `${window.location.origin}/solutions?canceled=true`;
 
+      // Direct Stripe Checkout integration
       const stripe = await stripePromise;
       if (!stripe) {
         throw new Error('Stripe failed to load');
       }
 
-      // Create a checkout session
+      // Create a checkout session on the server
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: {
@@ -301,6 +303,7 @@ export const stripeService = {
     timeline: string;
   }) {
     try {
+      // Send custom quote request to server
       const response = await fetch('/api/request-custom-quote', {
         method: 'POST',
         headers: {
@@ -323,6 +326,7 @@ export const stripeService = {
 
   async createCustomerPortalSession(customerId: string, returnUrl: string) {
     try {
+      // Create a customer portal session on the server
       const response = await fetch('/api/create-portal-session', {
         method: 'POST',
         headers: {
@@ -359,6 +363,7 @@ export const stripeService = {
 
   async getPaymentMethods(customerId: string) {
     try {
+      // Fetch payment methods from server
       const response = await fetch('/api/get-payment-methods', {
         method: 'POST',
         headers: {
@@ -380,6 +385,7 @@ export const stripeService = {
 
   async getInvoices(customerId: string) {
     try {
+      // Fetch invoices from server
       const response = await fetch('/api/get-invoices', {
         method: 'POST',
         headers: {
@@ -426,92 +432,14 @@ export const stripeService = {
   },
 
   async addPaymentMethod(customerId: string) {
-    try {
-      const stripe = await stripePromise;
-      if (!stripe) {
-        throw new Error('Stripe failed to load');
-      }
-
-      // Create a setup intent
-      const response = await fetch('/api/create-setup-intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ customerId }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create setup intent');
-      }
-
-      const { clientSecret } = await response.json();
-
-      // Redirect to the setup form
-      const result = await stripe.confirmCardSetup(clientSecret, {
-        payment_method: {
-          card: {
-            token: 'tok_visa', // This is for testing only
-          },
-          billing_details: {
-            name: 'Jenny Rosen',
-          },
-        },
-      });
-
-      if (result.error) {
-        throw new Error(result.error.message);
-      }
-
-      return result.setupIntent;
-    } catch (error) {
-      console.error('Error adding payment method:', error);
-      throw error;
-    }
+    throw new Error('Payment method management requires Stripe Elements integration. Please contact support.');
   },
 
   async setDefaultPaymentMethod(customerId: string, paymentMethodId: string) {
-    try {
-      const response = await fetch('/api/set-default-payment-method', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ customerId, paymentMethodId }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to set default payment method');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error setting default payment method:', error);
-      throw error;
-    }
+    throw new Error('Payment method management requires backend integration. Please contact support.');
   },
 
   async deletePaymentMethod(paymentMethodId: string) {
-    try {
-      const response = await fetch('/api/delete-payment-method', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ paymentMethodId }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete payment method');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error deleting payment method:', error);
-      throw error;
-    }
+    throw new Error('Payment method management requires backend integration. Please contact support.');
   }
 };
