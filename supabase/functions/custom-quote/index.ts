@@ -1,124 +1,106 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+// Follow Deno and Supabase Edge Function conventions
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
-
-interface QuoteRequest {
-  companyName: string
-  contactName: string
-  email: string
-  phone?: string
-  teamSize: string
-  requirements: string
-  timeline: string
-}
+// Initialize Supabase client
+const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // Handle CORS
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
+    });
   }
 
   try {
-    // Initialize Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    const quoteData: QuoteRequest = await req.json()
-
-    // Validate required fields
-    if (!quoteData.companyName || !quoteData.contactName || !quoteData.email || 
-        !quoteData.teamSize || !quoteData.requirements || !quoteData.timeline) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
     }
 
-    // Store quote request in database
-    const { data, error } = await supabaseClient
-      .from('quote_requests')
+    // Parse request body
+    const quoteData = await req.json();
+
+    // Validate required fields
+    const requiredFields = ['companyName', 'contactName', 'email', 'teamSize', 'requirements', 'timeline'];
+    for (const field of requiredFields) {
+      if (!quoteData[field]) {
+        return new Response(JSON.stringify({ error: `Missing required field: ${field}` }), {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      }
+    }
+
+    // Store the quote request in Supabase
+    const { data, error } = await supabase
+      .from('custom_quotes')
       .insert([
         {
           company_name: quoteData.companyName,
           contact_name: quoteData.contactName,
           email: quoteData.email,
-          phone: quoteData.phone,
+          phone: quoteData.phone || null,
           team_size: quoteData.teamSize,
           requirements: quoteData.requirements,
           timeline: quoteData.timeline,
           status: 'pending',
           created_at: new Date().toISOString(),
-        }
+        },
       ])
-      .select()
+      .select();
 
     if (error) {
-      console.error('Error storing quote request:', error)
-      return new Response(
-        JSON.stringify({ error: 'Failed to store quote request' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+      console.error('Error storing quote request:', error);
+      return new Response(JSON.stringify({ error: 'Failed to store quote request' }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
     }
 
-    // Send notification email to sales team (you can integrate with your email service)
-    await sendQuoteNotification(quoteData)
+    // In a real application, you would also send an email notification to your sales team
+    // and potentially to the customer as well
 
-    // Send confirmation email to customer
-    await sendCustomerConfirmation(quoteData)
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Quote request submitted successfully',
-        requestId: data[0].id 
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
-
+    // Return success response
+    return new Response(JSON.stringify({ 
+      success: true, 
+      message: 'Quote request submitted successfully',
+      quoteId: data[0].id
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
   } catch (error) {
-    console.error('Error processing quote request:', error)
-    
-    return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+    console.error('Error processing quote request:', error);
+    return new Response(JSON.stringify({ error: error.message || 'Internal server error' }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
   }
-})
-
-async function sendQuoteNotification(quoteData: QuoteRequest) {
-  // Integrate with your email service (SendGrid, Resend, etc.)
-  // For now, just log the notification
-  console.log('New quote request received:', {
-    company: quoteData.companyName,
-    contact: quoteData.contactName,
-    email: quoteData.email,
-    teamSize: quoteData.teamSize,
-    timeline: quoteData.timeline
-  })
-}
-
-async function sendCustomerConfirmation(quoteData: QuoteRequest) {
-  // Send confirmation email to customer
-  console.log(`Sending confirmation email to ${quoteData.email}`)
-}
+});
