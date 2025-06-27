@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '../../layouts/MainLayout';
 import { Search, UserPlus, MessageSquare, Users, Filter, MapPin, Briefcase, Bell, Clock } from 'lucide-react';
@@ -9,10 +9,12 @@ import { ConnectionRequestModal } from '../../components/network/ConnectionReque
 import { PendingConnectionsModal } from '../../components/network/PendingConnectionsModal';
 import { connectionService } from '../../services/connectionService';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTour } from '../../contexts/TourContext';
 import { toast } from 'react-hot-toast';
 
 export function NetworkPage() {
   const { user } = useAuth();
+  const { shouldShowTour, startTour } = useTour();
   const navigate = useNavigate();
   const [connections, setConnections] = React.useState<NetworkProfile[]>([]);
   const [recommendations, setRecommendations] = React.useState<NetworkProfile[]>([]);
@@ -32,6 +34,23 @@ export function NetworkPage() {
       loadPendingRequests();
     }
   }, [user]);
+
+  // Check if we should show the network tour
+  useEffect(() => {
+    const checkTourStatus = async () => {
+      if (user && !loading) {
+        const shouldShow = await shouldShowTour('network');
+        if (shouldShow) {
+          // Small delay to ensure the UI is fully rendered
+          setTimeout(() => {
+            startTour('network');
+          }, 1000);
+        }
+      }
+    };
+
+    checkTourStatus();
+  }, [user, loading, shouldShowTour, startTour]);
 
   const loadNetworkData = async () => {
     if (!user) return;
@@ -154,7 +173,7 @@ export function NetworkPage() {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4" data-tour="network-header">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">My Network</h1>
             <p className="text-gray-600 mt-2">Connect with tech sales professionals and grow your network</p>
@@ -180,7 +199,7 @@ export function NetworkPage() {
           </div>
         </div>
 
-        <div className="relative">
+        <div className="relative" data-tour="network-search">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
           <input
             type="text"
@@ -223,7 +242,7 @@ export function NetworkPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-gray-200" data-tour="network-tabs">
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab('connections')}
@@ -272,8 +291,12 @@ export function NetworkPage() {
                 )}
               </div>
             ) : (
-              filteredConnections.map((connection) => (
-                <div key={connection.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+              filteredConnections.map((connection, index) => (
+                <div 
+                  key={connection.id} 
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200"
+                  data-tour={index === 0 ? "connection-card" : undefined}
+                >
                   <div className="flex items-start space-x-4">
                     {connection.photo_url ? (
                       <img

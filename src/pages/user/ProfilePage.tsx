@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { MainLayout } from '../../layouts/MainLayout';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTour } from '../../contexts/TourContext';
 import { Button } from '../../components/common/Button';
 import { 
   MessageSquare, UserPlus, Users, Briefcase, MapPin, Calendar, Edit3, Save, X, Camera, 
@@ -36,6 +37,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 export function ProfilePage() {
   const { userId } = useParams();
   const { user, updateUserProfile } = useAuth();
+  const { shouldShowTour, startTour } = useTour();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = React.useState(false);
   const [profileData, setProfileData] = React.useState<NetworkProfile | null>(null);
@@ -84,6 +86,23 @@ export function ProfilePage() {
       loadUserProfile(userId);
     }
   }, [user, userId, isOwnProfile, reset]);
+
+  // Check if we should show the profile tour
+  useEffect(() => {
+    const checkTourStatus = async () => {
+      if (user && !loadingProfile && isOwnProfile) {
+        const shouldShow = await shouldShowTour('profile');
+        if (shouldShow) {
+          // Small delay to ensure the UI is fully rendered
+          setTimeout(() => {
+            startTour('profile');
+          }, 1000);
+        }
+      }
+    };
+
+    checkTourStatus();
+  }, [user, loadingProfile, isOwnProfile, shouldShowTour, startTour]);
 
   const loadUserProfile = async (targetUserId: string) => {
     try {
@@ -277,7 +296,7 @@ export function ProfilePage() {
       <div className="max-w-6xl mx-auto">
         <div className="bg-white shadow-sm rounded-lg overflow-hidden">
           {/* Profile Header */}
-          <div className="relative bg-gradient-to-r from-indigo-500 to-purple-600 h-32">
+          <div className="relative bg-gradient-to-r from-indigo-500 to-purple-600 h-32" data-tour="profile-header">
             <div className="absolute inset-0 bg-black opacity-20"></div>
           </div>
           
@@ -388,7 +407,7 @@ export function ProfilePage() {
                             </Button>
                           </div>
                         ) : (
-                          <Button onClick={() => setIsEditing(true)}>
+                          <Button onClick={() => setIsEditing(true)} data-tour="profile-edit">
                             <Edit3 className="w-4 h-4 mr-2" />
                             Edit Profile
                           </Button>
@@ -546,7 +565,7 @@ export function ProfilePage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   <div className="lg:col-span-2 space-y-8">
                     {/* About Section */}
-                    <div>
+                    <div data-tour="profile-about">
                       <h3 className="text-lg font-medium text-gray-900 mb-3">About</h3>
                       <p className="text-gray-700 leading-relaxed">
                         {currentUser?.profile?.about || currentUser?.profile_about || 
@@ -603,7 +622,7 @@ export function ProfilePage() {
                     )}
 
                     {/* Skills Section */}
-                    <div>
+                    <div data-tour="profile-skills">
                       <h3 className="text-lg font-medium text-gray-900 mb-3">Skills & Expertise</h3>
                       <div className="flex flex-wrap gap-2 mb-4">
                         {(currentUser?.profile?.skills || currentUser?.profile_skills || ['Enterprise Sales', 'SaaS', 'Lead Generation', 'CRM']).map((skill, index) => (

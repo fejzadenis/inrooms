@@ -21,9 +21,11 @@ import {
 import { Logo } from '../components/common/Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/common/Button';
+import { useTour } from '../contexts/TourContext';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
+  const { startTour, shouldShowTour } = useTour();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -32,6 +34,23 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const menuRef = React.useRef<HTMLDivElement>(null);
   const notificationsRef = React.useRef<HTMLDivElement>(null);
   const mobileMenuRef = React.useRef<HTMLDivElement>(null);
+
+  // Check if we should show the tour when the user first logs in
+  React.useEffect(() => {
+    const checkTourStatus = async () => {
+      if (user && location.pathname !== '/onboarding') {
+        const shouldShow = await shouldShowTour('main');
+        if (shouldShow) {
+          // Small delay to ensure the UI is fully rendered
+          setTimeout(() => {
+            startTour('main');
+          }, 1000);
+        }
+      }
+    };
+
+    checkTourStatus();
+  }, [user, location.pathname, shouldShowTour, startTour]);
 
   const userMenuItems = [
     { name: 'Profile', href: '/profile', icon: UserCircle },
@@ -51,10 +70,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   ];
 
   const navigationItems = [
-    { name: 'Events', href: '/events' },
-    { name: 'Network', href: '/network' },
-    { name: 'Solutions', href: '/solutions' },
-    { name: 'Resources', href: '/resources' }
+    { name: 'Events', href: '/events', dataTour: 'events' },
+    { name: 'Network', href: '/network', dataTour: 'network' },
+    { name: 'Solutions', href: '/solutions', dataTour: 'solutions' },
+    { name: 'Resources', href: '/resources', dataTour: 'resources' }
   ];
 
   const mockNotifications = [
@@ -112,7 +131,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
               {/* Desktop Navigation */}
               {user && (
-                <div className="hidden md:flex items-center space-x-4 ml-6">
+                <div className="hidden md:flex items-center space-x-4 ml-6" data-tour="navigation">
                   {navigationItems.map(item => (
                     <Link 
                       key={item.name}
@@ -120,6 +139,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                       className={`text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium ${
                         location.pathname === item.href ? 'text-indigo-600 font-semibold' : ''
                       }`}
+                      data-tour={item.dataTour}
                     >
                       {item.name}
                     </Link>
@@ -147,7 +167,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
               {user ? (
                 <>
-                  <div className="relative" ref={notificationsRef}>
+                  <div className="relative" ref={notificationsRef} data-tour="notifications">
                     <button
                       onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                       className="p-2 rounded-full hover:bg-gray-100 relative"
@@ -181,7 +201,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                     )}
                   </div>
 
-                  <div className="relative" ref={menuRef}>
+                  <div className="relative" ref={menuRef} data-tour="user-menu">
                     <button
                       onClick={() => setIsMenuOpen(!isMenuOpen)}
                       className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
@@ -298,6 +318,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                   onClick={() => setIsMobileMenuOpen(false)}
+                  data-tour={item.dataTour}
                 >
                   {item.name}
                 </Link>

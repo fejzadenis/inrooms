@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTour } from '../../contexts/TourContext';
 import { Button } from '../../components/common/Button';
 import { ProgressIndicator } from '../../components/onboarding/ProgressIndicator';
 import { RoleCard } from '../../components/onboarding/RoleCard';
@@ -146,6 +147,7 @@ const roles = [
 
 export function OnboardingFlow() {
   const { user, updateUserProfile } = useAuth();
+  const { startTour } = useTour();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = React.useState(1);
   const [selectedRole, setSelectedRole] = React.useState<string | null>(null);
@@ -273,6 +275,9 @@ export function OnboardingFlow() {
         // Assigned Role
         assignedRole: selectedRole,
         completedAt: new Date().toISOString(),
+        
+        // Initialize completedTours to track tour completion
+        completedTours: {}
       };
 
       // Update user profile first
@@ -283,8 +288,13 @@ export function OnboardingFlow() {
 
       toast.success('Profile setup complete! Welcome to inRooms!');
       
-      // Redirect to profile page
-      navigate('/profile');
+      // Start the main tour after a short delay
+      setTimeout(() => {
+        startTour('main');
+      }, 1000);
+      
+      // Redirect to events page
+      navigate('/events');
     } catch (error) {
       console.error('Error completing onboarding:', error);
       toast.error('Failed to complete setup. Please try again.');

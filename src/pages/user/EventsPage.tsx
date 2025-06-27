@@ -1,15 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { MainLayout } from '../../layouts/MainLayout';
 import { EventCard } from '../../components/common/EventCard';
 import { Search, Filter } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { eventService, type Event } from '../../services/eventService';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTour } from '../../contexts/TourContext';
 import { toast } from 'react-hot-toast';
 import { generateCalendarEvent } from '../../utils/calendar';
 
 export function EventsPage() {
   const { user } = useAuth();
+  const { shouldShowTour, startTour } = useTour();
   const [events, setEvents] = React.useState<Event[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [registeredEvents, setRegisteredEvents] = React.useState<string[]>([]);
@@ -21,6 +23,23 @@ export function EventsPage() {
       loadUserRegistrations();
     }
   }, [user]);
+
+  // Check if we should show the events tour
+  useEffect(() => {
+    const checkTourStatus = async () => {
+      if (user && !loading) {
+        const shouldShow = await shouldShowTour('events');
+        if (shouldShow) {
+          // Small delay to ensure the UI is fully rendered
+          setTimeout(() => {
+            startTour('events');
+          }, 1000);
+        }
+      }
+    };
+
+    checkTourStatus();
+  }, [user, loading, shouldShowTour, startTour]);
 
   const loadEvents = async () => {
     try {
@@ -129,7 +148,7 @@ export function EventsPage() {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center" data-tour="events-header">
           <h1 className="text-2xl font-semibold text-gray-900">Upcoming Events</h1>
           <Button>
             <Filter className="w-4 h-4 mr-2" />
@@ -137,7 +156,7 @@ export function EventsPage() {
           </Button>
         </div>
 
-        <div className="relative">
+        <div className="relative" data-tour="events-search">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
           <input
             type="text"
@@ -149,7 +168,7 @@ export function EventsPage() {
         </div>
 
         {user && (
-          <div className="bg-indigo-50 rounded-lg p-4">
+          <div className="bg-indigo-50 rounded-lg p-4" data-tour="events-quota">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-medium text-indigo-900">Your Event Quota</h3>
@@ -176,19 +195,20 @@ export function EventsPage() {
               </p>
             </div>
           ) : (
-            filteredEvents.map((event) => (
-              <EventCard
-                key={event.id}
-                title={event.title}
-                description={event.description}
-                date={event.date}
-                maxParticipants={event.maxParticipants}
-                currentParticipants={event.currentParticipants}
-                meetLink={event.meetLink}
-                isRegistered={registeredEvents.includes(event.id!)}
-                onRegister={() => handleRegister(event.id!)}
-                onJoin={() => handleJoinMeeting(event.meetLink!)}
-              />
+            filteredEvents.map((event, index) => (
+              <div key={event.id} data-tour={index === 0 ? "event-card" : undefined}>
+                <EventCard
+                  title={event.title}
+                  description={event.description}
+                  date={event.date}
+                  maxParticipants={event.maxParticipants}
+                  currentParticipants={event.currentParticipants}
+                  meetLink={event.meetLink}
+                  isRegistered={registeredEvents.includes(event.id!)}
+                  onRegister={() => handleRegister(event.id!)}
+                  onJoin={() => handleJoinMeeting(event.meetLink!)}
+                />
+              </div>
             ))
           )}
         </div>
