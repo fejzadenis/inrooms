@@ -194,7 +194,7 @@ export function BillingPage() {
         : [...prev, addOn.id]
     );
     
-    if (activeAddOns.includes(addOn.id)) {
+    if (selectedAddOns.includes(addOn.id)) {
       toast.success(`${addOn.name} removed from your plan`);
     } else {
       toast.success(`${addOn.name} added to your plan`);
@@ -368,7 +368,7 @@ export function BillingPage() {
               <AddOnCard
                 key={addOn.id}
                 addOn={addOn}
-                isActive={activeAddOns.includes(addOn.id)}
+                isActive={selectedAddOns.includes(addOn.id)}
                 onToggle={handleToggleAddOn}
                 loading={false}
               />
