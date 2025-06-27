@@ -141,7 +141,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Team leaderboards',
       'Everything in Professional plan'
     ],
-    stripePriceId: 'price_1RdZFnGCopIxkzs6Yd9Ixvxl'
+    stripePriceId: 'price_team_monthly'
   },
   {
     id: 'custom',
@@ -184,16 +184,17 @@ export const allPlans = [...subscriptionPlans, ...annualPlans];
 export const stripeService = {
   async createCheckoutSession(userId: string, userEmail: string, priceId: string, successUrl: string, cancelUrl: string, addOns: string[] = []) {
     try {
-      // Direct Stripe Checkout integration
-      const stripe = await stripePromise;
-      if (!stripe) {
-        throw new Error('Stripe failed to load');
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing. Please check your environment variables.');
       }
 
-      // Create a checkout session on the server
-      const response = await fetch('/api/create-checkout-session', {
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -207,19 +208,41 @@ export const stripeService = {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create checkout session');
+        let errorMessage = 'Failed to create checkout session';
+        
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (jsonError) {
+          errorMessage = response.statusText || 'Received an invalid response from the server. Please try again.';
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      const session = await response.json();
+      let sessionData;
+      try {
+        sessionData = await response.json();
+      } catch (jsonError) {
+        console.error('Failed to parse JSON response:', jsonError);
+        throw new Error('Received an invalid response from the server. Please try again.');
+      }
 
-      // Redirect to Stripe Checkout
-      const result = await stripe.redirectToCheckout({
-        sessionId: session.id,
-      });
+      const { sessionId } = sessionData;
+      
+      if (!sessionId) {
+        throw new Error('No session ID received from server');
+      }
+      
+      const stripe = await stripePromise;
+      if (!stripe) {
+        throw new Error('Stripe failed to load');
+      }
 
-      if (result.error) {
-        throw new Error(result.error.message);
+      const { error } = await stripe.redirectToCheckout({ sessionId });
+      
+      if (error) {
+        throw error;
       }
     } catch (error) {
       console.error('Error creating checkout session:', error);
@@ -238,6 +261,13 @@ export const stripeService = {
 
   async purchaseFeatureForDemo(userId: string, userEmail: string, demoId: string, featureType: 'featured_demo'): Promise<void> {
     try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing. Please check your environment variables.');
+      }
+
       // Find the appropriate add-on price ID
       const addOn = addOns.find(a => a.id === featureType);
       if (!addOn) {
@@ -247,16 +277,11 @@ export const stripeService = {
       const successUrl = `${window.location.origin}/solutions?success=true&demoId=${demoId}&feature=${featureType}`;
       const cancelUrl = `${window.location.origin}/solutions?canceled=true`;
 
-      // Direct Stripe Checkout integration
-      const stripe = await stripePromise;
-      if (!stripe) {
-        throw new Error('Stripe failed to load');
-      }
-
-      // Create a checkout session on the server
-      const response = await fetch('/api/create-checkout-session', {
+      // Create a checkout session for the feature purchase
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -273,19 +298,41 @@ export const stripeService = {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create checkout session');
+        let errorMessage = 'Failed to create checkout session';
+        
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (jsonError) {
+          errorMessage = response.statusText || 'Received an invalid response from the server. Please try again.';
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      const session = await response.json();
+      let sessionData;
+      try {
+        sessionData = await response.json();
+      } catch (jsonError) {
+        console.error('Failed to parse JSON response:', jsonError);
+        throw new Error('Received an invalid response from the server. Please try again.');
+      }
 
-      // Redirect to Stripe Checkout
-      const result = await stripe.redirectToCheckout({
-        sessionId: session.id,
-      });
+      const { sessionId } = sessionData;
+      
+      if (!sessionId) {
+        throw new Error('No session ID received from server');
+      }
+      
+      const stripe = await stripePromise;
+      if (!stripe) {
+        throw new Error('Stripe failed to load');
+      }
 
-      if (result.error) {
-        throw new Error(result.error.message);
+      const { error } = await stripe.redirectToCheckout({ sessionId });
+      
+      if (error) {
+        throw error;
       }
     } catch (error) {
       console.error('Error purchasing feature for demo:', error);
@@ -303,10 +350,17 @@ export const stripeService = {
     timeline: string;
   }) {
     try {
-      // Send custom quote request to server
-      const response = await fetch('/api/request-custom-quote', {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing. Please check your environment variables.');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/custom-quote`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(companyInfo),
@@ -326,10 +380,17 @@ export const stripeService = {
 
   async createCustomerPortalSession(customerId: string, returnUrl: string) {
     try {
-      // Create a customer portal session on the server
-      const response = await fetch('/api/create-portal-session', {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing. Please check your environment variables.');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-portal`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -339,14 +400,33 @@ export const stripeService = {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create portal session');
+        let errorMessage = 'Failed to create portal session';
+        
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (jsonError) {
+          errorMessage = response.statusText || 'Received an invalid response from the server. Please try again.';
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      const session = await response.json();
+      let portalData;
+      try {
+        portalData = await response.json();
+      } catch (jsonError) {
+        console.error('Failed to parse JSON response:', jsonError);
+        throw new Error('Received an invalid response from the server. Please try again.');
+      }
 
-      // Redirect to the customer portal
-      window.location.href = session.url;
+      const { url } = portalData;
+      
+      if (!url) {
+        throw new Error('No portal URL received from server');
+      }
+      
+      window.location.href = url;
     } catch (error) {
       console.error('Error creating portal session:', error);
       
@@ -363,10 +443,13 @@ export const stripeService = {
 
   async getPaymentMethods(customerId: string) {
     try {
-      // Fetch payment methods from server
-      const response = await fetch('/api/get-payment-methods', {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-payment-methods`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ customerId }),
@@ -385,10 +468,13 @@ export const stripeService = {
 
   async getInvoices(customerId: string) {
     try {
-      // Fetch invoices from server
-      const response = await fetch('/api/get-invoices', {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-invoices`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ customerId }),
