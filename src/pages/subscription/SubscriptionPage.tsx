@@ -215,9 +215,10 @@ export function SubscriptionPage() {
               }`}
             >
               Yearly
-              <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                Save 20%
-              </span>
+              <span className="absolute -top-3 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+  Save 20%
+</span>
+
             </button>
           </div>
         </div>
