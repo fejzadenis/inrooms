@@ -33,7 +33,7 @@ export function MainTour() {
           target: '[data-tour="navigation"]',
           content: {
             title: 'Main Navigation',
-            description: 'This navigation bar lets you access different sections of the platform. You can browse events, connect with other professionals, and explore solutions.'
+            description: 'This navigation bar lets you access different sections of the platform. We\'ll guide you through each section.'
           },
           placement: 'bottom',
           disableBeacon: true,
@@ -42,46 +42,11 @@ export function MainTour() {
           target: '[data-tour="events"]',
           content: {
             title: 'Events Section',
-            description: 'Find and register for networking events here. Your subscription includes a specific number of events each month.'
+            description: 'Click here to explore networking events. This is where you can find and register for events with other tech sales professionals.'
           },
           placement: 'bottom',
           disableBeacon: true,
-        },
-        {
-          target: '[data-tour="network"]',
-          content: {
-            title: 'Network Section',
-            description: 'Connect with other tech sales professionals, view profiles, and build your professional network.'
-          },
-          placement: 'bottom',
-          disableBeacon: true,
-        },
-        {
-          target: '[data-tour="solutions"]',
-          content: {
-            title: 'Solutions Showcase',
-            description: 'Discover product demos from other companies or host your own to showcase your solutions.'
-          },
-          placement: 'bottom',
-          disableBeacon: true,
-        },
-        {
-          target: '[data-tour="user-menu"]',
-          content: {
-            title: 'User Menu',
-            description: 'Access your profile, account settings, billing information, and more from this menu.'
-          },
-          placement: 'bottom',
-          disableBeacon: true,
-        },
-        {
-          target: '[data-tour="notifications"]',
-          content: {
-            title: 'Notifications',
-            description: 'Stay updated with important alerts about events, connection requests, and platform updates.'
-          },
-          placement: 'bottom',
-          disableBeacon: true,
+          spotlightClicks: true,
         }
       ]);
     } else if (currentTour === 'events') {
@@ -121,6 +86,16 @@ export function MainTour() {
           },
           placement: 'right',
           disableBeacon: true,
+        },
+        {
+          target: '[data-tour="network"]',
+          content: {
+            title: 'Next: Network Section',
+            description: 'Click here to continue the tour and learn about connecting with other professionals.'
+          },
+          placement: 'bottom',
+          disableBeacon: true,
+          spotlightClicks: true,
         }
       ]);
     } else if (currentTour === 'network') {
@@ -160,6 +135,16 @@ export function MainTour() {
           },
           placement: 'right',
           disableBeacon: true,
+        },
+        {
+          target: '[data-tour="solutions"]',
+          content: {
+            title: 'Next: Solutions Section',
+            description: 'Click here to continue the tour and learn about product demos and solutions.'
+          },
+          placement: 'bottom',
+          disableBeacon: true,
+          spotlightClicks: true,
         }
       ]);
     } else if (currentTour === 'profile') {
@@ -210,6 +195,30 @@ export function MainTour() {
     if (type === 'step:after') {
       // Update step when the user navigates
       setTourStep(index + 1);
+      
+      // Handle navigation between sections
+      if (currentTour === 'main' && index === 2) {
+        // After clicking Events, switch to events tour
+        completeTour('main').catch(console.error);
+        closeTour();
+        setTimeout(() => {
+          navigate('/events');
+        }, 300);
+      } else if (currentTour === 'events' && index === 4) {
+        // After clicking Network, switch to network tour
+        completeTour('events').catch(console.error);
+        closeTour();
+        setTimeout(() => {
+          navigate('/network');
+        }, 300);
+      } else if (currentTour === 'network' && index === 4) {
+        // After clicking Solutions, end the tour
+        completeTour('network').catch(console.error);
+        closeTour();
+        setTimeout(() => {
+          navigate('/solutions');
+        }, 300);
+      }
     } else if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
       // Tour is complete or skipped
       if (currentTour) {
@@ -236,19 +245,6 @@ export function MainTour() {
       setTourStep(tourStep - 1);
     }
   };
-
-  // Navigate to specific pages based on the tour
-  useEffect(() => {
-    if (isTourOpen && currentTour) {
-      if (currentTour === 'events') {
-        navigate('/events');
-      } else if (currentTour === 'network') {
-        navigate('/network');
-      } else if (currentTour === 'profile') {
-        navigate('/profile');
-      }
-    }
-  }, [isTourOpen, currentTour, navigate]);
 
   if (!isTourOpen || !currentTour || steps.length === 0) {
     return null;

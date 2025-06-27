@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MainLayout } from '../layouts/MainLayout';
 import { DemoCard } from '../components/solutions/DemoCard';
 import { DemoScheduleModal } from '../components/solutions/DemoScheduleModal';
@@ -18,14 +19,15 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/common/Button';
 import { useAuth } from '../contexts/AuthContext';
+import { useTour } from '../contexts/TourContext';
 import { demoService } from '../services/demoService';
 import { stripeService } from '../services/stripeService';
 import { toast } from 'react-hot-toast';
 import type { Demo } from '../types/demo';
-import { useSearchParams, useNavigate } from 'react-router-dom';
 
 export function SolutionsPage() {
   const { user } = useAuth();
+  const { askForTourPermission, startTour, completeTour } = useTour();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [demos, setDemos] = React.useState<Demo[]>([]);
@@ -49,6 +51,24 @@ export function SolutionsPage() {
       loadUserRegistrations();
     }
   }, [user]);
+
+  // Check if we should show the solutions tour
+  useEffect(() => {
+    const checkTourStatus = async () => {
+      if (user && !loading) {
+        // Complete the tour journey
+        await completeTour('main');
+        await completeTour('events');
+        await completeTour('network');
+        
+        toast.success('Tour completed! You now know the basics of inRooms. Explore and enjoy the platform!', {
+          duration: 5000,
+        });
+      }
+    };
+
+    checkTourStatus();
+  }, [user, loading]);
 
   React.useEffect(() => {
     // Check for success/cancel parameters from Stripe redirect
@@ -246,7 +266,7 @@ export function SolutionsPage() {
     <MainLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="text-center">
+        <div className="text-center" data-tour="solutions-header">
           <div className="flex items-center justify-center mb-4">
             <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full p-3">
               <Sparkles className="w-8 h-8 text-white" />
@@ -260,7 +280,7 @@ export function SolutionsPage() {
         </div>
 
         {/* Action Bar */}
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between" data-tour="solutions-search">
           <div className="relative flex-1 w-full max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <input
@@ -278,7 +298,7 @@ export function SolutionsPage() {
               Filter
             </Button>
             {canScheduleDemos && (
-              <Button onClick={handleScheduleDemo} className="flex-1 sm:flex-none">
+              <Button onClick={handleScheduleDemo} className="flex-1 sm:flex-none" data-tour="schedule-demo">
                 <Plus className="w-4 h-4 mr-2" />
                 Schedule Demo
               </Button>
@@ -287,7 +307,7 @@ export function SolutionsPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6" data-tour="solutions-stats">
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 md:p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -333,7 +353,7 @@ export function SolutionsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200 overflow-x-auto">
+        <div className="border-b border-gray-200 overflow-x-auto" data-tour="solutions-tabs">
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab('featured')}
@@ -407,26 +427,27 @@ export function SolutionsPage() {
               )}
             </div>
           ) : (
-            getFilteredDemos().map((demo) => (
-              <DemoCard
-                key={demo.id}
-                demo={demo}
-                isRegistered={userRegistrations.includes(demo.id!)}
-                canManage={user?.id === demo.hostId || user?.role === 'admin'}
-                onRegister={() => handleRegisterForDemo(demo)}
-                onJoin={() => handleJoinDemo(demo)}
-                onViewRecording={() => handleViewRecording(demo)}
-                onUploadRecording={() => handleUploadRecording(demo)}
-                onToggleFeatured={() => handleToggleFeatured(demo)}
-                isFeaturingInProgress={featuringDemo?.id === demo.id}
-              />
+            getFilteredDemos().map((demo, index) => (
+              <div key={demo.id} data-tour={index === 0 ? "demo-card" : undefined}>
+                <DemoCard
+                  demo={demo}
+                  isRegistered={userRegistrations.includes(demo.id!)}
+                  canManage={user?.id === demo.hostId || user?.role === 'admin'}
+                  onRegister={() => handleRegisterForDemo(demo)}
+                  onJoin={() => handleJoinDemo(demo)}
+                  onViewRecording={() => handleViewRecording(demo)}
+                  onUploadRecording={() => handleUploadRecording(demo)}
+                  onToggleFeatured={() => handleToggleFeatured(demo)}
+                  isFeaturingInProgress={featuringDemo?.id === demo.id}
+                />
+              </div>
             ))
           )}
         </div>
 
         {/* Enterprise CTA */}
         {!canScheduleDemos && (
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 md:p-8 text-white">
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 md:p-8 text-white" data-tour="solutions-cta">
             <div className="text-center">
               <h3 className="text-xl md:text-2xl font-bold mb-4">Showcase Your Solutions</h3>
               <p className="text-indigo-100 mb-6 max-w-2xl mx-auto text-sm md:text-base">
