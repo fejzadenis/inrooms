@@ -56,26 +56,29 @@ export const demoService = {
 
   async getDemos(filter?: DemoFilter): Promise<Demo[]> {
     try {
-      let q = query(collection(db, 'demos'), orderBy('scheduledDate', 'desc'));
+      let q;
       
-      if (filter?.isPublic !== undefined) {
-        q = query(q, where('isPublic', '==', filter.isPublic));
-      }
-      
-      if (filter?.isFeatured !== undefined) {
-        q = query(q, where('isFeatured', '==', filter.isFeatured));
-      }
-      
-      if (filter?.status) {
-        q = query(q, where('status', '==', filter.status));
-      }
-      
-      if (filter?.hostId) {
-        q = query(q, where('hostId', '==', filter.hostId));
+      // If we have multiple filters that would require a composite index,
+      // we'll fetch all demos and filter in memory to avoid index requirements
+      if (filter && Object.keys(filter).length > 1) {
+        // Fetch all demos and filter in memory
+        q = query(collection(db, 'demos'));
+      } else if (filter?.isPublic !== undefined) {
+        // Single filter queries that don't require composite indexes
+        q = query(collection(db, 'demos'), where('isPublic', '==', filter.isPublic));
+      } else if (filter?.isFeatured !== undefined) {
+        q = query(collection(db, 'demos'), where('isFeatured', '==', filter.isFeatured));
+      } else if (filter?.status) {
+        q = query(collection(db, 'demos'), where('status', '==', filter.status));
+      } else if (filter?.hostId) {
+        q = query(collection(db, 'demos'), where('hostId', '==', filter.hostId));
+      } else {
+        // No filters, just get all demos
+        q = query(collection(db, 'demos'));
       }
 
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => {
+      let demos = querySnapshot.docs.map(doc => {
         const data = doc.data();
         // Properly handle date conversion
         const scheduledDate = data.scheduledDate instanceof Timestamp ? 
@@ -94,6 +97,27 @@ export const demoService = {
           updatedAt: data.updatedAt?.toDate?.() || null,
         };
       }) as Demo[];
+
+      // Apply filters in memory if we fetched all demos
+      if (filter && Object.keys(filter).length > 1) {
+        if (filter.isPublic !== undefined) {
+          demos = demos.filter(demo => demo.isPublic === filter.isPublic);
+        }
+        if (filter.isFeatured !== undefined) {
+          demos = demos.filter(demo => demo.isFeatured === filter.isFeatured);
+        }
+        if (filter.status) {
+          demos = demos.filter(demo => demo.status === filter.status);
+        }
+        if (filter.hostId) {
+          demos = demos.filter(demo => demo.hostId === filter.hostId);
+        }
+      }
+
+      // Sort by scheduled date (descending) in memory
+      demos.sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime());
+
+      return demos;
     } catch (error) {
       console.error('Error getting demos:', error);
       throw error;
@@ -102,16 +126,14 @@ export const demoService = {
 
   async getFeaturedDemos(): Promise<Demo[]> {
     try {
+      // Use separate queries to avoid composite index requirements
       const q = query(
         collection(db, 'demos'),
-        where('isFeatured', '==', true),
-        where('isPublic', '==', true),
-        orderBy('scheduledDate', 'desc'),
-        limit(6)
+        where('isFeatured', '==', true)
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => {
+      let demos = querySnapshot.docs.map(doc => {
         const data = doc.data();
         // Properly handle date conversion
         const scheduledDate = data.scheduledDate instanceof Timestamp ? 
@@ -130,6 +152,14 @@ export const demoService = {
           updatedAt: data.updatedAt?.toDate?.() || null,
         };
       }) as Demo[];
+
+      // Filter for public demos and sort in memory
+      demos = demos
+        .filter(demo => demo.isPublic)
+        .sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime())
+        .slice(0, 6); // Limit to 6 results
+
+      return demos;
     } catch (error) {
       console.error('Error getting featured demos:', error);
       throw error;
