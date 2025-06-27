@@ -98,7 +98,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Calendar integration',
       'Priority support'
     ],
-    stripePriceId: 'price_professional_monthly'
+    stripePriceId: 'prod_SYgcU61DZSEXMM'
   },
   {
     id: 'enterprise',
