@@ -180,5 +180,70 @@ service cloud.firestore {
         request.auth.token.email == 'admin@inrooms.com'
       );
     }
+    
+    // Demos collection - for product demos
+    match /demos/{demoId} {
+      allow read: if request.auth != null;
+      
+      // Allow create for authenticated users with proper subscription
+      allow create: if request.auth != null && (
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com' ||
+        (
+          request.resource.data.hostId == request.auth.uid &&
+          (
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.subscription.status == 'active' ||
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+          )
+        )
+      );
+      
+      // Allow update for demo owners or admins
+      allow update: if request.auth != null && (
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com' ||
+        resource.data.hostId == request.auth.uid
+      );
+      
+      // Allow delete for demo owners or admins
+      allow delete: if request.auth != null && (
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com' ||
+        resource.data.hostId == request.auth.uid
+      );
+    }
+    
+    // Demo registrations collection - for managing demo attendees
+    match /demo_registrations/{registrationId} {
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        get(/databases/$(database)/documents/demos/$(resource.data.demoId)).data.hostId == request.auth.uid ||
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
+      
+      // Allow create for any authenticated user
+      allow create: if request.auth != null && (
+        request.resource.data.userId == request.auth.uid ||
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
+      
+      // Allow update for the registrant, demo host, or admins
+      allow update: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        get(/databases/$(database)/documents/demos/$(resource.data.demoId)).data.hostId == request.auth.uid ||
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
+      
+      // Allow delete for the registrant, demo host, or admins
+      allow delete: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        get(/databases/$(database)/documents/demos/$(resource.data.demoId)).data.hostId == request.auth.uid ||
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
+    }
   }
 }
