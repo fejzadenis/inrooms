@@ -1,18 +1,20 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
 import { toast } from 'react-hot-toast';
 
+type TourType = 'main' | 'events' | 'network' | 'solutions' | 'profile' | null;
+
 interface TourContextType {
   isTourOpen: boolean;
-  currentTour: string | null;
+  currentTour: TourType;
   tourStep: number;
-  openTour: (tourName: string) => void;
+  openTour: (tourType: TourType) => void;
   closeTour: () => void;
-  startTour: (tourName: string) => void;
-  completeTour: (tourName: string, userId?: string) => Promise<void>;
-  askForTourPermission: (tourName: string) => Promise<boolean>;
+  startTour: (tourType: TourType) => void;
+  completeTour: (tourType: TourType, userId?: string) => Promise<void>;
+  askForTourPermission: (tourType: TourType) => Promise<boolean>;
   setTourStep: (step: number) => void;
   skipTour: () => void;
 }
@@ -32,49 +34,14 @@ const TourContext = createContext<TourContextType>({
 
 export const useTour = () => useContext(TourContext);
 
-interface TourProviderProps {
-  children: React.ReactNode;
-}
-
-export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
+export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [isTourOpen, setIsTourOpen] = useState(false);
-  const [currentTour, setCurrentTour] = useState<string | null>(null);
+  const [currentTour, setCurrentTour] = useState<TourType>(null);
   const [tourStep, setTourStep] = useState(0);
-  const [askedForPermission, setAskedForPermission] = useState<Record<string, boolean>>({});
-  const [hasShownInitialTour, setHasShownInitialTour] = useState(false);
 
-  // Check if user is newly registered
-  useEffect(() => {
-    const checkIfNewUser = async () => {
-      if (user && !hasShownInitialTour) {
-        try {
-          // Check if user has completedTours field
-          const userRef = doc(db, 'users', user.id);
-          const userDoc = await getDoc(userRef);
-          
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            // If user has no completedTours field or it's empty, they're considered new
-            const isNewUser = !userData.profile?.completedTours || 
-                             Object.keys(userData.profile?.completedTours || {}).length === 0;
-            
-            // Only show tour for new users
-            if (isNewUser) {
-              setHasShownInitialTour(true);
-            }
-          }
-        } catch (error) {
-          console.error('Error checking if user is new:', error);
-        }
-      }
-    };
-    
-    checkIfNewUser();
-  }, [user, hasShownInitialTour]);
-
-  const openTour = useCallback((tourName: string) => {
-    setCurrentTour(tourName);
+  const openTour = useCallback((tourType: TourType) => {
+    setCurrentTour(tourType);
     setIsTourOpen(true);
     setTourStep(0);
   }, []);
@@ -84,81 +51,110 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
     setCurrentTour(null);
   }, []);
 
-  const startTour = useCallback((tourName: string) => {
-    openTour(tourName);
+  const startTour = useCallback((tourType: TourType) => {
+    openTour(tourType);
   }, [openTour]);
-
-  const completeTour = useCallback(async (tourName: string, userId?: string) => {
-    try {
-      const id = userId || user?.id;
-      if (!id) {
-        throw new Error('userId is not defined');
-      }
-
-      const userRef = doc(db, 'users', id);
-      const userDoc = await getDoc(userRef);
-      
-      if (userDoc.exists()) {
-        // Update the completedTours field
-        await updateDoc(userRef, {
-          [`profile.completedTours.${tourName}`]: new Date().toISOString()
-        });
-      }
-    } catch (error) {
-      console.error('Error marking tour as completed:', error);
-      throw error;
-    }
-  }, [user]);
-
-  const askForTourPermission = useCallback(async (tourName: string): Promise<boolean> => {
-    // If we've already asked for this tour, don't ask again
-    if (askedForPermission[tourName]) {
-      return false;
-    }
-
-    // Only show tour for new users
-    if (!hasShownInitialTour && tourName === 'main') {
-      return false;
-    }
-
-    // Check if the tour has already been completed
-    if (user) {
-      try {
-        const userRef = doc(db, 'users', user.id);
-        const userDoc = await getDoc(userRef);
-        
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          // If the tour is already completed, don't show it
-          if (userData.profile?.completedTours?.[tourName]) {
-            setAskedForPermission(prev => ({ ...prev, [tourName]: true }));
-            return false;
-          }
-        }
-      } catch (error) {
-        console.error('Error checking tour completion status:', error);
-        return false;
-      }
-    }
-
-    // For newly registered users, automatically start the tour without asking
-    if (user && user.profile?.onboardingCompleted && !user.profile?.completedTours?.[tourName]) {
-      setAskedForPermission(prev => ({ ...prev, [tourName]: true }));
-      return true;
-    }
-
-    // For all other cases, don't show the tour
-    setAskedForPermission(prev => ({ ...prev, [tourName]: true }));
-    return false;
-  }, [user, askedForPermission, hasShownInitialTour]);
 
   const skipTour = useCallback(() => {
     if (currentTour && user) {
       completeTour(currentTour, user.id).catch(console.error);
-      toast.success('Tour skipped. You can restart it from the help menu anytime.');
     }
     closeTour();
-  }, [currentTour, user, completeTour, closeTour]);
+  }, [closeTour, currentTour, user]);
+
+  const completeTour = useCallback(async (tourType: TourType, userId?: string) => {
+    const uid = userId || user?.id;
+    if (!uid) return;
+
+    try {
+      const userRef = doc(db, 'users', uid);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        // Update the user's completed tours
+        await updateDoc(userRef, {
+          [`profile.completedTours.${tourType}`]: true,
+          updatedAt: new Date(),
+        });
+      }
+    } catch (error) {
+      console.error(`Error completing tour ${tourType}:`, error);
+    }
+  }, [user]);
+
+  const askForTourPermission = useCallback(async (tourType: TourType): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      // Check if user has already completed this tour
+      const userRef = doc(db, 'users', user.id);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const completedTours = userData.profile?.completedTours || {};
+        
+        // If tour is already completed, don't show it again
+        if (completedTours[tourType]) {
+          return false;
+        }
+        
+        // For new users, automatically start the tour
+        if (userData.isNewUser) {
+          return true;
+        }
+      }
+      
+      // For returning users who haven't completed the tour, ask permission
+      return new Promise((resolve) => {
+        // Use toast for permission
+        toast.custom(
+          (t) => (
+            <div className={`${
+              t.visible ? 'animate-enter' : 'animate-leave'
+            } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex flex-col`}>
+              <div className="p-4">
+                <div className="flex items-start">
+                  <div className="ml-3 flex-1">
+                    <p className="text-sm font-medium text-gray-900">
+                      Would you like a quick tour?
+                    </p>
+                    <p className="mt-1 text-sm text-gray-500">
+                      We can show you around the key features of inRooms.
+                    </p>
+                    <div className="mt-4 flex">
+                      <button
+                        onClick={() => {
+                          toast.dismiss(t.id);
+                          resolve(true);
+                        }}
+                        className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+                      >
+                        Yes, show me around
+                      </button>
+                      <button
+                        onClick={() => {
+                          toast.dismiss(t.id);
+                          resolve(false);
+                        }}
+                        className="ml-3 inline-flex justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+                      >
+                        No, thanks
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ),
+          { duration: 10000 }
+        );
+      });
+    } catch (error) {
+      console.error('Error checking tour status:', error);
+      return false;
+    }
+  }, [user]);
 
   return (
     <TourContext.Provider

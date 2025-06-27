@@ -61,24 +61,22 @@ export function SubscriptionPage() {
       return;
     }
 
+    if (currentPlan?.id === plan.id) {
+      toast.info('You are already subscribed to this plan');
+      return;
+    }
+
     setLoading(true);
     setSelectedPlan(plan);
 
     try {
-      const successUrl = `${window.location.origin}/subscription?success=true`;
-      const cancelUrl = `${window.location.origin}/subscription?canceled=true`;
-
-      // Use the appropriate price ID based on billing interval
-      const priceId = billingInterval === 'yearly' ? 
-        `${plan.stripePriceId}_annual` : plan.stripePriceId;
-
-      await stripeService.createCheckoutSession(
-        user.id,
-        user.email,
-        priceId,
-        successUrl,
-        cancelUrl
-      );
+      // For demo purposes, show a success message instead of redirecting to Stripe
+      toast.success('This is a demo. In a real app, you would be redirected to Stripe Checkout.');
+      
+      // Simulate a delay before redirecting to the billing page
+      setTimeout(() => {
+        navigate('/billing');
+      }, 3000);
     } catch (error) {
       console.error('Error creating checkout session:', error);
       toast.error('Failed to start checkout process. Please try again.');
@@ -138,6 +136,13 @@ export function SubscriptionPage() {
     const addOn = addOns.find(a => a.id === addOnId);
     return total + (addOn?.price || 0);
   }, 0);
+
+  const currentPlan = React.useMemo(() => {
+    if (!user?.subscription) return null;
+    return stripeService.getMonthlyPlans().find(plan => 
+      plan.eventsQuota === user.subscription.eventsQuota
+    ) || stripeService.getMonthlyPlans()[0];
+  }, [user]);
 
   return (
     <MainLayout>
@@ -216,9 +221,8 @@ export function SubscriptionPage() {
             >
               Yearly
               <span className="absolute -top-3 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-  Save 20%
-</span>
-
+                Save 20%
+              </span>
             </button>
           </div>
         </div>
@@ -233,6 +237,7 @@ export function SubscriptionPage() {
               <PricingCard
                 key={plan.id}
                 plan={plan}
+                isCurrentPlan={currentPlan?.id === plan.id}
                 onSelectPlan={handleSelectPlan}
                 onRequestQuote={handleRequestQuote}
                 loading={loading && selectedPlan?.id === plan.id}
