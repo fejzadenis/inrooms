@@ -4,8 +4,3 @@ src/contexts/*
 src/types/*
 src/utils/*
 dist/*
-src/auth/*
-src/billing/*
-src/common/*
-src/onboarding/*
-src/solutions/*
