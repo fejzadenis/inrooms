@@ -22,11 +22,12 @@ import { demoService } from '../services/demoService';
 import { stripeService } from '../services/stripeService';
 import { toast } from 'react-hot-toast';
 import type { Demo } from '../types/demo';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 export function SolutionsPage() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [demos, setDemos] = React.useState<Demo[]>([]);
   const [featuredDemos, setFeaturedDemos] = React.useState<Demo[]>([]);
   const [recordings, setRecordings] = React.useState<Demo[]>([]);
@@ -226,6 +227,10 @@ export function SolutionsPage() {
   };
 
   const canScheduleDemos = user && (user.role === 'admin' || user.subscription.status === 'active');
+  
+  const handleUpgradeClick = () => {
+    navigate('/billing');
+  };
 
   if (loading) {
     return (
@@ -428,9 +433,14 @@ export function SolutionsPage() {
                 Upgrade to an Enterprise plan to schedule your own product demos, 
                 share recordings, and reach potential customers.
               </p>
-              <Button className="bg-white text-indigo-600 hover:bg-gray-100">
-                Upgrade to Enterprise
-              </Button>
+              <div className="flex justify-center">
+                <Button 
+                  className="bg-white text-indigo-600 hover:bg-gray-100"
+                  onClick={handleUpgradeClick}
+                >
+                  Upgrade to Enterprise
+                </Button>
+              </div>
             </div>
           </div>
         )}
