@@ -104,6 +104,8 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
     
     // For existing users, ask for permission with a nice UI
     return new Promise((resolve) => {
+      let isResolved = false;
+      
       // Create a custom toast with buttons
       const toastId = toast(
         (t) => (
@@ -115,8 +117,11 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
             <div className="flex space-x-2 mt-2">
               <button
                 onClick={() => {
-                  toast.dismiss(t.id);
-                  resolve(true);
+                  if (!isResolved) {
+                    isResolved = true;
+                    toast.dismiss(t.id);
+                    resolve(true);
+                  }
                 }}
                 className="px-3 py-1 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700"
               >
@@ -124,8 +129,11 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
               </button>
               <button
                 onClick={() => {
-                  toast.dismiss(t.id);
-                  resolve(false);
+                  if (!isResolved) {
+                    isResolved = true;
+                    toast.dismiss(t.id);
+                    resolve(false);
+                  }
                 }}
                 className="px-3 py-1 bg-gray-200 text-gray-800 text-sm rounded-md hover:bg-gray-300"
               >
@@ -149,7 +157,8 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 
       // If the toast expires, consider it as "no"
       setTimeout(() => {
-        if (toast.isActive(toastId)) {
+        if (!isResolved) {
+          isResolved = true;
           toast.dismiss(toastId);
           resolve(false);
         }
