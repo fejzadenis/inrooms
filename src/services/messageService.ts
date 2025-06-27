@@ -16,7 +16,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { connectionService } from './connectionService';
-import type { Message, Chat } from '../types/messages';
+import type { Message, Chat, LastMessage } from '../types/messages';
 
 export const messageService = {
   async sendMessage(senderId: string, receiverId: string, content: string, existingChatId?: string): Promise<void> {
@@ -30,15 +30,7 @@ export const messageService = {
       // Get or create chat ID
       const chatId = existingChatId || [senderId, receiverId].sort().join('_');
       
-      // Create or update chat first
-      const chatRef = doc(db, 'chats', chatId);
-      await setDoc(chatRef, {
-        participants: [senderId, receiverId],
-        updatedAt: serverTimestamp(),
-        createdAt: serverTimestamp(),
-      }, { merge: true });
-
-      // Add message
+      // Add message first
       const messageData = {
         senderId,
         receiverId,
@@ -48,12 +40,26 @@ export const messageService = {
         chatId,
       };
 
-      await addDoc(collection(db, 'messages'), messageData);
+      const messageRef = await addDoc(collection(db, 'messages'), messageData);
 
-      // Update chat with last message timestamp
-      await updateDoc(chatRef, {
+      // Create last message object for chat document
+      const lastMessage: Omit<LastMessage, 'timestamp'> & { timestamp: any } = {
+        id: messageRef.id,
+        senderId,
+        receiverId,
+        content: content.trim(),
+        timestamp: serverTimestamp(),
+        read: false,
+      };
+
+      // Create or update chat with last message
+      const chatRef = doc(db, 'chats', chatId);
+      await setDoc(chatRef, {
+        participants: [senderId, receiverId],
+        lastMessage,
         updatedAt: serverTimestamp(),
-      });
+        createdAt: serverTimestamp(),
+      }, { merge: true });
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -90,6 +96,26 @@ export const messageService = {
     try {
       const messageRef = doc(db, 'messages', messageId);
       await updateDoc(messageRef, { read: true });
+
+      // Also update the lastMessage read status in the chat if this is the last message
+      const messageDoc = await getDoc(messageRef);
+      if (messageDoc.exists()) {
+        const messageData = messageDoc.data();
+        const chatId = messageData.chatId;
+        
+        // Get the chat to check if this is the last message
+        const chatRef = doc(db, 'chats', chatId);
+        const chatDoc = await getDoc(chatRef);
+        
+        if (chatDoc.exists()) {
+          const chatData = chatDoc.data();
+          if (chatData.lastMessage && chatData.lastMessage.id === messageId) {
+            await updateDoc(chatRef, {
+              'lastMessage.read': true
+            });
+          }
+        }
+      }
     } catch (error) {
       console.error('Error marking message as read:', error);
       throw error;
@@ -97,58 +123,39 @@ export const messageService = {
   },
 
   subscribeToUserChats(userId: string, callback: (chats: Chat[]) => void): () => void {
-    // Simplified query without ordering to avoid index requirement
+    // Simple query that gets chats with lastMessage already included
     const q = query(
       collection(db, 'chats'),
       where('participants', 'array-contains', userId)
     );
 
-    return onSnapshot(q, async (snapshot) => {
+    return onSnapshot(q, (snapshot) => {
       try {
-        const chats = await Promise.all(
-          snapshot.docs.map(async (doc) => {
-            const chatData = doc.data();
-            
-            // Get the most recent message for this chat - remove orderBy to avoid composite index requirement
-            const messagesQuery = query(
-              collection(db, 'messages'),
-              where('chatId', '==', doc.id),
-              limit(50) // Get more messages and sort in memory
-            );
-            
-            const messagesSnapshot = await getDocs(messagesQuery);
-            let lastMessage = null;
-            
-            if (!messagesSnapshot.empty) {
-              // Sort messages by timestamp in memory and get the most recent
-              const messages = messagesSnapshot.docs
-                .map(messageDoc => {
-                  const messageData = messageDoc.data();
-                  return {
-                    id: messageDoc.id,
-                    ...messageData,
-                    timestamp: messageData.timestamp?.toDate() || new Date(),
-                  };
-                })
-                .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-              
-              lastMessage = messages[0];
-            }
-            
-            return {
-              id: doc.id,
-              ...chatData,
-              updatedAt: chatData.updatedAt?.toDate() || new Date(),
-              createdAt: chatData.createdAt?.toDate() || new Date(),
-              lastMessage: lastMessage || undefined,
+        const chats = snapshot.docs.map((doc) => {
+          const chatData = doc.data();
+          
+          // Convert lastMessage timestamp if it exists
+          let lastMessage = undefined;
+          if (chatData.lastMessage) {
+            lastMessage = {
+              ...chatData.lastMessage,
+              timestamp: chatData.lastMessage.timestamp?.toDate() || new Date(),
             };
-          })
-        );
+          }
+          
+          return {
+            id: doc.id,
+            participants: chatData.participants,
+            lastMessage,
+            updatedAt: chatData.updatedAt?.toDate() || new Date(),
+            createdAt: chatData.createdAt?.toDate() || new Date(),
+          };
+        }) as Chat[];
         
         // Sort chats by updatedAt in memory (most recent first)
         const sortedChats = chats.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
         
-        callback(sortedChats as Chat[]);
+        callback(sortedChats);
       } catch (error) {
         console.error('Error in chats subscription:', error);
         callback([]);

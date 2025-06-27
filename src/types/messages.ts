@@ -8,9 +8,19 @@ export interface Message {
   chatId: string;
 }
 
+export interface LastMessage {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  timestamp: Date;
+  read: boolean;
+}
+
 export interface Chat {
   id: string;
   participants: string[];
-  lastMessage?: Message;
+  lastMessage?: LastMessage;
   updatedAt: Date;
+  createdAt: Date;
 }
