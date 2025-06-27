@@ -32,22 +32,18 @@ export function HomePage() {
                 <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
                   Meet people who provide you value by attending relationship nurturing video conferences. Connect with decision-makers, share opportunities, practice your pitch, and accelerate your sales success.
                 </p>
-                <div className="mt-5 sm:mt-8 flex justify-center lg:justify-start">
-                  <div className="rounded-md shadow">
-                    <Link to="/signup">
-                      <Button className="w-full flex items-center justify-center gap-2">
-                        Get started
-                        <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    </Link>
-                  </div>
-                  <div className="mt-3 sm:mt-0 sm:ml-3">
-                    <Link to="/about">
-                      <Button variant="outline" className="w-full">
-                        Learn more
-                      </Button>
-                    </Link>
-                  </div>
+                <div className="mt-5 sm:mt-8 flex flex-col sm:flex-row justify-center lg:justify-start gap-3 sm:gap-4">
+                  <Link to="/signup" className="w-full sm:w-auto">
+                    <Button className="w-full sm:w-auto px-8 py-3 text-base font-medium">
+                      Get started
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
+                  </Link>
+                  <Link to="/about" className="w-full sm:w-auto">
+                    <Button variant="outline" className="w-full sm:w-auto px-8 py-3 text-base font-medium">
+                      Learn more
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </main>
