@@ -77,43 +77,43 @@ export function AboutPage() {
       <div className="space-y-20">
         {/* Hero Section */}
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900">
             Elevate Your Tech Sales Career
           </h1>
-          <p className="mt-6 text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="mt-6 text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
             inRooms is the premier networking platform designed exclusively for tech sales professionals. 
             Connect, learn, and grow with peers who understand your challenges.
           </p>
-          <div className="mt-8 flex justify-center gap-4">
+          <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
             <Link to="/signup">
-              <Button className="flex items-center">
+              <Button className="w-full sm:w-auto flex items-center justify-center">
                 Join Now
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
             </Link>
             <Link to="/events">
-              <Button variant="outline">Browse Events</Button>
+              <Button variant="outline" className="w-full sm:w-auto">Browse Events</Button>
             </Link>
           </div>
         </div>
 
         {/* Features Grid */}
         <div>
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-8 md:mb-12">
             Why Choose inRooms?
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {features.map((feature) => {
               const Icon = feature.icon;
               return (
-                <div key={feature.title} className="bg-white rounded-lg shadow-sm p-8 hover:shadow-md transition-shadow duration-200">
+                <div key={feature.title} className="bg-white rounded-lg shadow-sm p-6 md:p-8 hover:shadow-md transition-shadow duration-200">
                   <div className="inline-flex items-center justify-center p-3 bg-indigo-100 rounded-lg">
                     <Icon className="h-6 w-6 text-indigo-600" />
                   </div>
-                  <h3 className="mt-4 text-xl font-semibold text-gray-900">
+                  <h3 className="mt-4 text-lg md:text-xl font-semibold text-gray-900">
                     {feature.title}
                   </h3>
-                  <p className="mt-2 text-gray-600">
+                  <p className="mt-2 text-gray-600 text-sm md:text-base">
                     {feature.description}
                   </p>
                 </div>
@@ -123,15 +123,15 @@ export function AboutPage() {
         </div>
 
         {/* Benefits Section */}
-        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl py-16 px-8">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl py-12 md:py-16 px-4 md:px-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-8 md:mb-12">
             The inRooms Advantage
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {benefits.map((benefit) => {
               const Icon = benefit.icon;
               return (
-                <div key={benefit.title} className="bg-white rounded-lg shadow-sm p-8 flex items-start space-x-4">
+                <div key={benefit.title} className="bg-white rounded-lg shadow-sm p-6 flex flex-col md:flex-row md:items-start gap-4">
                   <div className="flex-shrink-0">
                     <div className="p-3 bg-indigo-100 rounded-lg">
                       <Icon className="h-6 w-6 text-indigo-600" />
@@ -139,7 +139,7 @@ export function AboutPage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">{benefit.title}</h3>
-                    <p className="mt-2 text-gray-600">{benefit.description}</p>
+                    <p className="mt-2 text-gray-600 text-sm md:text-base">{benefit.description}</p>
                   </div>
                 </div>
               );
@@ -149,14 +149,14 @@ export function AboutPage() {
 
         {/* Testimonials */}
         <div>
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-8 md:mb-12">
             What Our Members Say
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-sm p-8 hover:shadow-md transition-shadow duration-200">
-                <div className="h-40">
-                  <p className="text-lg text-gray-600 italic">"{testimonial.quote}"</p>
+              <div key={index} className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200">
+                <div className="h-40 md:h-36 lg:h-40">
+                  <p className="text-gray-600 italic text-sm md:text-base">"{testimonial.quote}"</p>
                 </div>
                 <div className="mt-6 border-t border-gray-100 pt-4">
                   <p className="text-base font-semibold text-gray-900">{testimonial.author}</p>
@@ -169,12 +169,12 @@ export function AboutPage() {
 
         {/* How It Works */}
         <div className="bg-white">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-8 md:mb-12">
             How inRooms Works
           </h2>
           <div className="max-w-4xl mx-auto">
             {/* Steps */}
-            <div className="space-y-16">
+            <div className="space-y-12 md:space-y-16">
               {[
                 {
                   number: 1,
@@ -197,13 +197,13 @@ export function AboutPage() {
                   description: "Leverage new connections, insights, and opportunities to accelerate your professional growth."
                 }
               ].map((step) => (
-                <div key={step.number} className="flex items-start">
-                  <div className="flex-shrink-0 mr-6">
+                <div key={step.number} className="flex flex-col md:flex-row md:items-start">
+                  <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-6">
                     <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
                       {step.number}
                     </div>
                   </div>
-                  <div className="pt-2">
+                  <div className="md:pt-2">
                     <h3 className="text-xl font-semibold text-gray-900">{step.title}</h3>
                     <p className="mt-2 text-gray-600">{step.description}</p>
                   </div>
@@ -214,11 +214,11 @@ export function AboutPage() {
         </div>
 
         {/* CTA Section */}
-        <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl py-16 px-8 text-center text-white">
-          <h2 className="text-3xl font-bold">
+        <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl py-12 md:py-16 px-4 md:px-8 text-center text-white">
+          <h2 className="text-2xl md:text-3xl font-bold">
             Ready to Transform Your Network?
           </h2>
-          <p className="mt-4 text-xl text-indigo-100 max-w-2xl mx-auto">
+          <p className="mt-4 text-lg md:text-xl text-indigo-100 max-w-2xl mx-auto">
             Join thousands of tech sales professionals who are already growing their careers with inRooms.
             Your next big opportunity could be just one connection away.
           </p>

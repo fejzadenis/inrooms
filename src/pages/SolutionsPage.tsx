@@ -247,8 +247,8 @@ export function SolutionsPage() {
               <Sparkles className="w-8 h-8 text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900">Solutions Showcase</h1>
-          <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Solutions Showcase</h1>
+          <p className="mt-4 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
             Discover innovative solutions through live product demos and recorded sessions. 
             See how industry leaders solve real business challenges and practice your pitch.
           </p>
@@ -256,7 +256,7 @@ export function SolutionsPage() {
 
         {/* Action Bar */}
         <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 w-full max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <input
               type="text"
@@ -267,13 +267,13 @@ export function SolutionsPage() {
             />
           </div>
           
-          <div className="flex space-x-3">
-            <Button variant="outline">
+          <div className="flex space-x-3 w-full sm:w-auto">
+            <Button variant="outline" className="flex-1 sm:flex-none">
               <Filter className="w-4 h-4 mr-2" />
               Filter
             </Button>
             {canScheduleDemos && (
-              <Button onClick={handleScheduleDemo}>
+              <Button onClick={handleScheduleDemo} className="flex-1 sm:flex-none">
                 <Plus className="w-4 h-4 mr-2" />
                 Schedule Demo
               </Button>
@@ -282,39 +282,39 @@ export function SolutionsPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 md:p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-100">Total Demos</p>
-                <p className="text-3xl font-bold">{demos.length}</p>
+                <p className="text-blue-100 text-xs md:text-sm">Total Demos</p>
+                <p className="text-xl md:text-3xl font-bold">{demos.length}</p>
               </div>
-              <Video className="w-8 h-8 text-blue-200" />
+              <Video className="w-6 h-6 md:w-8 md:h-8 text-blue-200" />
             </div>
           </div>
-          <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg p-6 text-white">
+          <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg p-4 md:p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-yellow-100">Featured</p>
-                <p className="text-3xl font-bold">{featuredDemos.length}</p>
+                <p className="text-yellow-100 text-xs md:text-sm">Featured</p>
+                <p className="text-xl md:text-3xl font-bold">{featuredDemos.length}</p>
               </div>
-              <Star className="w-8 h-8 text-yellow-200" />
+              <Star className="w-6 h-6 md:w-8 md:h-8 text-yellow-200" />
             </div>
           </div>
-          <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white">
+          <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 md:p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100">Recordings</p>
-                <p className="text-3xl font-bold">{recordings.length}</p>
+                <p className="text-green-100 text-xs md:text-sm">Recordings</p>
+                <p className="text-xl md:text-3xl font-bold">{recordings.length}</p>
               </div>
-              <Play className="w-8 h-8 text-green-200" />
+              <Play className="w-6 h-6 md:w-8 md:h-8 text-green-200" />
             </div>
           </div>
-          <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+          <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 md:p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100">This Month</p>
-                <p className="text-3xl font-bold">
+                <p className="text-purple-100 text-xs md:text-sm">This Month</p>
+                <p className="text-xl md:text-3xl font-bold">
                   {demos.filter(demo => {
                     const now = new Date();
                     const demoDate = new Date(demo.scheduledDate);
@@ -322,13 +322,13 @@ export function SolutionsPage() {
                   }).length}
                 </p>
               </div>
-              <Calendar className="w-8 h-8 text-purple-200" />
+              <Calendar className="w-6 h-6 md:w-8 md:h-8 text-purple-200" />
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-gray-200 overflow-x-auto">
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab('featured')}
@@ -380,7 +380,7 @@ export function SolutionsPage() {
         </div>
 
         {/* Demo Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {getFilteredDemos().length === 0 ? (
             <div className="col-span-full text-center py-12">
               <Video className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -421,10 +421,10 @@ export function SolutionsPage() {
 
         {/* Enterprise CTA */}
         {!canScheduleDemos && (
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-8 text-white">
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 md:p-8 text-white">
             <div className="text-center">
-              <h3 className="text-2xl font-bold mb-4">Showcase Your Solutions</h3>
-              <p className="text-indigo-100 mb-6 max-w-2xl mx-auto">
+              <h3 className="text-xl md:text-2xl font-bold mb-4">Showcase Your Solutions</h3>
+              <p className="text-indigo-100 mb-6 max-w-2xl mx-auto text-sm md:text-base">
                 Upgrade to an Enterprise plan to schedule your own product demos, 
                 share recordings, and reach potential customers.
               </p>

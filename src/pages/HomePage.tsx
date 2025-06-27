@@ -72,7 +72,7 @@ export function HomePage() {
               We're building the most effective networking platform for tech sales professionals.
             </p>
           </div>
-          <dl className="mt-12 space-y-10 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-8">
+          <dl className="mt-12 space-y-10 sm:space-y-0 sm:grid sm:grid-cols-1 md:grid-cols-3 sm:gap-8">
             {[
               {
                 title: 'Curated Events',

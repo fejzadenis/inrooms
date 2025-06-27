@@ -94,13 +94,13 @@ export function DemoCard({
   };
 
   return (
-    <div className={`relative rounded-xl border-2 p-8 transition-all duration-200 hover:shadow-lg ${
-      demo.isFeatured ? 'border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50' : 'border-gray-200'
+    <div className={`relative rounded-xl border-2 p-4 md:p-6 transition-all duration-200 hover:shadow-lg ${
+      demo.isFeatured ? 'border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50' : 'border-gray-200 bg-white'
     }`}>
       {/* Header */}
       <div className="pb-4">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-start justify-between gap-2 mb-4">
+          <div className="flex flex-wrap items-center gap-2">
             {getStatusBadge()}
             {demo.isFeatured && (
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
@@ -142,7 +142,7 @@ export function DemoCard({
           )}
         </div>
 
-        <h3 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
+        <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
           {demo.title}
         </h3>
         
@@ -185,17 +185,17 @@ export function DemoCard({
       {/* Details */}
       <div className="pb-4 space-y-3">
         <div className="flex items-center text-sm text-gray-600">
-          <Calendar className="w-4 h-4 mr-2" />
+          <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
           <span>{format(demoStart, 'MMM d, yyyy')}</span>
         </div>
         
         <div className="flex items-center text-sm text-gray-600">
-          <Clock className="w-4 h-4 mr-2" />
+          <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
           <span>{format(demoStart, 'h:mm a')} ({demo.duration} min)</span>
         </div>
         
         <div className="flex items-center text-sm text-gray-600">
-          <Users className="w-4 h-4 mr-2" />
+          <Users className="w-4 h-4 mr-2 flex-shrink-0" />
           <span>{demo.currentAttendees} / {demo.maxAttendees} registered</span>
         </div>
 
@@ -214,7 +214,7 @@ export function DemoCard({
         {/* Recording Info */}
         {demo.recordingUrl && (
           <div className="flex items-center text-sm text-gray-600">
-            <Play className="w-4 h-4 mr-2" />
+            <Play className="w-4 h-4 mr-2 flex-shrink-0" />
             <span>Recording available ({demo.recordingDuration} min)</span>
             {demo.visibilityExpiresAt && (
               <span className="ml-2 text-xs text-orange-600">
@@ -266,7 +266,7 @@ export function DemoCard({
 
         {/* Management Actions */}
         {canManage && (
-          <div className="flex space-x-2">
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             {isCompleted && !demo.recordingUrl && (
               <Button variant="outline" onClick={onUploadRecording} className="flex-1">
                 <Upload className="w-4 h-4 mr-2" />

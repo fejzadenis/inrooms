@@ -80,7 +80,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
         setIsNotificationsOpen(false);
       }
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node) && 
+          !(event.target as Element).closest('[data-mobile-menu-toggle]')) {
         setIsMobileMenuOpen(false);
       }
     }
@@ -88,6 +89,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Close mobile menu when route changes
+  React.useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     await logout();
@@ -128,6 +134,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 <button
                   className="md:hidden p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  data-mobile-menu-toggle="true"
+                  aria-label="Toggle mobile menu"
                 >
                   {isMobileMenuOpen ? (
                     <X className="w-6 h-6" />
@@ -143,13 +151,14 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                     <button
                       onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                       className="p-2 rounded-full hover:bg-gray-100 relative"
+                      aria-label="Notifications"
                     >
                       <Bell className="w-5 h-5 text-gray-600" />
                       <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white" />
                     </button>
 
                     {isNotificationsOpen && (
-                      <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
+                      <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50">
                         <div className="p-4">
                           <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
                           <div className="mt-2 divide-y divide-gray-100">
@@ -176,6 +185,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                     <button
                       onClick={() => setIsMenuOpen(!isMenuOpen)}
                       className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+                      aria-label="User menu"
                     >
                       {user.photoURL ? (
                         <img
@@ -200,7 +210,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                     </button>
 
                     {isMenuOpen && (
-                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50">
                         <div className="py-1">
                           {user.role === 'user' && userMenuItems.map((item) => {
                             const Icon = item.icon;
@@ -273,7 +283,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && user && (
           <div 
-            className="md:hidden bg-white border-t border-gray-200 shadow-lg"
+            className="md:hidden bg-white border-t border-gray-200 shadow-lg fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto"
             ref={mobileMenuRef}
           >
             <div className="px-2 pt-2 pb-3 space-y-1">

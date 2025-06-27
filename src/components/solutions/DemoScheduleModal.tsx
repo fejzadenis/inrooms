@@ -97,24 +97,25 @@ export function DemoScheduleModal({ isOpen, onClose, onSuccess }: DemoScheduleMo
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-4 md:p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Schedule Product Demo</h2>
-              <p className="text-gray-600 mt-1">Create a new demo session for your solution</p>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900">Schedule Product Demo</h2>
+              <p className="text-gray-600 mt-1 text-sm md:text-base">Create a new demo session for your solution</p>
             </div>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Close"
             >
               <X className="w-6 h-6" />
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="p-4 md:p-6 space-y-6">
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-gray-900">Demo Details</h3>
@@ -299,8 +300,9 @@ export function DemoScheduleModal({ isOpen, onClose, onSuccess }: DemoScheduleMo
                 type="checkbox"
                 {...register('isPublic')}
                 className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                id="isPublic"
               />
-              <label className="ml-2 block text-sm text-gray-900">
+              <label htmlFor="isPublic" className="ml-2 block text-sm text-gray-900">
                 Make this demo publicly visible
               </label>
             </div>
