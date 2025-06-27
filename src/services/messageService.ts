@@ -224,5 +224,29 @@ export const messageService = {
       console.error('Error getting unread message count:', error);
       return 0;
     }
+  },
+
+  // Create a notification for a new message
+  async createMessageNotification(senderId: string, receiverId: string, messageContent: string): Promise<void> {
+    try {
+      // Get sender's name
+      const senderRef = doc(db, 'users', senderId);
+      const senderDoc = await getDoc(senderRef);
+      const senderName = senderDoc.exists() ? senderDoc.data().name : 'Someone';
+
+      // Create notification
+      await addDoc(collection(db, 'notifications'), {
+        userId: receiverId,
+        type: 'message',
+        title: 'New Message',
+        message: `${senderName}: ${messageContent.substring(0, 50)}${messageContent.length > 50 ? '...' : ''}`,
+        relatedId: senderId, // Use sender ID as related ID
+        read: false,
+        createdAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error creating message notification:', error);
+      // Don't throw - notification failure shouldn't block the message
+    }
   }
 };
