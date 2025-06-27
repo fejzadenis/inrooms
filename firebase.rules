@@ -69,17 +69,14 @@ service cloud.firestore {
         request.auth.token.email == 'admin@inrooms.com'
       );
 
-      // Allow create if chat exists and the chatId is correctly formed from sender and receiver
+      // Allow create if chat exists and both sender and receiver are participants
       allow create: if request.auth != null && 
         request.resource.data.chatId != null &&
         request.resource.data.senderId != null &&
         request.resource.data.receiverId != null &&
         request.auth.uid == request.resource.data.senderId &&
-        isValidChatId(
-          request.resource.data.senderId,
-          request.resource.data.receiverId,
-          request.resource.data.chatId
-        );
+        request.resource.data.senderId in getChatParticipants(request.resource.data.chatId) &&
+        request.resource.data.receiverId in getChatParticipants(request.resource.data.chatId);
 
       // Allow update only for marking messages as read by the receiver or admin
       allow update: if request.auth != null && (
