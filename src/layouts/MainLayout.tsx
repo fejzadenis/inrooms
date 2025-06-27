@@ -14,7 +14,9 @@ import {
   HelpCircle,
   FileText,
   CreditCard,
-  Sparkles
+  Sparkles,
+  Menu,
+  X
 } from 'lucide-react';
 import { Logo } from '../components/common/Logo';
 import { useAuth } from '../contexts/AuthContext';
@@ -26,8 +28,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
   const notificationsRef = React.useRef<HTMLDivElement>(null);
+  const mobileMenuRef = React.useRef<HTMLDivElement>(null);
 
   const userMenuItems = [
     { name: 'Profile', href: '/profile', icon: UserCircle },
@@ -44,6 +48,13 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     { name: 'Events', href: '/admin/events', icon: CalendarDays },
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
+  ];
+
+  const navigationItems = [
+    { name: 'Events', href: '/events' },
+    { name: 'Network', href: '/network' },
+    { name: 'Solutions', href: '/solutions' },
+    { name: 'Resources', href: '/resources' }
   ];
 
   const mockNotifications = [
@@ -69,6 +80,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
         setIsNotificationsOpen(false);
       }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setIsMobileMenuOpen(false);
+      }
     }
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -85,28 +99,44 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       <nav className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <Link to="/" className="flex-shrink-0">
-              <Logo />
-            </Link>
+            <div className="flex items-center">
+              <Link to="/" className="flex-shrink-0">
+                <Logo />
+              </Link>
 
-            {user && (
-              <div className="hidden md:flex items-center space-x-4">
-                <Link to="/events" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                  Events
-                </Link>
-                <Link to="/network" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                  Network
-                </Link>
-                <Link to="/solutions" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                  Solutions
-                </Link>
-                <Link to="/resources" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                  Resources
-                </Link>
-              </div>
-            )}
+              {/* Desktop Navigation */}
+              {user && (
+                <div className="hidden md:flex items-center space-x-4 ml-6">
+                  {navigationItems.map(item => (
+                    <Link 
+                      key={item.name}
+                      to={item.href} 
+                      className={`text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium ${
+                        location.pathname === item.href ? 'text-indigo-600 font-semibold' : ''
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
             
             <div className="flex items-center space-x-4">
+              {/* Mobile menu button */}
+              {user && (
+                <button
+                  className="md:hidden p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                >
+                  {isMobileMenuOpen ? (
+                    <X className="w-6 h-6" />
+                  ) : (
+                    <Menu className="w-6 h-6" />
+                  )}
+                </button>
+              )}
+
               {user ? (
                 <>
                   <div className="relative" ref={notificationsRef}>
@@ -158,7 +188,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                           <UserCircle className="w-5 h-5 text-indigo-600" />
                         </div>
                       )}
-                      <div className="text-right">
+                      <div className="text-right hidden sm:block">
                         <div className="text-sm font-medium text-gray-900">
                           {user.name}
                         </div>
@@ -239,6 +269,85 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </div>
+
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && user && (
+          <div 
+            className="md:hidden bg-white border-t border-gray-200 shadow-lg"
+            ref={mobileMenuRef}
+          >
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              {/* Navigation Links */}
+              {navigationItems.map(item => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                    location.pathname === item.href
+                      ? 'bg-indigo-50 text-indigo-600'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
+              
+              {/* User Menu Items */}
+              <div className="pt-4 pb-3 border-t border-gray-200">
+                <div className="px-3 space-y-1">
+                  {user.role === 'user' && userMenuItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Icon className="w-5 h-5 mr-3 text-gray-500" />
+                        {item.name}
+                      </Link>
+                    );
+                  })}
+                  
+                  {user.role === 'admin' && (
+                    <>
+                      <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Admin Controls
+                      </div>
+                      {adminMenuItems.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <Link
+                            key={item.name}
+                            to={item.href}
+                            className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <Icon className="w-5 h-5 mr-3 text-gray-500" />
+                            {item.name}
+                          </Link>
+                        );
+                      })}
+                    </>
+                  )}
+                  
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                  >
+                    <LogOut className="w-5 h-5 mr-3 text-gray-500" />
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
