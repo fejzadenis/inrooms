@@ -1,6 +1,10 @@
 public/*
 supabase/*
 src/contexts/*
-src/types/*
 src/utils/*
 dist/*
+src/api/*
+src/components/*
+src/config/*
+src/pages/*
+src/layouts/*
