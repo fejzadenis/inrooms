@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
-  getAuth, 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
-  signOut as firebaseSignOut,
-  GoogleAuthProvider,
+  signOut, 
+  GoogleAuthProvider, 
   signInWithPopup,
   onAuthStateChanged,
   User as FirebaseUser
@@ -14,46 +13,37 @@ import {
   getDoc, 
   setDoc, 
   updateDoc, 
-  serverTimestamp,
-  Timestamp
+  serverTimestamp 
 } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { auth, db } from '../config/firebase';
 import { toast } from 'react-hot-toast';
 
-interface UserProfile {
-  title?: string;
-  company?: string;
-  location?: string;
-  about?: string;
-  phone?: string;
-  website?: string;
-  linkedin?: string;
-  skills?: string[];
-  joinedAt?: Date;
-  points?: number;
-  assignedRole?: string;
-  onboardingCompleted?: boolean;
-  onboardingCompletedAt?: string;
-  completedTours?: Record<string, boolean>;
-  [key: string]: any; // Allow additional properties
-}
-
-interface UserSubscription {
-  status: 'trial' | 'active' | 'inactive';
-  eventsQuota: number;
-  eventsUsed: number;
-  trialEndsAt?: Date;
-  plan?: string;
-}
-
-export interface User {
+interface User {
   id: string;
-  email: string;
   name: string;
+  email: string;
   role: 'user' | 'admin';
   photoURL?: string;
-  profile?: UserProfile;
-  subscription: UserSubscription;
+  profile?: {
+    title?: string;
+    company?: string;
+    location?: string;
+    about?: string;
+    phone?: string;
+    website?: string;
+    linkedin?: string;
+    skills?: string[];
+    points?: number;
+    assignedRole?: string;
+    completedTours?: Record<string, boolean>;
+    [key: string]: any;
+  };
+  subscription: {
+    status: 'trial' | 'active' | 'inactive';
+    eventsQuota: number;
+    eventsUsed: number;
+    trialEndsAt?: Date;
+  };
   stripe_customer_id?: string;
   isNewUser?: boolean;
 }
@@ -66,92 +56,26 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: (isNewUser?: boolean) => Promise<void>;
   logout: () => Promise<void>;
-  updateUserProfile: (userId: string, profileData: Partial<UserProfile>) => Promise<void>;
+  updateUserProfile: (userId: string, profileData: any) => Promise<void>;
   startFreeTrial: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  loading: true,
-  error: null,
-  signup: async () => {},
-  login: async () => {},
-  loginWithGoogle: async () => {},
-  logout: async () => {},
-  updateUserProfile: async () => {},
-  startFreeTrial: async () => {},
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => useContext(AuthContext);
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const auth = getAuth();
 
-  // Listen for auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            
-            // Convert Firestore timestamps to Date objects
-            const subscription: UserSubscription = {
-              status: userData.subscription?.status || 'inactive',
-              eventsQuota: userData.subscription?.eventsQuota || 0,
-              eventsUsed: userData.subscription?.eventsUsed || 0,
-              trialEndsAt: userData.subscription?.trialEndsAt?.toDate?.() || undefined,
-              plan: userData.subscription?.plan || undefined
-            };
-            
-            const profile: UserProfile | undefined = userData.profile ? {
-              ...userData.profile,
-              joinedAt: userData.profile.joinedAt?.toDate?.() || undefined,
-            } : undefined;
-            
-            setUser({
-              id: firebaseUser.uid,
-              email: firebaseUser.email || userData.email || '',
-              name: userData.name || firebaseUser.displayName || '',
-              role: userData.role || 'user',
-              photoURL: firebaseUser.photoURL || userData.photoURL || undefined,
-              profile,
-              subscription,
-              stripe_customer_id: userData.stripe_customer_id,
-              isNewUser: userData.isNewUser || false
-            });
-          } else {
-            // User document doesn't exist, create it
-            const newUser: Partial<User> = {
-              id: firebaseUser.uid,
-              email: firebaseUser.email || '',
-              name: firebaseUser.displayName || '',
-              role: 'user',
-              photoURL: firebaseUser.photoURL || undefined,
-              subscription: {
-                status: 'inactive',
-                eventsQuota: 0,
-                eventsUsed: 0
-              },
-              isNewUser: true
-            };
-            
-            await setDoc(doc(db, 'users', firebaseUser.uid), {
-              ...newUser,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp()
-            });
-            
-            setUser(newUser as User);
-          }
+          const userData = await getUserData(firebaseUser);
+          setUser(userData);
         } catch (err) {
-          console.error('Error fetching user data:', err);
-          setError('Failed to load user data');
+          console.error('Error getting user data:', err);
+          setUser(null);
         }
       } else {
         setUser(null);
@@ -160,23 +84,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return () => unsubscribe();
-  }, [auth]);
+  }, []);
 
-  const signup = async (email: string, password: string, name: string, isNewUser: boolean = true) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
+  const getUserData = async (firebaseUser: FirebaseUser): Promise<User> => {
+    const userRef = doc(db, 'users', firebaseUser.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
       
-      // Create user document in Firestore
-      await setDoc(doc(db, 'users', firebaseUser.uid), {
+      // Convert Firestore timestamps to Date objects
+      const trialEndsAt = userData.subscription?.trialEndsAt?.toDate?.();
+      
+      return {
         id: firebaseUser.uid,
-        email: email,
-        name: name,
+        name: userData.name || firebaseUser.displayName || '',
+        email: userData.email || firebaseUser.email || '',
+        role: userData.role || 'user',
+        photoURL: userData.photoURL || firebaseUser.photoURL || undefined,
+        profile: userData.profile || {},
+        subscription: {
+          status: userData.subscription?.status || 'inactive',
+          eventsQuota: userData.subscription?.eventsQuota || 0,
+          eventsUsed: userData.subscription?.eventsUsed || 0,
+          trialEndsAt: trialEndsAt || undefined
+        },
+        stripe_customer_id: userData.stripe_customer_id,
+        isNewUser: userData.isNewUser || false
+      };
+    } else {
+      // Create a new user document if it doesn't exist
+      const newUser = {
+        id: firebaseUser.uid,
+        name: firebaseUser.displayName || '',
+        email: firebaseUser.email || '',
         role: 'user',
-        photoURL: firebaseUser.photoURL || null,
+        photoURL: firebaseUser.photoURL || undefined,
+        profile: {},
         subscription: {
           status: 'inactive',
           eventsQuota: 0,
@@ -184,80 +128,88 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        isNewUser: isNewUser
+        isNewUser: true
+      };
+
+      await setDoc(userRef, {
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        photoURL: newUser.photoURL,
+        profile: newUser.profile,
+        subscription: newUser.subscription,
+        createdAt: newUser.createdAt,
+        updatedAt: newUser.updatedAt,
+        isNewUser: true
       });
+
+      return newUser;
+    }
+  };
+
+  const signup = async (email: string, password: string, name: string, isNewUser: boolean = true) => {
+    try {
+      setError(null);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
-      // Update user state
-      setUser({
-        id: firebaseUser.uid,
-        email: email,
-        name: name,
+      // Create user document
+      const userRef = doc(db, 'users', userCredential.user.uid);
+      await setDoc(userRef, {
+        name,
+        email,
         role: 'user',
-        photoURL: firebaseUser.photoURL || undefined,
+        photoURL: userCredential.user.photoURL,
+        profile: {},
         subscription: {
           status: 'inactive',
           eventsQuota: 0,
           eventsUsed: 0
         },
-        isNewUser: isNewUser
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        isNewUser
       });
-      
+
       toast.success('Account created successfully!');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Signup error:', err);
-      if (err instanceof Error) {
-        setError(err.message);
-        toast.error(err.message);
-      } else {
-        setError('An unknown error occurred');
-        toast.error('Failed to create account');
-      }
-    } finally {
-      setLoading(false);
+      setError(err.message || 'Failed to create account');
+      toast.error(err.message || 'Failed to create account');
+      throw err;
     }
   };
 
   const login = async (email: string, password: string) => {
-    setLoading(true);
-    setError(null);
-    
     try {
+      setError(null);
       await signInWithEmailAndPassword(auth, email, password);
       toast.success('Logged in successfully!');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Login error:', err);
-      if (err instanceof Error) {
-        setError(err.message);
-        toast.error(err.message);
-      } else {
-        setError('An unknown error occurred');
-        toast.error('Failed to log in');
-      }
-    } finally {
-      setLoading(false);
+      setError(err.message || 'Failed to log in');
+      toast.error(err.message || 'Failed to log in');
+      throw err;
     }
   };
 
   const loginWithGoogle = async (isNewUser: boolean = false) => {
-    setLoading(true);
-    setError(null);
-    
     try {
+      setError(null);
       const provider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(auth, provider);
-      const firebaseUser = userCredential.user;
+      const result = await signInWithPopup(auth, provider);
       
-      // Check if user document exists
-      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      // Check if this is a new user
+      const userRef = doc(db, 'users', result.user.uid);
+      const userSnap = await getDoc(userRef);
       
-      if (!userDoc.exists()) {
-        // Create user document in Firestore
-        await setDoc(doc(db, 'users', firebaseUser.uid), {
-          id: firebaseUser.uid,
-          email: firebaseUser.email,
-          name: firebaseUser.displayName,
+      if (!userSnap.exists()) {
+        // Create user document for new Google sign-ins
+        await setDoc(userRef, {
+          name: result.user.displayName,
+          email: result.user.email,
           role: 'user',
-          photoURL: firebaseUser.photoURL,
+          photoURL: result.user.photoURL,
+          profile: {},
           subscription: {
             status: 'inactive',
             eventsQuota: 0,
@@ -265,70 +217,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           },
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
-          isNewUser: isNewUser
+          isNewUser
         });
-        
         toast.success('Account created successfully!');
       } else {
         toast.success('Logged in successfully!');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Google login error:', err);
-      if (err instanceof Error) {
-        setError(err.message);
-        toast.error(err.message);
-      } else {
-        setError('An unknown error occurred');
-        toast.error('Failed to log in with Google');
-      }
-    } finally {
-      setLoading(false);
+      setError(err.message || 'Failed to log in with Google');
+      toast.error(err.message || 'Failed to log in with Google');
+      throw err;
     }
   };
 
   const logout = async () => {
-    setLoading(true);
-    setError(null);
-    
     try {
-      await firebaseSignOut(auth);
-      setUser(null);
+      await signOut(auth);
       toast.success('Logged out successfully');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Logout error:', err);
-      if (err instanceof Error) {
-        setError(err.message);
-        toast.error(err.message);
-      } else {
-        setError('An unknown error occurred');
-        toast.error('Failed to log out');
-      }
-    } finally {
-      setLoading(false);
+      setError(err.message || 'Failed to log out');
+      toast.error(err.message || 'Failed to log out');
+      throw err;
     }
   };
 
-  const updateUserProfile = async (userId: string, profileData: Partial<UserProfile>) => {
-    setLoading(true);
-    setError(null);
-    
+  const updateUserProfile = async (userId: string, profileData: any) => {
     try {
       const userRef = doc(db, 'users', userId);
       
       // Prepare update data
-      const updateData: Record<string, any> = {
+      const updateData: any = {
         updatedAt: serverTimestamp()
       };
       
-      // Handle name separately as it's at the root level
-      if (profileData.name) {
-        updateData.name = profileData.name;
-        delete profileData.name;
-      }
+      // Handle top-level fields
+      if (profileData.name) updateData.name = profileData.name;
+      if (profileData.photoURL) updateData.photoURL = profileData.photoURL;
       
-      // Add profile fields with proper nesting
-      Object.entries(profileData).forEach(([key, value]) => {
-        updateData[`profile.${key}`] = value;
+      // Handle profile fields
+      Object.keys(profileData).forEach(key => {
+        if (key !== 'name' && key !== 'photoURL') {
+          updateData[`profile.${key}`] = profileData[key];
+        }
       });
       
       await updateDoc(userRef, updateData);
@@ -341,52 +273,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return {
             ...prev,
             name: profileData.name || prev.name,
+            photoURL: profileData.photoURL || prev.photoURL,
             profile: {
               ...prev.profile,
-              ...profileData
+              ...Object.fromEntries(
+                Object.entries(profileData).filter(([key]) => 
+                  key !== 'name' && key !== 'photoURL'
+                )
+              )
             }
           };
         });
       }
       
       toast.success('Profile updated successfully!');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Profile update error:', err);
-      if (err instanceof Error) {
-        setError(err.message);
-        toast.error(err.message);
-      } else {
-        setError('An unknown error occurred');
-        toast.error('Failed to update profile');
-      }
-    } finally {
-      setLoading(false);
+      toast.error(err.message || 'Failed to update profile');
+      throw err;
     }
   };
 
   const startFreeTrial = async () => {
-    if (!user) {
-      throw new Error('User must be logged in to start a trial');
-    }
-    
-    setLoading(true);
-    setError(null);
-    
+    if (!user) throw new Error('User not authenticated');
+
     try {
       const userRef = doc(db, 'users', user.id);
       
-      // Set trial end date to 7 days from now
-      const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + 7);
+      // Set trial end date (7 days from now)
+      const trialEndsAt = new Date();
+      trialEndsAt.setDate(trialEndsAt.getDate() + 7);
       
-      // Update user subscription
       await updateDoc(userRef, {
         'subscription.status': 'trial',
         'subscription.eventsQuota': 2,
         'subscription.eventsUsed': 0,
-        'subscription.trialEndsAt': Timestamp.fromDate(trialEndDate),
-        'subscription.startedAt': serverTimestamp(),
-        updatedAt: serverTimestamp()
+        'subscription.trialEndsAt': trialEndsAt,
+        'updatedAt': serverTimestamp()
       });
       
       // Update local user state
@@ -400,24 +323,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             status: 'trial',
             eventsQuota: 2,
             eventsUsed: 0,
-            trialEndsAt: trialEndDate
+            trialEndsAt
           }
         };
       });
       
       toast.success('Free trial activated successfully!');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Free trial activation error:', err);
-      if (err instanceof Error) {
-        setError(err.message);
-        toast.error(err.message);
-      } else {
-        setError('An unknown error occurred');
-        toast.error('Failed to activate free trial');
-      }
+      toast.error(err.message || 'Failed to activate free trial');
       throw err;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -438,4 +353,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {children}
     </AuthContext.Provider>
   );
-};
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}

@@ -10,31 +10,17 @@ interface TourContextType {
   isTourOpen: boolean;
   currentTour: TourType | null;
   tourStep: number;
-  openTour: (tourType: TourType) => void;
-  closeTour: () => void;
   startTour: (tourType: TourType) => void;
+  closeTour: () => void;
   completeTour: (tourType: TourType, userId?: string) => Promise<void>;
   skipTour: () => void;
   setTourStep: (step: number) => void;
   askForTourPermission: (tourType: TourType) => Promise<boolean>;
 }
 
-const TourContext = createContext<TourContextType>({
-  isTourOpen: false,
-  currentTour: null,
-  tourStep: 0,
-  openTour: () => {},
-  closeTour: () => {},
-  startTour: () => {},
-  completeTour: async () => {},
-  skipTour: () => {},
-  setTourStep: () => {},
-  askForTourPermission: async () => false,
-});
+const TourContext = createContext<TourContextType | undefined>(undefined);
 
-export const useTour = () => useContext(TourContext);
-
-export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function TourProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [currentTour, setCurrentTour] = useState<TourType | null>(null);
@@ -64,7 +50,7 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loadCompletedTours();
   }, [user]);
 
-  const openTour = (tourType: TourType) => {
+  const startTour = (tourType: TourType) => {
     setCurrentTour(tourType);
     setTourStep(0);
     setIsTourOpen(true);
@@ -72,37 +58,34 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const closeTour = () => {
     setIsTourOpen(false);
-  };
-
-  const startTour = (tourType: TourType) => {
-    openTour(tourType);
+    setCurrentTour(null);
   };
 
   const completeTour = async (tourType: TourType, userId?: string) => {
     const targetUserId = userId || user?.id;
     
     if (!targetUserId) return;
-    
+
     try {
       // Update local state
       setCompletedTours(prev => ({
         ...prev,
         [tourType]: true
       }));
-      
+
       // Update in Firestore
       const userRef = doc(db, 'users', targetUserId);
       await updateDoc(userRef, {
         [`profile.completedTours.${tourType}`]: true
       });
     } catch (error) {
-      console.error(`Error completing ${tourType} tour:`, error);
+      console.error('Error completing tour:', error);
     }
   };
 
   const skipTour = () => {
-    if (currentTour && user) {
-      completeTour(currentTour).catch(console.error);
+    if (currentTour && user?.id) {
+      completeTour(currentTour, user.id).catch(console.error);
     }
     closeTour();
   };
@@ -111,35 +94,67 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // If user is not logged in, don't show tour
     if (!user) return false;
     
-    // Check if this tour has already been completed
+    // If tour is already completed, don't show it again
     if (completedTours[tourType]) return false;
     
-    // For newly registered users, automatically show the tour without asking
+    // For new users, automatically show the tour without asking
     if (user.isNewUser) {
       return true;
     }
     
-    // For existing users, ask for permission
-    try {
-      // Check if we've already asked about this tour
-      const tourAskedKey = `tourAsked_${tourType}`;
-      const hasAskedBefore = localStorage.getItem(tourAskedKey);
-      
-      if (hasAskedBefore) return false;
-      
-      // Ask user if they want to see the tour
-      const userWantsTour = window.confirm(
-        `Would you like to see a quick tour of the ${tourType} features?`
+    // For existing users, ask for permission with a nice UI
+    return new Promise((resolve) => {
+      // Create a custom toast with buttons
+      const toastId = toast(
+        (t) => (
+          <div className="flex flex-col space-y-2">
+            <div className="font-medium">Would you like a quick tour?</div>
+            <p className="text-sm text-gray-600">
+              Learn how to use this section of the platform
+            </p>
+            <div className="flex space-x-2 mt-2">
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  resolve(true);
+                }}
+                className="px-3 py-1 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700"
+              >
+                Yes, show me
+              </button>
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  resolve(false);
+                }}
+                className="px-3 py-1 bg-gray-200 text-gray-800 text-sm rounded-md hover:bg-gray-300"
+              >
+                Skip
+              </button>
+            </div>
+          </div>
+        ),
+        {
+          duration: 10000, // 10 seconds
+          position: 'bottom-center',
+          style: {
+            borderRadius: '10px',
+            background: '#fff',
+            color: '#333',
+            padding: '16px',
+            boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
+          },
+        }
       );
-      
-      // Remember that we've asked
-      localStorage.setItem(tourAskedKey, 'true');
-      
-      return userWantsTour;
-    } catch (error) {
-      console.error('Error asking for tour permission:', error);
-      return false;
-    }
+
+      // If the toast expires, consider it as "no"
+      setTimeout(() => {
+        if (toast.isActive(toastId)) {
+          toast.dismiss(toastId);
+          resolve(false);
+        }
+      }, 10000);
+    });
   };
 
   return (
@@ -148,9 +163,8 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isTourOpen,
         currentTour,
         tourStep,
-        openTour,
-        closeTour,
         startTour,
+        closeTour,
         completeTour,
         skipTour,
         setTourStep,
@@ -160,4 +174,12 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {children}
     </TourContext.Provider>
   );
-};
+}
+
+export function useTour() {
+  const context = useContext(TourContext);
+  if (context === undefined) {
+    throw new Error('useTour must be used within a TourProvider');
+  }
+  return context;
+}
