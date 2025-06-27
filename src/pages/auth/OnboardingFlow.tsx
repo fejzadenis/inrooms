@@ -60,23 +60,26 @@ const step5Schema = z.object({
   currentChallenges: z.array(z.string()).min(1, 'Select at least one challenge'),
 });
 
+// Simplified step 6 schema - made some fields optional
 const step6Schema = z.object({
   networkingStyle: z.enum(['introvert', 'extrovert', 'ambivert']),
   communicationPreference: z.enum(['direct', 'collaborative', 'analytical', 'creative']),
-  interests: z.array(z.string()).min(1, 'Select at least one interest'),
-  eventPreferences: z.array(z.string()).min(1, 'Select at least one event type'),
+  interests: z.array(z.string()).optional(), // Made optional
+  eventPreferences: z.array(z.string()).optional(), // Made optional
 });
 
+// Simplified step 7 schema - reduced minimum length requirement
 const step7Schema = z.object({
-  about: z.string().min(50, 'Bio must be at least 50 characters'),
+  about: z.string().min(20, 'Bio must be at least 20 characters'), // Reduced from 50
   achievements: z.string().optional(),
-  valueProposition: z.string().min(1, 'Value proposition is required'),
+  valueProposition: z.string().optional(), // Made optional
 });
 
+// Simplified step 8 schema - made some fields optional
 const step8Schema = z.object({
   availability: z.enum(['very_active', 'moderately_active', 'occasional']),
-  timeZone: z.string().min(1, 'Time zone is required'),
-  preferredMeetingTimes: z.array(z.string()).min(1, 'Select at least one time preference'),
+  timeZone: z.string().optional(), // Made optional
+  preferredMeetingTimes: z.array(z.string()).optional(), // Made optional
 });
 
 type Step1Data = z.infer<typeof step1Schema>;
@@ -193,6 +196,17 @@ export function OnboardingFlow() {
   const handlePrevious = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSkip = () => {
+    // Skip the current step but save any filled data
+    const currentForm = getCurrentForm();
+    const stepData = currentForm.getValues();
+    setFormData(prev => ({ ...prev, [`step${currentStep}`]: stepData }));
+    
+    if (currentStep < TOTAL_STEPS) {
+      setCurrentStep(currentStep + 1);
     }
   };
 
@@ -749,7 +763,7 @@ export function OnboardingFlow() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Interests * (Select all that apply)
+                  Interests (Optional - Select any that apply)
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {[
@@ -770,14 +784,11 @@ export function OnboardingFlow() {
                     </label>
                   ))}
                 </div>
-                {step6Form.formState.errors.interests && (
-                  <p className="text-red-600 text-sm mt-1">{step6Form.formState.errors.interests.message}</p>
-                )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Event Preferences * (Select all that apply)
+                  Event Preferences (Optional - Select any that apply)
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {[
@@ -797,9 +808,6 @@ export function OnboardingFlow() {
                     </label>
                   ))}
                 </div>
-                {step6Form.formState.errors.eventPreferences && (
-                  <p className="text-red-600 text-sm mt-1">{step6Form.formState.errors.eventPreferences.message}</p>
-                )}
               </div>
             </div>
           </div>
@@ -817,7 +825,7 @@ export function OnboardingFlow() {
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Professional Bio * (minimum 50 characters)
+                  Professional Bio * (minimum 20 characters)
                 </label>
                 <textarea
                   {...step7Form.register('about')}
@@ -847,7 +855,7 @@ export function OnboardingFlow() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Unique Value Proposition *
+                  Unique Value Proposition (Optional)
                 </label>
                 <textarea
                   {...step7Form.register('valueProposition')}
@@ -855,9 +863,6 @@ export function OnboardingFlow() {
                   rows={2}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
-                {step7Form.formState.errors.valueProposition && (
-                  <p className="text-red-600 text-sm mt-1">{step7Form.formState.errors.valueProposition.message}</p>
-                )}
               </div>
             </div>
           </div>
@@ -904,7 +909,7 @@ export function OnboardingFlow() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Time Zone *
+                  Time Zone (Optional)
                 </label>
                 <select
                   {...step8Form.register('timeZone')}
@@ -920,14 +925,11 @@ export function OnboardingFlow() {
                   <option value="JST">Japan Standard Time (JST)</option>
                   <option value="AEST">Australian Eastern Standard Time (AEST)</option>
                 </select>
-                {step8Form.formState.errors.timeZone && (
-                  <p className="text-red-600 text-sm mt-1">{step8Form.formState.errors.timeZone.message}</p>
-                )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Preferred Meeting Times * (Select all that apply)
+                  Preferred Meeting Times (Optional - Select any that apply)
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {[
@@ -947,9 +949,6 @@ export function OnboardingFlow() {
                     </label>
                   ))}
                 </div>
-                {step8Form.formState.errors.preferredMeetingTimes && (
-                  <p className="text-red-600 text-sm mt-1">{step8Form.formState.errors.preferredMeetingTimes.message}</p>
-                )}
               </div>
             </div>
           </div>
@@ -1014,27 +1013,37 @@ export function OnboardingFlow() {
           </AnimatePresence>
 
           <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={currentStep === 1}
-            >
-              Previous
-            </Button>
-
-            {currentStep < TOTAL_STEPS ? (
-              <Button onClick={handleNext}>
-                Next
-              </Button>
-            ) : (
+            <div>
               <Button
-                onClick={handleComplete}
-                isLoading={isSubmitting}
-                disabled={!selectedRole}
+                variant="outline"
+                onClick={handlePrevious}
+                disabled={currentStep === 1}
               >
-                Complete Setup
+                Previous
               </Button>
-            )}
+            </div>
+
+            <div className="flex space-x-3">
+              {currentStep < TOTAL_STEPS && currentStep > 1 && (
+                <Button variant="outline" onClick={handleSkip}>
+                  Skip
+                </Button>
+              )}
+              
+              {currentStep < TOTAL_STEPS ? (
+                <Button onClick={handleNext}>
+                  Next
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleComplete}
+                  isLoading={isSubmitting}
+                  disabled={!selectedRole}
+                >
+                  Complete Setup
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>

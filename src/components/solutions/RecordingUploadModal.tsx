@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { X, Upload, Video, Clock, Eye, Calendar } from 'lucide-react';
 import { Button } from '../common/Button';
 import { demoService } from '../../services/demoService';
+import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import type { Demo } from '../../types/demo';
 
@@ -30,18 +31,43 @@ export function RecordingUploadModal({
   onClose, 
   onSuccess 
 }: RecordingUploadModalProps) {
+  const { user } = useAuth();
+  const [defaultVisibilityDuration, setDefaultVisibilityDuration] = React.useState(30);
+
+  React.useEffect(() => {
+    if (user && user.subscription) {
+      // Set default visibility duration based on subscription plan
+      if (user.role === 'admin' || user.subscription.status === 'active') {
+        // Enterprise or admin users get unlimited visibility by default
+        setDefaultVisibilityDuration(365); // 1 year as "unlimited"
+      } else if (user.subscription.status === 'trial') {
+        // Trial users get 7 days
+        setDefaultVisibilityDuration(7);
+      } else {
+        // Default for other plans
+        setDefaultVisibilityDuration(30);
+      }
+    }
+  }, [user]);
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-    watch
+    watch,
+    setValue
   } = useForm<UploadFormData>({
     resolver: zodResolver(uploadSchema),
     defaultValues: {
-      visibilityDuration: 30, // 30 days default
+      visibilityDuration: defaultVisibilityDuration,
     }
   });
+
+  // Update the default value when it changes
+  React.useEffect(() => {
+    setValue('visibilityDuration', defaultVisibilityDuration);
+  }, [defaultVisibilityDuration, setValue]);
 
   const visibilityDuration = watch('visibilityDuration');
 
@@ -73,6 +99,16 @@ export function RecordingUploadModal({
     const expiry = new Date();
     expiry.setDate(expiry.getDate() + visibilityDuration);
     return expiry.toLocaleDateString();
+  };
+
+  const getVisibilityHelp = () => {
+    if (user?.role === 'admin' || (user?.subscription.status === 'active')) {
+      return "As an Enterprise member, you have access to extended visibility periods.";
+    } else if (user?.subscription.status === 'trial') {
+      return "During your trial, recordings are visible for 7 days. Upgrade to extend visibility.";
+    } else {
+      return "Standard visibility is 30 days. Upgrade to Enterprise for extended visibility.";
+    }
   };
 
   return (
@@ -178,7 +214,7 @@ export function RecordingUploadModal({
                 </p>
               )}
               <p className="text-sm text-gray-500 mt-1">
-                Leave empty for unlimited visibility
+                {getVisibilityHelp()}
               </p>
             </div>
 
@@ -188,8 +224,9 @@ export function RecordingUploadModal({
                 Visibility Settings
               </h4>
               <p className="text-sm text-blue-800">
-                Enterprise members can set visibility duration based on their subscription plan. 
-                Recordings can be extended or made private at any time.
+                {user?.role === 'admin' || user?.subscription.status === 'active' 
+                  ? 'Enterprise members can set extended visibility durations. Recordings can be extended or made private at any time.'
+                  : 'Upgrade to Enterprise for unlimited recording visibility and advanced management options.'}
               </p>
             </div>
 

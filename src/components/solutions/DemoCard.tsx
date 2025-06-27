@@ -11,7 +11,8 @@ import {
   Eye,
   Building,
   Tag,
-  ExternalLink
+  ExternalLink,
+  DollarSign
 } from 'lucide-react';
 import { Button } from '../common/Button';
 import type { Demo } from '../../types/demo';
@@ -25,6 +26,7 @@ interface DemoCardProps {
   onViewRecording?: () => void;
   onUploadRecording?: () => void;
   onToggleFeatured?: () => void;
+  isFeaturingInProgress?: boolean;
 }
 
 export function DemoCard({
@@ -35,7 +37,8 @@ export function DemoCard({
   onJoin,
   onViewRecording,
   onUploadRecording,
-  onToggleFeatured
+  onToggleFeatured,
+  isFeaturingInProgress = false
 }: DemoCardProps) {
   const now = new Date();
   const demoStart = new Date(demo.scheduledDate);
@@ -91,11 +94,11 @@ export function DemoCard({
   };
 
   return (
-    <div className={`bg-white rounded-xl shadow-sm border-2 transition-all duration-200 hover:shadow-lg ${
+    <div className={`relative rounded-xl border-2 p-8 transition-all duration-200 hover:shadow-lg ${
       demo.isFeatured ? 'border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50' : 'border-gray-200'
     }`}>
       {/* Header */}
-      <div className="p-6 pb-4">
+      <div className="pb-4">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center space-x-2">
             {getStatusBadge()}
@@ -111,17 +114,31 @@ export function DemoCard({
           </div>
           
           {canManage && (
-            <button
-              onClick={onToggleFeatured}
-              className={`p-1 rounded-full transition-colors ${
-                demo.isFeatured 
-                  ? 'text-yellow-500 hover:text-yellow-600' 
-                  : 'text-gray-400 hover:text-yellow-500'
-              }`}
-              title={demo.isFeatured ? 'Remove from featured' : 'Add to featured'}
-            >
-              <Star className={`w-4 h-4 ${demo.isFeatured ? 'fill-current' : ''}`} />
-            </button>
+            <div className="flex items-center">
+              {demo.isFeatured ? (
+                <button
+                  onClick={onToggleFeatured}
+                  className="p-1 rounded-full transition-colors text-yellow-500 hover:text-yellow-600"
+                  title="Remove from featured"
+                >
+                  <Star className="w-4 h-4 fill-current" />
+                </button>
+              ) : (
+                <button
+                  onClick={onToggleFeatured}
+                  disabled={isFeaturingInProgress}
+                  className={`p-1 rounded-full transition-colors ${
+                    isFeaturingInProgress 
+                      ? 'text-gray-300 cursor-not-allowed' 
+                      : 'text-gray-400 hover:text-yellow-500'
+                  }`}
+                  title="Add to featured"
+                >
+                  <Star className="w-4 h-4" />
+                  {isFeaturingInProgress && <span className="sr-only">Processing...</span>}
+                </button>
+              )}
+            </div>
           )}
         </div>
 
@@ -166,7 +183,7 @@ export function DemoCard({
       </div>
 
       {/* Details */}
-      <div className="px-6 pb-4 space-y-3">
+      <div className="pb-4 space-y-3">
         <div className="flex items-center text-sm text-gray-600">
           <Calendar className="w-4 h-4 mr-2" />
           <span>{format(demoStart, 'MMM d, yyyy')}</span>
@@ -209,7 +226,7 @@ export function DemoCard({
       </div>
 
       {/* Actions */}
-      <div className="px-6 pb-6 space-y-3">
+      <div className="space-y-3">
         {/* Primary Actions */}
         {!isCompleted && !isRegistered && !isFull && (
           <Button onClick={onRegister} className="w-full">
@@ -261,6 +278,18 @@ export function DemoCard({
               <Button variant="outline" onClick={onViewRecording} className="flex-1">
                 <Eye className="w-4 h-4 mr-2" />
                 Manage
+              </Button>
+            )}
+
+            {!demo.isFeatured && demo.hostId === user?.id && (
+              <Button 
+                variant="outline" 
+                onClick={onToggleFeatured} 
+                className="flex-1"
+                isLoading={isFeaturingInProgress}
+              >
+                <DollarSign className="w-4 h-4 mr-2" />
+                Feature Demo
               </Button>
             )}
           </div>

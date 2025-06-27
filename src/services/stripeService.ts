@@ -41,6 +41,21 @@ export const addOns: AddOn[] = [
       'Enhanced profile analytics',
       'Premium member directory listing'
     ]
+  },
+  {
+    id: 'featured_demo',
+    name: 'Featured Demo',
+    description: 'Highlight your demo at the top of the Solutions page',
+    price: 49,
+    stripePriceId: 'price_featured_demo_monthly',
+    icon: 'star',
+    benefits: [
+      'Prominent placement at the top of Solutions page',
+      'Highlighted with special visual treatment',
+      'Increased visibility to potential customers',
+      '30 days of featured status',
+      'Performance analytics for your featured demo'
+    ]
   }
 ];
 
@@ -241,6 +256,87 @@ export const stripeService = {
       }
       
       throw new Error('An unexpected error occurred. Please try again.');
+    }
+  },
+
+  async purchaseFeatureForDemo(userId: string, userEmail: string, demoId: string, featureType: 'featured_demo'): Promise<void> {
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing. Please check your environment variables.');
+      }
+
+      // Find the appropriate add-on price ID
+      const addOn = addOns.find(a => a.id === featureType);
+      if (!addOn) {
+        throw new Error(`Unknown feature type: ${featureType}`);
+      }
+
+      const successUrl = `${window.location.origin}/solutions?success=true&demoId=${demoId}&feature=${featureType}`;
+      const cancelUrl = `${window.location.origin}/solutions?canceled=true`;
+
+      // Create a checkout session for the feature purchase
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          userEmail,
+          priceId: addOn.stripePriceId,
+          successUrl,
+          cancelUrl,
+          metadata: {
+            demoId,
+            featureType
+          }
+        }),
+      });
+
+      if (!response.ok) {
+        let errorMessage = 'Failed to create checkout session';
+        
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (jsonError) {
+          errorMessage = response.statusText || 'Received an invalid response from the server. Please try again.';
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      let sessionData;
+      try {
+        sessionData = await response.json();
+      } catch (jsonError) {
+        console.error('Failed to parse JSON response:', jsonError);
+        throw new Error('Received an invalid response from the server. Please try again.');
+      }
+
+      const { sessionId } = sessionData;
+      
+      if (!sessionId) {
+        throw new Error('No session ID received from server');
+      }
+      
+      const stripe = await stripePromise;
+      if (!stripe) {
+        throw new Error('Stripe failed to load');
+      }
+
+      const { error } = await stripe.redirectToCheckout({ sessionId });
+      
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error purchasing feature for demo:', error);
+      throw error;
     }
   },
 

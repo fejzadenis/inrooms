@@ -186,16 +186,51 @@ export const demoService = {
   }): Promise<void> {
     try {
       const demoRef = doc(db, 'demos', demoId);
-      const visibilityExpiresAt = recordingData.visibilityDuration 
-        ? new Date(Date.now() + recordingData.visibilityDuration * 24 * 60 * 60 * 1000)
-        : null;
+      
+      // Get the demo to check the host's subscription status
+      const demoDoc = await getDoc(demoRef);
+      if (!demoDoc.exists()) {
+        throw new Error('Demo not found');
+      }
+      
+      const demoData = demoDoc.data();
+      const hostId = demoData.hostId;
+      
+      // Get the host's user data to check subscription
+      const hostRef = doc(db, 'users', hostId);
+      const hostDoc = await getDoc(hostRef);
+      
+      let visibilityDuration = recordingData.visibilityDuration;
+      let visibilityExpiresAt = null;
+      
+      if (hostDoc.exists()) {
+        const hostData = hostDoc.data();
+        
+        // Adjust visibility based on subscription
+        if (hostData.role === 'admin' || hostData.subscription?.status === 'active') {
+          // Enterprise or admin users can set any visibility duration
+          visibilityDuration = recordingData.visibilityDuration || 365; // Default to 1 year if not specified
+        } else if (hostData.subscription?.status === 'trial') {
+          // Trial users get max 7 days
+          visibilityDuration = Math.min(recordingData.visibilityDuration || 7, 7);
+        } else {
+          // Standard users get max 30 days
+          visibilityDuration = Math.min(recordingData.visibilityDuration || 30, 30);
+        }
+      }
+      
+      // Calculate expiry date if visibility duration is set
+      if (visibilityDuration) {
+        visibilityExpiresAt = new Date();
+        visibilityExpiresAt.setDate(visibilityExpiresAt.getDate() + visibilityDuration);
+      }
 
       await updateDoc(demoRef, {
         recordingUrl: recordingData.recordingUrl,
         recordingDuration: recordingData.recordingDuration,
         thumbnailUrl: recordingData.thumbnailUrl,
-        visibilityDuration: recordingData.visibilityDuration,
-        visibilityExpiresAt,
+        visibilityDuration: visibilityDuration,
+        visibilityExpiresAt: visibilityExpiresAt,
         recordingUploadedAt: serverTimestamp(),
         status: 'completed',
         updatedAt: serverTimestamp(),

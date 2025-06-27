@@ -19,11 +19,14 @@ import {
 import { Button } from '../components/common/Button';
 import { useAuth } from '../contexts/AuthContext';
 import { demoService } from '../services/demoService';
+import { stripeService } from '../services/stripeService';
 import { toast } from 'react-hot-toast';
 import type { Demo } from '../types/demo';
+import { useSearchParams } from 'react-router-dom';
 
 export function SolutionsPage() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [demos, setDemos] = React.useState<Demo[]>([]);
   const [featuredDemos, setFeaturedDemos] = React.useState<Demo[]>([]);
   const [recordings, setRecordings] = React.useState<Demo[]>([]);
@@ -37,6 +40,7 @@ export function SolutionsPage() {
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = React.useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = React.useState(false);
   const [selectedDemo, setSelectedDemo] = React.useState<Demo | null>(null);
+  const [featuringDemo, setFeaturingDemo] = React.useState<Demo | null>(null);
 
   React.useEffect(() => {
     loadDemos();
@@ -44,6 +48,20 @@ export function SolutionsPage() {
       loadUserRegistrations();
     }
   }, [user]);
+
+  React.useEffect(() => {
+    // Check for success/cancel parameters from Stripe redirect
+    const success = searchParams.get('success');
+    const demoId = searchParams.get('demoId');
+    const feature = searchParams.get('feature');
+    
+    if (success === 'true' && demoId && feature) {
+      toast.success('Payment successful! Your demo will be featured shortly.');
+      loadDemos();
+    } else if (searchParams.get('canceled') === 'true') {
+      toast.error('Payment canceled. Your demo was not featured.');
+    }
+  }, [searchParams]);
 
   const loadDemos = async () => {
     try {
@@ -86,8 +104,9 @@ export function SolutionsPage() {
       return;
     }
 
-    // Check if user can schedule demos (enterprise subscription)
-    if (user.subscription.status !== 'active' || user.role !== 'admin') {
+    // Check if user can schedule demos (enterprise subscription or admin)
+    const canScheduleDemos = user.role === 'admin' || user.subscription.status === 'active';
+    if (!canScheduleDemos) {
       toast.error('Demo scheduling is available for enterprise members only');
       return;
     }
@@ -122,18 +141,58 @@ export function SolutionsPage() {
   };
 
   const handleToggleFeatured = async (demo: Demo) => {
-    if (!user || user.role !== 'admin') {
-      toast.error('Only admins can feature demos');
+    if (!user) {
+      toast.error('Please log in to manage demos');
+      return;
+    }
+
+    // Admin can toggle featured status directly
+    if (user.role === 'admin') {
+      try {
+        await demoService.toggleFeaturedStatus(demo.id!, !demo.isFeatured);
+        toast.success(`Demo ${demo.isFeatured ? 'removed from' : 'added to'} featured`);
+        loadDemos();
+      } catch (error) {
+        console.error('Failed to toggle featured status:', error);
+        toast.error('Failed to update demo');
+      }
+      return;
+    }
+
+    // For non-admins, if they're the demo host and it's not already featured, 
+    // they need to purchase featured status
+    if (demo.hostId === user.id && !demo.isFeatured) {
+      handlePurchaseFeature(demo);
+    } else if (demo.hostId !== user.id) {
+      toast.error('You can only feature your own demos');
+    } else {
+      toast.info('Please contact support to remove featured status');
+    }
+  };
+
+  const handlePurchaseFeature = async (demo: Demo) => {
+    if (!user) {
+      toast.error('Please log in to feature demos');
+      return;
+    }
+
+    if (demo.hostId !== user.id && user.role !== 'admin') {
+      toast.error('You can only feature your own demos');
       return;
     }
 
     try {
-      await demoService.toggleFeaturedStatus(demo.id!, !demo.isFeatured);
-      toast.success(`Demo ${demo.isFeatured ? 'removed from' : 'added to'} featured`);
-      loadDemos();
+      setFeaturingDemo(demo);
+      await stripeService.purchaseFeatureForDemo(
+        user.id,
+        user.email,
+        demo.id!,
+        'featured_demo'
+      );
     } catch (error) {
-      console.error('Failed to toggle featured status:', error);
-      toast.error('Failed to update demo');
+      console.error('Failed to initiate feature purchase:', error);
+      toast.error('Failed to process payment. Please try again.');
+      setFeaturingDemo(null);
     }
   };
 
@@ -191,7 +250,7 @@ export function SolutionsPage() {
           <h1 className="text-4xl font-bold text-gray-900">Solutions Showcase</h1>
           <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
             Discover innovative solutions through live product demos and recorded sessions. 
-            See how industry leaders solve real business challenges.
+            See how industry leaders solve real business challenges and practice your pitch.
           </p>
         </div>
 
@@ -354,6 +413,7 @@ export function SolutionsPage() {
                 onViewRecording={() => handleViewRecording(demo)}
                 onUploadRecording={() => handleUploadRecording(demo)}
                 onToggleFeatured={() => handleToggleFeatured(demo)}
+                isFeaturingInProgress={featuringDemo?.id === demo.id}
               />
             ))
           )}
