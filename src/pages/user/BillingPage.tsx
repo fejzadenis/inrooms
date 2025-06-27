@@ -8,7 +8,7 @@ import { Button } from '../../components/common/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { stripeService, type SubscriptionPlan } from '../../services/stripeService';
 import { toast } from 'react-hot-toast';
-import { TrendingUp, Crown, CheckCircle, AlertCircle, CreditCard, Download, ExternalLink } from 'lucide-react';
+import { TrendingUp, Crown, CheckCircle, AlertCircle, CreditCard, Download, ExternalLink, Plus } from 'lucide-react';
 
 export function BillingPage() {
   const { user } = useAuth();
