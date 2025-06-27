@@ -151,22 +151,22 @@ service cloud.firestore {
     // Registrations collection - users can manage their own, admin can view all
     match /registrations/{registrationId} {
       allow read: if request.auth != null && (
-        resource.data.userId == request.auth.uid ||
+        ('userId' in resource.data && resource.data.userId is string && resource.data.userId == request.auth.uid) ||
         request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
         request.auth.token.email == 'admin@inrooms.com'
       );
       allow create: if request.auth != null && (
-        request.resource.data.userId == request.auth.uid ||
+        ('userId' in request.resource.data && request.resource.data.userId is string && request.resource.data.userId == request.auth.uid) ||
         request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
         request.auth.token.email == 'admin@inrooms.com'
       );
       allow update: if request.auth != null && (
-        resource.data.userId == request.auth.uid ||
+        ('userId' in resource.data && resource.data.userId is string && resource.data.userId == request.auth.uid) ||
         request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
         request.auth.token.email == 'admin@inrooms.com'
       );
       allow delete: if request.auth != null && (
-        resource.data.userId == request.auth.uid ||
+        ('userId' in resource.data && resource.data.userId is string && resource.data.userId == request.auth.uid) ||
         request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
         request.auth.token.email == 'admin@inrooms.com'
       );
