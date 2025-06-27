@@ -24,18 +24,9 @@ export function MainTour() {
           target: 'body',
           content: {
             title: 'Welcome to inRooms!',
-            description: 'Let\'s take a quick tour to help you get started with our platform. We\'ll show you the key features to help you make the most of your experience.'
+            description: 'Let\'s take a quick tour to help you get started with our platform. We\'ll show you the key sections to help you make the most of your experience.'
           },
           placement: 'center',
-          disableBeacon: true,
-        },
-        {
-          target: '[data-tour="navigation"]',
-          content: {
-            title: 'Main Navigation',
-            description: 'This navigation bar lets you access different sections of the platform. We\'ll guide you through each section.'
-          },
-          placement: 'bottom',
           disableBeacon: true,
         },
         {
@@ -46,143 +37,32 @@ export function MainTour() {
           },
           placement: 'bottom',
           disableBeacon: true,
-          spotlightClicks: true,
-        }
-      ]);
-    } else if (currentTour === 'events') {
-      setSteps([
-        {
-          target: '[data-tour="events-header"]',
-          content: {
-            title: 'Events Page',
-            description: 'This is where you can discover and join networking events with other tech sales professionals.'
-          },
-          placement: 'bottom',
-          disableBeacon: true,
-        },
-        {
-          target: '[data-tour="events-search"]',
-          content: {
-            title: 'Search Events',
-            description: 'Looking for specific topics? Use this search bar to find events that match your interests or needs.'
-          },
-          placement: 'bottom',
-          disableBeacon: true,
-        },
-        {
-          target: '[data-tour="events-quota"]',
-          content: {
-            title: 'Event Quota',
-            description: 'Your subscription includes a specific number of events each month. This tracker shows how many you have remaining.'
-          },
-          placement: 'bottom',
-          disableBeacon: true,
-        },
-        {
-          target: '[data-tour="event-card"]',
-          content: {
-            title: 'Event Card',
-            description: 'Each card shows event details including title, description, date, and participant count. Click "Register Now" to join an event.'
-          },
-          placement: 'right',
-          disableBeacon: true,
         },
         {
           target: '[data-tour="network"]',
           content: {
-            title: 'Next: Network Section',
-            description: 'Click here to continue the tour and learn about connecting with other professionals.'
+            title: 'Network Section',
+            description: 'Here you can connect with other professionals, build your network, and manage your connections.'
           },
           placement: 'bottom',
-          disableBeacon: true,
-          spotlightClicks: true,
-        }
-      ]);
-    } else if (currentTour === 'network') {
-      setSteps([
-        {
-          target: '[data-tour="network-header"]',
-          content: {
-            title: 'Network Page',
-            description: 'This is your hub for connecting with other tech sales professionals and growing your network.'
-          },
-          placement: 'bottom',
-          disableBeacon: true,
-        },
-        {
-          target: '[data-tour="network-search"]',
-          content: {
-            title: 'Search Connections',
-            description: 'Find specific people by searching for their name, company, title, or skills.'
-          },
-          placement: 'bottom',
-          disableBeacon: true,
-        },
-        {
-          target: '[data-tour="network-tabs"]',
-          content: {
-            title: 'Network Tabs',
-            description: 'Toggle between viewing your existing connections and discovering new people to connect with.'
-          },
-          placement: 'bottom',
-          disableBeacon: true,
-        },
-        {
-          target: '[data-tour="connection-card"]',
-          content: {
-            title: 'Connection Card',
-            description: 'View profile details, send messages, and manage your connections. Click "Connect" to send a connection request.'
-          },
-          placement: 'right',
           disableBeacon: true,
         },
         {
           target: '[data-tour="solutions"]',
           content: {
-            title: 'Next: Solutions Section',
-            description: 'Click here to continue the tour and learn about product demos and solutions.'
-          },
-          placement: 'bottom',
-          disableBeacon: true,
-          spotlightClicks: true,
-        }
-      ]);
-    } else if (currentTour === 'profile') {
-      setSteps([
-        {
-          target: '[data-tour="profile-header"]',
-          content: {
-            title: 'Your Profile',
-            description: 'This is your professional profile that others will see when they view your page. A complete profile helps you make better connections.'
+            title: 'Solutions Section',
+            description: 'Discover product demos and solutions from other professionals. You can also showcase your own products here.'
           },
           placement: 'bottom',
           disableBeacon: true,
         },
         {
-          target: '[data-tour="profile-edit"]',
+          target: '[data-tour="resources"]',
           content: {
-            title: 'Edit Profile',
-            description: 'Click here to update your profile information, including your title, company, skills, and more.'
+            title: 'Resources Section',
+            description: 'Access helpful resources, guides, and templates to enhance your sales skills and career.'
           },
-          placement: 'left',
-          disableBeacon: true,
-        },
-        {
-          target: '[data-tour="profile-about"]',
-          content: {
-            title: 'About Section',
-            description: 'This is where you can share your professional background and expertise. A compelling bio helps others understand your value.'
-          },
-          placement: 'right',
-          disableBeacon: true,
-        },
-        {
-          target: '[data-tour="profile-skills"]',
-          content: {
-            title: 'Skills & Expertise',
-            description: 'Highlight your key skills to attract relevant connections and opportunities. These skills also help our system recommend events for you.'
-          },
-          placement: 'right',
+          placement: 'bottom',
           disableBeacon: true,
         }
       ]);
@@ -195,30 +75,6 @@ export function MainTour() {
     if (type === 'step:after') {
       // Update step when the user navigates
       setTourStep(index + 1);
-      
-      // Handle navigation between sections
-      if (currentTour === 'main' && index === 2) {
-        // After clicking Events, switch to events tour
-        completeTour('main').catch(console.error);
-        closeTour();
-        setTimeout(() => {
-          navigate('/events');
-        }, 300);
-      } else if (currentTour === 'events' && index === 4) {
-        // After clicking Network, switch to network tour
-        completeTour('events').catch(console.error);
-        closeTour();
-        setTimeout(() => {
-          navigate('/network');
-        }, 300);
-      } else if (currentTour === 'network' && index === 4) {
-        // After clicking Solutions, end the tour
-        completeTour('network').catch(console.error);
-        closeTour();
-        setTimeout(() => {
-          navigate('/solutions');
-        }, 300);
-      }
     } else if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
       // Tour is complete or skipped
       if (currentTour) {

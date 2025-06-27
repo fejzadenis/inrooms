@@ -51,7 +51,7 @@ service cloud.firestore {
       );
     }
     
-    // Messages collection - simplified rules for direct messaging between users
+    // Messages collection - for direct messaging between users
     match /messages/{messageId} {
       // Allow read if user is sender or receiver, or admin
       allow read: if request.auth != null && (
@@ -209,7 +209,7 @@ service cloud.firestore {
         request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
         request.auth.token.email == 'admin@inrooms.com' ||
         resource.data.hostId == request.auth.uid ||
-        // Allow enterprise users to upload recordings for completed demos
+        // Allow enterprise users or admins to upload recordings for completed demos
         (
           resource.data.status == 'completed' &&
           request.resource.data.diff(resource.data).affectedKeys().hasAny(['recordingUrl', 'recordingDuration', 'thumbnailUrl', 'visibilityDuration', 'visibilityExpiresAt', 'recordingUploadedAt']) &&
