@@ -173,49 +173,42 @@ export function AboutPage() {
             How inRooms Works
           </h2>
           <div className="max-w-4xl mx-auto">
-            <div className="relative">
-              {/* Timeline */}
-              <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-indigo-100"></div>
-              
-              {/* Steps */}
-              <div className="space-y-16">
-                {[
-                  {
-                    number: 1,
-                    title: "Create Your Profile",
-                    description: "Set up your professional profile highlighting your experience, skills, and networking goals."
-                  },
-                  {
-                    number: 2,
-                    title: "Discover Events",
-                    description: "Browse upcoming networking events, workshops, and masterclasses tailored to tech sales professionals."
-                  },
-                  {
-                    number: 3,
-                    title: "Connect & Engage",
-                    description: "Participate in events, build your network, and engage in meaningful conversations with industry peers."
-                  },
-                  {
-                    number: 4,
-                    title: "Grow Your Career",
-                    description: "Leverage new connections, insights, and opportunities to accelerate your professional growth."
-                  }
-                ].map((step) => (
-                  <div key={step.number} className="relative">
-                    <div className="flex items-center">
-                      <div className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                        <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
-                          {step.number}
-                        </div>
-                      </div>
-                      <div className={`w-1/2 ${step.number % 2 === 0 ? 'ml-auto pr-12' : 'pr-12 text-right'}`}>
-                        <h3 className="text-xl font-semibold text-gray-900">{step.title}</h3>
-                        <p className="mt-2 text-gray-600">{step.description}</p>
-                      </div>
+            {/* Steps */}
+            <div className="space-y-16">
+              {[
+                {
+                  number: 1,
+                  title: "Create Your Profile",
+                  description: "Set up your professional profile highlighting your experience, skills, and networking goals."
+                },
+                {
+                  number: 2,
+                  title: "Discover Events",
+                  description: "Browse upcoming networking events, workshops, and masterclasses tailored to tech sales professionals."
+                },
+                {
+                  number: 3,
+                  title: "Connect & Engage",
+                  description: "Participate in events, build your network, and engage in meaningful conversations with industry peers."
+                },
+                {
+                  number: 4,
+                  title: "Grow Your Career",
+                  description: "Leverage new connections, insights, and opportunities to accelerate your professional growth."
+                }
+              ].map((step) => (
+                <div key={step.number} className="flex items-start">
+                  <div className="flex-shrink-0 mr-6">
+                    <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                      {step.number}
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="pt-2">
+                    <h3 className="text-xl font-semibold text-gray-900">{step.title}</h3>
+                    <p className="mt-2 text-gray-600">{step.description}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
