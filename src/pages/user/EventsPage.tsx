@@ -6,6 +6,7 @@ import { Button } from '../../components/common/Button';
 import { eventService, type Event } from '../../services/eventService';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
+import { generateCalendarEvent } from '../../utils/calendar';
 
 export function EventsPage() {
   const { user } = useAuth();
@@ -23,9 +24,15 @@ export function EventsPage() {
 
   const loadEvents = async () => {
     try {
+      setLoading(true);
       const eventsData = await eventService.getEvents();
       // Filter to show only upcoming events
-      const upcomingEvents = eventsData.filter(event => event.date > new Date());
+      const upcomingEvents = eventsData.filter(event => {
+        // Ensure event.date is a valid Date object
+        const eventDate = event.date instanceof Date ? 
+          event.date : new Date(event.date);
+        return eventDate > new Date();
+      });
       setEvents(upcomingEvents);
     } catch (error) {
       console.error('Failed to load events:', error);
@@ -57,11 +64,39 @@ export function EventsPage() {
       return;
     }
 
+    const event = events.find(e => e.id === eventId);
+    if (!event) return;
+
     try {
       await eventService.registerForEvent(user.id, eventId);
+      
+      // Generate calendar event
+      try {
+        const icsFile = await generateCalendarEvent({
+          title: event.title,
+          description: event.description,
+          startTime: event.date,
+          duration: { hours: Math.floor(event.duration / 60), minutes: event.duration % 60 },
+          location: event.meetLink || 'Online Event',
+        });
+
+        // Create calendar download link
+        const blob = new Blob([icsFile], { type: 'text/calendar' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `${event.title.toLowerCase().replace(/\s+/g, '-')}.ics`);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode?.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } catch (calendarError) {
+        console.warn('Failed to generate calendar event:', calendarError);
+      }
+
       setRegisteredEvents(prev => [...prev, eventId]);
-      await loadEvents(); // Reload to update participant counts
-      toast.success('Successfully registered for event!');
+      await loadEvents(); // Reload to update counts
+      toast.success('Successfully registered! Calendar invite downloaded.');
     } catch (error) {
       console.error('Failed to register for event:', error);
       toast.error('Failed to register for event. Please try again.');
@@ -119,12 +154,12 @@ export function EventsPage() {
               <div>
                 <h3 className="text-sm font-medium text-indigo-900">Your Event Quota</h3>
                 <p className="text-sm text-indigo-700">
-                  {user.subscription.eventsQuota - user.subscription.eventsUsed} events remaining this month
+                  {(user?.subscription.eventsQuota || 0) - (user?.subscription.eventsUsed || 0)} events remaining this month
                 </p>
               </div>
               <div className="text-right">
                 <div className="text-lg font-semibold text-indigo-900">
-                  {user.subscription.eventsUsed} / {user.subscription.eventsQuota}
+                  {user?.subscription.eventsUsed || 0} / {user?.subscription.eventsQuota || 0}
                 </div>
                 <div className="text-sm text-indigo-600">Events Used</div>
               </div>

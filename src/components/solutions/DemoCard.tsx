@@ -281,7 +281,7 @@ export function DemoCard({
               </Button>
             )}
 
-            {!demo.isFeatured && demo.hostId === user?.id && (
+            {!demo.isFeatured && demo.hostId === demo.hostId && (
               <Button 
                 variant="outline" 
                 onClick={onToggleFeatured} 

@@ -38,8 +38,19 @@ export function MyEventsPage() {
       
       // Separate into upcoming and past
       const now = new Date();
-      const upcoming = userEvents.filter(event => event.date > now);
-      const past = userEvents.filter(event => event.date <= now);
+      const upcoming = userEvents.filter(event => {
+        // Ensure event.date is a valid Date object
+        const eventDate = event.date instanceof Date ? 
+          event.date : new Date(event.date);
+        return eventDate > now;
+      });
+      
+      const past = userEvents.filter(event => {
+        // Ensure event.date is a valid Date object
+        const eventDate = event.date instanceof Date ? 
+          event.date : new Date(event.date);
+        return eventDate <= now;
+      });
 
       setEvents({ upcoming, past });
     } catch (error) {

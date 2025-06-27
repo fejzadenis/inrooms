@@ -11,7 +11,8 @@ import {
   orderBy,
   limit,
   serverTimestamp,
-  increment
+  increment,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type { Demo, DemoRegistration, DemoFilter } from '../types/demo';
@@ -74,15 +75,25 @@ export const demoService = {
       }
 
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        scheduledDate: doc.data().scheduledDate.toDate(),
-        recordingUploadedAt: doc.data().recordingUploadedAt?.toDate(),
-        visibilityExpiresAt: doc.data().visibilityExpiresAt?.toDate(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate(),
-      })) as Demo[];
+      return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        // Properly handle date conversion
+        const scheduledDate = data.scheduledDate instanceof Timestamp ? 
+          data.scheduledDate.toDate() : 
+          (data.scheduledDate && typeof data.scheduledDate.toDate === 'function' ? 
+            data.scheduledDate.toDate() : 
+            new Date(data.scheduledDate));
+            
+        return {
+          id: doc.id,
+          ...data,
+          scheduledDate: scheduledDate,
+          recordingUploadedAt: data.recordingUploadedAt?.toDate?.() || null,
+          visibilityExpiresAt: data.visibilityExpiresAt?.toDate?.() || null,
+          createdAt: data.createdAt?.toDate?.() || null,
+          updatedAt: data.updatedAt?.toDate?.() || null,
+        };
+      }) as Demo[];
     } catch (error) {
       console.error('Error getting demos:', error);
       throw error;
@@ -100,15 +111,25 @@ export const demoService = {
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        scheduledDate: doc.data().scheduledDate.toDate(),
-        recordingUploadedAt: doc.data().recordingUploadedAt?.toDate(),
-        visibilityExpiresAt: doc.data().visibilityExpiresAt?.toDate(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate(),
-      })) as Demo[];
+      return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        // Properly handle date conversion
+        const scheduledDate = data.scheduledDate instanceof Timestamp ? 
+          data.scheduledDate.toDate() : 
+          (data.scheduledDate && typeof data.scheduledDate.toDate === 'function' ? 
+            data.scheduledDate.toDate() : 
+            new Date(data.scheduledDate));
+            
+        return {
+          id: doc.id,
+          ...data,
+          scheduledDate: scheduledDate,
+          recordingUploadedAt: data.recordingUploadedAt?.toDate?.() || null,
+          visibilityExpiresAt: data.visibilityExpiresAt?.toDate?.() || null,
+          createdAt: data.createdAt?.toDate?.() || null,
+          updatedAt: data.updatedAt?.toDate?.() || null,
+        };
+      }) as Demo[];
     } catch (error) {
       console.error('Error getting featured demos:', error);
       throw error;
@@ -149,11 +170,14 @@ export const demoService = {
         where('userId', '==', userId)
       );
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        registeredAt: doc.data().registeredAt.toDate(),
-      })) as DemoRegistration[];
+      return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          registeredAt: data.registeredAt?.toDate?.() || new Date(),
+        };
+      }) as DemoRegistration[];
     } catch (error) {
       console.error('Error getting user demo registrations:', error);
       throw error;
@@ -167,11 +191,14 @@ export const demoService = {
         where('demoId', '==', demoId)
       );
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        registeredAt: doc.data().registeredAt.toDate(),
-      })) as DemoRegistration[];
+      return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          registeredAt: data.registeredAt?.toDate?.() || new Date(),
+        };
+      }) as DemoRegistration[];
     } catch (error) {
       console.error('Error getting demo registrations:', error);
       throw error;
@@ -267,7 +294,8 @@ export const demoService = {
       const demoDoc = await getDoc(demoRef);
       
       if (demoDoc.exists()) {
-        const currentExpiry = demoDoc.data().visibilityExpiresAt?.toDate() || new Date();
+        const data = demoDoc.data();
+        const currentExpiry = data.visibilityExpiresAt?.toDate?.() || new Date();
         const newExpiry = new Date(currentExpiry.getTime() + additionalDays * 24 * 60 * 60 * 1000);
         
         await updateDoc(demoRef, {

@@ -10,7 +10,8 @@ import {
   where, 
   orderBy,
   serverTimestamp,
-  increment
+  increment,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
@@ -76,13 +77,23 @@ export const eventService = {
     try {
       const q = query(collection(db, 'events'), orderBy('date', 'asc'));
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        date: doc.data().date.toDate(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate(),
-      })) as Event[];
+      return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        // Handle date conversion properly, checking if it's a Timestamp
+        const date = data.date instanceof Timestamp ? 
+          data.date.toDate() : 
+          (data.date && typeof data.date.toDate === 'function' ? 
+            data.date.toDate() : 
+            new Date(data.date));
+            
+        return {
+          id: doc.id,
+          ...data,
+          date: date,
+          createdAt: data.createdAt?.toDate?.() || null,
+          updatedAt: data.updatedAt?.toDate?.() || null,
+        };
+      }) as Event[];
     } catch (error) {
       console.error('Error getting events:', error);
       throw error;
@@ -122,11 +133,14 @@ export const eventService = {
         where('userId', '==', userId)
       );
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        registeredAt: doc.data().registeredAt.toDate(),
-      })) as EventRegistration[];
+      return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          registeredAt: data.registeredAt?.toDate?.() || new Date(),
+        };
+      }) as EventRegistration[];
     } catch (error) {
       console.error('Error getting user registrations:', error);
       throw error;
@@ -140,11 +154,14 @@ export const eventService = {
         where('eventId', '==', eventId)
       );
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        registeredAt: doc.data().registeredAt.toDate(),
-      })) as EventRegistration[];
+      return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          registeredAt: data.registeredAt?.toDate?.() || new Date(),
+        };
+      }) as EventRegistration[];
     } catch (error) {
       console.error('Error getting event registrations:', error);
       throw error;
