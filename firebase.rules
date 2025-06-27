@@ -51,6 +51,7 @@ service cloud.firestore {
       );
     }
     
+    // Messages collection - for direct messaging between users
     match /messages/{messageId} {
       function getChatParticipants(chatId) {
         return get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
@@ -92,6 +93,7 @@ service cloud.firestore {
       );
     }
     
+    // Chats collection - for managing conversations between users
     match /chats/{chatId} {
       function areUsersConnected(userId1, userId2) {
         let user1Doc = get(/databases/$(database)/documents/users/$(userId1));
