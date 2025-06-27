@@ -98,10 +98,17 @@ service cloud.firestore {
       function areUsersConnected(userId1, userId2) {
         let user1Doc = get(/databases/$(database)/documents/users/$(userId1));
         let user2Doc = get(/databases/$(database)/documents/users/$(userId2));
+        
+        // Safely get connections arrays, defaulting to empty list if missing
+        let user1Connections = user1Doc.exists && 'connections' in user1Doc.data && user1Doc.data.connections is list 
+          ? user1Doc.data.connections 
+          : [];
+        let user2Connections = user2Doc.exists && 'connections' in user2Doc.data && user2Doc.data.connections is list 
+          ? user2Doc.data.connections 
+          : [];
+        
         return user1Doc.exists && user2Doc.exists &&
-               user1Doc.data.keys().hasAll(['connections']) && user2Doc.data.keys().hasAll(['connections']) &&
-               user1Doc.data.connections is list && user2Doc.data.connections is list &&
-               userId1 in user2Doc.data.connections && userId2 in user1Doc.data.connections;
+               userId1 in user2Connections && userId2 in user1Connections;
       }
 
       allow read: if request.auth != null && (
