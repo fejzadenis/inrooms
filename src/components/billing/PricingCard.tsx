@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Check, Star, Crown, Users, Zap, MessageSquare, ArrowRight } from 'lucide-react';
 import { Button } from '../common/Button';
 import { stripeService, type SubscriptionPlan } from '../../services/stripeService';
