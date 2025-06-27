@@ -9,13 +9,15 @@ import { Button } from '../../components/common/Button';
 import { 
   MessageSquare, UserPlus, Users, Briefcase, MapPin, Calendar, Edit3, Save, X, Camera, 
   Mail, Phone, Globe, Linkedin, Target, Award, Clock, Building, GraduationCap, Star,
-  TrendingUp, Activity, Zap, Heart, Brain, Coffee
+  TrendingUp, Activity, Zap, Heart, Brain, Coffee, Check, AlertTriangle
 } from 'lucide-react';
 import { messageService } from '../../services/messageService';
 import { networkService, type NetworkProfile } from '../../services/networkService';
+import { connectionService } from '../../services/connectionService';
 import { toast } from 'react-hot-toast';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
+import { ConnectionRequestModal } from '../../components/network/ConnectionRequestModal';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -38,8 +40,9 @@ export function ProfilePage() {
   const [isEditing, setIsEditing] = React.useState(false);
   const [profileData, setProfileData] = React.useState<NetworkProfile | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [isConnected, setIsConnected] = React.useState(false);
+  const [connectionStatus, setConnectionStatus] = React.useState<'connected' | 'pending_sent' | 'pending_received' | 'none'>('none');
   const [loadingProfile, setLoadingProfile] = React.useState(true);
+  const [isConnectionModalOpen, setIsConnectionModalOpen] = React.useState(false);
   const isOwnProfile = !userId || userId === user?.id;
 
   const {
@@ -108,10 +111,10 @@ export function ProfilePage() {
         
         setProfileData(profile);
         
-        // Check if current user is connected to this profile
+        // Check connection status between current user and profile user
         if (user) {
-          const userConnections = await networkService.getUserConnections(user.id);
-          setIsConnected(userConnections.includes(targetUserId));
+          const status = await connectionService.getConnectionStatus(user.id, targetUserId);
+          setConnectionStatus(status);
         }
       } else {
         toast.error('User profile not found');
@@ -149,16 +152,38 @@ export function ProfilePage() {
     }
   };
 
-  const handleConnect = async () => {
+  const handleConnect = () => {
+    if (!profileData) return;
+    setIsConnectionModalOpen(true);
+  };
+
+  const handleAcceptRequest = async () => {
     if (!user || !userId) return;
 
     try {
-      await networkService.addConnection(user.id, userId);
-      setIsConnected(true);
-      toast.success('Connection added successfully!');
+      setIsLoading(true);
+      
+      // Find the pending request
+      const pendingRequests = await connectionService.getIncomingConnectionRequests(user.id);
+      const request = pendingRequests.find(req => req.fromUserId === userId);
+      
+      if (!request) {
+        toast.error('Connection request not found');
+        return;
+      }
+      
+      // Accept the request
+      await connectionService.acceptConnectionRequest(request.id!);
+      
+      // Update connection status
+      setConnectionStatus('connected');
+      
+      toast.success('Connection request accepted');
     } catch (error) {
-      console.error('Error adding connection:', error);
-      toast.error('Failed to add connection. Please try again.');
+      console.error('Error accepting connection request:', error);
+      toast.error('Failed to accept connection request');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -311,18 +336,38 @@ export function ProfilePage() {
                         <Button 
                           variant="outline" 
                           onClick={handleMessage}
-                          disabled={!isConnected}
-                          title={!isConnected ? 'Connect first to send messages' : 'Send message'}
+                          disabled={connectionStatus !== 'connected'}
+                          title={connectionStatus !== 'connected' ? 'Connect first to send messages' : 'Send message'}
                         >
                           <MessageSquare className="w-4 h-4 mr-2" />
                           Message
                         </Button>
-                        {!isConnected ? (
+                        
+                        {connectionStatus === 'none' && (
                           <Button onClick={handleConnect}>
                             <UserPlus className="w-4 h-4 mr-2" />
                             Connect
                           </Button>
-                        ) : (
+                        )}
+                        
+                        {connectionStatus === 'pending_sent' && (
+                          <Button variant="outline" disabled>
+                            <Clock className="w-4 h-4 mr-2" />
+                            Request Sent
+                          </Button>
+                        )}
+                        
+                        {connectionStatus === 'pending_received' && (
+                          <Button 
+                            onClick={handleAcceptRequest}
+                            isLoading={isLoading}
+                          >
+                            <Check className="w-4 h-4 mr-2" />
+                            Accept Request
+                          </Button>
+                        )}
+                        
+                        {connectionStatus === 'connected' && (
                           <Button variant="outline" disabled>
                             <Users className="w-4 h-4 mr-2" />
                             Connected
@@ -605,16 +650,52 @@ export function ProfilePage() {
                     )}
 
                     {/* Connection Status */}
-                    {!isOwnProfile && isConnected && (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <div className="flex items-center">
-                          <Users className="w-5 h-5 text-green-600 mr-2" />
-                          <span className="text-green-800 font-medium">You're connected</span>
-                        </div>
-                        <p className="text-green-700 text-sm mt-1">
-                          You can now send messages and view full contact information
-                        </p>
-                      </div>
+                    {!isOwnProfile && (
+                      <>
+                        {connectionStatus === 'connected' && (
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div className="flex items-center">
+                              <Check className="w-5 h-5 text-green-600 mr-2" />
+                              <span className="text-green-800 font-medium">You're connected</span>
+                            </div>
+                            <p className="text-green-700 text-sm mt-1">
+                              You can now send messages and view full contact information
+                            </p>
+                          </div>
+                        )}
+                        
+                        {connectionStatus === 'pending_sent' && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div className="flex items-center">
+                              <Clock className="w-5 h-5 text-blue-600 mr-2" />
+                              <span className="text-blue-800 font-medium">Connection request sent</span>
+                            </div>
+                            <p className="text-blue-700 text-sm mt-1">
+                              Waiting for {profileData?.name} to accept your connection request
+                            </p>
+                          </div>
+                        )}
+                        
+                        {connectionStatus === 'pending_received' && (
+                          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div className="flex items-center">
+                              <AlertTriangle className="w-5 h-5 text-yellow-600 mr-2" />
+                              <span className="text-yellow-800 font-medium">Pending connection request</span>
+                            </div>
+                            <p className="text-yellow-700 text-sm mt-1">
+                              {profileData?.name} wants to connect with you
+                            </p>
+                            <Button 
+                              className="mt-2"
+                              onClick={handleAcceptRequest}
+                              isLoading={isLoading}
+                            >
+                              <Check className="w-4 h-4 mr-2" />
+                              Accept Request
+                            </Button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -646,7 +727,7 @@ export function ProfilePage() {
                         </div>
                         
                         {/* Show contact details only to connections or own profile */}
-                        {(isOwnProfile || isConnected) && (
+                        {(isOwnProfile || connectionStatus === 'connected') && (
                           <>
                             {currentUser?.profile?.phone && (
                               <div className="flex items-center">
@@ -696,7 +777,7 @@ export function ProfilePage() {
                           </>
                         )}
                         
-                        {!isOwnProfile && !isConnected && (
+                        {!isOwnProfile && connectionStatus !== 'connected' && (
                           <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
                             <p className="text-sm text-gray-600">
                               Connect to view contact information
@@ -775,6 +856,17 @@ export function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Connection Request Modal */}
+      <ConnectionRequestModal
+        isOpen={isConnectionModalOpen}
+        onClose={() => setIsConnectionModalOpen(false)}
+        targetUser={profileData}
+        onSuccess={() => {
+          setConnectionStatus('pending_sent');
+          toast.success(`Connection request sent to ${profileData?.name}`);
+        }}
+      />
     </MainLayout>
   );
 }

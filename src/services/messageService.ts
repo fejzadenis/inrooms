@@ -11,13 +11,15 @@ import {
   setDoc,
   getDocs,
   getDoc,
-  limit
+  limit,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { connectionService } from './connectionService';
 import type { Message, Chat } from '../types/messages';
 
 export const messageService = {
-  async sendMessage(senderId: string, receiverId: string, content: string): Promise<void> {
+  async sendMessage(senderId: string, receiverId: string, content: string, existingChatId?: string): Promise<void> {
     try {
       // First check if users are connected
       const canMessage = await this.canMessage(senderId, receiverId);
@@ -25,7 +27,8 @@ export const messageService = {
         throw new Error('You can only message your connections');
       }
 
-      const chatId = [senderId, receiverId].sort().join('_');
+      // Get or create chat ID
+      const chatId = existingChatId || [senderId, receiverId].sort().join('_');
       
       // Create or update chat first
       const chatRef = doc(db, 'chats', chatId);
@@ -62,20 +65,21 @@ export const messageService = {
     // Query messages for this specific chat
     const q = query(
       collection(db, 'messages'),
-      where('chatId', '==', chatId)
+      where('chatId', '==', chatId),
+      orderBy('timestamp', 'asc')
     );
 
     return onSnapshot(q, (snapshot) => {
-      const messages = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        timestamp: doc.data().timestamp?.toDate() || new Date(),
-      })) as Message[];
+      const messages = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          timestamp: data.timestamp?.toDate() || new Date(),
+        };
+      }) as Message[];
       
-      // Sort messages by timestamp (oldest first for chat display)
-      const sortedMessages = messages.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-      
-      callback(sortedMessages);
+      callback(messages);
     }, (error) => {
       console.error('Error in chat subscription:', error);
       callback([]);
@@ -95,7 +99,8 @@ export const messageService = {
   subscribeToUserChats(userId: string, callback: (chats: Chat[]) => void): () => void {
     const q = query(
       collection(db, 'chats'),
-      where('participants', 'array-contains', userId)
+      where('participants', 'array-contains', userId),
+      orderBy('updatedAt', 'desc')
     );
 
     return onSnapshot(q, async (snapshot) => {
@@ -107,28 +112,29 @@ export const messageService = {
             // Get the most recent message for this chat
             const messagesQuery = query(
               collection(db, 'messages'),
-              where('chatId', '==', doc.id)
+              where('chatId', '==', doc.id),
+              orderBy('timestamp', 'desc'),
+              limit(1)
             );
             
             const messagesSnapshot = await getDocs(messagesQuery);
             let lastMessage = null;
             
             if (!messagesSnapshot.empty) {
-              const messages = messagesSnapshot.docs.map(msgDoc => ({
-                id: msgDoc.id,
-                ...msgDoc.data(),
-                timestamp: msgDoc.data().timestamp?.toDate() || new Date(),
-              }));
-              
-              // Sort and get the most recent message
-              const sortedMessages = messages.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-              lastMessage = sortedMessages[0];
+              const messageDoc = messagesSnapshot.docs[0];
+              const messageData = messageDoc.data();
+              lastMessage = {
+                id: messageDoc.id,
+                ...messageData,
+                timestamp: messageData.timestamp?.toDate() || new Date(),
+              };
             }
             
             return {
               id: doc.id,
               ...chatData,
               updatedAt: chatData.updatedAt?.toDate() || new Date(),
+              createdAt: chatData.createdAt?.toDate() || new Date(),
               lastMessage: lastMessage || undefined,
             };
           })
@@ -151,14 +157,7 @@ export const messageService = {
   // Check if two users can message each other (are connected)
   async canMessage(userId: string, targetUserId: string): Promise<boolean> {
     try {
-      const userRef = doc(db, 'users', userId);
-      const userDoc = await getDoc(userRef);
-      
-      if (userDoc.exists()) {
-        const connections = userDoc.data().connections || [];
-        return connections.includes(targetUserId);
-      }
-      return false;
+      return await connectionService.checkIfUsersAreConnected(userId, targetUserId);
     } catch (error) {
       console.error('Error checking message permissions:', error);
       return false;
@@ -202,6 +201,23 @@ export const messageService = {
     } catch (error) {
       console.error('Error getting chat ID:', error);
       return null;
+    }
+  },
+
+  // Get unread message count for a user
+  async getUnreadMessageCount(userId: string): Promise<number> {
+    try {
+      const q = query(
+        collection(db, 'messages'),
+        where('receiverId', '==', userId),
+        where('read', '==', false)
+      );
+      
+      const snapshot = await getDocs(q);
+      return snapshot.size;
+    } catch (error) {
+      console.error('Error getting unread message count:', error);
+      return 0;
     }
   }
 };

@@ -1,10 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '../../layouts/MainLayout';
-import { Search, UserPlus, MessageSquare, Users, Filter, MapPin, Briefcase } from 'lucide-react';
+import { Search, UserPlus, MessageSquare, Users, Filter, MapPin, Briefcase, Bell, Clock } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { messageService } from '../../services/messageService';
 import { networkService, type NetworkProfile } from '../../services/networkService';
+import { ConnectionRequestModal } from '../../components/network/ConnectionRequestModal';
+import { PendingConnectionsModal } from '../../components/network/PendingConnectionsModal';
+import { connectionService } from '../../services/connectionService';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 
@@ -13,14 +16,20 @@ export function NetworkPage() {
   const navigate = useNavigate();
   const [connections, setConnections] = React.useState<NetworkProfile[]>([]);
   const [recommendations, setRecommendations] = React.useState<NetworkProfile[]>([]);
+  const [pendingRequestsCount, setPendingRequestsCount] = React.useState(0);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [loading, setLoading] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState<'connections' | 'discover'>('connections');
-  const [connectionIds, setConnectionIds] = React.useState<string[]>([]);
+  
+  // Modal states
+  const [isConnectionModalOpen, setIsConnectionModalOpen] = React.useState(false);
+  const [isPendingModalOpen, setIsPendingModalOpen] = React.useState(false);
+  const [selectedUser, setSelectedUser] = React.useState<NetworkProfile | null>(null);
 
   React.useEffect(() => {
+    loadNetworkData();
     if (user) {
-      loadNetworkData();
+      loadPendingRequests();
     }
   }, [user]);
 
@@ -30,25 +39,30 @@ export function NetworkPage() {
     try {
       setLoading(true);
       
-      // Load user's connection IDs
-      const userConnectionIds = await networkService.getUserConnections(user.id);
-      setConnectionIds(userConnectionIds);
-      
-      // Load all network users
-      const allUsers = await networkService.getNetworkUsers(user.id);
-      
-      // Separate connections from recommendations
-      const userConnections = allUsers.filter(u => userConnectionIds.includes(u.id));
-      const userRecommendations = allUsers.filter(u => !userConnectionIds.includes(u.id));
-      
+      // Load user's connections
+      const userConnections = await networkService.getUserConnectionProfiles(user.id);
       setConnections(userConnections);
-      setRecommendations(userRecommendations.slice(0, 20)); // Limit recommendations
+      
+      // Load recommended connections
+      const recommendedUsers = await networkService.getRecommendedConnections(user.id);
+      setRecommendations(recommendedUsers);
       
     } catch (error) {
       console.error('Failed to load network data:', error);
       toast.error('Failed to load network data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPendingRequests = async () => {
+    if (!user) return;
+    
+    try {
+      const incomingRequests = await connectionService.getIncomingConnectionRequests(user.id);
+      setPendingRequestsCount(incomingRequests.length);
+    } catch (error) {
+      console.error('Failed to load pending requests:', error);
     }
   };
 
@@ -79,41 +93,30 @@ export function NetworkPage() {
     navigate(`/profile/${connectionId}`);
   };
 
-  const handleConnect = async (targetUserId: string) => {
-    if (!user) return;
-
-    try {
-      await networkService.addConnection(user.id, targetUserId);
-      toast.success('Connection added successfully!');
-      
-      // Move user from recommendations to connections
-      const connectedUser = recommendations.find(rec => rec.id === targetUserId);
-      if (connectedUser) {
-        setConnections(prev => [...prev, connectedUser]);
-        setRecommendations(prev => prev.filter(rec => rec.id !== targetUserId));
-        setConnectionIds(prev => [...prev, targetUserId]);
-      }
-    } catch (error) {
-      console.error('Error adding connection:', error);
-      toast.error('Failed to add connection. Please try again.');
-    }
+  const handleConnect = (person: NetworkProfile) => {
+    setSelectedUser(person);
+    setIsConnectionModalOpen(true);
   };
 
   const handleSearch = async () => {
     if (!user || !searchTerm.trim()) return;
 
     try {
+      setLoading(true);
       const searchResults = await networkService.searchUsers(searchTerm.trim(), user.id);
+      
       if (activeTab === 'connections') {
-        const filteredConnections = searchResults.filter(u => connectionIds.includes(u.id));
+        const filteredConnections = searchResults.filter(u => u.connectionStatus === 'connected');
         setConnections(filteredConnections);
       } else {
-        const filteredRecommendations = searchResults.filter(u => !connectionIds.includes(u.id));
+        const filteredRecommendations = searchResults.filter(u => u.connectionStatus !== 'connected');
         setRecommendations(filteredRecommendations);
       }
     } catch (error) {
       console.error('Error searching users:', error);
       toast.error('Search failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -151,19 +154,28 @@ export function NetworkPage() {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">My Network</h1>
             <p className="text-gray-600 mt-2">Connect with tech sales professionals and grow your network</p>
           </div>
-          <div className="flex space-x-4">
-            <Button variant="outline">
+          <div className="flex space-x-4 w-full md:w-auto">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsPendingModalOpen(true)}
+              className="flex-1 md:flex-auto relative"
+            >
+              <Clock className="w-4 h-4 mr-2" />
+              Pending Requests
+              {pendingRequestsCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                  {pendingRequestsCount}
+                </span>
+              )}
+            </Button>
+            <Button variant="outline" className="flex-1 md:flex-auto">
               <Filter className="w-4 h-4 mr-2" />
               Filter
-            </Button>
-            <Button variant="outline">
-              <Users className="w-4 h-4 mr-2" />
-              Groups
             </Button>
           </div>
         </div>
@@ -193,10 +205,10 @@ export function NetworkPage() {
           <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100">New This Month</p>
-                <p className="text-3xl font-bold">12</p>
+                <p className="text-green-100">Pending Requests</p>
+                <p className="text-3xl font-bold">{pendingRequestsCount}</p>
               </div>
-              <UserPlus className="w-8 h-8 text-green-200" />
+              <Bell className="w-8 h-8 text-green-200" />
             </div>
           </div>
           <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
@@ -277,7 +289,7 @@ export function NetworkPage() {
                     <div className="flex-1 min-w-0">
                       <h3 className="text-lg font-semibold text-gray-900 truncate">{connection.name}</h3>
                       <div className="flex items-center text-sm text-gray-500 mt-1">
-                        <Briefcase className="w-4 h-4 mr-1" />
+                        <Briefcase className="w-4 h-4 mr-1 flex-shrink-0" />
                         <span className="truncate">{connection.profile_title || 'Professional'}</span>
                       </div>
                       <div className="flex items-center text-sm text-gray-500 mt-1">
@@ -285,7 +297,7 @@ export function NetworkPage() {
                       </div>
                       {connection.profile_location && (
                         <div className="flex items-center text-sm text-gray-500 mt-1">
-                          <MapPin className="w-4 h-4 mr-1" />
+                          <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
                           <span className="truncate">{connection.profile_location}</span>
                         </div>
                       )}
@@ -370,7 +382,7 @@ export function NetworkPage() {
                     <div className="flex-1 min-w-0">
                       <h3 className="text-lg font-semibold text-gray-900 truncate">{person.name}</h3>
                       <div className="flex items-center text-sm text-gray-500 mt-1">
-                        <Briefcase className="w-4 h-4 mr-1" />
+                        <Briefcase className="w-4 h-4 mr-1 flex-shrink-0" />
                         <span className="truncate">{person.profile_title || 'Professional'}</span>
                       </div>
                       <div className="flex items-center text-sm text-gray-500 mt-1">
@@ -378,7 +390,7 @@ export function NetworkPage() {
                       </div>
                       {person.profile_location && (
                         <div className="flex items-center text-sm text-gray-500 mt-1">
-                          <MapPin className="w-4 h-4 mr-1" />
+                          <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
                           <span className="truncate">{person.profile_location}</span>
                         </div>
                       )}
@@ -413,13 +425,37 @@ export function NetworkPage() {
                     >
                       View Profile
                     </Button>
-                    <Button 
-                      className="flex-1"
-                      onClick={() => handleConnect(person.id)}
-                    >
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Connect
-                    </Button>
+                    
+                    {person.connectionStatus === 'none' && (
+                      <Button 
+                        className="flex-1"
+                        onClick={() => handleConnect(person)}
+                      >
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Connect
+                      </Button>
+                    )}
+                    
+                    {person.connectionStatus === 'pending_sent' && (
+                      <Button 
+                        variant="outline"
+                        className="flex-1"
+                        disabled
+                      >
+                        <Clock className="w-4 h-4 mr-2" />
+                        Request Sent
+                      </Button>
+                    )}
+                    
+                    {person.connectionStatus === 'pending_received' && (
+                      <Button 
+                        className="flex-1"
+                        onClick={() => setIsPendingModalOpen(true)}
+                      >
+                        <Check className="w-4 h-4 mr-2" />
+                        Accept Request
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))
@@ -427,6 +463,29 @@ export function NetworkPage() {
           )}
         </div>
       </div>
+
+      {/* Modals */}
+      <ConnectionRequestModal
+        isOpen={isConnectionModalOpen}
+        onClose={() => {
+          setIsConnectionModalOpen(false);
+          setSelectedUser(null);
+        }}
+        targetUser={selectedUser}
+        onSuccess={() => {
+          loadNetworkData();
+          loadPendingRequests();
+        }}
+      />
+
+      <PendingConnectionsModal
+        isOpen={isPendingModalOpen}
+        onClose={() => setIsPendingModalOpen(false)}
+        onSuccess={() => {
+          loadNetworkData();
+          loadPendingRequests();
+        }}
+      />
     </MainLayout>
   );
 }

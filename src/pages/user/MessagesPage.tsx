@@ -1,6 +1,6 @@
 import React from 'react';
 import { MainLayout } from '../../layouts/MainLayout';
-import { MessageSquare, Send, User, Search, MoreVertical } from 'lucide-react';
+import { MessageSquare, Send, User, Search, MoreVertical, Smile, Paperclip, Image } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { messageService } from '../../services/messageService';
 import { networkService } from '../../services/networkService';
@@ -8,6 +8,8 @@ import type { Message, Chat } from '../../types/messages';
 import { format, isToday, isYesterday } from 'date-fns';
 import { Button } from '../../components/common/Button';
 import { toast } from 'react-hot-toast';
+import data from '@emoji-mart/data';
+import Picker from '@emoji-mart/react';
 
 interface ChatWithUserInfo extends Chat {
   otherUserName?: string;
@@ -23,7 +25,10 @@ export function MessagesPage() {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [loading, setLoading] = React.useState(true);
   const [sendingMessage, setSendingMessage] = React.useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const messageInputRef = React.useRef<HTMLInputElement>(null);
+  const emojiPickerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     if (!user) return;
@@ -87,6 +92,17 @@ export function MessagesPage() {
     return () => unsubscribe();
   }, [selectedChat, user]);
 
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const scrollToBottom = () => {
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -105,7 +121,7 @@ export function MessagesPage() {
     setSendingMessage(true);
 
     try {
-      await messageService.sendMessage(user.id, receiverId, messageContent);
+      await messageService.sendMessage(user.id, receiverId, messageContent, selectedChat.id);
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message. Please try again.');
@@ -113,6 +129,12 @@ export function MessagesPage() {
     } finally {
       setSendingMessage(false);
     }
+  };
+
+  const handleEmojiSelect = (emoji: any) => {
+    setNewMessage(prev => prev + emoji.native);
+    setShowEmojiPicker(false);
+    messageInputRef.current?.focus();
   };
 
   const formatMessageTime = (date: Date) => {
@@ -123,6 +145,36 @@ export function MessagesPage() {
     } else {
       return format(date, 'MMM d');
     }
+  };
+
+  const formatMessageDate = (date: Date) => {
+    if (isToday(date)) {
+      return 'Today';
+    } else if (isYesterday(date)) {
+      return 'Yesterday';
+    } else {
+      return format(date, 'MMMM d, yyyy');
+    }
+  };
+
+  const groupMessagesByDate = (messages: Message[]) => {
+    const groups: { date: string; messages: Message[] }[] = [];
+    
+    messages.forEach(message => {
+      const messageDate = formatMessageDate(message.timestamp);
+      const existingGroup = groups.find(group => group.date === messageDate);
+      
+      if (existingGroup) {
+        existingGroup.messages.push(message);
+      } else {
+        groups.push({
+          date: messageDate,
+          messages: [message]
+        });
+      }
+    });
+    
+    return groups;
   };
 
   const filteredChats = chats.filter(chat =>
@@ -144,7 +196,7 @@ export function MessagesPage() {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="grid grid-cols-12 h-[calc(100vh-12rem)]">
           {/* Sidebar */}
-          <div className="col-span-4 border-r border-gray-200 flex flex-col">
+          <div className="col-span-12 md:col-span-4 border-r border-gray-200 flex flex-col">
             <div className="p-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900">Messages</h2>
               <div className="mt-3 relative">
@@ -220,7 +272,7 @@ export function MessagesPage() {
           </div>
 
           {/* Chat Area */}
-          <div className="col-span-8 flex flex-col">
+          <div className="col-span-12 md:col-span-8 flex flex-col">
             {selectedChat ? (
               <>
                 {/* Chat Header */}
@@ -260,34 +312,44 @@ export function MessagesPage() {
                       <p className="text-sm">Start the conversation!</p>
                     </div>
                   ) : (
-                    messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex ${
-                          message.senderId === user?.id ? 'justify-end' : 'justify-start'
-                        }`}
-                      >
-                        <div
-                          className={`max-w-xs lg:max-w-md rounded-lg px-4 py-2 ${
-                            message.senderId === user?.id
-                              ? 'bg-indigo-600 text-white'
-                              : 'bg-white text-gray-900 border border-gray-200'
-                          }`}
-                        >
-                          <p className="text-sm">{message.content}</p>
-                          <p className={`text-xs mt-1 ${
-                            message.senderId === user?.id
-                              ? 'text-indigo-200'
-                              : 'text-gray-500'
-                          }`}>
-                            {format(message.timestamp, 'h:mm a')}
-                            {message.senderId === user?.id && (
-                              <span className="ml-1">
-                                {message.read ? '✓✓' : '✓'}
-                              </span>
-                            )}
-                          </p>
+                    groupMessagesByDate(messages).map((group, groupIndex) => (
+                      <div key={groupIndex} className="space-y-4">
+                        <div className="flex justify-center">
+                          <div className="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full">
+                            {group.date}
+                          </div>
                         </div>
+                        
+                        {group.messages.map((message) => (
+                          <div
+                            key={message.id}
+                            className={`flex ${
+                              message.senderId === user?.id ? 'justify-end' : 'justify-start'
+                            }`}
+                          >
+                            <div
+                              className={`max-w-xs lg:max-w-md rounded-lg px-4 py-2 ${
+                                message.senderId === user?.id
+                                  ? 'bg-indigo-600 text-white'
+                                  : 'bg-white text-gray-900 border border-gray-200'
+                              }`}
+                            >
+                              <p className="text-sm">{message.content}</p>
+                              <p className={`text-xs mt-1 ${
+                                message.senderId === user?.id
+                                  ? 'text-indigo-200'
+                                  : 'text-gray-500'
+                              }`}>
+                                {format(message.timestamp, 'h:mm a')}
+                                {message.senderId === user?.id && (
+                                  <span className="ml-1">
+                                    {message.read ? '✓✓' : '✓'}
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     ))
                   )}
@@ -297,6 +359,37 @@ export function MessagesPage() {
                 {/* Message Input */}
                 <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200 bg-white">
                   <div className="flex items-center space-x-3">
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                      >
+                        <Smile className="h-5 w-5" />
+                      </button>
+                      
+                      {showEmojiPicker && (
+                        <div 
+                          className="absolute bottom-12 left-0 z-10"
+                          ref={emojiPickerRef}
+                        >
+                          <Picker 
+                            data={data} 
+                            onEmojiSelect={handleEmojiSelect}
+                            theme="light"
+                            previewPosition="none"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    
+                    <button
+                      type="button"
+                      className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                    >
+                      <Paperclip className="h-5 w-5" />
+                    </button>
+                    
                     <input
                       type="text"
                       value={newMessage}
@@ -304,7 +397,9 @@ export function MessagesPage() {
                       placeholder="Type your message..."
                       className="flex-1 rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
                       disabled={sendingMessage}
+                      ref={messageInputRef}
                     />
+                    
                     <Button
                       type="submit"
                       disabled={!newMessage.trim() || sendingMessage}
