@@ -58,9 +58,22 @@ export function ConnectionRequestModal({
       return;
     }
 
+    // Use user.id instead of user.uid to match the database schema
+    const currentUserId = user.id || user.uid;
+    
+    if (!currentUserId) {
+      toast.error('User ID not found. Please try logging in again.');
+      return;
+    }
+
+    if (!targetUser.id) {
+      toast.error('Target user ID not found');
+      return;
+    }
+
     try {
       await connectionService.sendConnectionRequest(
-        user.uid,
+        currentUserId,
         targetUser.id,
         data.message || ''
       );
