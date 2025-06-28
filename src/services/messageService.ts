@@ -21,15 +21,6 @@ import type { Message, Chat, LastMessage } from '../types/messages';
 export const messageService = {
   async sendMessage(senderId: string, receiverId: string, content: string, existingChatId?: string): Promise<void> {
     try {
-      // Validate inputs
-      if (!senderId || !receiverId || !content?.trim()) {
-        throw new Error('Sender ID, receiver ID, and message content are required');
-      }
-
-      if (senderId === receiverId) {
-        throw new Error('Cannot send message to yourself');
-      }
-
       // First check if users are connected
       const canMessage = await this.canMessage(senderId, receiverId);
       if (!canMessage) {
@@ -37,9 +28,9 @@ export const messageService = {
       }
 
       // Get or create chat ID
-      const chatId = existingChatId || await this.getOrCreateChat(senderId, receiverId);
+      const chatId = existingChatId || [senderId, receiverId].sort().join('_');
       
-      // Add message
+      // Add message first
       const messageData = {
         senderId,
         receiverId,
@@ -61,12 +52,14 @@ export const messageService = {
         read: false,
       };
 
-      // Update chat with last message
+      // Create or update chat with last message
       const chatRef = doc(db, 'chats', chatId);
-      await updateDoc(chatRef, {
+      await setDoc(chatRef, {
+        participants: [senderId, receiverId],
         lastMessage,
         updatedAt: serverTimestamp(),
-      });
+        createdAt: serverTimestamp(),
+      }, { merge: true });
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -178,14 +171,6 @@ export const messageService = {
   // Check if two users can message each other (are connected)
   async canMessage(userId: string, targetUserId: string): Promise<boolean> {
     try {
-      if (!userId || !targetUserId) {
-        return false;
-      }
-      
-      if (userId === targetUserId) {
-        return false;
-      }
-
       return await connectionService.checkIfUsersAreConnected(userId, targetUserId);
     } catch (error) {
       console.error('Error checking message permissions:', error);
@@ -196,15 +181,6 @@ export const messageService = {
   // Create a chat between two connected users
   async createChat(userId: string, targetUserId: string): Promise<string> {
     try {
-      // Validate inputs
-      if (!userId || !targetUserId) {
-        throw new Error('Both user IDs are required');
-      }
-
-      if (userId === targetUserId) {
-        throw new Error('Cannot create chat with yourself');
-      }
-
       // Check if users are connected
       const canMessage = await this.canMessage(userId, targetUserId);
       if (!canMessage) {
@@ -231,10 +207,6 @@ export const messageService = {
   // Get existing chat between two users
   async getChatId(userId: string, targetUserId: string): Promise<string | null> {
     try {
-      if (!userId || !targetUserId) {
-        return null;
-      }
-
       const chatId = [userId, targetUserId].sort().join('_');
       const chatRef = doc(db, 'chats', chatId);
       const chatDoc = await getDoc(chatRef);
