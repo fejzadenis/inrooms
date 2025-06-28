@@ -1,5 +1,7 @@
 import React from 'react';
 import { X, UserPlus, Check, X as XIcon, Clock, Calendar } from 'lucide-react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../config/firebase';
 import { Button } from '../common/Button';
 import { connectionService } from '../../services/connectionService';
 import { networkService } from '../../services/networkService';
