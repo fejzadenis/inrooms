@@ -2,21 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // === Helper Functions ===
-    function areUsersConnected(userId1, userId2) {
-      let user1Doc = get(/databases/$(database)/documents/users/$(userId1));
-      let user2Doc = get(/databases/$(database)/documents/users/$(userId2));
-      
-      let user1Connections = user1Doc.exists && 'connections' in user1Doc.data && user1Doc.data.connections is list 
-        ? user1Doc.data.connections 
-        : [];
-      let user2Connections = user2Doc.exists && 'connections' in user2Doc.data && user2Doc.data.connections is list 
-        ? user2Doc.data.connections 
-        : [];
-      
-      return user1Doc.exists && user2Doc.exists &&
-             userId1 in user2Connections && userId2 in user1Connections;
-    }
+
 
     function getChatParticipants(chatId) {
       let chatDoc = get(/databases/$(database)/documents/chats/$(chatId));
