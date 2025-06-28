@@ -323,7 +323,7 @@ export const connectionService = {
     }
   },
 
-  // Check if two users are connected
+  // Check if two users are connected (mutual check)
   async checkIfUsersAreConnected(userId1: string, userId2: string): Promise<boolean> {
     try {
       // Validate that both user IDs are defined
@@ -331,16 +331,24 @@ export const connectionService = {
         return false;
       }
 
-      const userRef = doc(db, 'users', userId1);
-      const userDoc = await getDoc(userRef);
+      // Fetch both user documents
+      const [user1Doc, user2Doc] = await Promise.all([
+        getDoc(doc(db, 'users', userId1)),
+        getDoc(doc(db, 'users', userId2))
+      ]);
 
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        const connections = userData.connections || [];
-        return connections.includes(userId2);
+      if (!user1Doc.exists() || !user2Doc.exists()) {
+        return false;
       }
 
-      return false;
+      const user1Data = user1Doc.data();
+      const user2Data = user2Doc.data();
+
+      const user1Connections = user1Data.connections || [];
+      const user2Connections = user2Data.connections || [];
+
+      // Check mutual connection - both users must have each other in their connections
+      return user1Connections.includes(userId2) && user2Connections.includes(userId1);
     } catch (error) {
       console.error('Error checking if users are connected:', error);
       throw error;
