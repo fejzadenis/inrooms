@@ -27,10 +27,10 @@ export const messageService = {
         throw new Error('You can only message your connections');
       }
 
-      // Get or create chat ID
-      const chatId = existingChatId || [senderId, receiverId].sort().join('_');
+      // Ensure chat exists BEFORE trying to send message
+      const chatId = existingChatId || await this.getOrCreateChat(senderId, receiverId);
       
-      // Add message first
+      // Add message after chat is confirmed to exist
       const messageData = {
         senderId,
         receiverId,
@@ -52,14 +52,12 @@ export const messageService = {
         read: false,
       };
 
-      // Create or update chat with last message
+      // Update chat with last message
       const chatRef = doc(db, 'chats', chatId);
-      await setDoc(chatRef, {
-        participants: [senderId, receiverId],
+      await updateDoc(chatRef, {
         lastMessage,
         updatedAt: serverTimestamp(),
-        createdAt: serverTimestamp(),
-      }, { merge: true });
+      });
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -189,13 +187,13 @@ export const messageService = {
 
       const chatId = [userId, targetUserId].sort().join('_');
       
-      // Create chat document
+      // Create chat document with participants array
       const chatRef = doc(db, 'chats', chatId);
       await setDoc(chatRef, {
         participants: [userId, targetUserId],
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      }, { merge: true });
+      });
 
       return chatId;
     } catch (error) {
