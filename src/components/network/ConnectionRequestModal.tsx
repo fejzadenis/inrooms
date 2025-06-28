@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { X, Send, UserPlus } from 'lucide-react';
 import { Button } from '../common/Button';
 import { connectionService } from '../../services/connectionService';
+import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 
 const requestSchema = z.object({
@@ -32,6 +33,7 @@ export function ConnectionRequestModal({
   targetUser,
   onSuccess
 }: ConnectionRequestModalProps) {
+  const { user } = useAuth();
   const {
     register,
     handleSubmit,
@@ -51,10 +53,14 @@ export function ConnectionRequestModal({
   }, [isOpen, reset]);
 
   const handleFormSubmit = async (data: RequestFormData) => {
-    if (!targetUser) return;
+    if (!targetUser || !user) {
+      toast.error('Authentication required to send connection request');
+      return;
+    }
 
     try {
       await connectionService.sendConnectionRequest(
+        user.uid,
         targetUser.id,
         data.message || ''
       );
@@ -144,7 +150,7 @@ export function ConnectionRequestModal({
               <Button variant="outline" onClick={onClose} type="button">
                 Cancel
               </Button>
-              <Button type="submit" isLoading={isSubmitting}>
+              <Button type="submit" isLoading={isSubmitting} disabled={!user}>
                 <Send className="w-4 h-4 mr-2" />
                 Send Request
               </Button>
