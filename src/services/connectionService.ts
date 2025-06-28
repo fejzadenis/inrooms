@@ -12,7 +12,9 @@ import {
   serverTimestamp,
   arrayUnion,
   arrayRemove,
-  Timestamp
+  Timestamp,
+  runTransaction,
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type { ConnectionRequest, Notification } from '../types/connections';
@@ -64,44 +66,58 @@ export const connectionService = {
     }
   },
 
-  // Accept a connection request
+  // Accept a connection request with atomic transaction
   async acceptConnectionRequest(requestId: string): Promise<void> {
     try {
-      const requestRef = doc(db, 'connection_requests', requestId);
-      const requestDoc = await getDoc(requestRef);
+      await runTransaction(db, async (transaction) => {
+        const requestRef = doc(db, 'connection_requests', requestId);
+        const requestDoc = await transaction.get(requestRef);
 
-      if (!requestDoc.exists()) {
-        throw new Error('Connection request not found');
+        if (!requestDoc.exists()) {
+          throw new Error('Connection request not found');
+        }
+
+        const requestData = requestDoc.data();
+        if (requestData.status !== 'pending') {
+          throw new Error('Connection request has already been processed');
+        }
+
+        const fromUserId = requestData.fromUserId;
+        const toUserId = requestData.toUserId;
+
+        // Get both user documents to ensure they exist
+        const fromUserRef = doc(db, 'users', fromUserId);
+        const toUserRef = doc(db, 'users', toUserId);
+        
+        const fromUserDoc = await transaction.get(fromUserRef);
+        const toUserDoc = await transaction.get(toUserRef);
+
+        if (!fromUserDoc.exists() || !toUserDoc.exists()) {
+          throw new Error('One or both users not found');
+        }
+
+        // Update request status
+        transaction.update(requestRef, {
+          status: 'accepted',
+          updatedAt: serverTimestamp()
+        });
+
+        // Add each user to the other's connections array atomically
+        transaction.update(fromUserRef, {
+          connections: arrayUnion(toUserId)
+        });
+
+        transaction.update(toUserRef, {
+          connections: arrayUnion(fromUserId)
+        });
+      });
+
+      // Create notification for the sender (outside transaction to avoid blocking)
+      const requestDoc = await getDoc(doc(db, 'connection_requests', requestId));
+      if (requestDoc.exists()) {
+        const requestData = requestDoc.data();
+        await this.createConnectionAcceptedNotification(requestData.fromUserId, requestData.toUserId);
       }
-
-      const requestData = requestDoc.data();
-      if (requestData.status !== 'pending') {
-        throw new Error('Connection request has already been processed');
-      }
-
-      const fromUserId = requestData.fromUserId;
-      const toUserId = requestData.toUserId;
-
-      // Update request status
-      await updateDoc(requestRef, {
-        status: 'accepted',
-        updatedAt: serverTimestamp()
-      });
-
-      // Add each user to the other's connections array
-      const fromUserRef = doc(db, 'users', fromUserId);
-      const toUserRef = doc(db, 'users', toUserId);
-
-      await updateDoc(fromUserRef, {
-        connections: arrayUnion(toUserId)
-      });
-
-      await updateDoc(toUserRef, {
-        connections: arrayUnion(fromUserId)
-      });
-
-      // Create notification for the sender
-      await this.createConnectionAcceptedNotification(fromUserId, toUserId);
     } catch (error) {
       console.error('Error accepting connection request:', error);
       throw error;
@@ -144,19 +160,29 @@ export const connectionService = {
     }
   },
 
-  // Remove a connection
+  // Remove a connection with atomic transaction
   async removeConnection(userId: string, connectionId: string): Promise<void> {
     try {
-      const userRef = doc(db, 'users', userId);
-      const connectionRef = doc(db, 'users', connectionId);
+      await runTransaction(db, async (transaction) => {
+        const userRef = doc(db, 'users', userId);
+        const connectionRef = doc(db, 'users', connectionId);
 
-      // Remove each user from the other's connections array
-      await updateDoc(userRef, {
-        connections: arrayRemove(connectionId)
-      });
+        // Get both user documents to ensure they exist
+        const userDoc = await transaction.get(userRef);
+        const connectionDoc = await transaction.get(connectionRef);
 
-      await updateDoc(connectionRef, {
-        connections: arrayRemove(userId)
+        if (!userDoc.exists() || !connectionDoc.exists()) {
+          throw new Error('One or both users not found');
+        }
+
+        // Remove each user from the other's connections array atomically
+        transaction.update(userRef, {
+          connections: arrayRemove(connectionId)
+        });
+
+        transaction.update(connectionRef, {
+          connections: arrayRemove(userId)
+        });
       });
     } catch (error) {
       console.error('Error removing connection:', error);
