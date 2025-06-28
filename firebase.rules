@@ -19,7 +19,8 @@ service cloud.firestore {
     }
 
     function getChatParticipants(chatId) {
-      return get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+      let chatDoc = get(/databases/$(database)/documents/chats/$(chatId));
+      return chatDoc.exists ? chatDoc.data.participants : [];
     }
 
     // === User Profiles ===
@@ -80,6 +81,7 @@ service cloud.firestore {
 
     // === Messages ===
     match /messages/{messageId} {
+      // For reading messages, check if user is in the chat participants
       allow read: if request.auth != null && (
         (resource.data.chatId != null &&
          request.auth.uid in getChatParticipants(resource.data.chatId)) ||
@@ -87,14 +89,21 @@ service cloud.firestore {
         request.auth.token.email == 'admin@inrooms.com'
       );
 
+      // For creating messages, ensure chat exists and user is authorized
       allow create: if request.auth != null && 
         request.resource.data.chatId != null &&
         request.resource.data.senderId != null &&
         request.resource.data.receiverId != null &&
         request.auth.uid == request.resource.data.senderId &&
-        request.resource.data.senderId in getChatParticipants(request.resource.data.chatId) &&
-        request.resource.data.receiverId in getChatParticipants(request.resource.data.chatId);
+        (
+          // Check if chat document exists and user is participant
+          let chatDoc = get(/databases/$(database)/documents/chats/$(request.resource.data.chatId));
+          chatDoc.exists &&
+          request.resource.data.senderId in chatDoc.data.participants &&
+          request.resource.data.receiverId in chatDoc.data.participants
+        );
 
+      // For updating messages (marking as read, editing within 5 minutes)
       allow update: if request.auth != null && (
         (resource.data.chatId != null &&
          request.auth.uid in getChatParticipants(resource.data.chatId) &&
@@ -118,13 +127,11 @@ service cloud.firestore {
 
       allow create: if request.auth != null && (
         request.auth.uid in request.resource.data.participants &&
+        request.resource.data.participants.size() == 2 &&
         (
           request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
           request.auth.token.email == 'admin@inrooms.com' ||
-          (
-            request.resource.data.participants.size() == 2 &&
-            areUsersConnected(request.resource.data.participants[0], request.resource.data.participants[1])
-          )
+          areUsersConnected(request.resource.data.participants[0], request.resource.data.participants[1])
         )
       );
 
