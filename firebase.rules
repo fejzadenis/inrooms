@@ -1,6 +1,23 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper function for connection checking (moved to top for proper scope)
+    function areUsersConnected(userId1, userId2) {
+      let user1Doc = get(/databases/$(database)/documents/users/$(userId1));
+      let user2Doc = get(/databases/$(database)/documents/users/$(userId2));
+      
+      // Safely get connections arrays, defaulting to empty list if missing
+      let user1Connections = user1Doc.exists && 'connections' in user1Doc.data && user1Doc.data.connections is list 
+        ? user1Doc.data.connections 
+        : [];
+      let user2Connections = user2Doc.exists && 'connections' in user2Doc.data && user2Doc.data.connections is list 
+        ? user2Doc.data.connections 
+        : [];
+      
+      return user1Doc.exists && user2Doc.exists &&
+             userId1 in user2Connections && userId2 in user1Connections;
+    }
+
     match /users/{userId} {
       // Allow reading user documents for networking - authenticated users can read basic profile info
       allow read: if request.auth != null;
@@ -81,22 +98,6 @@ service cloud.firestore {
     
     // Chats collection - for managing conversations between users
     match /chats/{chatId} {
-      function areUsersConnected(userId1, userId2) {
-        let user1Doc = get(/databases/$(database)/documents/users/$(userId1));
-        let user2Doc = get(/databases/$(database)/documents/users/$(userId2));
-        
-        // Safely get connections arrays, defaulting to empty list if missing
-        let user1Connections = user1Doc.exists && 'connections' in user1Doc.data && user1Doc.data.connections is list 
-          ? user1Doc.data.connections 
-          : [];
-        let user2Connections = user2Doc.exists && 'connections' in user2Doc.data && user2Doc.data.connections is list 
-          ? user2Doc.data.connections 
-          : [];
-        
-        return user1Doc.exists && user2Doc.exists &&
-               userId1 in user2Connections && userId2 in user1Connections;
-      }
-
       allow read: if request.auth != null && (
         request.auth.uid in resource.data.participants ||
         request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
@@ -116,23 +117,6 @@ service cloud.firestore {
         request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
         request.auth.token.email == 'admin@inrooms.com'
       );
-    }
-
-    // Helper function for connection checking (moved to global scope)
-    function areUsersConnected(userId1, userId2) {
-      let user1Doc = get(/databases/$(database)/documents/users/$(userId1));
-      let user2Doc = get(/databases/$(database)/documents/users/$(userId2));
-      
-      // Safely get connections arrays, defaulting to empty list if missing
-      let user1Connections = user1Doc.exists && 'connections' in user1Doc.data && user1Doc.data.connections is list 
-        ? user1Doc.data.connections 
-        : [];
-      let user2Connections = user2Doc.exists && 'connections' in user2Doc.data && user2Doc.data.connections is list 
-        ? user2Doc.data.connections 
-        : [];
-      
-      return user1Doc.exists && user2Doc.exists &&
-             userId1 in user2Connections && userId2 in user1Connections;
     }
 
     // Notifications collection - for user notifications
