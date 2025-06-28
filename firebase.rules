@@ -61,9 +61,12 @@ service cloud.firestore {
         request.auth.token.email == 'admin@inrooms.com'
       );
 
-      // Allow create if user is the sender
+      // Allow create if user is the sender and users are connected
       allow create: if request.auth != null && 
-        request.resource.data.senderId == request.auth.uid;
+        request.resource.data.senderId == request.auth.uid &&
+        (request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+         request.auth.token.email == 'admin@inrooms.com' ||
+         areUsersConnected(request.resource.data.senderId, request.resource.data.receiverId));
 
       // Allow update for marking messages as read by the receiver, editing by sender within 5 minutes, or admin
       allow update: if request.auth != null && (
@@ -113,6 +116,23 @@ service cloud.firestore {
         request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
         request.auth.token.email == 'admin@inrooms.com'
       );
+    }
+
+    // Helper function for connection checking (moved to global scope)
+    function areUsersConnected(userId1, userId2) {
+      let user1Doc = get(/databases/$(database)/documents/users/$(userId1));
+      let user2Doc = get(/databases/$(database)/documents/users/$(userId2));
+      
+      // Safely get connections arrays, defaulting to empty list if missing
+      let user1Connections = user1Doc.exists && 'connections' in user1Doc.data && user1Doc.data.connections is list 
+        ? user1Doc.data.connections 
+        : [];
+      let user2Connections = user2Doc.exists && 'connections' in user2Doc.data && user2Doc.data.connections is list 
+        ? user2Doc.data.connections 
+        : [];
+      
+      return user1Doc.exists && user2Doc.exists &&
+             userId1 in user2Connections && userId2 in user1Connections;
     }
 
     // Notifications collection - for user notifications

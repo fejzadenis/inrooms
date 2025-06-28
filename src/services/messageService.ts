@@ -67,6 +67,7 @@ export const messageService = {
     }
   },
 
+  // Subscribe to messages for a specific chat - only called when entering a chat
   subscribeToChat(chatId: string, callback: (messages: Message[]) => void): () => void {
     // Query messages for this specific chat
     const q = query(
@@ -122,6 +123,7 @@ export const messageService = {
     }
   },
 
+  // Subscribe to user's chats list - only gets chat metadata, not messages
   subscribeToUserChats(userId: string, callback: (chats: Chat[]) => void): () => void {
     // Simple query that gets chats with lastMessage already included
     const q = query(
@@ -213,6 +215,24 @@ export const messageService = {
     } catch (error) {
       console.error('Error getting chat ID:', error);
       return null;
+    }
+  },
+
+  // Get or create chat between two users
+  async getOrCreateChat(userId: string, targetUserId: string): Promise<string> {
+    try {
+      // First check if chat exists
+      let chatId = await this.getChatId(userId, targetUserId);
+      
+      // If not, create it
+      if (!chatId) {
+        chatId = await this.createChat(userId, targetUserId);
+      }
+      
+      return chatId;
+    } catch (error) {
+      console.error('Error getting or creating chat:', error);
+      throw error;
     }
   },
 
