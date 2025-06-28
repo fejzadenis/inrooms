@@ -21,6 +21,15 @@ export const connectionService = {
   // Send a connection request
   async sendConnectionRequest(fromUserId: string, toUserId: string, message?: string): Promise<string> {
     try {
+      // Validate that both user IDs are defined
+      if (!fromUserId || !toUserId) {
+        throw new Error('Both fromUserId and toUserId are required');
+      }
+
+      if (fromUserId === toUserId) {
+        throw new Error('Cannot send connection request to yourself');
+      }
+
       // Check if a request already exists
       const existingRequest = await this.getConnectionRequestBetweenUsers(fromUserId, toUserId);
       if (existingRequest) {
@@ -271,6 +280,11 @@ export const connectionService = {
   // Check if a connection request exists between two users
   async getConnectionRequestBetweenUsers(userId1: string, userId2: string): Promise<ConnectionRequest | null> {
     try {
+      // Validate that both user IDs are defined
+      if (!userId1 || !userId2) {
+        return null;
+      }
+
       // Check for requests in both directions
       const q1 = query(
         collection(db, 'connection_requests'),
@@ -312,6 +326,11 @@ export const connectionService = {
   // Check if two users are connected
   async checkIfUsersAreConnected(userId1: string, userId2: string): Promise<boolean> {
     try {
+      // Validate that both user IDs are defined
+      if (!userId1 || !userId2) {
+        return false;
+      }
+
       const userRef = doc(db, 'users', userId1);
       const userDoc = await getDoc(userRef);
 
@@ -331,6 +350,11 @@ export const connectionService = {
   // Get connection status between two users
   async getConnectionStatus(userId1: string, userId2: string): Promise<'connected' | 'pending_sent' | 'pending_received' | 'none'> {
     try {
+      // Validate that both user IDs are defined
+      if (!userId1 || !userId2) {
+        return 'none';
+      }
+
       // Check if they're already connected
       const areConnected = await this.checkIfUsersAreConnected(userId1, userId2);
       if (areConnected) {
