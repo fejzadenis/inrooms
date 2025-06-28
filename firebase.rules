@@ -127,12 +127,7 @@ service cloud.firestore {
 
       allow create: if request.auth != null && (
         request.auth.uid in request.resource.data.participants &&
-        request.resource.data.participants.size() == 2 &&
-        (
-          request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
-          request.auth.token.email == 'admin@inrooms.com' ||
-          areUsersConnected(request.resource.data.participants[0], request.resource.data.participants[1])
-        )
+        request.resource.data.participants.size() == 2
       );
 
       allow update: if request.auth != null && (
