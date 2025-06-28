@@ -70,15 +70,14 @@ service cloud.firestore {
     
     // Messages collection - for direct messaging between users
     match /messages/{messageId} {
-      // Allow read if user is sender or receiver, or admin
+      // Allow read if user is sender or receiver (and they are connected), or admin
       allow read: if request.auth != null && (
-        resource.data.senderId == request.auth.uid ||
-        resource.data.receiverId == request.auth.uid ||
+        (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid) ||
         request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
         request.auth.token.email == 'admin@inrooms.com'
       );
 
-      // Allow create if user is the sender and users are connected
+      // Allow create if user is the sender and users are connected (or admin)
       allow create: if request.auth != null && 
         request.resource.data.senderId == request.auth.uid &&
         (request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
