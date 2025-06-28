@@ -23,6 +23,13 @@ service cloud.firestore {
       return chatDoc.exists ? chatDoc.data.participants : [];
     }
 
+    function chatExistsAndUserIsParticipant(chatId, senderId, receiverId) {
+      let chatDoc = get(/databases/$(database)/documents/chats/$(chatId));
+      return chatDoc.exists &&
+             senderId in chatDoc.data.participants &&
+             receiverId in chatDoc.data.participants;
+    }
+
     // === User Profiles ===
     match /users/{userId} {
       allow read: if request.auth != null;
@@ -95,12 +102,10 @@ service cloud.firestore {
         request.resource.data.senderId != null &&
         request.resource.data.receiverId != null &&
         request.auth.uid == request.resource.data.senderId &&
-        (
-          // Check if chat document exists and user is participant
-          let chatDoc = get(/databases/$(database)/documents/chats/$(request.resource.data.chatId));
-          chatDoc.exists &&
-          request.resource.data.senderId in chatDoc.data.participants &&
-          request.resource.data.receiverId in chatDoc.data.participants
+        chatExistsAndUserIsParticipant(
+          request.resource.data.chatId,
+          request.resource.data.senderId,
+          request.resource.data.receiverId
         );
 
       // For updating messages (marking as read, editing within 5 minutes)
