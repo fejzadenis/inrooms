@@ -254,7 +254,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Handle top-level fields
       if (profileData.name) updateData.name = profileData.name;
-      if (profileData.photoURL) updateData.photoURL = profileData.photoURL;
+      if (profileData.photoURL !== undefined) updateData.photoURL = profileData.photoURL;
       
       // Handle profile fields
       Object.keys(profileData).forEach(key => {
@@ -273,7 +273,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return {
             ...prev,
             name: profileData.name || prev.name,
-            photoURL: profileData.photoURL || prev.photoURL,
+            photoURL: profileData.photoURL !== undefined ? profileData.photoURL : prev.photoURL,
             profile: {
               ...prev.profile,
               ...Object.fromEntries(

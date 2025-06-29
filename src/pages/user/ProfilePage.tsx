@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,15 +10,20 @@ import { Button } from '../../components/common/Button';
 import { 
   MessageSquare, UserPlus, Users, Briefcase, MapPin, Calendar, Edit3, Save, X, Camera, 
   Mail, Phone, Globe, Linkedin, Target, Award, Clock, Building, GraduationCap, Star,
-  TrendingUp, Activity, Zap, Heart, Brain, Coffee, Check, AlertTriangle
+  TrendingUp, Activity, Zap, Heart, Brain, Coffee, Check, AlertTriangle, Trash2
 } from 'lucide-react';
 import { messageService } from '../../services/messageService';
 import { networkService, type NetworkProfile } from '../../services/networkService';
 import { connectionService } from '../../services/connectionService';
 import { toast } from 'react-hot-toast';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db } from '../../config/firebase';
 import { ConnectionRequestModal } from '../../components/network/ConnectionRequestModal';
+import { v4 as uuidv4 } from 'uuid';
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -45,6 +50,9 @@ export function ProfilePage() {
   const [connectionStatus, setConnectionStatus] = React.useState<'connected' | 'pending_sent' | 'pending_received' | 'none'>('none');
   const [loadingProfile, setLoadingProfile] = React.useState(true);
   const [isConnectionModalOpen, setIsConnectionModalOpen] = React.useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const isOwnProfile = !userId || userId === user?.id;
 
   const {
@@ -232,8 +240,103 @@ export function ProfilePage() {
   };
 
   const handlePhotoUpload = () => {
-    // This would typically open a file picker and handle image upload
-    toast.info('Photo upload feature coming soon!');
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      toast.error('Invalid file type. Please upload a JPEG, PNG, or WebP image.');
+      return;
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error('File is too large. Maximum size is 5MB.');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const storage = getStorage();
+      const fileId = uuidv4();
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `profile_photos/${user.id}_${fileId}.${fileExtension}`;
+      const storageRef = ref(storage, fileName);
+
+      // Delete old photo if exists
+      if (user.photoURL && user.photoURL.includes('firebase')) {
+        try {
+          const oldPhotoRef = ref(storage, user.photoURL);
+          await deleteObject(oldPhotoRef);
+        } catch (error) {
+          console.error('Error deleting old photo:', error);
+          // Continue with upload even if delete fails
+        }
+      }
+
+      // Upload new photo
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(progress);
+        },
+        (error) => {
+          console.error('Error uploading file:', error);
+          toast.error('Failed to upload profile photo');
+          setIsUploading(false);
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          
+          // Update user profile with new photo URL
+          await updateUserProfile(user.id, { photoURL: downloadURL });
+          
+          toast.success('Profile photo updated successfully');
+          setIsUploading(false);
+        }
+      );
+    } catch (error) {
+      console.error('Error handling file upload:', error);
+      toast.error('Failed to upload profile photo');
+      setIsUploading(false);
+    }
+  };
+
+  const handleDeletePhoto = async () => {
+    if (!user || !user.photoURL) return;
+
+    if (!window.confirm('Are you sure you want to remove your profile photo?')) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Delete from storage if it's a firebase storage URL
+      if (user.photoURL.includes('firebase')) {
+        const storage = getStorage();
+        const photoRef = ref(storage, user.photoURL);
+        await deleteObject(photoRef);
+      }
+
+      // Update user profile to remove photo URL
+      await updateUserProfile(user.id, { photoURL: null });
+      
+      toast.success('Profile photo removed');
+    } catch (error) {
+      console.error('Error deleting profile photo:', error);
+      toast.error('Failed to remove profile photo');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getRoleIcon = (role: string) => {
@@ -296,25 +399,62 @@ export function ProfilePage() {
       <div className="max-w-6xl mx-auto">
         <div className="bg-white shadow-sm rounded-lg overflow-hidden">
           {/* Profile Header */}
-          <div className="relative bg-gradient-to-r from-indigo-500 to-purple-600 h-32" data-tour="profile-header">
+          <div className="relative bg-gradient-to-r from-indigo-500 to-purple-600 h-24 md:h-32" data-tour="profile-header">
             <div className="absolute inset-0 bg-black opacity-20"></div>
           </div>
           
           <div className="relative px-6 pb-6">
-            <div className="flex flex-col sm:flex-row sm:items-end sm:space-x-6 -mt-16">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:space-x-6 -mt-20">
               <div className="relative">
-                {currentUser?.photoURL || currentUser?.photo_url ? (
-                  <img
-                    src={currentUser.photoURL || currentUser.photo_url}
-                    alt={currentUser.name}
-                    className="h-32 w-32 rounded-full border-4 border-white shadow-lg object-cover"
-                  />
+                {isUploading ? (
+                  <div className="h-32 w-32 rounded-full border-4 border-white shadow-lg bg-gray-100 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-2 relative">
+                        <div className="absolute inset-0 rounded-full border-4 border-indigo-200"></div>
+                        <div 
+                          className="absolute inset-0 rounded-full border-4 border-indigo-600 transition-all duration-300"
+                          style={{ 
+                            clipPath: `polygon(0 0, 100% 0, 100% ${uploadProgress}%, 0 ${uploadProgress}%)` 
+                          }}
+                        ></div>
+                      </div>
+                      <span className="text-xs font-medium text-gray-600">{Math.round(uploadProgress)}%</span>
+                    </div>
+                  </div>
+                ) : currentUser?.photoURL || currentUser?.photo_url ? (
+                  <div className="relative group">
+                    <img
+                      src={currentUser.photoURL || currentUser.photo_url}
+                      alt={currentUser.name}
+                      className="h-32 w-32 rounded-full border-4 border-white shadow-lg object-cover"
+                    />
+                    {isOwnProfile && (
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-full transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={handlePhotoUpload}
+                            className="bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 transition-colors duration-200"
+                            title="Change photo"
+                          >
+                            <Camera className="h-4 w-4 text-gray-600" />
+                          </button>
+                          <button
+                            onClick={handleDeletePhoto}
+                            className="bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 transition-colors duration-200"
+                            title="Remove photo"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div className="h-32 w-32 rounded-full border-4 border-white shadow-lg bg-indigo-100 flex items-center justify-center">
                     <Users className="h-16 w-16 text-indigo-600" />
                   </div>
                 )}
-                {isOwnProfile && (
+                {isOwnProfile && !isUploading && (
                   <button
                     onClick={handlePhotoUpload}
                     className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 transition-colors duration-200"
@@ -322,6 +462,13 @@ export function ProfilePage() {
                     <Camera className="h-4 w-4 text-gray-600" />
                   </button>
                 )}
+                <input 
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                />
               </div>
               
               <div className="mt-4 sm:mt-0 flex-1">
