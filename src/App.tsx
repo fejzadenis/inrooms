@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { TourProvider } from './contexts/TourContext';
@@ -46,7 +46,11 @@ function App() {
             } />
             <Route path="/subscription" element={<SubscriptionPage />} />
             <Route path="/linkedin-callback" element={<LinkedInCallback />} />
-            <Route path="/solutions" element={<SolutionsPage />} />
+            <Route path="/solutions" element={
+              <ProtectedRoute>
+                <SolutionsPage />
+              </ProtectedRoute>
+            } />
             <Route
               path="/profile"
               element={
@@ -151,6 +155,8 @@ function App() {
                 </AdminProtectedRoute>
               }
             />
+            {/* Catch-all route for 404 pages - redirect to login if not authenticated */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
           <Toaster position="top-right" />
         </TourProvider>

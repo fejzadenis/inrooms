@@ -14,7 +14,11 @@ export function AdminProtectedRoute({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!user || user.role !== 'admin') {
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user.role !== 'admin') {
     return <Navigate to="/" replace />;
   }
 
