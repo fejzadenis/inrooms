@@ -10,15 +10,14 @@ import { Button } from '../../components/common/Button';
 import { 
   MessageSquare, UserPlus, Users, Briefcase, MapPin, Calendar, Edit3, Save, X, Camera, 
   Mail, Phone, Globe, Linkedin, Target, Award, Clock, Building, GraduationCap, Star,
-  TrendingUp, Activity, Zap, Heart, Brain, Coffee, Check, AlertTriangle, Upload
+  TrendingUp, Activity, Zap, Heart, Brain, Coffee, Check, AlertTriangle
 } from 'lucide-react';
 import { messageService } from '../../services/messageService';
 import { networkService, type NetworkProfile } from '../../services/networkService';
 import { connectionService } from '../../services/connectionService';
 import { toast } from 'react-hot-toast';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../../config/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../config/firebase';
 import { ConnectionRequestModal } from '../../components/network/ConnectionRequestModal';
 
 const profileSchema = z.object({
@@ -46,8 +45,6 @@ export function ProfilePage() {
   const [connectionStatus, setConnectionStatus] = React.useState<'connected' | 'pending_sent' | 'pending_received' | 'none'>('none');
   const [loadingProfile, setLoadingProfile] = React.useState(true);
   const [isConnectionModalOpen, setIsConnectionModalOpen] = React.useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = React.useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const isOwnProfile = !userId || userId === user?.id;
 
   const {
@@ -235,59 +232,8 @@ export function ProfilePage() {
   };
 
   const handlePhotoUpload = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!user || !e.target.files || e.target.files.length === 0) return;
-    
-    const file = e.target.files[0];
-    
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
-      return;
-    }
-    
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB');
-      return;
-    }
-    
-    setUploadingPhoto(true);
-    
-    try {
-      // Create a reference to the storage location
-      const storageRef = ref(storage, `profile_photos/${user.id}/${Date.now()}_${file.name}`);
-      
-      // Upload the file
-      await uploadBytes(storageRef, file);
-      
-      // Get the download URL
-      const downloadURL = await getDownloadURL(storageRef);
-      
-      // Update user profile with new photo URL
-      const userRef = doc(db, 'users', user.id);
-      await updateDoc(userRef, {
-        photoURL: downloadURL,
-        updatedAt: new Date()
-      });
-      
-      // Update local user state
-      await updateUserProfile(user.id, { photoURL: downloadURL });
-      
-      toast.success('Profile photo updated successfully');
-    } catch (error) {
-      console.error('Error uploading profile photo:', error);
-      toast.error('Failed to upload profile photo');
-    } finally {
-      setUploadingPhoto(false);
-      // Clear the file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
+    // This would typically open a file picker and handle image upload
+    toast.info('Photo upload feature coming soon!');
   };
 
   const getRoleIcon = (role: string) => {
@@ -371,34 +317,22 @@ export function ProfilePage() {
                 {isOwnProfile && (
                   <button
                     onClick={handlePhotoUpload}
-                    disabled={uploadingPhoto}
                     className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 transition-colors duration-200"
                   >
-                    {uploadingPhoto ? (
-                      <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                      <Camera className="h-4 w-4 text-gray-600" />
-                    )}
+                    <Camera className="h-4 w-4 text-gray-600" />
                   </button>
                 )}
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleFileChange} 
-                  accept="image/*"
-                  className="hidden" 
-                />
               </div>
               
               <div className="mt-4 sm:mt-0 flex-1">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <div className="flex items-center space-x-3 flex-wrap">
-                      <h1 className="text-2xl font-bold text-gray-900 mr-2">
+                    <div className="flex items-center space-x-3">
+                      <h1 className="text-2xl font-bold text-gray-900">
                         {isEditing ? watch('name') : currentUser?.name}
                       </h1>
                       {currentUser?.profile?.assignedRole && (
-                        <div className="flex items-center space-x-2 bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full mt-1 sm:mt-0">
+                        <div className="flex items-center space-x-2 bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full">
                           {getRoleIcon(currentUser.profile.assignedRole)}
                           <span className="text-sm font-medium">
                             {getRoleLabel(currentUser.profile.assignedRole)}
@@ -406,7 +340,7 @@ export function ProfilePage() {
                         </div>
                       )}
                     </div>
-                    <p className="text-lg text-gray-600 mt-1">
+                    <p className="text-lg text-gray-600">
                       {isEditing ? watch('title') : (currentUser?.profile?.title || currentUser?.profile_title || 'Sales Professional')}
                     </p>
                     <p className="text-sm text-gray-500 flex items-center mt-1">
