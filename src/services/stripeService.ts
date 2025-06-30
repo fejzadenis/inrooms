@@ -23,6 +23,7 @@ export interface AddOn {
   description: string;
   price: number;
   stripePriceId: string;
+  paymentLink: string; // Added payment link field
   icon: string;
   benefits: string[];
 }
@@ -34,6 +35,7 @@ export const addOns: AddOn[] = [
     description: 'Stand out with a verified premium badge on your profile',
     price: 29,
     stripePriceId: 'price_premium_badge_monthly',
+    paymentLink: 'https://buy.stripe.com/4gM00jdtZ4aQa7Z0bG9bO04',
     icon: 'crown',
     benefits: [
       'Verified premium badge on profile',
@@ -49,6 +51,7 @@ export const addOns: AddOn[] = [
     description: 'Highlight your demo at the top of the Solutions page',
     price: 49,
     stripePriceId: 'price_featured_demo_monthly',
+    paymentLink: 'https://buy.stripe.com/3cI28rey37n26VN4rW9bO03',
     icon: 'star',
     benefits: [
       'Prominent placement at the top of Solutions page',
@@ -146,7 +149,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Everything in Professional plan'
     ],
     stripePriceId: 'price_team_monthly',
-    paymentLink: 'https://buy.stripe.com/contact'
+    paymentLink: 'https://buy.stripe.com/bJeaEXdtZazedkb9Mg9bO05'
   },
   {
     id: 'custom',

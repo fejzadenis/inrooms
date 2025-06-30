@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Crown, Star, Zap } from 'lucide-react';
+import { Check, Crown, Star, Zap, ExternalLink } from 'lucide-react';
 import { Button } from '../common/Button';
 import type { AddOn } from '../../services/stripeService';
 
@@ -21,6 +21,15 @@ export function AddOnCard({ addOn, isActive = false, onToggle, loading = false }
         return <Zap className="w-6 h-6" />;
       default:
         return <Crown className="w-6 h-6" />;
+    }
+  };
+
+  const handleClick = () => {
+    if (isActive) {
+      onToggle(addOn);
+    } else {
+      // Redirect to payment link for add-ons
+      window.location.href = addOn.paymentLink;
     }
   };
 
@@ -60,7 +69,7 @@ export function AddOnCard({ addOn, isActive = false, onToggle, loading = false }
       </ul>
 
       <Button
-        onClick={() => onToggle(addOn)}
+        onClick={handleClick}
         isLoading={loading}
         className={`w-full ${
           isActive 
@@ -68,7 +77,12 @@ export function AddOnCard({ addOn, isActive = false, onToggle, loading = false }
             : 'bg-gray-900 hover:bg-gray-800 text-white'
         }`}
       >
-        {isActive ? 'Remove Add-on' : 'Add to Plan'}
+        {isActive ? 'Remove Add-on' : (
+          <>
+            Add to Plan
+            <ExternalLink className="w-4 h-4 ml-2" />
+          </>
+        )}
       </Button>
     </div>
   );
