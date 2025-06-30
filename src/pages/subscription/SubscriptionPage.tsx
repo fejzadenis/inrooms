@@ -65,24 +65,11 @@ export function SubscriptionPage() {
     setSelectedPlan(plan);
 
     try {
-      const successUrl = `${window.location.origin}/subscription?success=true`;
-      const cancelUrl = `${window.location.origin}/subscription?canceled=true`;
-
-      // Use the appropriate price ID based on billing interval
-      const priceId = billingInterval === 'yearly' ? 
-        `${plan.stripePriceId}_annual` : plan.stripePriceId;
-
-      await stripeService.createCheckoutSession(
-        user.id,
-        user.email,
-        priceId,
-        successUrl,
-        cancelUrl
-      );
+      // Redirect to the Stripe payment link
+      stripeService.redirectToPaymentLink(plan.paymentLink);
     } catch (error) {
-      console.error('Error creating checkout session:', error);
-      toast.error('Failed to start checkout process. Please try again.');
-    } finally {
+      console.error('Error redirecting to payment page:', error);
+      toast.error('Failed to redirect to payment page. Please try again.');
       setLoading(false);
       setSelectedPlan(null);
     }

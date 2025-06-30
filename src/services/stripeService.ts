@@ -10,6 +10,7 @@ export interface SubscriptionPlan {
   eventsQuota: number;
   features: string[];
   stripePriceId: string;
+  paymentLink: string; // Added payment link field
   isPopular?: boolean;
   targetAudience: string;
   valueProposition: string;
@@ -76,7 +77,8 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Email support',
       'Mobile app access'
     ],
-    stripePriceId: 'price_1RdZFEGCopIxkzs6S2tcV157'
+    stripePriceId: 'price_starter_monthly',
+    paymentLink: 'https://buy.stripe.com/5kQ3cvey37n2bc3bUo9bO00'
   },
   {
     id: 'professional',
@@ -98,7 +100,8 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Calendar integration',
       'Priority support'
     ],
-    stripePriceId: 'price_1RdZFQGCopIxkzs6wvAEnJAr'
+    stripePriceId: 'price_professional_monthly',
+    paymentLink: 'https://buy.stripe.com/fZu00j4XtgXCdkb6A49bO01'
   },
   {
     id: 'enterprise',
@@ -120,7 +123,8 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Team management tools (up to 5 members)',
       'Custom integrations'
     ],
-    stripePriceId: 'price_1RdZFcGCopIxkzs68Zkn8Ocl'
+    stripePriceId: 'price_enterprise_monthly',
+    paymentLink: 'https://buy.stripe.com/28E8wP61x8r6dkbe2w9bO02'
   },
   {
     id: 'team',
@@ -141,7 +145,8 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Team leaderboards',
       'Everything in Professional plan'
     ],
-    stripePriceId: 'price_team_monthly'
+    stripePriceId: 'price_team_monthly',
+    paymentLink: 'https://buy.stripe.com/contact'
   },
   {
     id: 'custom',
@@ -164,7 +169,8 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'SLA guarantees',
       'Enterprise security features'
     ],
-    stripePriceId: 'custom_solution'
+    stripePriceId: 'custom_solution',
+    paymentLink: 'https://buy.stripe.com/contact'
   }
 ];
 
@@ -176,168 +182,16 @@ export const annualPlans: SubscriptionPlan[] = subscriptionPlans
     id: `${plan.id}_annual`,
     price: Math.round(plan.price * 12 * 0.8), // 20% discount
     interval: 'year' as const,
-    stripePriceId: `${plan.stripePriceId}_annual`
+    stripePriceId: `${plan.stripePriceId}_annual`,
+    paymentLink: plan.paymentLink // Using same payment link for now
   }));
 
 export const allPlans = [...subscriptionPlans, ...annualPlans];
 
 export const stripeService = {
-  async createCheckoutSession(userId: string, userEmail: string, priceId: string, successUrl: string, cancelUrl: string, addOns: string[] = []) {
-    try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
-      if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error('Supabase configuration is missing. Please check your environment variables.');
-      }
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          userEmail,
-          priceId,
-          successUrl,
-          cancelUrl,
-          addOns,
-        }),
-      });
-
-      if (!response.ok) {
-        let errorMessage = 'Failed to create checkout session';
-        
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch (jsonError) {
-          errorMessage = response.statusText || 'Received an invalid response from the server. Please try again.';
-        }
-        
-        throw new Error(errorMessage);
-      }
-
-      let sessionData;
-      try {
-        sessionData = await response.json();
-      } catch (jsonError) {
-        console.error('Failed to parse JSON response:', jsonError);
-        throw new Error('Received an invalid response from the server. Please try again.');
-      }
-
-      const { sessionId } = sessionData;
-      
-      if (!sessionId) {
-        throw new Error('No session ID received from server');
-      }
-      
-      const stripe = await stripePromise;
-      if (!stripe) {
-        throw new Error('Stripe failed to load');
-      }
-
-      const { error } = await stripe.redirectToCheckout({ sessionId });
-      
-      if (error) {
-        throw error;
-      }
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
-      
-      // Provide more user-friendly error messages
-      if (error instanceof Error) {
-        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-          throw new Error('Unable to connect to billing service. Please check your internet connection and try again.');
-        }
-        throw error;
-      }
-      
-      throw new Error('An unexpected error occurred. Please try again.');
-    }
-  },
-
-  async purchaseFeatureForDemo(userId: string, userEmail: string, demoId: string, featureType: 'featured_demo'): Promise<void> {
-    try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
-      if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error('Supabase configuration is missing. Please check your environment variables.');
-      }
-
-      // Find the appropriate add-on price ID
-      const addOn = addOns.find(a => a.id === featureType);
-      if (!addOn) {
-        throw new Error(`Unknown feature type: ${featureType}`);
-      }
-
-      const successUrl = `${window.location.origin}/solutions?success=true&demoId=${demoId}&feature=${featureType}`;
-      const cancelUrl = `${window.location.origin}/solutions?canceled=true`;
-
-      // Create a checkout session for the feature purchase
-      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          userEmail,
-          priceId: addOn.stripePriceId,
-          successUrl,
-          cancelUrl,
-          metadata: {
-            demoId,
-            featureType
-          }
-        }),
-      });
-
-      if (!response.ok) {
-        let errorMessage = 'Failed to create checkout session';
-        
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch (jsonError) {
-          errorMessage = response.statusText || 'Received an invalid response from the server. Please try again.';
-        }
-        
-        throw new Error(errorMessage);
-      }
-
-      let sessionData;
-      try {
-        sessionData = await response.json();
-      } catch (jsonError) {
-        console.error('Failed to parse JSON response:', jsonError);
-        throw new Error('Received an invalid response from the server. Please try again.');
-      }
-
-      const { sessionId } = sessionData;
-      
-      if (!sessionId) {
-        throw new Error('No session ID received from server');
-      }
-      
-      const stripe = await stripePromise;
-      if (!stripe) {
-        throw new Error('Stripe failed to load');
-      }
-
-      const { error } = await stripe.redirectToCheckout({ sessionId });
-      
-      if (error) {
-        throw error;
-      }
-    } catch (error) {
-      console.error('Error purchasing feature for demo:', error);
-      throw error;
-    }
+  // Redirect to Stripe payment link
+  redirectToPaymentLink(paymentLink: string): void {
+    window.location.href = paymentLink;
   },
 
   async requestCustomQuote(companyInfo: {

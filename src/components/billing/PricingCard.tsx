@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check, Star, Crown, Users, Zap, MessageSquare, ArrowRight } from 'lucide-react';
+import { Check, Star, Crown, Users, Zap, MessageSquare, ArrowRight, ExternalLink } from 'lucide-react';
 import { Button } from '../common/Button';
 import { stripeService, type SubscriptionPlan } from '../../services/stripeService';
 
@@ -224,7 +224,12 @@ export function PricingCard({
                Request Quote
                <ArrowRight className="w-4 h-4 ml-2" />
              </>
-           ) : `Choose ${plan.name}`}
+           ) : (
+             <>
+               Choose {plan.name}
+               <ExternalLink className="w-4 h-4 ml-2" />
+             </>
+           )}
         </Button>
 
         {plan.id === 'team' && (
