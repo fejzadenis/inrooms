@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/common/Button';
 import { GoogleSignInButton } from '../../components/auth/GoogleSignInButton';
@@ -16,9 +16,20 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export function LoginPage() {
-  const { login, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
+  
+  // Get the redirect path from location state or default to events page
+  const from = location.state?.from?.pathname || '/events';
+  
+  // If user is already logged in, redirect to the intended page
+  useEffect(() => {
+    if (user) {
+      navigate(from, { replace: true });
+    }
+  }, [user, navigate, from]);
   
   const {
     register,
@@ -34,7 +45,7 @@ export function LoginPage() {
       if (data.email === 'admin@inrooms.com') {
         navigate('/admin');
       } else {
-        navigate('/events');
+        navigate(from);
       }
     } catch (error) {
       // AuthContext handles error display
@@ -45,7 +56,7 @@ export function LoginPage() {
     setIsGoogleLoading(true);
     try {
       await loginWithGoogle();
-      navigate('/events');
+      navigate(from);
     } catch (error) {
       // AuthContext handles error display
     } finally {

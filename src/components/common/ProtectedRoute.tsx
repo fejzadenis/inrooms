@@ -1,10 +1,11 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { LoadingSpinner } from './LoadingSpinner';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -15,7 +16,8 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    // Redirect to login page, but save the current location they were trying to access
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;

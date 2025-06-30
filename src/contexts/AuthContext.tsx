@@ -46,6 +46,7 @@ interface User {
   };
   stripe_customer_id?: string;
   isNewUser?: boolean;
+  lastActivity?: Date;
 }
 
 interface AuthContextType {
@@ -58,7 +59,11 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateUserProfile: (userId: string, profileData: any) => Promise<void>;
   startFreeTrial: () => Promise<void>;
+  updateLastActivity: () => Promise<void>;
 }
+
+// Session timeout in milliseconds (30 minutes)
+const SESSION_TIMEOUT = 30 * 60 * 1000;
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -66,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sessionTimeout, setSessionTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -73,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const userData = await getUserData(firebaseUser);
           setUser(userData);
+          startSessionTimer();
         } catch (err) {
           console.error('Error getting user data:', err);
           setUser(null);
@@ -83,8 +90,77 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (sessionTimeout) {
+        clearTimeout(sessionTimeout);
+      }
+    };
   }, []);
+
+  // Set up activity listeners to reset the session timer
+  useEffect(() => {
+    if (!user) return;
+
+    const resetTimer = () => {
+      updateLastActivity();
+      startSessionTimer();
+    };
+
+    // Add event listeners for user activity
+    window.addEventListener('mousemove', resetTimer);
+    window.addEventListener('keypress', resetTimer);
+    window.addEventListener('click', resetTimer);
+    window.addEventListener('scroll', resetTimer);
+    window.addEventListener('touchstart', resetTimer);
+
+    return () => {
+      // Clean up event listeners
+      window.removeEventListener('mousemove', resetTimer);
+      window.removeEventListener('keypress', resetTimer);
+      window.removeEventListener('click', resetTimer);
+      window.removeEventListener('scroll', resetTimer);
+      window.removeEventListener('touchstart', resetTimer);
+    };
+  }, [user]);
+
+  const startSessionTimer = () => {
+    // Clear any existing timeout
+    if (sessionTimeout) {
+      clearTimeout(sessionTimeout);
+    }
+
+    // Set new timeout
+    const timeout = setTimeout(() => {
+      // Log out the user when session expires
+      logout().catch(console.error);
+      toast.error('Your session has expired. Please log in again.');
+    }, SESSION_TIMEOUT);
+
+    setSessionTimeout(timeout);
+  };
+
+  const updateLastActivity = async () => {
+    if (!user) return;
+
+    try {
+      const userRef = doc(db, 'users', user.id);
+      await updateDoc(userRef, {
+        lastActivity: serverTimestamp()
+      });
+
+      // Update local user state
+      setUser(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          lastActivity: new Date()
+        };
+      });
+    } catch (err) {
+      console.error('Error updating last activity:', err);
+    }
+  };
 
   const getUserData = async (firebaseUser: FirebaseUser): Promise<User> => {
     const userRef = doc(db, 'users', firebaseUser.uid);
@@ -95,6 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Convert Firestore timestamps to Date objects
       const trialEndsAt = userData.subscription?.trialEndsAt?.toDate?.();
+      const lastActivity = userData.lastActivity?.toDate?.();
       
       return {
         id: firebaseUser.uid,
@@ -110,7 +187,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           trialEndsAt: trialEndsAt || undefined
         },
         stripe_customer_id: userData.stripe_customer_id,
-        isNewUser: userData.isNewUser || false
+        isNewUser: userData.isNewUser || false,
+        lastActivity: lastActivity || new Date()
       };
     } else {
       // Create a new user document if it doesn't exist
@@ -126,6 +204,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           eventsQuota: 0,
           eventsUsed: 0
         },
+        lastActivity: new Date(),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         isNewUser: true
@@ -138,6 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         photoURL: newUser.photoURL,
         profile: newUser.profile,
         subscription: newUser.subscription,
+        lastActivity: serverTimestamp(),
         createdAt: newUser.createdAt,
         updatedAt: newUser.updatedAt,
         isNewUser: true
@@ -165,6 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           eventsQuota: 0,
           eventsUsed: 0
         },
+        lastActivity: serverTimestamp(),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         isNewUser
@@ -215,12 +296,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             eventsQuota: 0,
             eventsUsed: 0
           },
+          lastActivity: serverTimestamp(),
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           isNewUser
         });
         toast.success('Account created successfully!');
       } else {
+        // Update last activity for existing users
+        await updateDoc(userRef, {
+          lastActivity: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
         toast.success('Logged in successfully!');
       }
     } catch (err: any) {
@@ -235,6 +322,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await signOut(auth);
       toast.success('Logged out successfully');
+      
+      // Clear session timeout
+      if (sessionTimeout) {
+        clearTimeout(sessionTimeout);
+        setSessionTimeout(null);
+      }
     } catch (err: any) {
       console.error('Logout error:', err);
       setError(err.message || 'Failed to log out');
@@ -249,7 +342,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Prepare update data
       const updateData: any = {
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
+        lastActivity: serverTimestamp()
       };
       
       // Handle top-level fields
@@ -281,7 +375,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   key !== 'name' && key !== 'photoURL'
                 )
               )
-            }
+            },
+            lastActivity: new Date()
           };
         });
       }
@@ -309,6 +404,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         'subscription.eventsQuota': 2,
         'subscription.eventsUsed': 0,
         'subscription.trialEndsAt': trialEndsAt,
+        'lastActivity': serverTimestamp(),
         'updatedAt': serverTimestamp()
       });
       
@@ -324,7 +420,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             eventsQuota: 2,
             eventsUsed: 0,
             trialEndsAt
-          }
+          },
+          lastActivity: new Date()
         };
       });
       
@@ -347,7 +444,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loginWithGoogle,
         logout,
         updateUserProfile,
-        startFreeTrial
+        startFreeTrial,
+        updateLastActivity
       }}
     >
       {children}
