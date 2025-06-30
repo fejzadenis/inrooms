@@ -1,10 +1,13 @@
 import React from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../layouts/MainLayout';
 import { Button } from '../components/common/Button';
+import { useAuth } from '../contexts/AuthContext';
 
 export function HomePage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [currentWordIndex, setCurrentWordIndex] = React.useState(0);
   const words = ['Lead', 'Partnership', 'Prospect', 'Champion', 'Client', 'Solution'];
   const [currentSpeakerIndex, setCurrentSpeakerIndex] = React.useState(0);
@@ -56,6 +59,14 @@ export function HomePage() {
     setCurrentSpeakerIndex((prevIndex) => (prevIndex - 1 + speakers.length) % speakers.length);
   };
 
+  const handleGetStarted = () => {
+    if (user) {
+      navigate('/events');
+    } else {
+      navigate('/signup');
+    }
+  };
+
   return (
     <MainLayout>
       <div className="space-y-20">
@@ -75,12 +86,13 @@ export function HomePage() {
                     Meet people who provide you value by attending relationship nurturing video conferences. Connect with decision-makers, share opportunities, practice your pitch, and accelerate your sales success.
                   </p>
                   <div className="mt-5 sm:mt-8 flex flex-col sm:flex-row justify-center lg:justify-start gap-3 sm:gap-4">
-                    <Link to="/signup" className="w-full sm:w-auto">
-                      <Button className="w-full sm:w-auto px-8 py-3 text-base font-medium">
-                        Get started
-                        <ArrowRight className="ml-2 w-4 h-4" />
-                      </Button>
-                    </Link>
+                    <Button 
+                      onClick={handleGetStarted} 
+                      className="w-full sm:w-auto px-8 py-3 text-base font-medium"
+                    >
+                      Get started
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
                     <Link to="/about" className="w-full sm:w-auto">
                       <Button variant="outline" className="w-full sm:w-auto px-8 py-3 text-base font-medium">
                         Learn more
