@@ -454,7 +454,7 @@ export function ProfilePage() {
                     <Users className="h-16 w-16 text-indigo-600" />
                   </div>
                 )}
-                {isOwnProfile && !isUploading && !currentUser?.photoURL && !currentUser?.photo_url && (
+                {isOwnProfile && !isUploading && (
                   <button
                     onClick={handlePhotoUpload}
                     className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 transition-colors duration-200"
