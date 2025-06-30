@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   LogOut,
@@ -24,7 +24,7 @@ import { useTour } from '../contexts/TourContext';
 import { Button } from '../components/common/Button';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout, updateLastActivity } = useAuth();
+  const { user, logout } = useAuth();
   const { askForTourPermission, startTour } = useTour();
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,13 +34,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const menuRef = React.useRef<HTMLDivElement>(null);
   const notificationsRef = React.useRef<HTMLDivElement>(null);
   const mobileMenuRef = React.useRef<HTMLDivElement>(null);
-
-  // Update last activity when layout is rendered
-  useEffect(() => {
-    if (user) {
-      updateLastActivity();
-    }
-  }, [user, updateLastActivity]);
 
   // Check if we should show the tour when the user first logs in
   React.useEffect(() => {
@@ -126,15 +119,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       time: '1 hour ago',
     },
   ];
-
-  // If user is not logged in, show a simplified layout for public pages
-  const isPublicPage = ['/login', '/signup', '/about', '/'].includes(location.pathname);
-  
-  if (!user && !isPublicPage) {
-    // Redirect to login if trying to access protected page without auth
-    navigate('/login', { state: { from: location }, replace: true });
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
