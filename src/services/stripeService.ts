@@ -177,14 +177,20 @@ export const subscriptionPlans: SubscriptionPlan[] = [
 // Annual plans with 20% discount
 export const annualPlans: SubscriptionPlan[] = subscriptionPlans
   .filter(plan => !plan.isCustom)
-  .map(plan => ({
-    ...plan,
-    id: `${plan.id}_annual`,
-    price: Math.round(plan.price * 12 * 0.8), // 20% discount
-    interval: 'year' as const,
-    stripePriceId: `${plan.stripePriceId}_annual`,
-    paymentLink: plan.paymentLink // Using same payment link for now
-  }));
+  .map(plan => {
+    // Calculate yearly price with 20% discount
+    const yearlyPrice = Math.round(plan.price * 12 * 0.8); // 20% discount
+    
+    return {
+      ...plan,
+      id: `${plan.id}_annual`,
+      price: yearlyPrice,
+      interval: 'year' as const,
+      stripePriceId: `${plan.stripePriceId}_annual`,
+      paymentLink: plan.paymentLink, // Using same payment link for now
+      features: [...plan.features, 'Save 20% with annual billing']
+    };
+  });
 
 export const allPlans = [...subscriptionPlans, ...annualPlans];
 
@@ -366,9 +372,10 @@ export const stripeService = {
   },
 
   calculateAnnualSavings(monthlyPrice: number): number {
-    const annualPrice = monthlyPrice * 12 * 0.8; // 20% discount
+    // Calculate how much is saved by paying annually vs monthly
+    const annualCost = monthlyPrice * 12 * 0.8; // 20% discount
     const monthlyCost = monthlyPrice * 12;
-    return monthlyCost - annualPrice;
+    return Math.round(monthlyCost - annualCost);
   },
 
   async addPaymentMethod(customerId: string) {
