@@ -8,6 +8,9 @@ import { AdminProtectedRoute } from './components/common/AdminProtectedRoute';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { SignupPage } from './pages/auth/SignupPage';
+import { VerifyEmailPage } from './pages/auth/VerifyEmailPage';
+import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
+import { ConfirmResetPasswordPage } from './pages/auth/ConfirmResetPasswordPage';
 import { OnboardingFlow } from './pages/auth/OnboardingFlow';
 import { SubscriptionPage } from './pages/subscription/SubscriptionPage';
 import { DashboardPage } from './pages/user/DashboardPage';
@@ -39,22 +42,25 @@ function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/confirm-reset-password" element={<ConfirmResetPasswordPage />} />
             <Route path="/onboarding" element={
-              <ProtectedRoute>
+              <ProtectedRoute requireEmailVerification={true}>
                 <OnboardingFlow />
               </ProtectedRoute>
             } />
             <Route path="/subscription" element={<SubscriptionPage />} />
             <Route path="/linkedin-callback" element={<LinkedInCallback />} />
             <Route path="/solutions" element={
-              <ProtectedRoute>
+              <ProtectedRoute requireEmailVerification={true}>
                 <SolutionsPage />
               </ProtectedRoute>
             } />
             <Route
               path="/profile"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireEmailVerification={true}>
                   <ProfilePage />
                 </ProtectedRoute>
               }
@@ -62,7 +68,7 @@ function App() {
             <Route
               path="/profile/:userId"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireEmailVerification={true}>
                   <ProfilePage />
                 </ProtectedRoute>
               }
@@ -70,7 +76,7 @@ function App() {
             <Route
               path="/my-events"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireEmailVerification={true}>
                   <MyEventsPage />
                 </ProtectedRoute>
               }
@@ -78,7 +84,7 @@ function App() {
             <Route
               path="/messages"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireEmailVerification={true}>
                   <MessagesPage />
                 </ProtectedRoute>
               }
@@ -86,7 +92,7 @@ function App() {
             <Route
               path="/saved-events"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireEmailVerification={true}>
                   <SavedEventsPage />
                 </ProtectedRoute>
               }
@@ -94,7 +100,7 @@ function App() {
             <Route
               path="/billing"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireEmailVerification={true}>
                   <BillingPage />
                 </ProtectedRoute>
               }
@@ -102,7 +108,7 @@ function App() {
             <Route
               path="/help"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireEmailVerification={true}>
                   <HelpPage />
                 </ProtectedRoute>
               }
@@ -110,7 +116,7 @@ function App() {
             <Route
               path="/docs"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireEmailVerification={true}>
                   <DocsPage />
                 </ProtectedRoute>
               }
@@ -118,7 +124,7 @@ function App() {
             <Route
               path="/events"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireEmailVerification={true}>
                   <EventsPage />
                 </ProtectedRoute>
               }
@@ -126,7 +132,7 @@ function App() {
             <Route
               path="/network"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireEmailVerification={true}>
                   <NetworkPage />
                 </ProtectedRoute>
               }
@@ -134,7 +140,7 @@ function App() {
             <Route
               path="/resources"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireEmailVerification={true}>
                   <ResourcesPage />
                 </ProtectedRoute>
               }
@@ -142,7 +148,7 @@ function App() {
             <Route
               path="/notifications"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireEmailVerification={true}>
                   <NotificationsPage />
                 </ProtectedRoute>
               }

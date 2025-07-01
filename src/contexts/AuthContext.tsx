@@ -6,7 +6,12 @@ import {
   GoogleAuthProvider, 
   signInWithPopup,
   onAuthStateChanged,
-  User as FirebaseUser
+  User as FirebaseUser,
+  sendEmailVerification,
+  applyActionCode,
+  sendPasswordResetEmail,
+  verifyPasswordResetCode,
+  confirmPasswordReset
 } from 'firebase/auth';
 import { 
   doc, 
@@ -24,6 +29,7 @@ interface User {
   email: string;
   role: 'user' | 'admin';
   photoURL?: string;
+  emailVerified: boolean;
   profile?: {
     title?: string;
     company?: string;
@@ -58,6 +64,10 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateUserProfile: (userId: string, profileData: any) => Promise<void>;
   startFreeTrial: () => Promise<void>;
+  sendVerificationEmail: () => Promise<void>;
+  verifyEmail: (actionCode: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  confirmResetPassword: (code: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -102,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: userData.email || firebaseUser.email || '',
         role: userData.role || 'user',
         photoURL: userData.photoURL || firebaseUser.photoURL || undefined,
+        emailVerified: firebaseUser.emailVerified,
         profile: userData.profile || {},
         subscription: {
           status: userData.subscription?.status || 'inactive',
@@ -120,6 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: firebaseUser.email || '',
         role: 'user',
         photoURL: firebaseUser.photoURL || undefined,
+        emailVerified: firebaseUser.emailVerified,
         profile: {},
         subscription: {
           status: 'inactive',
@@ -152,6 +164,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
+      // Send verification email
+      await sendEmailVerification(userCredential.user);
+      
       // Create user document
       const userRef = doc(db, 'users', userCredential.user.uid);
       await setDoc(userRef, {
@@ -170,7 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isNewUser
       });
 
-      toast.success('Account created successfully!');
+      toast.success('Account created! Please check your email to verify your account.');
     } catch (err: any) {
       console.error('Signup error:', err);
       setError(err.message || 'Failed to create account');
@@ -182,7 +197,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setError(null);
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Check if email is verified
+      if (!userCredential.user.emailVerified) {
+        // Send verification email again
+        await sendEmailVerification(userCredential.user);
+        await signOut(auth);
+        toast.error('Please verify your email before logging in. A new verification email has been sent.');
+        throw new Error('Email not verified');
+      }
+      
       toast.success('Logged in successfully!');
     } catch (err: any) {
       console.error('Login error:', err);
@@ -336,6 +361,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const sendVerificationEmail = async () => {
+    if (!auth.currentUser) {
+      throw new Error('No user is currently signed in');
+    }
+
+    try {
+      await sendEmailVerification(auth.currentUser);
+      toast.success('Verification email sent! Please check your inbox.');
+    } catch (err: any) {
+      console.error('Error sending verification email:', err);
+      toast.error(err.message || 'Failed to send verification email');
+      throw err;
+    }
+  };
+
+  const verifyEmail = async (actionCode: string) => {
+    try {
+      await applyActionCode(auth, actionCode);
+      
+      // If there's a current user, refresh the token to update emailVerified status
+      if (auth.currentUser) {
+        await auth.currentUser.reload();
+        
+        // Update user state
+        if (user) {
+          setUser({
+            ...user,
+            emailVerified: true
+          });
+        }
+      }
+      
+      toast.success('Email verified successfully!');
+    } catch (err: any) {
+      console.error('Error verifying email:', err);
+      toast.error(err.message || 'Failed to verify email');
+      throw err;
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      toast.success('Password reset email sent! Please check your inbox.');
+    } catch (err: any) {
+      console.error('Error sending password reset email:', err);
+      toast.error(err.message || 'Failed to send password reset email');
+      throw err;
+    }
+  };
+
+  const confirmResetPassword = async (code: string, newPassword: string) => {
+    try {
+      await confirmPasswordReset(auth, code, newPassword);
+      toast.success('Password reset successfully! You can now log in with your new password.');
+    } catch (err: any) {
+      console.error('Error resetting password:', err);
+      toast.error(err.message || 'Failed to reset password');
+      throw err;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -347,7 +434,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loginWithGoogle,
         logout,
         updateUserProfile,
-        startFreeTrial
+        startFreeTrial,
+        sendVerificationEmail,
+        verifyEmail,
+        resetPassword,
+        confirmResetPassword
       }}
     >
       {children}

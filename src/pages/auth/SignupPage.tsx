@@ -24,6 +24,7 @@ export function SignupPage() {
   const { signup, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
+  const [isSuccess, setIsSuccess] = React.useState(false);
   
   const {
     register,
@@ -37,8 +38,8 @@ export function SignupPage() {
     try {
       // Set isNewUser flag to true for newly registered users
       await signup(data.email, data.password, data.name, true);
-      // Redirect to onboarding flow
-      navigate('/onboarding');
+      // Show success message instead of redirecting
+      setIsSuccess(true);
     } catch (error) {
       // AuthContext handles error display
     }
@@ -49,7 +50,7 @@ export function SignupPage() {
     try {
       // Set isNewUser flag to true for newly registered users
       await loginWithGoogle(true);
-      // Redirect to onboarding flow
+      // Google auth automatically verifies email, so redirect to onboarding
       navigate('/onboarding');
     } catch (error) {
       // AuthContext handles error display
@@ -57,6 +58,38 @@ export function SignupPage() {
       setIsGoogleLoading(false);
     }
   };
+
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="flex justify-center">
+            <Logo />
+          </div>
+          <div className="mt-6 bg-white py-8 px-4 shadow-xl sm:rounded-xl sm:px-10 border border-gray-100">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                Verification Email Sent
+              </h2>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-blue-800">
+                  We've sent a verification email to your inbox. Please check your email and click the verification link to complete your registration.
+                </p>
+              </div>
+              <p className="text-gray-600 mb-6">
+                After verifying your email, you'll be able to log in and complete your profile setup.
+              </p>
+              <Link to="/login">
+                <Button variant="outline" className="w-full">
+                  Return to Login
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
