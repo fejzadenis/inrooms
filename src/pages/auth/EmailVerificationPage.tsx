@@ -17,7 +17,7 @@ export function EmailVerificationPage() {
   // Redirect if user is already verified
   useEffect(() => {
     if (user?.emailVerified) {
-      navigate('/events');
+      navigate('/onboarding');
     }
   }, [user, navigate]);
 
@@ -55,7 +55,7 @@ export function EmailVerificationPage() {
         
         if (currentUser.emailVerified) {
           toast.success('Email verified successfully!');
-          navigate('/events');
+          navigate('/onboarding');
         } else {
           toast.error('Email not yet verified. Please check your inbox and click the verification link.');
         }
