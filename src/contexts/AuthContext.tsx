@@ -42,6 +42,7 @@ interface User {
     points?: number;
     assignedRole?: string;
     completedTours?: Record<string, boolean>;
+    onboardingCompleted?: boolean;
     [key: string]: any;
   };
   subscription: {

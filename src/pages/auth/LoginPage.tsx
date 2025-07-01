@@ -39,10 +39,29 @@ export function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       await login(data.email, data.password);
-      if (data.email === 'admin@inrooms.com') {
-        navigate('/admin');
+      
+      // Check if user has completed onboarding
+      const userRef = doc(db, 'users', auth.currentUser!.uid);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        
+        // Check if user is admin
+        if (userData.role === 'admin') {
+          navigate('/admin');
+          return;
+        }
+        
+        // Check if onboarding is completed
+        if (userData.profile?.onboardingCompleted) {
+          navigate('/events');
+        } else {
+          navigate('/onboarding');
+        }
       } else {
-        navigate('/events');
+        // Default to onboarding if user document doesn't exist
+        navigate('/onboarding');
       }
     } catch (error: any) {
       // If error is about email verification, show verification prompt
@@ -57,7 +76,30 @@ export function LoginPage() {
     setIsGoogleLoading(true);
     try {
       await loginWithGoogle();
-      navigate('/events');
+      
+      // Check if user has completed onboarding
+      const userRef = doc(db, 'users', auth.currentUser!.uid);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        
+        // Check if user is admin
+        if (userData.role === 'admin') {
+          navigate('/admin');
+          return;
+        }
+        
+        // Check if onboarding is completed
+        if (userData.profile?.onboardingCompleted) {
+          navigate('/events');
+        } else {
+          navigate('/onboarding');
+        }
+      } else {
+        // Default to onboarding if user document doesn't exist
+        navigate('/onboarding');
+      }
     } catch (error) {
       // AuthContext handles error display
     } finally {
