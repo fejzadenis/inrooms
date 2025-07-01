@@ -8,6 +8,7 @@ import { AdminProtectedRoute } from './components/common/AdminProtectedRoute';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { SignupPage } from './pages/auth/SignupPage';
+import { EmailVerificationPage } from './pages/auth/EmailVerificationPage';
 import { OnboardingFlow } from './pages/auth/OnboardingFlow';
 import { SubscriptionPage } from './pages/subscription/SubscriptionPage';
 import { DashboardPage } from './pages/user/DashboardPage';
@@ -39,6 +40,7 @@ function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/verify-email" element={<EmailVerificationPage />} />
             <Route path="/onboarding" element={
               <ProtectedRoute>
                 <OnboardingFlow />
