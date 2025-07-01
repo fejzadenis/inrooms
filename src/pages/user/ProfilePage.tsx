@@ -17,10 +17,10 @@ import { networkService, type NetworkProfile } from '../../services/networkServi
 import { connectionService } from '../../services/connectionService';
 import { toast } from 'react-hot-toast';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db } from '../../config/firebase';
 import { ConnectionRequestModal } from '../../components/network/ConnectionRequestModal';
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '../../config/supabase';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -263,50 +263,43 @@ export function ProfilePage() {
     setUploadProgress(0);
 
     try {
-      const storage = getStorage();
+      // Generate a unique file name
       const fileId = uuidv4();
       const fileExtension = file.name.split('.').pop();
-      const fileName = `profile_photos/${user.id}_${fileId}.${fileExtension}`;
-      const storageRef = ref(storage, fileName);
+      const fileName = `${user.id}_${fileId}.${fileExtension}`;
+      const filePath = `profile_photos/${fileName}`;
 
-      // Delete old photo if exists
-      if (user.photoURL && user.photoURL.includes('firebase')) {
-        try {
-          const oldPhotoRef = ref(storage, user.photoURL);
-          await deleteObject(oldPhotoRef);
-        } catch (error) {
-          console.error('Error deleting old photo:', error);
-          // Continue with upload even if delete fails
-        }
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+          onUploadProgress: (progress) => {
+            const percent = (progress.loaded / progress.total) * 100;
+            setUploadProgress(percent);
+          }
+        });
+
+      if (error) {
+        throw error;
       }
 
-      // Upload new photo
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      // Get the public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
 
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(progress);
-        },
-        (error) => {
-          console.error('Error uploading file:', error);
-          toast.error('Failed to upload profile photo');
-          setIsUploading(false);
-        },
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          
-          // Update user profile with new photo URL
-          await updateUserProfile(user.id, { photoURL: downloadURL });
-          
-          toast.success('Profile photo updated successfully');
-          setIsUploading(false);
-        }
-      );
+      const photoURL = publicUrlData.publicUrl;
+
+      // Update user profile with new photo URL
+      await updateUserProfile(user.id, { photoURL });
+      
+      toast.success('Profile photo updated successfully');
     } catch (error) {
-      console.error('Error handling file upload:', error);
+      console.error('Error uploading profile photo:', error);
       toast.error('Failed to upload profile photo');
+    } finally {
       setIsUploading(false);
     }
   };
@@ -320,11 +313,21 @@ export function ProfilePage() {
 
     setIsLoading(true);
     try {
-      // Delete from storage if it's a firebase storage URL
-      if (user.photoURL.includes('firebase')) {
-        const storage = getStorage();
-        const photoRef = ref(storage, user.photoURL);
-        await deleteObject(photoRef);
+      // If it's a Supabase URL, extract the path and delete from storage
+      if (user.photoURL.includes('avatars')) {
+        const url = new URL(user.photoURL);
+        const pathMatch = url.pathname.match(/\/avatars\/([^?]+)/);
+        
+        if (pathMatch && pathMatch[1]) {
+          const filePath = pathMatch[1];
+          const { error } = await supabase.storage
+            .from('avatars')
+            .remove([filePath]);
+            
+          if (error) {
+            console.error('Error removing file from storage:', error);
+          }
+        }
       }
 
       // Update user profile to remove photo URL
