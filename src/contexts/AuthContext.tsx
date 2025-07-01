@@ -60,8 +60,8 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   signup: (email: string, password: string, name: string, isNewUser?: boolean) => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: (isNewUser?: boolean) => Promise<void>;
+  login: (email: string, password: string) => Promise<any>;
+  loginWithGoogle: (isNewUser?: boolean) => Promise<any>;
   logout: () => Promise<void>;
   updateUserProfile: (userId: string, profileData: any) => Promise<void>;
   startFreeTrial: () => Promise<void>;
@@ -210,6 +210,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       toast.success('Logged in successfully!');
+      return userCredential;
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || 'Failed to log in');
@@ -249,6 +250,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         toast.success('Logged in successfully!');
       }
+      
+      return result;
     } catch (err: any) {
       console.error('Google login error:', err);
       setError(err.message || 'Failed to log in with Google');

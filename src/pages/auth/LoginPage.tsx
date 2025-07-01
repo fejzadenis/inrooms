@@ -8,6 +8,8 @@ import { Button } from '../../components/common/Button';
 import { GoogleSignInButton } from '../../components/auth/GoogleSignInButton';
 import { Logo } from '../../components/common/Logo';
 import { Mail, AlertTriangle } from 'lucide-react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../config/firebase';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -36,12 +38,10 @@ export function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: LoginFormData) => {
+  const checkOnboardingAndRedirect = async (userId: string) => {
     try {
-      await login(data.email, data.password);
-      
-      // Check if user has completed onboarding
-      const userRef = doc(db, 'users', auth.currentUser!.uid);
+      // Get user document to check onboarding status
+      const userRef = doc(db, 'users', userId);
       const userDoc = await getDoc(userRef);
       
       if (userDoc.exists()) {
@@ -62,6 +62,20 @@ export function LoginPage() {
       } else {
         // Default to onboarding if user document doesn't exist
         navigate('/onboarding');
+      }
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+      // Default to onboarding on error
+      navigate('/onboarding');
+    }
+  };
+
+  const onSubmit = async (data: LoginFormData) => {
+    try {
+      const userCredential = await login(data.email, data.password);
+      // Use the returned user ID for redirection
+      if (userCredential && userCredential.user) {
+        await checkOnboardingAndRedirect(userCredential.user.uid);
       }
     } catch (error: any) {
       // If error is about email verification, show verification prompt
@@ -75,30 +89,10 @@ export function LoginPage() {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
-      await loginWithGoogle();
-      
-      // Check if user has completed onboarding
-      const userRef = doc(db, 'users', auth.currentUser!.uid);
-      const userDoc = await getDoc(userRef);
-      
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        
-        // Check if user is admin
-        if (userData.role === 'admin') {
-          navigate('/admin');
-          return;
-        }
-        
-        // Check if onboarding is completed
-        if (userData.profile?.onboardingCompleted) {
-          navigate('/events');
-        } else {
-          navigate('/onboarding');
-        }
-      } else {
-        // Default to onboarding if user document doesn't exist
-        navigate('/onboarding');
+      const userCredential = await loginWithGoogle();
+      // Use the returned user ID for redirection
+      if (userCredential && userCredential.user) {
+        await checkOnboardingAndRedirect(userCredential.user.uid);
       }
     } catch (error) {
       // AuthContext handles error display
