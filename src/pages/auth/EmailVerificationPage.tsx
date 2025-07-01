@@ -55,10 +55,8 @@ export function EmailVerificationPage() {
         
         if (currentUser.emailVerified) {
           toast.success('Email verified successfully!');
-          // Add a small delay before navigation to ensure the toast is seen
-          setTimeout(() => {
-            navigate('/onboarding');
-          }, 1000);
+          // Immediately redirect to onboarding
+          navigate('/onboarding');
         } else {
           toast.error('Email not yet verified. Please check your inbox and click the verification link.');
         }
