@@ -131,11 +131,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               emailVerified: firebaseUser.emailVerified
             };
             
-            await setDoc(doc(db, 'users', firebaseUser.uid), {
+            // Create the document data, ensuring no undefined values
+            const docData = {
               ...newUser,
+              photoURL: firebaseUser.photoURL || null, // Explicitly set to null instead of undefined
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp()
-            });
+            };
+            
+            await setDoc(doc(db, 'users', firebaseUser.uid), docData);
             
             setUser(newUser);
           }
@@ -185,12 +189,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         emailVerified: firebaseUser.emailVerified
       };
       
-      await setDoc(doc(db, 'users', firebaseUser.uid), {
+      // Create the document data, ensuring no undefined values
+      const docData = {
         ...newUser,
+        photoURL: firebaseUser.photoURL || null, // Explicitly set to null instead of undefined
         isNewUser,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
-      });
+      };
+      
+      await setDoc(doc(db, 'users', firebaseUser.uid), docData);
       
       setUser(newUser);
       toast.success('Account created! Please verify your email.');
@@ -257,12 +265,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           emailVerified: firebaseUser.emailVerified
         };
         
-        await setDoc(doc(db, 'users', firebaseUser.uid), {
+        // Create the document data, ensuring no undefined values
+        const docData = {
           ...newUser,
+          photoURL: firebaseUser.photoURL || null, // Explicitly set to null instead of undefined
           isNewUser,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
-        });
+        };
+        
+        await setDoc(doc(db, 'users', firebaseUser.uid), docData);
         
         setUser(newUser);
       }
@@ -361,7 +373,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Handle photoURL separately as it can be at the root level
       if (profileData.photoURL !== undefined) {
-        updateData.photoURL = profileData.photoURL;
+        updateData.photoURL = profileData.photoURL || null; // Ensure null instead of undefined
         
         // Also update Firebase Auth photo URL if this is the current user
         if (userId === user.id) {

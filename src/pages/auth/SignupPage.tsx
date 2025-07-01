@@ -37,10 +37,11 @@ export function SignupPage() {
     try {
       // Set isNewUser flag to true for newly registered users
       await signup(data.email, data.password, data.name, true);
-      // Redirect to email verification page
+      // Only redirect to email verification page if signup was successful
       navigate('/verify-email');
     } catch (error) {
       // AuthContext handles error display
+      // Don't navigate on error - user stays on signup page
     }
   };
 
