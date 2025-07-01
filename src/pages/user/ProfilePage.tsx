@@ -263,11 +263,11 @@ export function ProfilePage() {
     setUploadProgress(0);
 
     try {
-      // Generate a unique file name
+      // Generate a unique file name with user ID as folder
       const fileId = uuidv4();
       const fileExtension = file.name.split('.').pop();
-      const fileName = `${user.id}_${fileId}.${fileExtension}`;
-      const filePath = `profile_photos/${fileName}`;
+      const fileName = `${fileId}.${fileExtension}`;
+      const filePath = `${user.id}/${fileName}`;
 
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
@@ -316,10 +316,10 @@ export function ProfilePage() {
       // If it's a Supabase URL, extract the path and delete from storage
       if (user.photoURL.includes('avatars')) {
         const url = new URL(user.photoURL);
-        const pathMatch = url.pathname.match(/\/avatars\/([^?]+)/);
+        const pathMatch = url.pathname.match(/\/avatars\/(.+)$/);
         
         if (pathMatch && pathMatch[1]) {
-          const filePath = pathMatch[1];
+          const filePath = decodeURIComponent(pathMatch[1]);
           const { error } = await supabase.storage
             .from('avatars')
             .remove([filePath]);
