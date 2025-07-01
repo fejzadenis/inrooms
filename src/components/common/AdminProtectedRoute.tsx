@@ -18,6 +18,11 @@ export function AdminProtectedRoute({ children }: { children: React.ReactNode })
     return <Navigate to="/login" replace />;
   }
 
+  // Check if email is verified
+  if (!user.emailVerified) {
+    return <Navigate to="/verify-email" replace />;
+  }
+
   if (user.role !== 'admin') {
     return <Navigate to="/" replace />;
   }
