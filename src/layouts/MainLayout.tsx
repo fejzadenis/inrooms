@@ -16,7 +16,8 @@ import {
   CreditCard,
   Sparkles,
   Menu,
-  X
+  X,
+  Award
 } from 'lucide-react';
 import { Logo } from '../components/common/Logo';
 import { useAuth } from '../contexts/AuthContext';
@@ -102,7 +103,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     { name: 'Events', href: '/events', dataTour: 'events' },
     { name: 'Network', href: '/network', dataTour: 'network' },
     { name: 'Solutions', href: '/solutions', dataTour: 'solutions' },
-    { name: 'Resources', href: '/resources', dataTour: 'resources' }
+    { name: 'Resources', href: '/resources', dataTour: 'resources' },
+    { name: 'Reputation', href: '/reputation', dataTour: 'reputation' }
   ];
 
   const mockNotifications = [

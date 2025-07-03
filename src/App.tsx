@@ -29,6 +29,7 @@ import { NotificationsPage } from './pages/user/NotificationsPage';
 import { AboutPage } from './pages/AboutPage';
 import { LinkedInCallback } from './pages/LinkedInCallback';
 import { SolutionsPage } from './pages/SolutionsPage';
+import { ReputationPage } from './pages/ReputationPage';
 import { MainTour } from './components/tour/MainTour';
 
 function App() {
@@ -57,6 +58,7 @@ function App() {
                 <SolutionsPage />
               </ProtectedRoute>
             } />
+            <Route path="/reputation" element={<ReputationPage />} />
             <Route
               path="/profile"
               element={
