@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Zap, Code, Award, Brain } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../layouts/MainLayout';
 import { Button } from '../components/common/Button';
@@ -202,6 +202,67 @@ export function HomePage() {
                   />
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Coming Soon Section */}
+        <div className="bg-gradient-to-r from-indigo-900 to-blue-900 py-16 rounded-3xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')] opacity-10 bg-cover bg-center mix-blend-overlay"></div>
+          <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-500 rounded-full filter blur-3xl opacity-20"></div>
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-purple-500 rounded-full filter blur-3xl opacity-20"></div>
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-white">What's Coming Soon</h2>
+              <p className="mt-4 text-xl text-blue-100 max-w-3xl mx-auto">
+                We're constantly evolving to bring you the most innovative networking features. 
+                Here's a sneak peek at what's on the horizon.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-8 border border-white border-opacity-20 transform transition-all duration-300 hover:scale-105">
+                <div className="bg-indigo-100 p-4 rounded-full inline-flex items-center justify-center mb-6">
+                  <Brain className="w-8 h-8 text-indigo-600" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-4">AI-Powered Matchmaking</h3>
+                <p className="text-blue-100">
+                  Our advanced AI will analyze your profile, interactions, and goals to suggest 
+                  the most valuable connections for your specific needs and career stage.
+                </p>
+              </div>
+              
+              <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-8 border border-white border-opacity-20 transform transition-all duration-300 hover:scale-105">
+                <div className="bg-indigo-100 p-4 rounded-full inline-flex items-center justify-center mb-6">
+                  <Code className="w-8 h-8 text-indigo-600" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-4">Open Build Rooms</h3>
+                <p className="text-blue-100">
+                  Collaborative spaces where you can drop in anytime to co-work, share your screen, 
+                  test ideas, and get feedback in real-time from other professionals.
+                </p>
+              </div>
+              
+              <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-8 border border-white border-opacity-20 transform transition-all duration-300 hover:scale-105">
+                <div className="bg-indigo-100 p-4 rounded-full inline-flex items-center justify-center mb-6">
+                  <Award className="w-8 h-8 text-indigo-600" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-4">Proof of Work Profiles</h3>
+                <p className="text-blue-100">
+                  Your profile will showcase verified contributions and achievements, creating 
+                  a trustworthy professional identity based on real work and impact.
+                </p>
+              </div>
+            </div>
+            
+            <div className="text-center mt-12">
+              <Link to="/signup">
+                <Button className="bg-white text-indigo-600 hover:bg-gray-100">
+                  Join the Waitlist
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
