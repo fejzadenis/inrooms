@@ -315,7 +315,7 @@ export function HomePage() {
                 {
                   icon: Rocket,
                   title: 'Curated by Design',
-                  description: 'Every Room is intentionally built around niche, role, or stage. You meet the right people — not just more people.',
+                  description: 'Every Room is intentionally built around niche, role, or stage. You meet the right people - not just more people.',
                   color: 'from-blue-600 to-blue-400'
                 },
                 {
@@ -333,7 +333,7 @@ export function HomePage() {
                 {
                   icon: Zap,
                   title: 'Proof of Connection',
-                  description: 'Your inRooms profile reflects what you've actually built with others — not just who you know.',
+                  description: 'Your inRooms profile reflects what you\'ve actually built with others - not just who you know.',
                   color: 'from-cyan-600 to-cyan-400'
                 }
               ].map((feature, index) => {
