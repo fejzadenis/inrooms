@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   LogOut,
@@ -23,7 +23,6 @@ import { Logo } from '../components/common/Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { useTour } from '../contexts/TourContext';
 import { Button } from '../components/common/Button';
-import { CustomCursor } from '../components/common/CustomCursor';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
@@ -139,12 +138,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Custom cursor */}
-      <CustomCursor />
-      
-      {/* Noise texture overlay */}
-      <div className="noise"></div>
-      
       {/* Animated background */}
       <div className="fixed inset-0 z-0">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-900 via-gray-900 to-black"></div>
@@ -159,7 +152,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
-              <Link to="/" className="flex-shrink-0 hoverable">
+              <Link to="/" className="flex-shrink-0">
                 <Logo />
               </Link>
 
@@ -170,7 +163,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                     <Link 
                       key={item.name}
                       to={item.href} 
-                      className={`relative px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 group overflow-hidden hoverable ${
+                      className={`relative px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 group overflow-hidden ${
                         location.pathname === item.href 
                           ? 'text-white' 
                           : 'text-gray-300 hover:text-white'
@@ -196,7 +189,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               {/* Mobile menu button */}
               {user && (
                 <button
-                  className="md:hidden p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-800 hoverable"
+                  className="md:hidden p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-800"
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                   data-mobile-menu-toggle="true"
                   aria-label="Toggle mobile menu"
@@ -214,7 +207,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                   <div className="relative" ref={notificationsRef} data-tour="notifications">
                     <button
                       onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                      className="p-2 rounded-full hover:bg-gray-800 relative hoverable"
+                      className="p-2 rounded-full hover:bg-gray-800 relative"
                       aria-label="Notifications"
                     >
                       <Bell className="w-5 h-5 text-gray-300" />
@@ -228,7 +221,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 10 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute right-0 mt-2 w-80 bg-gray-800 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50 border border-gray-700 glass-dark"
+                          className="absolute right-0 mt-2 w-80 bg-gray-800 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50 border border-gray-700"
                         >
                           <div className="p-4">
                             <h3 className="text-sm font-semibold text-white">Notifications</h3>
@@ -243,7 +236,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                             </div>
                             <Link
                               to="/notifications"
-                              className="block mt-4 text-sm font-medium text-blue-400 hover:text-blue-300 hoverable"
+                              className="block mt-4 text-sm font-medium text-blue-400 hover:text-blue-300"
                             >
                               View all notifications
                             </Link>
@@ -256,7 +249,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                   <div className="relative" ref={menuRef} data-tour="user-menu">
                     <button
                       onClick={() => setIsMenuOpen(!isMenuOpen)}
-                      className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200 hoverable"
+                      className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200"
                       aria-label="User menu"
                     >
                       {user.photoURL ? (
@@ -291,7 +284,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 10 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50 border border-gray-700 glass-dark"
+                          className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50 border border-gray-700"
                         >
                           <div className="py-1">
                             {user.role === 'user' && userMenuItems.map((item) => {
@@ -301,7 +294,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                                 <Link
                                   key={item.name}
                                   to={item.href}
-                                  className={`flex items-center px-4 py-2 text-sm hoverable ${
+                                  className={`flex items-center px-4 py-2 text-sm ${
                                     isActive
                                       ? 'bg-gray-700 text-white'
                                       : 'text-gray-300 hover:bg-gray-700 hover:text-white'
@@ -326,7 +319,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                                     <Link
                                       key={item.name}
                                       to={item.href}
-                                      className={`flex items-center px-4 py-2 text-sm hoverable ${
+                                      className={`flex items-center px-4 py-2 text-sm ${
                                         isActive
                                           ? 'bg-gray-700 text-white'
                                           : 'text-gray-300 hover:bg-gray-700 hover:text-white'
@@ -343,7 +336,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                             )}
                             <button
                               onClick={handleLogout}
-                              className="flex w-full items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white hoverable"
+                              className="flex w-full items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
                             >
                               <LogOut className="w-4 h-4 mr-3" />
                               Logout
@@ -373,7 +366,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3 }}
-              className="md:hidden bg-gray-800/90 backdrop-blur-lg border-t border-gray-700 shadow-lg fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto glass-dark"
+              className="md:hidden bg-gray-800 border-t border-gray-700 shadow-lg fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto"
               ref={mobileMenuRef}
             >
               <div className="px-2 pt-2 pb-3 space-y-1">
@@ -382,7 +375,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`block px-3 py-2 rounded-md text-base font-medium hoverable ${
+                    className={`block px-3 py-2 rounded-md text-base font-medium ${
                       location.pathname === item.href
                         ? 'bg-gray-700 text-white'
                         : 'text-gray-300 hover:bg-gray-700 hover:text-white'
@@ -403,7 +396,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                         <Link
                           key={item.name}
                           to={item.href}
-                          className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white hoverable"
+                          className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
                           <Icon className="w-5 h-5 mr-3 text-gray-400" />
@@ -423,7 +416,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                             <Link
                               key={item.name}
                               to={item.href}
-                              className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white hoverable"
+                              className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
                               onClick={() => setIsMobileMenuOpen(false)}
                             >
                               <Icon className="w-5 h-5 mr-3 text-gray-400" />
@@ -439,7 +432,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                         handleLogout();
                         setIsMobileMenuOpen(false);
                       }}
-                      className="flex w-full items-center px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white hoverable"
+                      className="flex w-full items-center px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
                     >
                       <LogOut className="w-5 h-5 mr-3 text-gray-400" />
                       Logout
