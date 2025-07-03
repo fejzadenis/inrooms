@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MainLayout } from '../layouts/MainLayout';
 import { DemoCard } from '../components/solutions/DemoCard';
@@ -15,7 +15,11 @@ import {
   Users,
   Play,
   Upload,
-  Sparkles
+  Sparkles,
+  Rocket,
+  Zap,
+  Lightbulb,
+  TrendingUp
 } from 'lucide-react';
 import { Button } from '../components/common/Button';
 import { useAuth } from '../contexts/AuthContext';
@@ -24,6 +28,7 @@ import { demoService } from '../services/demoService';
 import { stripeService } from '../services/stripeService';
 import { toast } from 'react-hot-toast';
 import type { Demo } from '../types/demo';
+import { motion } from 'framer-motion';
 
 export function SolutionsPage() {
   const { user } = useAuth();
@@ -44,6 +49,11 @@ export function SolutionsPage() {
   const [isUploadModalOpen, setIsUploadModalOpen] = React.useState(false);
   const [selectedDemo, setSelectedDemo] = React.useState<Demo | null>(null);
   const [featuringDemo, setFeaturingDemo] = React.useState<Demo | null>(null);
+  
+  // Refs for animation
+  const headerRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     loadDemos();
@@ -79,10 +89,10 @@ export function SolutionsPage() {
     const feature = searchParams.get('feature');
     
     if (success === 'true' && demoId && feature) {
-      toast.success('Payment successful! Your demo will be featured shortly.');
+      toast.success('Payment successful! Your product will be featured shortly.');
       loadDemos();
     } else if (searchParams.get('canceled') === 'true') {
-      toast.error('Payment canceled. Your demo was not featured.');
+      toast.error('Payment canceled. Your product was not featured.');
     }
   }, [searchParams]);
 
@@ -104,7 +114,7 @@ export function SolutionsPage() {
       
     } catch (error) {
       console.error('Failed to load demos:', error);
-      toast.error('Failed to load demos');
+      toast.error('Failed to load products');
     } finally {
       setLoading(false);
     }
@@ -123,14 +133,14 @@ export function SolutionsPage() {
 
   const handleScheduleDemo = () => {
     if (!user) {
-      toast.error('Please log in to schedule demos');
+      toast.error('Please log in to showcase your product');
       return;
     }
 
     // Check if user can schedule demos (enterprise subscription or admin)
     const canScheduleDemos = user.role === 'admin' || user.subscription.status === 'active';
     if (!canScheduleDemos) {
-      toast.error('Demo scheduling is available for enterprise members only');
+      toast.error('Product showcase is available for enterprise members only');
       return;
     }
 
@@ -165,7 +175,7 @@ export function SolutionsPage() {
 
   const handleToggleFeatured = async (demo: Demo) => {
     if (!user) {
-      toast.error('Please log in to manage demos');
+      toast.error('Please log in to manage products');
       return;
     }
 
@@ -173,11 +183,11 @@ export function SolutionsPage() {
     if (user.role === 'admin') {
       try {
         await demoService.toggleFeaturedStatus(demo.id!, !demo.isFeatured);
-        toast.success(`Demo ${demo.isFeatured ? 'removed from' : 'added to'} featured`);
+        toast.success(`Product ${demo.isFeatured ? 'removed from' : 'added to'} featured`);
         loadDemos();
       } catch (error) {
         console.error('Failed to toggle featured status:', error);
-        toast.error('Failed to update demo');
+        toast.error('Failed to update product');
       }
       return;
     }
@@ -187,7 +197,7 @@ export function SolutionsPage() {
     if (demo.hostId === user.id && !demo.isFeatured) {
       handlePurchaseFeature(demo);
     } else if (demo.hostId !== user.id) {
-      toast.error('You can only feature your own demos');
+      toast.error('You can only feature your own products');
     } else {
       toast.info('Please contact support to remove featured status');
     }
@@ -195,12 +205,12 @@ export function SolutionsPage() {
 
   const handlePurchaseFeature = async (demo: Demo) => {
     if (!user) {
-      toast.error('Please log in to feature demos');
+      toast.error('Please log in to feature products');
       return;
     }
 
     if (demo.hostId !== user.id && user.role !== 'admin') {
-      toast.error('You can only feature your own demos');
+      toast.error('You can only feature your own products');
       return;
     }
 
@@ -258,7 +268,7 @@ export function SolutionsPage() {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-lg text-gray-600">Loading solutions...</div>
+          <div className="text-lg text-gray-600">Loading products...</div>
         </div>
       </MainLayout>
     );
@@ -267,77 +277,117 @@ export function SolutionsPage() {
   return (
     <MainLayout>
       <div className="space-y-8">
-        {/* Header */}
-        <div className="text-center" data-tour="solutions-header">
-          <div className="flex items-center justify-center mb-4">
-            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full p-3">
-              <Sparkles className="w-8 h-8 text-white" />
+        {/* Hero Section with Futuristic Design */}
+        <motion.div 
+          ref={headerRef}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-900 via-purple-900 to-blue-900 py-16 px-8 text-center"
+          data-tour="solutions-header"
+        >
+          <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')] opacity-20 bg-cover bg-center mix-blend-overlay"></div>
+          
+          <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-500 rounded-full filter blur-3xl opacity-20"></div>
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-purple-500 rounded-full filter blur-3xl opacity-20"></div>
+          
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="relative z-10"
+          >
+            <div className="flex items-center justify-center mb-6">
+              <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-full p-4 border border-white border-opacity-20">
+                <Rocket className="w-10 h-10 text-white" />
+              </div>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Product Showcase</h1>
+            <p className="mt-4 text-lg md:text-xl text-blue-100 max-w-3xl mx-auto">
+              Discover innovative products and ideas from visionary founders. Connect with creators, 
+              investors, and early adopters to bring the next big thing to life.
+            </p>
+          </motion.div>
+        </motion.div>
+
+        {/* Action Bar with Futuristic Design */}
+        <motion.div 
+          ref={searchRef}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.6 }}
+          className="relative overflow-hidden rounded-xl bg-white border border-gray-200 shadow-lg p-6"
+          data-tour="solutions-search"
+        >
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div className="relative flex-1 w-full max-w-md">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-indigo-400 h-5 w-5" />
+              <input
+                type="text"
+                placeholder="Search products, companies, or technologies..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 pr-4 py-3 w-full rounded-lg border border-indigo-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm bg-indigo-50"
+              />
+            </div>
+            
+            <div className="flex space-x-3 w-full sm:w-auto">
+              <Button variant="outline" className="flex-1 sm:flex-none border-indigo-200 text-indigo-600 hover:bg-indigo-50">
+                <Filter className="w-4 h-4 mr-2" />
+                Filter
+              </Button>
+              {canScheduleDemos && (
+                <Button onClick={handleScheduleDemo} className="flex-1 sm:flex-none bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700" data-tour="schedule-demo">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Showcase Product
+                </Button>
+              )}
             </div>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Solutions Showcase</h1>
-          <p className="mt-4 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-            Discover innovative solutions through live product demos and recorded sessions. 
-            See how industry leaders solve real business challenges and practice your pitch.
-          </p>
-        </div>
+        </motion.div>
 
-        {/* Action Bar */}
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between" data-tour="solutions-search">
-          <div className="relative flex-1 w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-            <input
-              type="text"
-              placeholder="Search demos, companies, or topics..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-3 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm"
-            />
-          </div>
-          
-          <div className="flex space-x-3 w-full sm:w-auto">
-            <Button variant="outline" className="flex-1 sm:flex-none">
-              <Filter className="w-4 h-4 mr-2" />
-              Filter
-            </Button>
-            {canScheduleDemos && (
-              <Button onClick={handleScheduleDemo} className="flex-1 sm:flex-none" data-tour="schedule-demo">
-                <Plus className="w-4 h-4 mr-2" />
-                Schedule Demo
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6" data-tour="solutions-stats">
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 md:p-6 text-white">
+        {/* Stats with Futuristic Design */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.6 }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6" 
+          data-tour="solutions-stats"
+        >
+          <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-4 md:p-6 text-white shadow-lg border border-blue-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-100 text-xs md:text-sm">Total Demos</p>
+                <p className="text-blue-200 text-xs md:text-sm">Total Products</p>
                 <p className="text-xl md:text-3xl font-bold">{demos.length}</p>
               </div>
-              <Video className="w-6 h-6 md:w-8 md:h-8 text-blue-200" />
+              <div className="bg-white bg-opacity-10 p-3 rounded-lg">
+                <Video className="w-6 h-6 md:w-8 md:h-8 text-blue-200" />
+              </div>
             </div>
           </div>
-          <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg p-4 md:p-6 text-white">
+          <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl p-4 md:p-6 text-white shadow-lg border border-yellow-600">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-yellow-100 text-xs md:text-sm">Featured</p>
                 <p className="text-xl md:text-3xl font-bold">{featuredDemos.length}</p>
               </div>
-              <Star className="w-6 h-6 md:w-8 md:h-8 text-yellow-200" />
+              <div className="bg-white bg-opacity-10 p-3 rounded-lg">
+                <Star className="w-6 h-6 md:w-8 md:h-8 text-yellow-100" />
+              </div>
             </div>
           </div>
-          <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 md:p-6 text-white">
+          <div className="bg-gradient-to-br from-green-600 to-emerald-700 rounded-xl p-4 md:p-6 text-white shadow-lg border border-green-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100 text-xs md:text-sm">Recordings</p>
+                <p className="text-green-100 text-xs md:text-sm">Demos</p>
                 <p className="text-xl md:text-3xl font-bold">{recordings.length}</p>
               </div>
-              <Play className="w-6 h-6 md:w-8 md:h-8 text-green-200" />
+              <div className="bg-white bg-opacity-10 p-3 rounded-lg">
+                <Play className="w-6 h-6 md:w-8 md:h-8 text-green-100" />
+              </div>
             </div>
           </div>
-          <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 md:p-6 text-white">
+          <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-xl p-4 md:p-6 text-white shadow-lg border border-purple-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 text-xs md:text-sm">This Month</p>
@@ -349,21 +399,29 @@ export function SolutionsPage() {
                   }).length}
                 </p>
               </div>
-              <Calendar className="w-6 h-6 md:w-8 md:h-8 text-purple-200" />
+              <div className="bg-white bg-opacity-10 p-3 rounded-lg">
+                <Calendar className="w-6 h-6 md:w-8 md:h-8 text-purple-100" />
+              </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Tabs */}
-        <div className="border-b border-gray-200 overflow-x-auto" data-tour="solutions-tabs">
+        {/* Tabs with Futuristic Design */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.6 }}
+          className="border-b border-indigo-100 overflow-x-auto" 
+          data-tour="solutions-tabs"
+        >
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab('featured')}
               className={`${
                 activeTab === 'featured'
-                  ? 'border-indigo-500 text-indigo-600'
+                  ? 'border-indigo-500 text-indigo-600 font-medium'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center transition-all duration-200`}
             >
               <Star className="w-4 h-4 mr-2" />
               Featured ({featuredDemos.length})
@@ -372,65 +430,77 @@ export function SolutionsPage() {
               onClick={() => setActiveTab('all')}
               className={`${
                 activeTab === 'all'
-                  ? 'border-indigo-500 text-indigo-600'
+                  ? 'border-indigo-500 text-indigo-600 font-medium'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center transition-all duration-200`}
             >
-              <Video className="w-4 h-4 mr-2" />
-              All Demos ({demos.length})
+              <Rocket className="w-4 h-4 mr-2" />
+              All Products ({demos.length})
             </button>
             <button
               onClick={() => setActiveTab('recordings')}
               className={`${
                 activeTab === 'recordings'
-                  ? 'border-indigo-500 text-indigo-600'
+                  ? 'border-indigo-500 text-indigo-600 font-medium'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center transition-all duration-200`}
             >
               <Play className="w-4 h-4 mr-2" />
-              Recordings ({recordings.length})
+              Demos ({recordings.length})
             </button>
             {user && (
               <button
                 onClick={() => setActiveTab('my-demos')}
                 className={`${
                   activeTab === 'my-demos'
-                    ? 'border-indigo-500 text-indigo-600'
+                    ? 'border-indigo-500 text-indigo-600 font-medium'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center transition-all duration-200`}
               >
                 <Users className="w-4 h-4 mr-2" />
-                My Demos ({demos.filter(demo => demo.hostId === user.id).length})
+                My Products ({demos.filter(demo => demo.hostId === user.id).length})
               </button>
             )}
           </nav>
-        </div>
+        </motion.div>
 
-        {/* Demo Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Demo Grid with Futuristic Design */}
+        <motion.div 
+          ref={gridRef}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.8 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
           {getFilteredDemos().length === 0 ? (
-            <div className="col-span-full text-center py-12">
-              <Video className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <div className="col-span-full text-center py-12 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border border-indigo-100">
+              <Rocket className="w-16 h-16 text-indigo-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900">
-                {searchTerm ? 'No demos found' : 'No demos available'}
+                {searchTerm ? 'No products found' : 'No products available'}
               </h3>
               <p className="text-gray-500 mt-2">
                 {searchTerm 
                   ? 'Try adjusting your search terms' 
                   : activeTab === 'my-demos'
-                  ? 'You haven\'t scheduled any demos yet'
-                  : 'Check back later for new demos'}
+                  ? 'You haven\'t showcased any products yet'
+                  : 'Check back later for new products'}
               </p>
               {activeTab === 'my-demos' && canScheduleDemos && (
-                <Button className="mt-4" onClick={handleScheduleDemo}>
+                <Button className="mt-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700" onClick={handleScheduleDemo}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Schedule Your First Demo
+                  Showcase Your First Product
                 </Button>
               )}
             </div>
           ) : (
             getFilteredDemos().map((demo, index) => (
-              <div key={demo.id} data-tour={index === 0 ? "demo-card" : undefined}>
+              <motion.div 
+                key={demo.id} 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 * index, duration: 0.5 }}
+                data-tour={index === 0 ? "demo-card" : undefined}
+              >
                 <DemoCard
                   demo={demo}
                   isRegistered={userRegistrations.includes(demo.id!)}
@@ -442,31 +512,82 @@ export function SolutionsPage() {
                   onToggleFeatured={() => handleToggleFeatured(demo)}
                   isFeaturingInProgress={featuringDemo?.id === demo.id}
                 />
-              </div>
+              </motion.div>
             ))
           )}
-        </div>
+        </motion.div>
 
-        {/* Enterprise CTA */}
+        {/* Enterprise CTA with Futuristic Design */}
         {!canScheduleDemos && (
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 md:p-8 text-white" data-tour="solutions-cta">
-            <div className="text-center">
-              <h3 className="text-xl md:text-2xl font-bold mb-4">Showcase Your Solutions</h3>
-              <p className="text-indigo-100 mb-6 max-w-2xl mx-auto text-sm md:text-base">
-                Upgrade to an Enterprise plan to schedule your own product demos, 
-                share recordings, and reach potential customers.
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.6 }}
+            className="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 rounded-xl p-8 md:p-10 text-white shadow-xl border border-indigo-500" 
+            data-tour="solutions-cta"
+          >
+            <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')] opacity-10 bg-cover bg-center mix-blend-overlay"></div>
+            
+            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-500 rounded-full filter blur-3xl opacity-20"></div>
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-purple-500 rounded-full filter blur-3xl opacity-20"></div>
+            
+            <div className="relative z-10 text-center">
+              <div className="inline-flex items-center justify-center p-3 bg-white bg-opacity-10 backdrop-blur-lg rounded-full border border-white border-opacity-20 mb-6">
+                <Lightbulb className="w-8 h-8 text-yellow-300" />
+              </div>
+              
+              <h3 className="text-2xl md:text-3xl font-bold mb-4">Showcase Your Innovation</h3>
+              <p className="text-indigo-100 mb-8 max-w-2xl mx-auto text-sm md:text-base">
+                Upgrade to an Enterprise plan to showcase your products, share demos, 
+                and connect with potential customers, partners, and investors.
               </p>
               <div className="flex justify-center">
                 <Button 
-                  className="bg-white text-indigo-600 hover:bg-gray-100"
+                  className="bg-white text-indigo-600 hover:bg-gray-100 shadow-lg px-6 py-3"
                   onClick={handleUpgradeClick}
                 >
+                  <Zap className="w-5 h-5 mr-2" />
                   Upgrade to Enterprise
                 </Button>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
+
+        {/* Why Showcase Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9, duration: 0.6 }}
+          className="bg-white rounded-xl border border-gray-200 shadow-lg p-8"
+        >
+          <h2 className="text-2xl font-bold text-center mb-8">Why Showcase Your Product</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-6 border border-indigo-100">
+              <div className="bg-indigo-100 p-3 rounded-lg inline-block mb-4">
+                <Users className="w-6 h-6 text-indigo-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Connect with Users</h3>
+              <p className="text-gray-600">Get valuable feedback from early adopters and build your initial user base.</p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
+              <div className="bg-purple-100 p-3 rounded-lg inline-block mb-4">
+                <TrendingUp className="w-6 h-6 text-purple-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Attract Investors</h3>
+              <p className="text-gray-600">Demonstrate your product's potential to investors looking for the next big opportunity.</p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100">
+              <div className="bg-blue-100 p-3 rounded-lg inline-block mb-4">
+                <Zap className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Find Partners</h3>
+              <p className="text-gray-600">Discover potential partners to help scale your product and reach new markets.</p>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
       {/* Modals */}

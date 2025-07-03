@@ -12,9 +12,13 @@ import {
   Building,
   Tag,
   ExternalLink,
-  DollarSign
+  DollarSign,
+  Rocket,
+  Zap,
+  Lightbulb
 } from 'lucide-react';
 import { Button } from '../common/Button';
+import { motion } from 'framer-motion';
 import type { Demo } from '../../types/demo';
 
 interface DemoCardProps {
@@ -93,10 +97,29 @@ export function DemoCard({
     }
   };
 
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'product-demo':
+        return <Video className="w-3 h-3 mr-1" />;
+      case 'solution-showcase':
+        return <Rocket className="w-3 h-3 mr-1" />;
+      case 'case-study':
+        return <Lightbulb className="w-3 h-3 mr-1" />;
+      case 'training':
+        return <Zap className="w-3 h-3 mr-1" />;
+      default:
+        return <Tag className="w-3 h-3 mr-1" />;
+    }
+  };
+
   return (
-    <div className={`relative rounded-xl border-2 p-4 md:p-6 transition-all duration-200 hover:shadow-lg ${
-      demo.isFeatured ? 'border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50' : 'border-gray-200 bg-white'
-    }`}>
+    <motion.div 
+      whileHover={{ y: -5 }}
+      transition={{ duration: 0.3 }}
+      className={`relative rounded-xl border-2 p-4 md:p-6 transition-all duration-200 hover:shadow-xl ${
+        demo.isFeatured ? 'border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50' : 'border-gray-200 bg-white'
+      }`}
+    >
       {/* Header */}
       <div className="pb-4">
         <div className="flex flex-wrap items-start justify-between gap-2 mb-4">
@@ -109,6 +132,7 @@ export function DemoCard({
               </span>
             )}
             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(demo.category)}`}>
+              {getCategoryIcon(demo.category)}
               {demo.category.replace('-', ' ')}
             </span>
           </div>
@@ -167,14 +191,14 @@ export function DemoCard({
             {demo.tags.slice(0, 3).map((tag, index) => (
               <span
                 key={index}
-                className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700"
+                className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700"
               >
                 <Tag className="w-3 h-3 mr-1" />
                 {tag}
               </span>
             ))}
             {demo.tags.length > 3 && (
-              <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
+              <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700">
                 +{demo.tags.length - 3} more
               </span>
             )}
@@ -203,7 +227,7 @@ export function DemoCard({
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div
             className={`h-2 rounded-full transition-all duration-300 ${
-              isFull ? 'bg-red-500' : 'bg-green-500'
+              isFull ? 'bg-red-500' : 'bg-gradient-to-r from-green-500 to-emerald-500'
             }`}
             style={{
               width: `${Math.min((demo.currentAttendees / demo.maxAttendees) * 100, 100)}%`,
@@ -229,7 +253,7 @@ export function DemoCard({
       <div className="space-y-3">
         {/* Primary Actions */}
         {!isCompleted && !isRegistered && !isFull && (
-          <Button onClick={onRegister} className="w-full">
+          <Button onClick={onRegister} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
             <Users className="w-4 h-4 mr-2" />
             Register for Demo
           </Button>
@@ -243,7 +267,7 @@ export function DemoCard({
         )}
 
         {canJoin && (
-          <Button onClick={onJoin} className="w-full">
+          <Button onClick={onJoin} className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
             <Video className="w-4 h-4 mr-2" />
             {isLive ? 'Join Live Demo' : 'Join Demo'}
           </Button>
@@ -258,7 +282,7 @@ export function DemoCard({
 
         {/* Recording Actions */}
         {demo.recordingUrl && (
-          <Button variant="outline" onClick={onViewRecording} className="w-full">
+          <Button variant="outline" onClick={onViewRecording} className="w-full border-indigo-200 text-indigo-600 hover:bg-indigo-50">
             <Play className="w-4 h-4 mr-2" />
             Watch Recording
           </Button>
@@ -268,14 +292,14 @@ export function DemoCard({
         {canManage && (
           <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             {isCompleted && !demo.recordingUrl && (
-              <Button variant="outline" onClick={onUploadRecording} className="flex-1">
+              <Button variant="outline" onClick={onUploadRecording} className="flex-1 border-indigo-200 text-indigo-600 hover:bg-indigo-50">
                 <Upload className="w-4 h-4 mr-2" />
                 Upload Recording
               </Button>
             )}
             
             {demo.recordingUrl && (
-              <Button variant="outline" onClick={onViewRecording} className="flex-1">
+              <Button variant="outline" onClick={onViewRecording} className="flex-1 border-indigo-200 text-indigo-600 hover:bg-indigo-50">
                 <Eye className="w-4 h-4 mr-2" />
                 Manage
               </Button>
@@ -285,16 +309,16 @@ export function DemoCard({
               <Button 
                 variant="outline" 
                 onClick={onToggleFeatured} 
-                className="flex-1"
+                className="flex-1 border-yellow-200 text-yellow-600 hover:bg-yellow-50"
                 isLoading={isFeaturingInProgress}
               >
                 <DollarSign className="w-4 h-4 mr-2" />
-                Feature Demo
+                Feature Product
               </Button>
             )}
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
