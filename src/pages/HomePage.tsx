@@ -211,7 +211,7 @@ export function HomePage() {
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-3xl font-extrabold text-gray-900">Why choose inRooms?</h2>
               <p className="mt-4 text-lg text-gray-500">
-                We're building the most effective networking platform for tech sales professionals.
+                inRooms is a curated virtual networking platform built for early-stage founders, operators, and builders. It goes beyond traditional networking by offering high-signal, niche-focused Rooms, tactical keynotes from real practitioners, and live collaboration spaces where members can co-work and build in real time. Unlike static platforms, inRooms emphasizes real outcomes, verified reputation, and meaningful connection — making it a space where networking becomes a byproduct of real progress.
               </p>
             </div>
             <dl className="mt-12 space-y-10 sm:space-y-0 sm:grid sm:grid-cols-1 md:grid-cols-3 sm:gap-8">
