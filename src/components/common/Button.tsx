@@ -20,7 +20,7 @@ export function Button({
   glowColor = 'rgba(0, 178, 255, 0.5)',
   ...props
 }: ButtonProps) {
-  const baseStyles = 'font-medium transition-all duration-300 flex items-center justify-center relative overflow-hidden hoverable';
+  const baseStyles = 'font-medium transition-all duration-300 flex items-center justify-center relative overflow-hidden';
   
   const variants = {
     primary: 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 disabled:opacity-50',
