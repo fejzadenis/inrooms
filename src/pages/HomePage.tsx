@@ -1,9 +1,10 @@
 import React from 'react';
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Check, Zap, Users, MessageSquare, Target, Shield } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../layouts/MainLayout';
 import { Button } from '../components/common/Button';
 import { useAuth } from '../contexts/AuthContext';
+import { motion } from 'framer-motion';
 
 export function HomePage() {
   const { user } = useAuth();
@@ -206,37 +207,188 @@ export function HomePage() {
           </div>
         </div>
 
-        <div className="bg-white mt-16">
-          <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:py-24 lg:px-8">
-            <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-3xl font-extrabold text-gray-900">Why choose inRooms?</h2>
-              <p className="mt-4 text-lg text-gray-500">
-                inRooms is a curated virtual networking platform built for early-stage founders, operators, and builders. It goes beyond traditional networking by offering high-signal, niche-focused Rooms, tactical keynotes from real practitioners, and live collaboration spaces where members can co-work and build in real time. Unlike static platforms, inRooms emphasizes real outcomes, verified reputation, and meaningful connection — making it a space where networking becomes a byproduct of real progress.
+        {/* Why Choose inRooms Section */}
+        <div className="bg-white py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold text-gray-900">Why Choose inRooms?</h2>
+              <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
+                inRooms is a curated virtual networking platform built for early-stage founders, operators, and builders. It goes beyond traditional networking by offering high-signal, niche-focused Rooms, tactical keynotes from real practitioners, and live collaboration spaces where members can co-work and build in real time.
               </p>
             </div>
-            <dl className="mt-12 space-y-10 sm:space-y-0 sm:grid sm:grid-cols-1 md:grid-cols-3 sm:gap-8">
-              {[
-                {
-                  title: 'Curated Events',
-                  description: 'Join private Rooms, hear tactical keynotes, and build reputation with live connections.',
-                },
-                {
-                  title: 'Expert Networking',
-                  description: 'Connect with industry leaders and experienced professionals in tech sales.',
-                },
-                {
-                  title: 'Career Growth',
-                  description: 'Learn from peers, share experiences, and discover new opportunities.',
-                },
-              ].map((feature) => (
-                <div key={feature.title} className="relative">
-                  <dt>
-                    <p className="text-lg leading-6 font-medium text-gray-900">{feature.title}</p>
-                  </dt>
-                  <dd className="mt-2 text-base text-gray-500">{feature.description}</dd>
+
+            {/* Main Features */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16">
+              <motion.div 
+                whileHover={{ y: -5 }}
+                className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-8 border border-indigo-100 shadow-sm"
+              >
+                <div className="bg-indigo-100 w-14 h-14 rounded-lg flex items-center justify-center mb-6">
+                  <Target className="w-7 h-7 text-indigo-600" />
                 </div>
-              ))}
-            </dl>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Curated by Design</h3>
+                <p className="text-gray-600">
+                  Every Room is intentionally built around niche, role, or stage. You meet the right people — not just more people.
+                </p>
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ y: -5 }}
+                className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-8 border border-purple-100 shadow-sm"
+              >
+                <div className="bg-purple-100 w-14 h-14 rounded-lg flex items-center justify-center mb-6">
+                  <Zap className="w-7 h-7 text-purple-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Tactical Keynotes</h3>
+                <p className="text-gray-600">
+                  Fast, focused sessions led by real builders. No fluff, just valuable insights you can apply right away.
+                </p>
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ y: -5 }}
+                className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-8 border border-blue-100 shadow-sm"
+              >
+                <div className="bg-blue-100 w-14 h-14 rounded-lg flex items-center justify-center mb-6">
+                  <Users className="w-7 h-7 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Live Collaboration: Open Build Rooms</h3>
+                <p className="text-gray-600">
+                  Drop in anytime. Co-work, share your screen, test ideas, or get feedback in real time. Like a digital coworking space with momentum.
+                </p>
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ y: -5 }}
+                className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-8 border border-green-100 shadow-sm"
+              >
+                <div className="bg-green-100 w-14 h-14 rounded-lg flex items-center justify-center mb-6">
+                  <Shield className="w-7 h-7 text-green-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Proof of Connection (Coming Soon)</h3>
+                <p className="text-gray-600">
+                  Your inRooms profile reflects what you've actually built with others — not just who you know. Verified contributions become part of your reputation.
+                </p>
+              </motion.div>
+            </div>
+
+            {/* What Makes inRooms Different */}
+            <div className="mb-16">
+              <h3 className="text-2xl font-bold text-gray-900 text-center mb-10">What Makes inRooms Different</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                  "Dynamic, proof-driven profiles",
+                  "Live, curated Rooms instead of static feeds",
+                  "Warm, relevant intros — not cold outreach",
+                  "Events and connections built for forward motion"
+                ].map((item, index) => (
+                  <div key={index} className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                    <div className="flex items-center mb-4">
+                      <div className="bg-indigo-100 p-2 rounded-full mr-3">
+                        <Check className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <p className="font-medium text-gray-900">{item}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* What You Get */}
+            <div className="mb-16">
+              <h3 className="text-2xl font-bold text-gray-900 text-center mb-10">What You Get</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                  "Targeted networking by niche, need, and stage",
+                  "Access to mentors, collaborators, and real builders",
+                  "Ongoing rooms and tactical sessions",
+                  "A growing network and verified reputation that follows you"
+                ].map((item, index) => (
+                  <div key={index} className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg shadow-sm p-6 border border-gray-200">
+                    <div className="flex items-center mb-4">
+                      <div className="bg-indigo-500 p-2 rounded-full mr-3">
+                        <Check className="w-5 h-5 text-white" />
+                      </div>
+                      <p className="font-medium text-gray-900">{item}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Testimonials */}
+            <div className="mb-16">
+              <h3 className="text-2xl font-bold text-gray-900 text-center mb-10">What Our Members Say</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-200">
+                  <p className="text-gray-600 italic mb-6">
+                    "I met my co-founder and closed three deals in a single Room."
+                  </p>
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                      <span className="text-indigo-600 font-semibold">SJ</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Sarah J.</p>
+                      <p className="text-sm text-gray-500">Enterprise Sales Director</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-200">
+                  <p className="text-gray-600 italic mb-6">
+                    "This feels like what LinkedIn should have been."
+                  </p>
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                      <span className="text-purple-600 font-semibold">MC</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Michael C.</p>
+                      <p className="text-sm text-gray-500">Startup Sales Lead</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-200">
+                  <p className="text-gray-600 italic mb-6">
+                    "It's not just networking — it's progress."
+                  </p>
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                      <span className="text-blue-600 font-semibold">AR</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Alex R.</p>
+                      <p className="text-sm text-gray-500">Early-Stage Founder</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* How It Works */}
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900 text-center mb-10">How It Works</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                {[
+                  "Create a profile — tell us what you're working on",
+                  "Join curated Rooms based on your goals",
+                  "Collaborate in real time",
+                  "Build your reputation and grow your career"
+                ].map((step, index) => (
+                  <div key={index} className="relative">
+                    <div className="bg-indigo-600 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold mb-4">
+                      {index + 1}
+                    </div>
+                    {index < 3 && (
+                      <div className="hidden md:block absolute top-5 left-10 w-full h-0.5 bg-indigo-200"></div>
+                    )}
+                    <p className="font-medium text-gray-900">{step}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
