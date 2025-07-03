@@ -7,8 +7,6 @@ import {
   signInWithPopup,
   onAuthStateChanged,
   User as FirebaseUser,
-  sendEmailVerification,
-  applyActionCode,
   sendPasswordResetEmail,
   verifyPasswordResetCode,
   confirmPasswordReset
@@ -65,8 +63,6 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateUserProfile: (userId: string, profileData: any) => Promise<void>;
   startFreeTrial: () => Promise<void>;
-  sendVerificationEmail: () => Promise<void>;
-  verifyEmail: (actionCode: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   confirmResetPassword: (code: string, newPassword: string) => Promise<void>;
 }
@@ -113,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: userData.email || firebaseUser.email || '',
         role: userData.role || 'user',
         photoURL: userData.photoURL || firebaseUser.photoURL || undefined,
-        emailVerified: firebaseUser.emailVerified,
+        emailVerified: true, // Always treat as verified
         profile: userData.profile || {},
         subscription: {
           status: userData.subscription?.status || 'inactive',
@@ -132,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: firebaseUser.email || '',
         role: 'user',
         photoURL: firebaseUser.photoURL || undefined,
-        emailVerified: firebaseUser.emailVerified,
+        emailVerified: true, // Always treat as verified
         profile: {},
         subscription: {
           status: 'inactive',
@@ -165,9 +161,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
-      // Send verification email
-      await sendEmailVerification(userCredential.user);
-      
       // Create user document
       const userRef = doc(db, 'users', userCredential.user.uid);
       await setDoc(userRef, {
@@ -186,7 +179,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isNewUser
       });
 
-      toast.success('Account created! Please check your email to verify your account.');
+      toast.success('Account created successfully!');
+      return userCredential;
     } catch (err: any) {
       console.error('Signup error:', err);
       setError(err.message || 'Failed to create account');
@@ -199,16 +193,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      
-      // Check if email is verified
-      if (!userCredential.user.emailVerified) {
-        // Send verification email again
-        await sendEmailVerification(userCredential.user);
-        await signOut(auth);
-        toast.error('Please verify your email before logging in. A new verification email has been sent.');
-        throw new Error('Email not verified');
-      }
-      
       toast.success('Logged in successfully!');
       return userCredential;
     } catch (err: any) {
@@ -365,46 +349,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const sendVerificationEmail = async () => {
-    if (!auth.currentUser) {
-      throw new Error('No user is currently signed in');
-    }
-
-    try {
-      await sendEmailVerification(auth.currentUser);
-      toast.success('Verification email sent! Please check your inbox.');
-    } catch (err: any) {
-      console.error('Error sending verification email:', err);
-      toast.error(err.message || 'Failed to send verification email');
-      throw err;
-    }
-  };
-
-  const verifyEmail = async (actionCode: string) => {
-    try {
-      await applyActionCode(auth, actionCode);
-      
-      // If there's a current user, refresh the token to update emailVerified status
-      if (auth.currentUser) {
-        await auth.currentUser.reload();
-        
-        // Update user state
-        if (user) {
-          setUser({
-            ...user,
-            emailVerified: true
-          });
-        }
-      }
-      
-      toast.success('Email verified successfully!');
-    } catch (err: any) {
-      console.error('Error verifying email:', err);
-      toast.error(err.message || 'Failed to verify email');
-      throw err;
-    }
-  };
-
   const resetPassword = async (email: string) => {
     try {
       await sendPasswordResetEmail(auth, email);
@@ -439,8 +383,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         updateUserProfile,
         startFreeTrial,
-        sendVerificationEmail,
-        verifyEmail,
         resetPassword,
         confirmResetPassword
       }}

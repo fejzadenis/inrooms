@@ -7,7 +7,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/common/Button';
 import { GoogleSignInButton } from '../../components/auth/GoogleSignInButton';
 import { Logo } from '../../components/common/Logo';
-import { Mail, AlertTriangle } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 
@@ -19,12 +18,10 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export function LoginPage() {
-  const { login, loginWithGoogle, sendVerificationEmail } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
-  const [emailForVerification, setEmailForVerification] = React.useState('');
-  const [showVerificationPrompt, setShowVerificationPrompt] = React.useState(false);
   
   // Check for verification success from URL params
   const verificationSuccess = searchParams.get('emailVerified') === 'true';
@@ -33,7 +30,6 @@ export function LoginPage() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    getValues,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
@@ -77,12 +73,8 @@ export function LoginPage() {
       if (userCredential && userCredential.user) {
         await checkOnboardingAndRedirect(userCredential.user.uid);
       }
-    } catch (error: any) {
-      // If error is about email verification, show verification prompt
-      if (error.message === 'Email not verified') {
-        setEmailForVerification(data.email);
-        setShowVerificationPrompt(true);
-      }
+    } catch (error) {
+      // Error is handled in the AuthContext
     }
   };
 
@@ -100,61 +92,6 @@ export function LoginPage() {
       setIsGoogleLoading(false);
     }
   };
-
-  const handleResendVerification = async () => {
-    try {
-      await sendVerificationEmail();
-    } catch (error) {
-      // Error is handled in the AuthContext
-    }
-  };
-
-  // If showing verification prompt, render that instead of login form
-  if (showVerificationPrompt) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="flex justify-center">
-            <Logo />
-          </div>
-          <div className="mt-6 bg-white py-8 px-4 shadow-xl sm:rounded-xl sm:px-10 border border-gray-100">
-            <div className="text-center">
-              <div className="flex justify-center mb-4">
-                <div className="bg-yellow-100 p-3 rounded-full">
-                  <Mail className="h-8 w-8 text-yellow-600" />
-                </div>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Email Verification Required
-              </h2>
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                <div className="flex">
-                  <AlertTriangle className="h-5 w-5 text-yellow-600 mr-2 flex-shrink-0" />
-                  <p className="text-yellow-800 text-sm">
-                    Your email address <strong>{emailForVerification}</strong> needs to be verified before you can log in.
-                  </p>
-                </div>
-              </div>
-              <p className="text-gray-600 mb-6">
-                Please check your inbox and click the verification link in the email we sent you.
-                If you don't see it, check your spam folder.
-              </p>
-              <div className="space-y-3">
-                <Button onClick={handleResendVerification} className="w-full">
-                  Resend Verification Email
-                </Button>
-                <Link to="/login">
-                  <Button variant="outline" className="w-full">
-                    Back to Login
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
