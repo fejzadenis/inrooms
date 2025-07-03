@@ -9,7 +9,7 @@ export function HomePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [currentWordIndex, setCurrentWordIndex] = React.useState(0);
-  const words = ['Lead', 'Partnership', 'Prospect', 'Champion', 'Client', 'Solution'];
+  const words = ['Co-founder', 'Mentor', 'Collaborator', 'Hire', 'Beta tester', 'Partner'];
   const [currentSpeakerIndex, setCurrentSpeakerIndex] = React.useState(0);
 
   React.useEffect(() => {
