@@ -24,7 +24,7 @@ import { HelpPage } from './pages/user/HelpPage';
 import { DocsPage } from './pages/user/DocsPage';
 import { EventsPage } from './pages/user/EventsPage';
 import { NetworkPage } from './pages/user/NetworkPage';
-import { ResourcesPage } from './pages/user/ResourcesPage';
+import { ResourcesPage } from './pages/ResourcesPage';
 import { NotificationsPage } from './pages/user/NotificationsPage';
 import { AboutPage } from './pages/AboutPage';
 import { LinkedInCallback } from './pages/LinkedInCallback';
