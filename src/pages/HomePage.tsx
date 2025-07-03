@@ -83,7 +83,7 @@ export function HomePage() {
                     </span>
                   </h1>
                   <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                    Meet people who provide you value by attending relationship nurturing video conferences. Connect with decision-makers, share opportunities, practice your pitch, and accelerate your sales success.
+                    Curated virtual Rooms where early-stage startup builders connect, collaborate, and build momentum. Join private Rooms, hear tactical keynotes, and build reputation with live connections.
                   </p>
                   <div className="mt-5 sm:mt-8 flex flex-col sm:flex-row justify-center lg:justify-start gap-3 sm:gap-4">
                     <Button 
