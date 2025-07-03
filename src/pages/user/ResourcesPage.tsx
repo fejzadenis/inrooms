@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MainLayout } from '../../layouts/MainLayout';
+import { MainLayout } from '../layouts/MainLayout';
 import { 
   Search, 
   HelpCircle, 
@@ -14,9 +14,12 @@ import {
   Zap,
   Shield,
   Settings,
-  Star
+  Star,
+  Building,
+  Award,
+  Clock
 } from 'lucide-react';
-import { Button } from '../../components/common/Button';
+import { Button } from '../components/common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface FAQItem {
@@ -37,93 +40,99 @@ export function ResourcesPage() {
     { id: 'billing', name: 'Billing', icon: CreditCard, color: 'bg-purple-500' },
     { id: 'events', name: 'Events', icon: Calendar, color: 'bg-orange-500' },
     { id: 'products', name: 'Products', icon: Rocket, color: 'bg-red-500' },
-    { id: 'security', name: 'Security', icon: Shield, color: 'bg-indigo-500' },
+    { id: 'reputation', name: 'Reputation', icon: Award, color: 'bg-yellow-500' },
   ];
 
   const faqs: FAQItem[] = [
     {
       id: '1',
       category: 'general',
-      question: 'What is inRooms?',
-      answer: 'inRooms is a premier networking platform designed exclusively for tech sales professionals. We connect you with peers, potential clients, and industry leaders through virtual events, product showcases, and networking opportunities. Our platform helps you build meaningful relationships that drive your career and business forward.'
+      question: 'Who is inRooms for? Is it only for founders?',
+      answer: 'inRooms is designed for all tech sales professionals, not just founders. While we welcome founders, our platform serves enterprise sales executives, account managers, sales leaders, technical sales specialists, and anyone looking to grow their career in tech sales. Whether you\'re just starting out or leading a large team, inRooms provides valuable networking opportunities tailored to your specific needs and goals.'
     },
     {
       id: '2',
       category: 'general',
-      question: 'How do I get started with inRooms?',
-      answer: 'Getting started is easy! First, create your account and complete your profile with your professional information. Then, browse upcoming events and product showcases that interest you. Register for events, connect with other professionals, and start building your network. We recommend completing the onboarding tour to familiarize yourself with all features.'
+      question: 'What exactly is a "Room" on inRooms?',
+      answer: 'A Room is a virtual space where focused networking happens. Unlike generic video calls, Rooms are purpose-built for specific topics, industries, or goals. They can be scheduled networking events, impromptu collaboration sessions, or ongoing communities. Each Room has a host, a clear purpose, and tools designed for meaningful connection. Think of Rooms as curated networking spaces where you\'ll meet the right people, not just more people.'
     },
     {
       id: '3',
-      category: 'account',
-      question: 'How do I edit my profile?',
-      answer: 'To edit your profile, click on your profile picture in the top right corner and select "Profile" from the dropdown menu. On your profile page, click the "Edit Profile" button. From there, you can update your personal information, professional details, skills, and upload a new profile picture. Don\'t forget to click "Save Changes" when you\'re done.'
+      category: 'reputation',
+      question: 'What is "Proof of Work" and how does it benefit me?',
+      answer: 'Proof of Work is our verification system that showcases your real contributions and achievements. Unlike traditional profiles that rely on self-reported information, your inRooms profile displays badges and credentials earned through verified activities like hosting events, making successful connections, and receiving peer endorsements. This creates a trustworthy professional identity based on actual impact, making it easier to establish credibility and open doors to new opportunities.'
     },
     {
       id: '4',
-      category: 'account',
-      question: 'Can I connect my LinkedIn profile?',
-      answer: 'Yes! You can connect your LinkedIn profile to automatically import your professional information and connections. Go to your Profile page and click on the "Connect LinkedIn" button. You\'ll be prompted to authorize the connection. Once connected, your profile will be enriched with your LinkedIn data, making it easier to find relevant connections.'
+      category: 'events',
+      question: 'How often are networking events held?',
+      answer: 'We host multiple events weekly across various topics and formats. The exact frequency depends on your interests and industry focus. Most members attend 2-4 events per month, but your subscription plan determines how many you can register for. Our calendar is constantly updated with new events, and you can filter by topic, format, or time to find ones that match your schedule and goals. Enterprise members can also request custom events for their specific needs.'
     },
     {
       id: '5',
-      category: 'events',
-      question: 'How do I join a virtual event?',
-      answer: 'To join a virtual event, first register for the event from the Events page. Once registered, you\'ll receive a confirmation email with the event details. On the day of the event, you can join directly from your My Events page by clicking the "Join Meeting" button, which will appear 15 minutes before the scheduled start time. You can also join via the link in your confirmation email.'
+      category: 'billing',
+      question: 'Is it really free to start using inRooms?',
+      answer: 'Yes, we offer a 7-day free trial that gives you full access to the platform with 2 event registrations included. No credit card is required to start your trial. After the trial period, you can choose from our subscription plans starting at $39/month, or continue with limited functionality until you\'re ready to subscribe. We believe in letting you experience the value before committing.'
     },
     {
       id: '6',
-      category: 'events',
-      question: 'What happens if an event is full?',
-      answer: 'If an event reaches its maximum capacity, you can join the waitlist. You\'ll be automatically notified if a spot becomes available. We recommend registering early for popular events to secure your spot. You can also check our Events page regularly, as we frequently add new events based on demand.'
+      category: 'account',
+      question: 'How do I set up my profile for maximum networking success?',
+      answer: 'For maximum success, complete all profile sections including your professional background, skills, and goals. Upload a professional photo, connect your LinkedIn account, and specify your networking preferences. The more complete your profile, the better our matching algorithms can connect you with relevant professionals. Focus on highlighting your unique expertise and what you\'re looking to achieve through networking. Our onboarding process will guide you through optimizing your profile step by step.'
     },
     {
       id: '7',
-      category: 'billing',
-      question: 'What subscription plans do you offer?',
-      answer: 'We offer several subscription tiers to meet different needs: Starter ($39/month), Professional ($79/month), Enterprise ($149/month), and Team plans ($99/user/month, minimum 3 users). Each plan includes a specific number of monthly event registrations and features. We also offer annual billing with a 20% discount. You can view detailed plan information on our Subscription page.'
+      category: 'events',
+      question: 'What types of events can I attend?',
+      answer: 'inRooms offers a diverse range of events including roundtable discussions, panel sessions with industry experts, skill-building workshops, networking mixers, and 1:1 matching sessions. Events are categorized by industry, role, and experience level to ensure relevant connections. Some events are structured with specific agendas, while others provide more open networking opportunities. You can browse the full calendar and filter by type, topic, and time to find events that match your interests.'
     },
     {
       id: '8',
-      category: 'billing',
-      question: 'How does the free trial work?',
-      answer: 'Our 7-day free trial gives you full access to the platform with 2 event registrations. No credit card is required to start. After the trial period, you can choose a subscription plan that fits your needs. If you don\'t subscribe, your account will revert to limited functionality until you choose a plan.'
+      category: 'reputation',
+      question: 'How do I earn reputation badges?',
+      answer: 'Badges are earned through verified activities on the platform. For example, host three events to earn the "Event Host" badge, make five successful introductions for the "Connector" badge, or receive multiple positive mentorship reviews for the "Mentor" badge. Each badge has specific criteria, and you\'ll be notified when you\'re close to earning one. Badges appear on your profile and increase your visibility in search results and recommendations. Unlike self-reported skills, these badges represent verified contributions.'
     },
     {
       id: '9',
-      category: 'billing',
-      question: 'Can I cancel my subscription?',
-      answer: 'Yes, you can cancel your subscription at any time from the Billing page. Your access will continue until the end of your current billing period. There are no cancellation fees or long-term commitments. If you cancel, you\'ll still have access to your connections, but won\'t be able to register for new events until you resubscribe.'
+      category: 'general',
+      question: 'How is inRooms different from LinkedIn or other networking platforms?',
+      answer: 'Unlike LinkedIn, which focuses on static connections and content, inRooms is built for active, purposeful networking. We emphasize quality interactions over quantity of connections. Our platform features curated Rooms instead of feeds, verified reputation instead of self-reported experience, and structured networking events instead of random outreach. We also focus exclusively on tech sales professionals, ensuring all connections are relevant to your career growth. Think of us as the difference between a curated dinner party and a massive conference hall.'
     },
     {
       id: '10',
       category: 'products',
-      question: 'How do I showcase my product?',
-      answer: 'To showcase your product, you need an Enterprise subscription. Once subscribed, go to the Product Showcase page and click "Showcase Product." Fill out the form with your product details, including title, description, and scheduling information. You can also upload demos, presentations, and set up live demonstration sessions for potential users, partners, or investors.'
+      question: 'Can I showcase my product or solution on inRooms?',
+      answer: 'Yes, Enterprise subscribers can showcase products through our Solutions page. This feature allows you to schedule live demo sessions, upload recorded presentations, and connect with potential customers, partners, or investors. Your product showcases can be public or private, and you can track engagement metrics. This isn\'t just a listing - it\'s an interactive way to demonstrate your solution to a targeted audience of tech sales professionals who might become customers or recommend your product to their networks.'
     },
     {
       id: '11',
-      category: 'products',
-      question: 'How can I feature my product?',
-      answer: 'Featured products appear prominently on the Product Showcase page, increasing visibility to potential users and investors. To feature your product, click the "Feature" button on your product card. This is a premium service with an additional fee of $49 per month. Featured status lasts for 30 days and can be renewed.'
+      category: 'events',
+      question: 'What happens if I miss an event I registered for?',
+      answer: 'If you miss an event, you\'ll still have access to any recordings or resources shared (available for 30 days on Starter plans, longer on higher tiers). Your event credit is used regardless of attendance, but we send reminders to help you remember. For popular events that reach capacity, we encourage canceling your registration at least 2 hours in advance if you can\'t attend, to free up your spot for others. Consistent no-shows may affect your ability to register for high-demand events in the future.'
     },
     {
       id: '12',
-      category: 'security',
-      question: 'How is my data protected?',
-      answer: 'We take data security seriously. All data is encrypted both in transit and at rest. We use industry-standard security practices and regular security audits. Your personal information is never shared with third parties without your consent. We comply with GDPR, CCPA, and other relevant privacy regulations. You can review our full Privacy Policy for more details.'
+      category: 'billing',
+      question: 'What\'s included in each subscription tier?',
+      answer: 'Our Starter plan ($39/month) includes 3 events monthly, basic profile features, and standard networking tools. The Professional plan ($79/month) offers 8 events monthly, enhanced profile features, priority registration, and advanced networking tools. Our Enterprise plan ($149/month) provides 15 events monthly, custom event creation, premium profile badges, and dedicated support. All plans include access to our platform, messaging, and basic features. Annual subscriptions save 20% compared to monthly billing. You can view detailed plan comparisons on our Subscription page.'
     },
     {
       id: '13',
-      category: 'security',
-      question: 'Can I delete my account?',
-      answer: 'Yes, you can delete your account at any time. Go to Settings > Account > Delete Account. This will permanently remove all your personal information, connections, and activity history from our platform. Please note that this action cannot be undone. If you have an active subscription, you should cancel it before deleting your account to avoid further charges.'
+      category: 'reputation',
+      question: 'Can I display my inRooms reputation on other platforms?',
+      answer: 'Yes, we provide embeddable reputation badges that you can add to your personal website, email signature, or other profiles. These badges are dynamically updated as your reputation grows and include verification links so others can confirm their authenticity. We\'re also developing integrations with LinkedIn and other platforms to allow seamless sharing of your verified achievements. Your reputation becomes a portable asset that enhances your professional brand across the digital landscape.'
     },
     {
       id: '14',
       category: 'general',
-      question: 'How do I contact support?',
-      answer: 'You can contact our support team by emailing support@inrooms.com or by using the Help Center accessible from the user menu. For Enterprise and Team plan subscribers, we offer priority support with faster response times. Our support hours are Monday to Friday, 9 AM to 6 PM PST, with limited weekend support available.'
+      question: 'How do Open Build Rooms work?',
+      answer: 'Open Build Rooms are collaborative spaces where you can drop in anytime to co-work, share your screen, test ideas, and get feedback in real-time. Unlike scheduled events, these rooms have ongoing availability with flexible participation. You might join to work on a sales deck and get feedback, collaborate on solving a specific challenge, or simply work alongside other professionals in your field. Think of them as digital coworking spaces with momentum and purpose. This feature is coming soon and will be available to all subscription tiers.'
+    },
+    {
+      id: '15',
+      category: 'account',
+      question: 'Is my information secure and private?',
+      answer: 'Yes, we take data security and privacy seriously. Your personal information is encrypted and never shared with third parties without your consent. You control what appears on your public profile versus what\'s only visible to connections. All payment information is processed securely through Stripe and never stored on our servers. We comply with GDPR, CCPA, and other relevant privacy regulations. You can review our full Privacy Policy for more details on how we protect your information.'
     }
   ];
 
@@ -385,6 +394,53 @@ export function ResourcesPage() {
             </div>
           </div>
         </motion.div>
+
+        {/* Quick Answers Section */}
+        <div className="bg-white rounded-xl shadow-md p-8 border border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Answers</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-indigo-50 rounded-lg p-5 border border-indigo-100">
+              <h3 className="font-semibold text-indigo-900 mb-2 flex items-center">
+                <Clock className="w-5 h-5 mr-2 text-indigo-600" />
+                How much time should I commit?
+              </h3>
+              <p className="text-indigo-800">
+                Most members spend 2-4 hours per month and see significant value. Start with one event per week and adjust based on your goals.
+              </p>
+            </div>
+            
+            <div className="bg-green-50 rounded-lg p-5 border border-green-100">
+              <h3 className="font-semibold text-green-900 mb-2 flex items-center">
+                <Building className="w-5 h-5 mr-2 text-green-600" />
+                Can my whole team join?
+              </h3>
+              <p className="text-green-800">
+                Yes! Our Team plan ($99/user/month, minimum 3 users) includes team management tools and bulk event registration.
+              </p>
+            </div>
+            
+            <div className="bg-purple-50 rounded-lg p-5 border border-purple-100">
+              <h3 className="font-semibold text-purple-900 mb-2 flex items-center">
+                <Users className="w-5 h-5 mr-2 text-purple-600" />
+                How are connections verified?
+              </h3>
+              <p className="text-purple-800">
+                Connections require mutual acceptance and are based on actual interactions within the platform, creating a network of genuine relationships.
+              </p>
+            </div>
+            
+            <div className="bg-orange-50 rounded-lg p-5 border border-orange-100">
+              <h3 className="font-semibold text-orange-900 mb-2 flex items-center">
+                <Shield className="w-5 h-5 mr-2 text-orange-600" />
+                Is my data private and secure?
+              </h3>
+              <p className="text-orange-800">
+                Absolutely. We use enterprise-grade encryption, never sell your data, and give you full control over your privacy settings.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </MainLayout>
   );
