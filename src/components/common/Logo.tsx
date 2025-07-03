@@ -14,7 +14,7 @@ export function Logo() {
           <img src="/logo colored.png" alt="inRooms" className="h-8 w-auto" />
         </div>
       </div>
-      <span className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500">inRooms</span>
+      <span className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-400">inRooms</span>
     </motion.div>
   );
 }

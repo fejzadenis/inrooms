@@ -2,9 +2,11 @@ import React, { useEffect, useRef } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight, Rocket, Zap, Users, Star } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../layouts/MainLayout';
-import { Button } from '../components/common/Button';
+import { GlowButton } from '../components/common/GlowButton';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
+import { RevealOnScroll } from '../components/common/RevealOnScroll';
+import { ParallaxEffect } from '../components/common/ParallaxEffect';
 
 export function HomePage() {
   const { user } = useAuth();
@@ -126,7 +128,7 @@ export function HomePage() {
                 variants={fadeInUpVariants}
                 custom={0}
               >
-                <span className="block text-white">Meet Your Next</span>
+                <span className="block text-white neon-blue">Meet Your Next</span>
                 <motion.span 
                   className="block bg-gradient-to-r from-blue-400 to-cyan-400 text-transparent bg-clip-text min-h-[1.2em]"
                   key={currentWordIndex}
@@ -152,19 +154,19 @@ export function HomePage() {
                 variants={fadeInUpVariants}
                 custom={2}
               >
-                <Button 
+                <GlowButton 
                   onClick={handleGetStarted} 
-                  className="px-8 py-4 text-base font-medium"
+                  className="px-8 py-4 text-base font-medium hoverable"
                   glowColor="rgba(56, 189, 248, 0.6)"
                 >
                   Get started
                   <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
+                </GlowButton>
                 
                 <Link to="/about">
-                  <Button variant="glass" className="px-8 py-4 text-base font-medium">
+                  <GlowButton variant="glass" className="px-8 py-4 text-base font-medium hoverable">
                     Learn more
-                  </Button>
+                  </GlowButton>
                 </Link>
               </motion.div>
             </motion.div>
@@ -177,7 +179,7 @@ export function HomePage() {
             >
               <div className="relative w-full max-w-lg">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur-xl opacity-75"></div>
-                <div className="relative bg-gray-800 rounded-2xl overflow-hidden border border-gray-700">
+                <div className="relative bg-gray-800 rounded-2xl overflow-hidden border border-gray-700 glass-dark">
                   <img
                     src="/logo + typewrite colored scale 2.png"
                     alt="inRooms Logo"
@@ -191,236 +193,242 @@ export function HomePage() {
         </div>
 
         {/* Upcoming Keynote Speakers Section */}
-        <div className="relative py-16">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-800/50 pointer-events-none"></div>
-          
-          <motion.div 
-            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative"
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true, margin: "-100px" }}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-12">
-              <span className="bg-gradient-to-r from-blue-400 to-indigo-400 text-transparent bg-clip-text">Upcoming Keynote Speakers</span>
-            </h2>
+        <RevealOnScroll>
+          <div className="relative py-16">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-800/50 pointer-events-none"></div>
             
-            <div className="relative">
-              {/* Slideshow Navigation */}
-              <div className="absolute top-1/2 -left-4 transform -translate-y-1/2 z-10">
-                <button 
-                  onClick={prevSpeaker}
-                  className="bg-gray-800/80 backdrop-blur-sm rounded-full p-3 shadow-lg hover:bg-gray-700 transition-colors border border-gray-700"
-                  aria-label="Previous speaker"
-                >
-                  <ChevronLeft className="w-6 h-6 text-white" />
-                </button>
-              </div>
+            <motion.div 
+              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative"
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true, margin: "-100px" }}
+            >
+              <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-12 neon-blue">
+                <span className="bg-gradient-to-r from-blue-400 to-indigo-400 text-transparent bg-clip-text">Upcoming Keynote Speakers</span>
+              </h2>
               
-              <div className="absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
-                <button 
-                  onClick={nextSpeaker}
-                  className="bg-gray-800/80 backdrop-blur-sm rounded-full p-3 shadow-lg hover:bg-gray-700 transition-colors border border-gray-700"
-                  aria-label="Next speaker"
-                >
-                  <ChevronRight className="w-6 h-6 text-white" />
-                </button>
-              </div>
-              
-              {/* Speakers Slideshow */}
-              <div className="overflow-hidden">
-                <div 
-                  className="flex transition-transform duration-500 ease-in-out"
-                  style={{ transform: `translateX(-${currentSpeakerIndex * 100}%)` }}
-                >
-                  {speakers.map((speaker, index) => (
-                    <div key={index} className="w-full flex-shrink-0">
-                      <div className="bg-gray-800/60 backdrop-blur-md rounded-xl overflow-hidden mx-auto max-w-4xl border border-gray-700 shadow-xl">
-                        <div className="md:flex">
-                          <div className="md:flex-shrink-0 relative">
-                            <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-purple-600/20 mix-blend-overlay"></div>
-                            <img 
-                              className="h-64 w-full object-cover md:h-full md:w-64" 
-                              src={speaker.image} 
-                              alt={speaker.name} 
-                            />
-                          </div>
-                          <div className="p-8">
-                            <div className="uppercase tracking-wide text-sm text-blue-400 font-semibold">
-                              {speaker.date}
+              <div className="relative">
+                {/* Slideshow Navigation */}
+                <div className="absolute top-1/2 -left-4 transform -translate-y-1/2 z-10">
+                  <button 
+                    onClick={prevSpeaker}
+                    className="bg-gray-800/80 backdrop-blur-sm rounded-full p-3 shadow-lg hover:bg-gray-700 transition-colors border border-gray-700 hoverable"
+                    aria-label="Previous speaker"
+                  >
+                    <ChevronLeft className="w-6 h-6 text-white" />
+                  </button>
+                </div>
+                
+                <div className="absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
+                  <button 
+                    onClick={nextSpeaker}
+                    className="bg-gray-800/80 backdrop-blur-sm rounded-full p-3 shadow-lg hover:bg-gray-700 transition-colors border border-gray-700 hoverable"
+                    aria-label="Next speaker"
+                  >
+                    <ChevronRight className="w-6 h-6 text-white" />
+                  </button>
+                </div>
+                
+                {/* Speakers Slideshow */}
+                <div className="overflow-hidden">
+                  <div 
+                    className="flex transition-transform duration-500 ease-in-out"
+                    style={{ transform: `translateX(-${currentSpeakerIndex * 100}%)` }}
+                  >
+                    {speakers.map((speaker, index) => (
+                      <div key={index} className="w-full flex-shrink-0">
+                        <div className="bg-gray-800/60 backdrop-blur-md rounded-xl overflow-hidden mx-auto max-w-4xl border border-gray-700 shadow-xl glass-dark">
+                          <div className="md:flex">
+                            <div className="md:flex-shrink-0 relative">
+                              <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-purple-600/20 mix-blend-overlay"></div>
+                              <img 
+                                className="h-64 w-full object-cover md:h-full md:w-64" 
+                                src={speaker.image} 
+                                alt={speaker.name} 
+                              />
                             </div>
-                            <h3 className="mt-1 text-2xl font-semibold text-white">
-                              {speaker.name}
-                            </h3>
-                            <p className="mt-1 text-gray-300">
-                              {speaker.title}
-                            </p>
-                            <div className="mt-4">
-                              <span className="text-white font-medium">Topic: </span>
-                              <span className="text-gray-300">{speaker.topic}</span>
-                            </div>
-                            <div className="mt-6">
-                              <Link to="/events">
-                                <Button variant="primary" className="text-sm">
-                                  Register for this event
-                                </Button>
-                              </Link>
+                            <div className="p-8">
+                              <div className="uppercase tracking-wide text-sm text-blue-400 font-semibold">
+                                {speaker.date}
+                              </div>
+                              <h3 className="mt-1 text-2xl font-semibold text-white">
+                                {speaker.name}
+                              </h3>
+                              <p className="mt-1 text-gray-300">
+                                {speaker.title}
+                              </p>
+                              <div className="mt-4">
+                                <span className="text-white font-medium">Topic: </span>
+                                <span className="text-gray-300">{speaker.topic}</span>
+                              </div>
+                              <div className="mt-6">
+                                <Link to="/events">
+                                  <GlowButton variant="primary" className="text-sm hoverable">
+                                    Register for this event
+                                  </GlowButton>
+                                </Link>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Dots Indicator */}
+                <div className="flex justify-center mt-6 space-x-2">
+                  {speakers.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentSpeakerIndex(index)}
+                      className={`w-3 h-3 rounded-full transition-all duration-300 hoverable ${
+                        currentSpeakerIndex === index 
+                          ? 'bg-blue-500 scale-110' 
+                          : 'bg-gray-600 hover:bg-gray-500'
+                      }`}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
                   ))}
                 </div>
               </div>
-              
-              {/* Dots Indicator */}
-              <div className="flex justify-center mt-6 space-x-2">
-                {speakers.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentSpeakerIndex(index)}
-                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                      currentSpeakerIndex === index 
-                        ? 'bg-blue-500 scale-110' 
-                        : 'bg-gray-600 hover:bg-gray-500'
-                    }`}
-                    aria-label={`Go to slide ${index + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        </div>
+            </motion.div>
+          </div>
+        </RevealOnScroll>
 
-        <div className="relative py-16">
+        <RevealOnScroll>
+          <div className="relative py-16">
+            <motion.div 
+              className="max-w-7xl mx-auto"
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true, margin: "-100px" }}
+            >
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 neon-blue">
+                  <span className="bg-gradient-to-r from-blue-400 to-indigo-400 text-transparent bg-clip-text">Why choose inRooms?</span>
+                </h2>
+                <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+                  We're building the most effective networking platform for early-stage founders, operators, and builders.
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                {[
+                  {
+                    icon: Rocket,
+                    title: 'Curated by Design',
+                    description: 'Every Room is intentionally built around niche, role, or stage. You meet the right people — not just more people.',
+                    color: 'from-blue-600 to-blue-400'
+                  },
+                  {
+                    icon: Star,
+                    title: 'Tactical Keynotes',
+                    description: 'Fast, focused sessions led by real builders. No fluff, just valuable insights you can apply right away.',
+                    color: 'from-purple-600 to-purple-400'
+                  },
+                  {
+                    icon: Users,
+                    title: 'Live Collaboration',
+                    description: 'Drop in anytime. Co-work, share your screen, test ideas, or get feedback in real time.',
+                    color: 'from-indigo-600 to-indigo-400'
+                  },
+                  {
+                    icon: Zap,
+                    title: 'Proof of Connection',
+                    description: 'Your inRooms profile reflects what you've actually built with others — not just who you know.',
+                    color: 'from-cyan-600 to-cyan-400'
+                  }
+                ].map((feature, index) => {
+                  const Icon = feature.icon;
+                  return (
+                    <motion.div 
+                      key={feature.title}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1, duration: 0.5 }}
+                      viewport={{ once: true, margin: "-50px" }}
+                      whileHover={{ y: -5 }}
+                      className="relative group card-hover"
+                    >
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                      <div className="relative bg-gray-800 rounded-xl p-8 h-full border border-gray-700 glass-dark">
+                        <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-3 rounded-lg inline-flex items-center justify-center mb-5 border border-gray-700">
+                          <div className={`bg-gradient-to-r ${feature.color} rounded-lg p-2`}>
+                            <Icon className="h-6 w-6 text-white" />
+                          </div>
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
+                        <p className="text-gray-300">{feature.description}</p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </div>
+        </RevealOnScroll>
+
+        {/* CTA Section */}
+        <RevealOnScroll>
           <motion.div 
-            className="max-w-7xl mx-auto"
+            className="relative py-16"
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true, margin: "-100px" }}
           >
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                <span className="bg-gradient-to-r from-blue-400 to-indigo-400 text-transparent bg-clip-text">Why choose inRooms?</span>
-              </h2>
-              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-                We're building the most effective networking platform for early-stage founders, operators, and builders.
-              </p>
+            <div className="absolute inset-0">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-900 to-indigo-900 opacity-90 rounded-3xl"></div>
+              <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')] bg-cover bg-center opacity-20 mix-blend-overlay rounded-3xl"></div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {[
-                {
-                  icon: Rocket,
-                  title: 'Curated by Design',
-                  description: 'Every Room is intentionally built around niche, role, or stage. You meet the right people — not just more people.',
-                  color: 'from-blue-600 to-blue-400'
-                },
-                {
-                  icon: Star,
-                  title: 'Tactical Keynotes',
-                  description: 'Fast, focused sessions led by real builders. No fluff, just valuable insights you can apply right away.',
-                  color: 'from-purple-600 to-purple-400'
-                },
-                {
-                  icon: Users,
-                  title: 'Live Collaboration',
-                  description: 'Drop in anytime. Co-work, share your screen, test ideas, or get feedback in real time.',
-                  color: 'from-indigo-600 to-indigo-400'
-                },
-                {
-                  icon: Zap,
-                  title: 'Proof of Connection',
-                  description: 'Your inRooms profile reflects what you've actually built with others — not just who you know.',
-                  color: 'from-cyan-600 to-cyan-400'
-                }
-              ].map((feature, index) => {
-                const Icon = feature.icon;
-                return (
-                  <motion.div 
-                    key={feature.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1, duration: 0.5 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    whileHover={{ y: -5 }}
-                    className="relative group"
+            <div className="relative max-w-4xl mx-auto text-center px-4 py-16">
+              <motion.h2 
+                className="text-3xl md:text-4xl font-bold text-white mb-6 neon-blue"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                viewport={{ once: true }}
+              >
+                Ready to Transform Your Network?
+              </motion.h2>
+              
+              <motion.p 
+                className="text-xl text-blue-100 mb-10"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.5 }}
+                viewport={{ once: true }}
+              >
+                Join thousands of founders and builders who are already growing their startups with inRooms.
+                Your next big opportunity could be just one connection away.
+              </motion.p>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                viewport={{ once: true }}
+              >
+                <Link to="/signup">
+                  <GlowButton
+                    size="lg"
+                    className="text-lg px-10 py-4 bg-white text-indigo-600 hover:bg-gray-100 hoverable"
                   >
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                    <div className="relative bg-gray-800 rounded-xl p-8 h-full border border-gray-700">
-                      <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-3 rounded-lg inline-flex items-center justify-center mb-5 border border-gray-700">
-                        <div className={`bg-gradient-to-r ${feature.color} rounded-lg p-2`}>
-                          <Icon className="h-6 w-6 text-white" />
-                        </div>
-                      </div>
-                      <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
-                      <p className="text-gray-300">{feature.description}</p>
-                    </div>
-                  </motion.div>
-                );
-              })}
+                    Get Started Today
+                  </GlowButton>
+                </Link>
+                
+                <p className="mt-4 text-blue-200">
+                  No credit card required to start your 7-day free trial
+                </p>
+              </motion.div>
             </div>
           </motion.div>
-        </div>
-
-        {/* CTA Section */}
-        <motion.div 
-          className="relative py-16"
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true, margin: "-100px" }}
-        >
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-900 to-indigo-900 opacity-90 rounded-3xl"></div>
-            <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')] bg-cover bg-center opacity-20 mix-blend-overlay rounded-3xl"></div>
-          </div>
-          
-          <div className="relative max-w-4xl mx-auto text-center px-4 py-16">
-            <motion.h2 
-              className="text-3xl md:text-4xl font-bold text-white mb-6"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-            >
-              Ready to Transform Your Network?
-            </motion.h2>
-            
-            <motion.p 
-              className="text-xl text-blue-100 mb-10"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.5 }}
-              viewport={{ once: true }}
-            >
-              Join thousands of founders and builders who are already growing their startups with inRooms.
-              Your next big opportunity could be just one connection away.
-            </motion.p>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              viewport={{ once: true }}
-            >
-              <Link to="/signup">
-                <Button
-                  size="lg"
-                  className="text-lg px-10 py-4 bg-white text-indigo-600 hover:bg-gray-100"
-                >
-                  Get Started Today
-                </Button>
-              </Link>
-              
-              <p className="mt-4 text-blue-200">
-                No credit card required to start your 7-day free trial
-              </p>
-            </motion.div>
-          </div>
-        </motion.div>
+        </RevealOnScroll>
       </div>
     </MainLayout>
   );

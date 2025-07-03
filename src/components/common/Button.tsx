@@ -23,9 +23,9 @@ export function Button({
   const baseStyles = 'font-medium transition-all duration-300 flex items-center justify-center relative overflow-hidden';
   
   const variants = {
-    primary: 'bg-gradient-to-r from-[#003B7A] to-[#00B2FF] text-white hover:opacity-90 disabled:opacity-50',
+    primary: 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 disabled:opacity-50',
     secondary: 'bg-gradient-to-r from-gray-800 to-gray-900 text-white hover:opacity-90 disabled:opacity-50',
-    outline: 'border-2 border-gray-300 text-gray-700 hover:bg-gray-50 disabled:bg-gray-50',
+    outline: 'border border-gray-700 text-gray-300 hover:bg-gray-800 disabled:bg-gray-900 disabled:text-gray-600',
     glass: 'backdrop-blur-md bg-white/10 border border-white/20 text-white hover:bg-white/20 disabled:opacity-50'
   };
 
