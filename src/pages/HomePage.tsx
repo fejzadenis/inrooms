@@ -93,13 +93,11 @@ export function HomePage() {
                       Get started
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full sm:w-auto px-8 py-3 text-base font-medium"
-                      onClick={() => navigate('/about')}
-                    >
-                      Learn more
-                    </Button>
+                    <Link to="/about" className="w-full sm:w-auto">
+                      <Button variant="outline" className="w-full sm:w-auto px-8 py-3 text-base font-medium">
+                        Learn more
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </main>
