@@ -85,6 +85,9 @@ export function HomePage() {
                   <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
                     Curated virtual Rooms where early-stage startup builders connect, collaborate, and build momentum. Join private Rooms, hear tactical keynotes, and build reputation with live connections.
                   </p>
+                  <div className="mt-2 text-sm text-indigo-600 font-medium sm:text-base">
+                    Free Founder access now — upgrade later to unlock Pro features like unlimited Rooms, team tools, and analytics.
+                  </div>
                   <div className="mt-5 sm:mt-8 flex flex-col sm:flex-row justify-center lg:justify-start gap-3 sm:gap-4">
                     <Button 
                       onClick={handleGetStarted} 
@@ -93,9 +96,9 @@ export function HomePage() {
                       Get started
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
-                    <Link to="/about" className="w-full sm:w-auto">
+                    <Link to={user ? "/billing" : "/login"} className="w-full sm:w-auto">
                       <Button variant="outline" className="w-full sm:w-auto px-8 py-3 text-base font-medium">
-                        Learn more
+                        View Plans
                       </Button>
                     </Link>
                   </div>
