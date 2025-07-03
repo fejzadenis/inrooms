@@ -5,84 +5,19 @@ import { Button } from '../components/common/Button';
 import { Link } from 'react-router-dom';
 
 export function AboutPage() {
-  const features = [
-    {
-      icon: Users,
-      title: 'Curated Networking',
-      description: 'Connect with verified tech sales professionals in focused, intimate networking sessions designed for meaningful relationship building.'
-    },
-    {
-      icon: Target,
-      title: 'Industry-Specific Events',
-      description: 'Participate in events tailored specifically for tech sales, from enterprise deals to startup sales strategies and everything in between.'
-    },
-    {
-      icon: Shield,
-      title: 'Quality Interactions',
-      description: 'Our platform ensures meaningful connections through verified profiles, moderated events, and a focus on professional development.'
-    },
-    {
-      icon: Zap,
-      title: 'Career Growth',
-      description: 'Access exclusive resources, mentorship opportunities, and industry insights that directly impact your sales performance and career trajectory.'
-    }
-  ];
-
-  const benefits = [
-    {
-      icon: Award,
-      title: 'Proven Results',
-      description: 'Members report an average 27% increase in qualified leads and 35% faster deal cycles after 3 months on the platform.'
-    },
-    {
-      icon: Briefcase,
-      title: 'Industry Expertise',
-      description: 'Connect with professionals who understand the unique challenges of tech sales and can provide actionable insights.'
-    },
-    {
-      icon: Globe,
-      title: 'Global Community',
-      description: 'Access a worldwide network of tech sales professionals across different markets, companies, and specializations.'
-    },
-    {
-      icon: TrendingUp,
-      title: 'Continuous Learning',
-      description: 'Stay ahead with regular workshops, masterclasses, and resources focused on the latest sales methodologies and technologies.'
-    }
-  ];
-
-  const testimonials = [
-    {
-      quote: "inRooms has transformed how I network in the tech sales space. The connections I've made have directly led to three major enterprise deals this quarter alone.",
-      author: "Sarah Johnson",
-      role: "Enterprise Sales Director",
-      company: "TechCorp"
-    },
-    {
-      quote: "The quality of networking events and participants is unmatched. It's become an essential part of my professional growth and business development strategy.",
-      author: "Michael Chen",
-      role: "Sales Manager",
-      company: "InnovateHub"
-    },
-    {
-      quote: "As someone new to tech sales, inRooms has been invaluable for finding mentors and learning industry best practices. It's accelerated my career growth tremendously.",
-      author: "Alex Rodriguez",
-      role: "Account Executive",
-      company: "CloudSystems"
-    }
-  ];
-
   return (
     <MainLayout>
       <div className="space-y-20">
         {/* Hero Section */}
         <div className="text-center">
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900">
-            Elevate Your Tech Sales Career
+            Why Choose inRooms
           </h1>
-          <p className="mt-6 text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-            inRooms is the premier networking platform designed exclusively for tech sales professionals. 
-            Connect, learn, and grow with peers who understand your challenges.
+          <p className="mt-6 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+            inRooms is a curated virtual networking platform built for early-stage founders, operators, and builders. It goes beyond traditional networking by offering high-signal, niche-focused Rooms, tactical keynotes from real practitioners, and live collaboration spaces where members can co-work and build in real time.
+          </p>
+          <p className="mt-4 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+            Unlike static platforms, inRooms emphasizes real outcomes, verified reputation, and meaningful connection — making it a space where networking becomes a byproduct of real progress.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
             <Link to="/signup">
@@ -103,47 +38,101 @@ export function AboutPage() {
             Why Choose inRooms?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-            {features.map((feature) => {
-              const Icon = feature.icon;
-              return (
-                <div key={feature.title} className="bg-white rounded-lg shadow-sm p-6 md:p-8 hover:shadow-md transition-shadow duration-200">
-                  <div className="inline-flex items-center justify-center p-3 bg-indigo-100 rounded-lg">
-                    <Icon className="h-6 w-6 text-indigo-600" />
-                  </div>
-                  <h3 className="mt-4 text-lg md:text-xl font-semibold text-gray-900">
-                    {feature.title}
-                  </h3>
-                  <p className="mt-2 text-gray-600 text-sm md:text-base">
-                    {feature.description}
-                  </p>
-                </div>
-              );
-            })}
+            <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 hover:shadow-md transition-shadow duration-200">
+              <div className="inline-flex items-center justify-center p-3 bg-indigo-100 rounded-lg">
+                <Target className="h-6 w-6 text-indigo-600" />
+              </div>
+              <h3 className="mt-4 text-lg md:text-xl font-semibold text-gray-900">
+                Curated by Design
+              </h3>
+              <p className="mt-2 text-gray-600 text-sm md:text-base">
+                Every Room is intentionally built around niche, role, or stage. You meet the right people — not just more people.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 hover:shadow-md transition-shadow duration-200">
+              <div className="inline-flex items-center justify-center p-3 bg-indigo-100 rounded-lg">
+                <Zap className="h-6 w-6 text-indigo-600" />
+              </div>
+              <h3 className="mt-4 text-lg md:text-xl font-semibold text-gray-900">
+                Tactical Keynotes
+              </h3>
+              <p className="mt-2 text-gray-600 text-sm md:text-base">
+                Fast, focused sessions led by real builders. No fluff, just valuable insights you can apply right away.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 hover:shadow-md transition-shadow duration-200">
+              <div className="inline-flex items-center justify-center p-3 bg-indigo-100 rounded-lg">
+                <Users className="h-6 w-6 text-indigo-600" />
+              </div>
+              <h3 className="mt-4 text-lg md:text-xl font-semibold text-gray-900">
+                Live Collaboration: Open Build Rooms
+              </h3>
+              <p className="mt-2 text-gray-600 text-sm md:text-base">
+                Drop in anytime. Co-work, share your screen, test ideas, or get feedback in real time. Like a digital coworking space with momentum.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 hover:shadow-md transition-shadow duration-200">
+              <div className="inline-flex items-center justify-center p-3 bg-indigo-100 rounded-lg">
+                <Shield className="h-6 w-6 text-indigo-600" />
+              </div>
+              <h3 className="mt-4 text-lg md:text-xl font-semibold text-gray-900">
+                Proof of Connection (Coming Soon)
+              </h3>
+              <p className="mt-2 text-gray-600 text-sm md:text-base">
+                Your inRooms profile reflects what you've actually built with others — not just who you know. Verified contributions become part of your reputation.
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Benefits Section */}
-        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl py-12 md:py-16 px-4 md:px-8">
+        {/* What Makes inRooms Different */}
+        <div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-8 md:mb-12">
-            The inRooms Advantage
+            What Makes inRooms Different
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-            {benefits.map((benefit) => {
-              const Icon = benefit.icon;
-              return (
-                <div key={benefit.title} className="bg-white rounded-lg shadow-sm p-6 flex flex-col md:flex-row md:items-start gap-4">
-                  <div className="flex-shrink-0">
-                    <div className="p-3 bg-indigo-100 rounded-lg">
-                      <Icon className="h-6 w-6 text-indigo-600" />
-                    </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              "Dynamic, proof-driven profiles",
+              "Live, curated Rooms instead of static feeds",
+              "Warm, relevant intros — not cold outreach",
+              "Events and connections built for forward motion"
+            ].map((item, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <div className="flex items-center mb-4">
+                  <div className="bg-indigo-100 p-2 rounded-full mr-3">
+                    <TrendingUp className="w-5 h-5 text-indigo-600" />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{benefit.title}</h3>
-                    <p className="mt-2 text-gray-600 text-sm md:text-base">{benefit.description}</p>
-                  </div>
+                  <p className="font-medium text-gray-900">{item}</p>
                 </div>
-              );
-            })}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* What You Get */}
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-8 md:mb-12">
+            What You Get
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              "Targeted networking by niche, need, and stage",
+              "Access to mentors, collaborators, and real builders",
+              "Ongoing rooms and tactical sessions",
+              "A growing network and verified reputation that follows you"
+            ].map((item, index) => (
+              <div key={index} className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg shadow-sm p-6 border border-gray-200">
+                <div className="flex items-center mb-4">
+                  <div className="bg-indigo-500 p-2 rounded-full mr-3">
+                    <Award className="w-5 h-5 text-white" />
+                  </div>
+                  <p className="font-medium text-gray-900">{item}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -152,64 +141,76 @@ export function AboutPage() {
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-8 md:mb-12">
             What Our Members Say
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-            {testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200">
-                <div className="h-40 md:h-36 lg:h-40">
-                  <p className="text-gray-600 italic text-sm md:text-base">"{testimonial.quote}"</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-200">
+              <p className="text-gray-600 italic mb-6">
+                "I met my co-founder and closed three deals in a single Room."
+              </p>
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-indigo-600 font-semibold">SJ</span>
                 </div>
-                <div className="mt-6 border-t border-gray-100 pt-4">
-                  <p className="text-base font-semibold text-gray-900">{testimonial.author}</p>
-                  <p className="text-sm text-gray-500">{testimonial.role} at {testimonial.company}</p>
+                <div>
+                  <p className="font-medium text-gray-900">Sarah J.</p>
+                  <p className="text-sm text-gray-500">Enterprise Sales Director</p>
                 </div>
               </div>
-            ))}
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-200">
+              <p className="text-gray-600 italic mb-6">
+                "This feels like what LinkedIn should have been."
+              </p>
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-purple-600 font-semibold">MC</span>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">Michael C.</p>
+                  <p className="text-sm text-gray-500">Startup Sales Lead</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-200">
+              <p className="text-gray-600 italic mb-6">
+                "It's not just networking — it's progress."
+              </p>
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-blue-600 font-semibold">AR</span>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">Alex R.</p>
+                  <p className="text-sm text-gray-500">Early-Stage Founder</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* How It Works */}
-        <div className="bg-white">
+        <div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-8 md:mb-12">
-            How inRooms Works
+            How It Works
           </h2>
-          <div className="max-w-4xl mx-auto">
-            {/* Steps */}
-            <div className="space-y-12 md:space-y-16">
-              {[
-                {
-                  number: 1,
-                  title: "Create Your Profile",
-                  description: "Set up your professional profile highlighting your experience, skills, and networking goals."
-                },
-                {
-                  number: 2,
-                  title: "Discover Events",
-                  description: "Browse upcoming networking events, workshops, and masterclasses tailored to tech sales professionals."
-                },
-                {
-                  number: 3,
-                  title: "Connect & Engage",
-                  description: "Participate in events, build your network, and engage in meaningful conversations with industry peers."
-                },
-                {
-                  number: 4,
-                  title: "Grow Your Career",
-                  description: "Leverage new connections, insights, and opportunities to accelerate your professional growth."
-                }
-              ].map((step) => (
-                <div key={step.number} className="flex flex-col md:flex-row md:items-start">
-                  <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-6">
-                    <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                      {step.number}
-                    </div>
-                  </div>
-                  <div className="md:pt-2">
-                    <h3 className="text-xl font-semibold text-gray-900">{step.title}</h3>
-                    <p className="mt-2 text-gray-600">{step.description}</p>
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              "Create a profile — tell us what you're working on",
+              "Join curated Rooms based on your goals",
+              "Collaborate in real time",
+              "Build your reputation and grow your career"
+            ].map((step, index) => (
+              <div key={index} className="relative">
+                <div className="bg-indigo-600 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold mb-4">
+                  {index + 1}
                 </div>
-              ))}
-            </div>
+                {index < 3 && (
+                  <div className="hidden md:block absolute top-5 left-10 w-full h-0.5 bg-indigo-200"></div>
+                )}
+                <p className="font-medium text-gray-900">{step}</p>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -219,7 +220,7 @@ export function AboutPage() {
             Ready to Transform Your Network?
           </h2>
           <p className="mt-4 text-lg md:text-xl text-indigo-100 max-w-2xl mx-auto">
-            Join thousands of tech sales professionals who are already growing their careers with inRooms.
+            Join thousands of founders, operators, and builders who are already growing their careers with inRooms.
             Your next big opportunity could be just one connection away.
           </p>
           <div className="mt-8 flex justify-center">
