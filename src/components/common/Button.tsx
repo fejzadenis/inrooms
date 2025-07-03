@@ -1,13 +1,11 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { LoadingSpinner } from './LoadingSpinner';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'glass';
+  variant?: 'primary' | 'secondary' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   children: React.ReactNode;
-  glowColor?: string;
 }
 
 export function Button({
@@ -17,16 +15,14 @@ export function Button({
   children,
   className = '',
   disabled,
-  glowColor = 'rgba(0, 178, 255, 0.5)',
   ...props
 }: ButtonProps) {
-  const baseStyles = 'font-medium transition-all duration-300 flex items-center justify-center relative overflow-hidden';
+  const baseStyles = 'font-medium transition-colors duration-200 flex items-center justify-center';
   
   const variants = {
     primary: 'bg-gradient-to-r from-[#003B7A] to-[#00B2FF] text-white hover:opacity-90 disabled:opacity-50',
-    secondary: 'bg-gradient-to-r from-gray-800 to-gray-900 text-white hover:opacity-90 disabled:opacity-50',
-    outline: 'border-2 border-gray-300 text-gray-700 hover:bg-gray-50 disabled:bg-gray-50',
-    glass: 'backdrop-blur-md bg-white/10 border border-white/20 text-white hover:bg-white/20 disabled:opacity-50'
+    secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 disabled:bg-gray-100',
+    outline: 'border-2 border-gray-300 text-gray-700 hover:bg-gray-50 disabled:bg-gray-50'
   };
 
   const sizes = {
@@ -35,8 +31,12 @@ export function Button({
     lg: 'px-6 py-3 text-lg rounded-lg'
   };
 
-  const buttonContent = (
-    <>
+  return (
+    <button
+      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+      disabled={disabled || isLoading}
+      {...props}
+    >
       {isLoading ? (
         <>
           <LoadingSpinner className="mr-2" />
@@ -45,39 +45,6 @@ export function Button({
       ) : (
         children
       )}
-    </>
-  );
-
-  return (
-    <motion.button
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-      disabled={disabled || isLoading}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      {...props}
-    >
-      {variant === 'primary' && (
-        <span 
-          className="absolute inset-0 w-full h-full"
-          style={{
-            background: `radial-gradient(circle at var(--x, 50%) var(--y, 50%), ${glowColor} 0%, transparent 50%)`,
-            opacity: 0,
-            transition: 'opacity 0.3s',
-          }}
-          onMouseMove={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            const x = ((e.clientX - rect.left) / rect.width) * 100;
-            const y = ((e.clientY - rect.top) / rect.height) * 100;
-            e.currentTarget.style.setProperty('--x', `${x}%`);
-            e.currentTarget.style.setProperty('--y', `${y}%`);
-            e.currentTarget.style.opacity = '0.4';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = '0';
-          }}
-        />
-      )}
-      {buttonContent}
-    </motion.button>
+    </button>
   );
 }

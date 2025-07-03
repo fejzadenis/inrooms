@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   LogOut,
@@ -18,7 +18,6 @@ import {
   Menu,
   X
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Logo } from '../components/common/Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { useTour } from '../contexts/TourContext';
@@ -29,10 +28,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const { askForTourPermission, startTour } = useTour();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
   const notificationsRef = React.useRef<HTMLDivElement>(null);
   const mobileMenuRef = React.useRef<HTMLDivElement>(null);
@@ -54,20 +52,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
     checkTourStatus();
   }, [user, location.pathname, askForTourPermission, startTour]);
-
-  // Handle scroll effect for navbar
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -117,8 +101,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const navigationItems = [
     { name: 'Events', href: '/events', dataTour: 'events' },
     { name: 'Network', href: '/network', dataTour: 'network' },
-    { name: 'Products', href: '/solutions', dataTour: 'solutions' },
-    { name: 'FAQ', href: '/resources', dataTour: 'resources' }
+    { name: 'Solutions', href: '/solutions', dataTour: 'solutions' },
+    { name: 'Resources', href: '/resources', dataTour: 'resources' }
   ];
 
   const mockNotifications = [
@@ -137,18 +121,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      {/* Animated background */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-900 via-gray-900 to-black"></div>
-        <div className="absolute top-0 left-0 w-full h-full opacity-30">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob"></div>
-          <div className="absolute top-0 right-1/3 w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob animation-delay-4000"></div>
-        </div>
-      </div>
-
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-gray-900/80 backdrop-blur-lg shadow-lg' : 'bg-transparent'}`}>
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
@@ -158,27 +132,17 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
               {/* Desktop Navigation */}
               {user && (
-                <div className="hidden md:flex items-center space-x-1 ml-6" data-tour="navigation">
+                <div className="hidden md:flex items-center space-x-4 ml-6" data-tour="navigation">
                   {navigationItems.map(item => (
                     <Link 
                       key={item.name}
                       to={item.href} 
-                      className={`relative px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 group overflow-hidden ${
-                        location.pathname === item.href 
-                          ? 'text-white' 
-                          : 'text-gray-300 hover:text-white'
+                      className={`text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium ${
+                        location.pathname === item.href ? 'text-indigo-600 font-semibold' : ''
                       }`}
                       data-tour={item.dataTour}
                     >
-                      <span className="relative z-10">{item.name}</span>
-                      {location.pathname === item.href && (
-                        <motion.span 
-                          layoutId="navbar-indicator"
-                          className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-md -z-0"
-                          transition={{ type: "spring", duration: 0.6 }}
-                        />
-                      )}
-                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                      {item.name}
                     </Link>
                   ))}
                 </div>
@@ -189,7 +153,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               {/* Mobile menu button */}
               {user && (
                 <button
-                  className="md:hidden p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-800"
+                  className="md:hidden p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                   data-mobile-menu-toggle="true"
                   aria-label="Toggle mobile menu"
@@ -207,151 +171,130 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                   <div className="relative" ref={notificationsRef} data-tour="notifications">
                     <button
                       onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                      className="p-2 rounded-full hover:bg-gray-800 relative"
+                      className="p-2 rounded-full hover:bg-gray-100 relative"
                       aria-label="Notifications"
                     >
-                      <Bell className="w-5 h-5 text-gray-300" />
-                      <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-gray-900" />
+                      <Bell className="w-5 h-5 text-gray-600" />
+                      <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white" />
                     </button>
 
-                    <AnimatePresence>
-                      {isNotificationsOpen && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 10 }}
-                          transition={{ duration: 0.2 }}
-                          className="absolute right-0 mt-2 w-80 bg-gray-800 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50 border border-gray-700"
-                        >
-                          <div className="p-4">
-                            <h3 className="text-sm font-semibold text-white">Notifications</h3>
-                            <div className="mt-2 divide-y divide-gray-700">
-                              {mockNotifications.map((notification) => (
-                                <div key={notification.id} className="py-3">
-                                  <p className="text-sm font-medium text-white">{notification.title}</p>
-                                  <p className="text-sm text-gray-400">{notification.message}</p>
-                                  <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
-                                </div>
-                              ))}
-                            </div>
-                            <Link
-                              to="/notifications"
-                              className="block mt-4 text-sm font-medium text-blue-400 hover:text-blue-300"
-                            >
-                              View all notifications
-                            </Link>
+                    {isNotificationsOpen && (
+                      <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                        <div className="p-4">
+                          <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                          <div className="mt-2 divide-y divide-gray-100">
+                            {mockNotifications.map((notification) => (
+                              <div key={notification.id} className="py-3">
+                                <p className="text-sm font-medium text-gray-900">{notification.title}</p>
+                                <p className="text-sm text-gray-500">{notification.message}</p>
+                                <p className="text-xs text-gray-400 mt-1">{notification.time}</p>
+                              </div>
+                            ))}
                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          <Link
+                            to="/notifications"
+                            className="block mt-4 text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                          >
+                            View all notifications
+                          </Link>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="relative" ref={menuRef} data-tour="user-menu">
                     <button
                       onClick={() => setIsMenuOpen(!isMenuOpen)}
-                      className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200"
+                      className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
                       aria-label="User menu"
                     >
                       {user.photoURL ? (
-                        <div className="relative">
-                          <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-sm opacity-75"></div>
-                          <img
-                            src={user.photoURL}
-                            alt={user.name}
-                            className="w-8 h-8 rounded-full object-cover relative"
-                          />
-                        </div>
+                        <img
+                          src={user.photoURL}
+                          alt={user.name}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center">
-                          <UserCircle className="w-5 h-5 text-white" />
+                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                          <UserCircle className="w-5 h-5 text-indigo-600" />
                         </div>
                       )}
                       <div className="text-right hidden sm:block">
-                        <div className="text-sm font-medium text-white">
+                        <div className="text-sm font-medium text-gray-900">
                           {user.name}
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-gray-500">
                           {user.role === 'admin' ? 'Administrator' : 'User'}
                         </div>
                       </div>
-                      <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isMenuOpen ? 'transform rotate-180' : ''}`} />
+                      <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isMenuOpen ? 'transform rotate-180' : ''}`} />
                     </button>
 
-                    <AnimatePresence>
-                      {isMenuOpen && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 10 }}
-                          transition={{ duration: 0.2 }}
-                          className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50 border border-gray-700"
-                        >
-                          <div className="py-1">
-                            {user.role === 'user' && userMenuItems.map((item) => {
-                              const Icon = item.icon;
-                              const isActive = location.pathname === item.href;
-                              return (
-                                <Link
-                                  key={item.name}
-                                  to={item.href}
-                                  className={`flex items-center px-4 py-2 text-sm ${
-                                    isActive
-                                      ? 'bg-gray-700 text-white'
-                                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                                  }`}
-                                  onClick={() => setIsMenuOpen(false)}
-                                >
-                                  <Icon className="w-4 h-4 mr-3" />
-                                  {item.name}
-                                </Link>
-                              );
-                            })}
+                    {isMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                        <div className="py-1">
+                          {user.role === 'user' && userMenuItems.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = location.pathname === item.href;
+                            return (
+                              <Link
+                                key={item.name}
+                                to={item.href}
+                                className={`flex items-center px-4 py-2 text-sm ${
+                                  isActive
+                                    ? 'bg-gray-100 text-gray-900'
+                                    : 'text-gray-700 hover:bg-gray-50'
+                                }`}
+                                onClick={() => setIsMenuOpen(false)}
+                              >
+                                <Icon className="w-4 h-4 mr-3" />
+                                {item.name}
+                              </Link>
+                            );
+                          })}
 
-                            {user.role === 'admin' && (
-                              <>
-                                <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                  Admin Controls
-                                </div>
-                                {adminMenuItems.map((item) => {
-                                  const Icon = item.icon;
-                                  const isActive = location.pathname === item.href;
-                                  return (
-                                    <Link
-                                      key={item.name}
-                                      to={item.href}
-                                      className={`flex items-center px-4 py-2 text-sm ${
-                                        isActive
-                                          ? 'bg-gray-700 text-white'
-                                          : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                                      }`}
-                                      onClick={() => setIsMenuOpen(false)}
-                                    >
-                                      <Icon className="w-4 h-4 mr-3" />
-                                      {item.name}
-                                    </Link>
-                                  );
-                                })}
-                                <div className="border-t border-gray-700 my-1"></div>
-                              </>
-                            )}
-                            <button
-                              onClick={handleLogout}
-                              className="flex w-full items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
-                            >
-                              <LogOut className="w-4 h-4 mr-3" />
-                              Logout
-                            </button>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          {user.role === 'admin' && (
+                            <>
+                              <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Admin Controls
+                              </div>
+                              {adminMenuItems.map((item) => {
+                                const Icon = item.icon;
+                                const isActive = location.pathname === item.href;
+                                return (
+                                  <Link
+                                    key={item.name}
+                                    to={item.href}
+                                    className={`flex items-center px-4 py-2 text-sm ${
+                                      isActive
+                                        ? 'bg-gray-100 text-gray-900'
+                                        : 'text-gray-700 hover:bg-gray-50'
+                                    }`}
+                                    onClick={() => setIsMenuOpen(false)}
+                                  >
+                                    <Icon className="w-4 h-4 mr-3" />
+                                    {item.name}
+                                  </Link>
+                                );
+                              })}
+                              <div className="border-t border-gray-100 my-1"></div>
+                            </>
+                          )}
+                          <button
+                            onClick={handleLogout}
+                            className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          >
+                            <LogOut className="w-4 h-4 mr-3" />
+                            Logout
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
                 <Link to="/login">
-                  <Button variant="primary" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                    Login
-                  </Button>
+                  <Button variant="primary">Login</Button>
                 </Link>
               )}
             </div>
@@ -359,96 +302,88 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Mobile Navigation Menu */}
-        <AnimatePresence>
-          {isMobileMenuOpen && user && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="md:hidden bg-gray-800 border-t border-gray-700 shadow-lg fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto"
-              ref={mobileMenuRef}
-            >
-              <div className="px-2 pt-2 pb-3 space-y-1">
-                {/* Navigation Links */}
-                {navigationItems.map(item => (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`block px-3 py-2 rounded-md text-base font-medium ${
-                      location.pathname === item.href
-                        ? 'bg-gray-700 text-white'
-                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                    }`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    data-tour={item.dataTour}
+        {isMobileMenuOpen && user && (
+          <div 
+            className="md:hidden bg-white border-t border-gray-200 shadow-lg fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto"
+            ref={mobileMenuRef}
+          >
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              {/* Navigation Links */}
+              {navigationItems.map(item => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                    location.pathname === item.href
+                      ? 'bg-indigo-50 text-indigo-600'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  data-tour={item.dataTour}
+                >
+                  {item.name}
+                </Link>
+              ))}
+              
+              {/* User Menu Items */}
+              <div className="pt-4 pb-3 border-t border-gray-200">
+                <div className="px-3 space-y-1">
+                  {user.role === 'user' && userMenuItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Icon className="w-5 h-5 mr-3 text-gray-500" />
+                        {item.name}
+                      </Link>
+                    );
+                  })}
+                  
+                  {user.role === 'admin' && (
+                    <>
+                      <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Admin Controls
+                      </div>
+                      {adminMenuItems.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <Link
+                            key={item.name}
+                            to={item.href}
+                            className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <Icon className="w-5 h-5 mr-3 text-gray-500" />
+                            {item.name}
+                          </Link>
+                        );
+                      })}
+                    </>
+                  )}
+                  
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                   >
-                    {item.name}
-                  </Link>
-                ))}
-                
-                {/* User Menu Items */}
-                <div className="pt-4 pb-3 border-t border-gray-700">
-                  <div className="px-3 space-y-1">
-                    {user.role === 'user' && userMenuItems.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <Link
-                          key={item.name}
-                          to={item.href}
-                          className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <Icon className="w-5 h-5 mr-3 text-gray-400" />
-                          {item.name}
-                        </Link>
-                      );
-                    })}
-                    
-                    {user.role === 'admin' && (
-                      <>
-                        <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                          Admin Controls
-                        </div>
-                        {adminMenuItems.map((item) => {
-                          const Icon = item.icon;
-                          return (
-                            <Link
-                              key={item.name}
-                              to={item.href}
-                              className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                              onClick={() => setIsMobileMenuOpen(false)}
-                            >
-                              <Icon className="w-5 h-5 mr-3 text-gray-400" />
-                              {item.name}
-                            </Link>
-                          );
-                        })}
-                      </>
-                    )}
-                    
-                    <button
-                      onClick={() => {
-                        handleLogout();
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="flex w-full items-center px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                    >
-                      <LogOut className="w-5 h-5 mr-3 text-gray-400" />
-                      Logout
-                    </button>
-                  </div>
+                    <LogOut className="w-5 h-5 mr-3 text-gray-500" />
+                    Logout
+                  </button>
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </div>
+        )}
       </nav>
 
-      <main className="relative z-10 pt-20 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {children}
-        </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {children}
       </main>
     </div>
   );
