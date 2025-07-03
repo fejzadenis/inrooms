@@ -218,7 +218,7 @@ export function HomePage() {
               {[
                 {
                   title: 'Curated Events',
-                  description: 'Carefully selected topics and participants to ensure meaningful connections.',
+                  description: 'Join private Rooms, hear tactical keynotes, and build reputation with live connections.',
                 },
                 {
                   title: 'Expert Networking',
