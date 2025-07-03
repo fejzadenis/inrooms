@@ -17,8 +17,9 @@ import {
   Zap,
   Lightbulb
 } from 'lucide-react';
-import { Button } from '../common/Button';
+import { GlowButton } from '../common/GlowButton';
 import { motion } from 'framer-motion';
+import { GlassCard } from '../common/GlassCard';
 import type { Demo } from '../../types/demo';
 
 interface DemoCardProps {
@@ -57,7 +58,7 @@ export function DemoCard({
   const getStatusBadge = () => {
     if (isLive) {
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-900/50 text-red-300 border border-red-700/50">
           <div className="w-2 h-2 bg-red-500 rounded-full mr-1 animate-pulse"></div>
           Live Now
         </span>
@@ -65,7 +66,7 @@ export function DemoCard({
     }
     if (isUpcoming) {
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-900/50 text-blue-300 border border-blue-700/50">
           <Calendar className="w-3 h-3 mr-1" />
           Upcoming
         </span>
@@ -73,7 +74,7 @@ export function DemoCard({
     }
     if (isCompleted) {
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-800/50 text-gray-300 border border-gray-700/50">
           <Video className="w-3 h-3 mr-1" />
           Completed
         </span>
@@ -85,15 +86,15 @@ export function DemoCard({
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'product-demo':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-900/50 text-blue-300 border-blue-700/50';
       case 'solution-showcase':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-900/50 text-green-300 border-green-700/50';
       case 'case-study':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-purple-900/50 text-purple-300 border-purple-700/50';
       case 'training':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-orange-900/50 text-orange-300 border-orange-700/50';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-800/50 text-gray-300 border-gray-700/50';
     }
   };
 
@@ -113,11 +114,9 @@ export function DemoCard({
   };
 
   return (
-    <motion.div 
-      whileHover={{ y: -5 }}
-      transition={{ duration: 0.3 }}
-      className={`relative rounded-xl border-2 p-4 md:p-6 transition-all duration-200 hover:shadow-xl ${
-        demo.isFeatured ? 'border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50' : 'border-gray-200 bg-white'
+    <GlassCard 
+      className={`relative p-4 md:p-6 transition-all duration-200 ${
+        demo.isFeatured ? 'border-yellow-500/50 bg-gradient-to-br from-yellow-900/20 to-orange-900/20' : ''
       }`}
     >
       {/* Header */}
@@ -126,12 +125,12 @@ export function DemoCard({
           <div className="flex flex-wrap items-center gap-2">
             {getStatusBadge()}
             {demo.isFeatured && (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-900/50 text-yellow-300 border border-yellow-700/50">
                 <Star className="w-3 h-3 mr-1" />
                 Featured
               </span>
             )}
-            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(demo.category)}`}>
+            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getCategoryColor(demo.category)}`}>
               {getCategoryIcon(demo.category)}
               {demo.category.replace('-', ' ')}
             </span>
@@ -142,7 +141,7 @@ export function DemoCard({
               {demo.isFeatured ? (
                 <button
                   onClick={onToggleFeatured}
-                  className="p-1 rounded-full transition-colors text-yellow-500 hover:text-yellow-600"
+                  className="p-1 rounded-full transition-colors text-yellow-400 hover:text-yellow-300 hoverable"
                   title="Remove from featured"
                 >
                   <Star className="w-4 h-4 fill-current" />
@@ -151,10 +150,10 @@ export function DemoCard({
                 <button
                   onClick={onToggleFeatured}
                   disabled={isFeaturingInProgress}
-                  className={`p-1 rounded-full transition-colors ${
+                  className={`p-1 rounded-full transition-colors hoverable ${
                     isFeaturingInProgress 
-                      ? 'text-gray-300 cursor-not-allowed' 
-                      : 'text-gray-400 hover:text-yellow-500'
+                      ? 'text-gray-600 cursor-not-allowed' 
+                      : 'text-gray-400 hover:text-yellow-400'
                   }`}
                   title="Add to featured"
                 >
@@ -166,22 +165,22 @@ export function DemoCard({
           )}
         </div>
 
-        <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
+        <h3 className="text-lg md:text-xl font-semibold text-white mb-2 line-clamp-2">
           {demo.title}
         </h3>
         
-        <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+        <p className="text-gray-300 text-sm mb-4 line-clamp-3">
           {demo.description}
         </p>
 
         {/* Host Info */}
         <div className="flex items-center space-x-3 mb-4">
-          <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-            <Building className="w-5 h-5 text-indigo-600" />
+          <div className="w-10 h-10 bg-indigo-900/50 rounded-full flex items-center justify-center border border-indigo-700/50">
+            <Building className="w-5 h-5 text-indigo-300" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-900">{demo.hostName}</p>
-            <p className="text-xs text-gray-500">{demo.hostTitle} at {demo.hostCompany}</p>
+            <p className="text-sm font-medium text-white">{demo.hostName}</p>
+            <p className="text-xs text-gray-400">{demo.hostTitle} at {demo.hostCompany}</p>
           </div>
         </div>
 
@@ -191,14 +190,14 @@ export function DemoCard({
             {demo.tags.slice(0, 3).map((tag, index) => (
               <span
                 key={index}
-                className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700"
+                className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-indigo-900/30 text-indigo-300 border border-indigo-700/30"
               >
                 <Tag className="w-3 h-3 mr-1" />
                 {tag}
               </span>
             ))}
             {demo.tags.length > 3 && (
-              <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700">
+              <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-indigo-900/30 text-indigo-300 border border-indigo-700/30">
                 +{demo.tags.length - 3} more
               </span>
             )}
@@ -208,26 +207,26 @@ export function DemoCard({
 
       {/* Details */}
       <div className="pb-4 space-y-3">
-        <div className="flex items-center text-sm text-gray-600">
-          <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
+        <div className="flex items-center text-sm text-gray-300">
+          <Calendar className="w-4 h-4 mr-2 flex-shrink-0 text-indigo-400" />
           <span>{format(demoStart, 'MMM d, yyyy')}</span>
         </div>
         
-        <div className="flex items-center text-sm text-gray-600">
-          <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+        <div className="flex items-center text-sm text-gray-300">
+          <Clock className="w-4 h-4 mr-2 flex-shrink-0 text-indigo-400" />
           <span>{format(demoStart, 'h:mm a')} ({demo.duration} min)</span>
         </div>
         
-        <div className="flex items-center text-sm text-gray-600">
-          <Users className="w-4 h-4 mr-2 flex-shrink-0" />
+        <div className="flex items-center text-sm text-gray-300">
+          <Users className="w-4 h-4 mr-2 flex-shrink-0 text-indigo-400" />
           <span>{demo.currentAttendees} / {demo.maxAttendees} registered</span>
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-800 rounded-full h-2 border border-gray-700">
           <div
             className={`h-2 rounded-full transition-all duration-300 ${
-              isFull ? 'bg-red-500' : 'bg-gradient-to-r from-green-500 to-emerald-500'
+              isFull ? 'bg-red-600' : 'bg-gradient-to-r from-green-500 to-emerald-500'
             }`}
             style={{
               width: `${Math.min((demo.currentAttendees / demo.maxAttendees) * 100, 100)}%`,
@@ -237,11 +236,11 @@ export function DemoCard({
 
         {/* Recording Info */}
         {demo.recordingUrl && (
-          <div className="flex items-center text-sm text-gray-600">
-            <Play className="w-4 h-4 mr-2 flex-shrink-0" />
+          <div className="flex items-center text-sm text-gray-300">
+            <Play className="w-4 h-4 mr-2 flex-shrink-0 text-indigo-400" />
             <span>Recording available ({demo.recordingDuration} min)</span>
             {demo.visibilityExpiresAt && (
-              <span className="ml-2 text-xs text-orange-600">
+              <span className="ml-2 text-xs text-orange-400">
                 Expires {format(demo.visibilityExpiresAt, 'MMM d')}
               </span>
             )}
@@ -253,72 +252,72 @@ export function DemoCard({
       <div className="space-y-3">
         {/* Primary Actions */}
         {!isCompleted && !isRegistered && !isFull && (
-          <Button onClick={onRegister} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
+          <GlowButton onClick={onRegister} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 hoverable">
             <Users className="w-4 h-4 mr-2" />
             Register for Demo
-          </Button>
+          </GlowButton>
         )}
 
         {!isCompleted && isRegistered && !canJoin && (
-          <Button variant="outline" disabled className="w-full">
+          <GlowButton variant="outline" disabled className="w-full">
             <Users className="w-4 h-4 mr-2" />
             Registered
-          </Button>
+          </GlowButton>
         )}
 
         {canJoin && (
-          <Button onClick={onJoin} className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
+          <GlowButton onClick={onJoin} className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 hoverable">
             <Video className="w-4 h-4 mr-2" />
             {isLive ? 'Join Live Demo' : 'Join Demo'}
-          </Button>
+          </GlowButton>
         )}
 
         {isFull && !isRegistered && (
-          <Button variant="outline" disabled className="w-full">
+          <GlowButton variant="outline" disabled className="w-full">
             <Users className="w-4 h-4 mr-2" />
             Demo Full
-          </Button>
+          </GlowButton>
         )}
 
         {/* Recording Actions */}
         {demo.recordingUrl && (
-          <Button variant="outline" onClick={onViewRecording} className="w-full border-indigo-200 text-indigo-600 hover:bg-indigo-50">
+          <GlowButton variant="outline" onClick={onViewRecording} className="w-full border-indigo-700/50 text-indigo-300 hover:bg-indigo-900/30 hoverable">
             <Play className="w-4 h-4 mr-2" />
             Watch Recording
-          </Button>
+          </GlowButton>
         )}
 
         {/* Management Actions */}
         {canManage && (
           <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             {isCompleted && !demo.recordingUrl && (
-              <Button variant="outline" onClick={onUploadRecording} className="flex-1 border-indigo-200 text-indigo-600 hover:bg-indigo-50">
+              <GlowButton variant="outline" onClick={onUploadRecording} className="flex-1 border-indigo-700/50 text-indigo-300 hover:bg-indigo-900/30 hoverable">
                 <Upload className="w-4 h-4 mr-2" />
                 Upload Recording
-              </Button>
+              </GlowButton>
             )}
             
             {demo.recordingUrl && (
-              <Button variant="outline" onClick={onViewRecording} className="flex-1 border-indigo-200 text-indigo-600 hover:bg-indigo-50">
+              <GlowButton variant="outline" onClick={onViewRecording} className="flex-1 border-indigo-700/50 text-indigo-300 hover:bg-indigo-900/30 hoverable">
                 <Eye className="w-4 h-4 mr-2" />
                 Manage
-              </Button>
+              </GlowButton>
             )}
 
             {!demo.isFeatured && demo.hostId === demo.hostId && (
-              <Button 
+              <GlowButton 
                 variant="outline" 
                 onClick={onToggleFeatured} 
-                className="flex-1 border-yellow-200 text-yellow-600 hover:bg-yellow-50"
+                className="flex-1 border-yellow-700/50 text-yellow-300 hover:bg-yellow-900/30 hoverable"
                 isLoading={isFeaturingInProgress}
               >
                 <DollarSign className="w-4 h-4 mr-2" />
                 Feature Product
-              </Button>
+              </GlowButton>
             )}
           </div>
         )}
       </div>
-    </motion.div>
+    </GlassCard>
   );
 }
