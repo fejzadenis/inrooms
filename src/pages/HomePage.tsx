@@ -213,7 +213,10 @@ export function HomePage() {
             <div className="text-center mb-16">
               <h2 className="text-3xl font-bold text-gray-900">Why Choose inRooms?</h2>
               <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
-                inRooms is a curated virtual networking platform built for early-stage founders, operators, and builders. It goes beyond traditional networking by offering high-signal, niche-focused Rooms, tactical keynotes from real practitioners, and live collaboration spaces where members can co-work and build in real time.
+                inRooms is a curated virtual networking platform built for early-stage founders, operators, and builders. It goes beyond traditional networking by offering high-signal, niche-focused Rooms, tactical keynotes from real practitioners, and live collaboration spaces where members can co-work and build in real time. Unlike static platforms, inRooms emphasizes real outcomes, verified reputation, and meaningful connection — making it a space where networking becomes a byproduct of real progress.
+              </p>
+              <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
+                Curated Events- Join private Rooms, hear tactical keynotes, and build reputation with live connections.
               </p>
             </div>
 
