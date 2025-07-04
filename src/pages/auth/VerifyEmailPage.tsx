@@ -183,11 +183,11 @@ export function VerifyEmailPage() {
                       } else {
                         toast.info('Email not verified yet. Please check your inbox.');
                       }
-                    } finally {
-                      setIsLoading(false);
                     } catch (error) {
                       console.error('Error reloading user:', error);
                       toast.error('Failed to check verification status');
+                    } finally {
+                      setIsLoading(false);
                     }
                   }
                 }}
