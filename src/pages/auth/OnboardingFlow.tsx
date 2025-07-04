@@ -278,7 +278,10 @@ export function OnboardingFlow() {
         completedAt: new Date().toISOString(),
         
         // Initialize completedTours to track tour completion
-        completedTours: {}
+        completedTours: {},
+        
+        // Explicitly set onboardingCompleted flag
+        onboardingCompleted: true
       };
 
       // Update user profile first

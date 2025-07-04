@@ -36,7 +36,7 @@ export function ProtectedRoute({ children, requireEmailVerification = false }: P
   }
 
   // For other routes, check if onboarding is completed when required
-  if (requireEmailVerification && !user.profile?.onboardingCompleted) {
+  if (user.emailVerified && !user.profile?.onboardingCompleted) {
     return <Navigate to="/onboarding" replace />;
   }
 
