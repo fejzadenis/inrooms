@@ -13,7 +13,7 @@ export function VerifyEmailPage() {
   const { verifyEmail, user } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [verifying, setVerifying] = useState(true);
+  const [verifying, setVerifying] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resendDisabled, setResendDisabled] = useState(false);
@@ -24,6 +24,8 @@ export function VerifyEmailPage() {
     
     if (actionCode) {
       // We have an action code, so we're verifying an email
+      setVerifying(true);
+      
       const verifyUserEmail = async () => {
         try {
           await verifyEmail(actionCode);
@@ -41,11 +43,11 @@ export function VerifyEmailPage() {
       };
 
       verifyUserEmail();
-    } else {
-      // No action code, so we're just showing the verification instructions
-      setVerifying(false);
+    } else if (user && user.emailVerified) {
+      // If user is already verified, redirect to appropriate page
+      navigate('/onboarding');
     }
-  }, [searchParams, verifyEmail, navigate]);
+  }, [searchParams, verifyEmail, navigate, user]);
 
   // Countdown timer for resend button
   useEffect(() => {
@@ -58,10 +60,10 @@ export function VerifyEmailPage() {
   }, [countdown, resendDisabled]);
 
   const handleResendVerification = async () => {
-    if (!user || resendDisabled) return;
+    if (!auth.currentUser || resendDisabled) return;
     
     try {
-      await sendEmailVerification(auth.currentUser!);
+      await sendEmailVerification(auth.currentUser);
       toast.success('Verification email sent! Please check your inbox.');
       setResendDisabled(true);
       setCountdown(60); // Disable for 60 seconds
