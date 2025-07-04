@@ -8,7 +8,7 @@ import { Button } from '../../components/common/Button';
 import { GoogleSignInButton } from '../../components/auth/GoogleSignInButton';
 import { Logo } from '../../components/common/Logo';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { db, auth } from '../../config/firebase';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
