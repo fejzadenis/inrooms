@@ -55,15 +55,18 @@ export function NetworkPage() {
   const loadNetworkData = async () => {
     if (!user) return;
 
+    console.log("NETWORK DEBUG: Loading network data for user", user.id);
     try {
       setLoading(true);
       
       // Load user's connections
       const userConnections = await networkService.getUserConnectionProfiles(user.id);
+      console.log("NETWORK DEBUG: Loaded connections", userConnections.length);
       setConnections(userConnections);
       
       // Load recommended connections
       const recommendedUsers = await networkService.getRecommendedConnections(user.id);
+      console.log("NETWORK DEBUG: Loaded recommendations", recommendedUsers.length);
       setRecommendations(recommendedUsers);
       
     } catch (error) {
@@ -120,9 +123,11 @@ export function NetworkPage() {
   const handleSearch = async () => {
     if (!user || !searchTerm.trim()) return;
 
+    console.log("NETWORK DEBUG: Searching for", searchTerm);
     try {
       setLoading(true);
       const searchResults = await networkService.searchUsers(searchTerm.trim(), user.id);
+      console.log("NETWORK DEBUG: Search results", searchResults.length);
       
       if (activeTab === 'connections') {
         const filteredConnections = searchResults.filter(u => u.connectionStatus === 'connected');
@@ -141,9 +146,11 @@ export function NetworkPage() {
 
   React.useEffect(() => {
     if (searchTerm) {
+      console.log("NETWORK DEBUG: Search term changed, debouncing search");
       const debounceTimer = setTimeout(handleSearch, 500);
       return () => clearTimeout(debounceTimer);
     } else if (user) {
+      console.log("NETWORK DEBUG: Search term cleared, reloading network data");
       loadNetworkData();
     }
   }, [searchTerm, activeTab]);

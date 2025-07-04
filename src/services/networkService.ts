@@ -198,9 +198,11 @@ export const networkService = {
   async searchUsers(searchTerm: string, currentUserId: string): Promise<NetworkProfile[]> {
     try {
       const usersRef = collection(db, 'users');
-      const q = query(usersRef, limit(50));
+      // Remove the limit to get all users
+      const q = query(usersRef);
 
       const snapshot = await getDocs(q);
+      console.log("NETWORK DEBUG: Total users found in search:", snapshot.docs.length);
       const users = snapshot.docs
         .map(doc => {
           const data = doc.data();
@@ -222,13 +224,18 @@ export const networkService = {
           if (user.id === currentUserId) return false;
           
           const searchLower = searchTerm.toLowerCase();
+          // Improved search to check all relevant fields
           return (
             user.name?.toLowerCase().includes(searchLower) ||
             user.profile_company?.toLowerCase().includes(searchLower) ||
             user.profile_title?.toLowerCase().includes(searchLower) ||
-            user.profile_skills?.some(skill => skill.toLowerCase().includes(searchLower))
+            user.profile_skills?.some(skill => skill.toLowerCase().includes(searchLower)) ||
+            user.profile_location?.toLowerCase().includes(searchLower) ||
+            user.profile_about?.toLowerCase().includes(searchLower)
           );
         });
+      
+      console.log("NETWORK DEBUG: Filtered search results:", users.length);
 
       // Add connection status for each user
       const usersWithStatus = await Promise.all(
@@ -268,7 +275,8 @@ export const networkService = {
       
       // Query users with similar skills or industry
       const usersRef = collection(db, 'users');
-      const q = query(usersRef, limit(50));
+      // Remove the limit to get all users
+      const q = query(usersRef);
       
       const snapshot = await getDocs(q);
       
@@ -331,7 +339,8 @@ export const networkService = {
       // Sort by match score and limit to top 10
       const sortedConnections = potentialConnections
         .sort((a, b) => b.matchScore - a.matchScore)
-        .slice(0, 10);
+        // Remove the hardcoded limit of 10 users
+        // .slice(0, 10);
       
       // Add connection status for each recommendation
       const recommendationsWithStatus = await Promise.all(
