@@ -551,18 +551,20 @@ export function ProfilePage() {
                             </Button>
                           </div>
                         ) : (
-                          <Button onClick={() => setIsEditing(true)} data-tour="profile-edit">
-                            <Edit3 className="w-4 h-4 mr-2" />
-                            Edit Profile
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            onClick={() => startTour('profile')} 
-                            className="ml-2"
-                          >
-                            <HelpCircle className="w-4 h-4 mr-2" />
-                            Profile Tour
-                          </Button>
+                          <>
+                            <Button onClick={() => setIsEditing(true)} data-tour="profile-edit">
+                              <Edit3 className="w-4 h-4 mr-2" />
+                              Edit Profile
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              onClick={() => startTour('profile')} 
+                              className="ml-2"
+                            >
+                              <HelpCircle className="w-4 h-4 mr-2" />
+                              Profile Tour
+                            </Button>
+                          </>
                         )}
                       </>
                     )}
