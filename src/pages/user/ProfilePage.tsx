@@ -6,10 +6,10 @@ import { z } from 'zod';
 import { MainLayout } from '../../layouts/MainLayout';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTour } from '../../contexts/TourContext';
-import { Button } from '../../components/common/Button';
+import { Button } from '../../components/common/Button'; 
 import { 
   MessageSquare, UserPlus, Users, Briefcase, MapPin, Calendar, Edit3, Save, X, Camera, 
-  Mail, Phone, Globe, Linkedin, Target, Award, Clock, Building, GraduationCap, Star,
+  Mail, Phone, Globe, Linkedin, Target, Award, Clock, Building, GraduationCap, Star, HelpCircle,
   TrendingUp, Activity, Zap, Heart, Brain, Coffee, Check, AlertTriangle, Trash2
 } from 'lucide-react';
 import { messageService } from '../../services/messageService';
@@ -98,15 +98,9 @@ export function ProfilePage() {
   // Check if we should show the profile tour
   useEffect(() => {
     const checkTourStatus = async () => {
-      if (user && !loadingProfile && isOwnProfile) {
-        const shouldStart = await askForTourPermission('profile');
-        if (shouldStart) {
-          // Small delay to ensure the UI is fully rendered
-          setTimeout(() => {
-            startTour('profile');
-          }, 1000);
-        }
-      }
+      // Profile tour should never start automatically
+      // Users can manually start it if needed
+      console.log("PROFILE DEBUG: Profile tour disabled from auto-starting");
     };
 
     checkTourStatus();
@@ -560,6 +554,14 @@ export function ProfilePage() {
                           <Button onClick={() => setIsEditing(true)} data-tour="profile-edit">
                             <Edit3 className="w-4 h-4 mr-2" />
                             Edit Profile
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            onClick={() => startTour('profile')} 
+                            className="ml-2"
+                          >
+                            <HelpCircle className="w-4 h-4 mr-2" />
+                            Profile Tour
                           </Button>
                         )}
                       </>

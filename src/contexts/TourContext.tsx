@@ -139,7 +139,13 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     }
     
-    // For other tours, only show if the user is new and hasn't seen this tour yet
+    // For profile tour, never show automatically
+    if (tourType === 'profile') {
+      console.log(`TOUR DEBUG: Profile tour should not appear automatically`);
+      return false;
+    }
+    
+    // For other tours (events, network, solutions), only show if the user is new
     console.log(`TOUR DEBUG: Permission check for ${tourType} tour:`, {
       isNewUser: user?.isNewUser,
       result: user?.isNewUser || false
