@@ -47,7 +47,7 @@ function App() {
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/confirm-reset-password" element={<ConfirmResetPasswordPage />} />
             <Route path="/onboarding" element={
-              <ProtectedRoute requireEmailVerification={true}>
+              <ProtectedRoute>
                 <OnboardingFlow />
               </ProtectedRoute>
             } />
