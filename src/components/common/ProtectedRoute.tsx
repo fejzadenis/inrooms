@@ -8,10 +8,14 @@ interface ProtectedRouteProps {
   requireEmailVerification?: boolean;
 }
 
-export function ProtectedRoute({ children, requireEmailVerification = false }: ProtectedRouteProps) {
+export function ProtectedRoute({
+  children,
+  requireEmailVerification = false,
+}: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const location = useLocation();
 
+  // Show loading spinner while auth state is being resolved
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -20,31 +24,29 @@ export function ProtectedRoute({ children, requireEmailVerification = false }: P
     );
   }
 
+  // If no user, redirect to login
   if (!user) {
-    // Redirect to login page, but save the current location they were trying to access
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Check if email verification is required and user's email is not verified
-  if (requireEmailVerification && !user.emailVerified) {
-    // Only redirect to verify-email if we're not already there
-    if (location.pathname !== '/verify-email') {
-      return <Navigate to="/verify-email" replace />;
-    }
-  }
+  const isOnboardingRoute = location.pathname === '/onboarding';
+  const isVerifyEmailRoute = location.pathname === '/verify-email';
 
-  // For the onboarding route specifically, we don't need to check if onboarding is completed
-  if (location.pathname === '/onboarding') {
+  // Allow onboarding route to bypass email verification check
+  if (isOnboardingRoute) {
     return <>{children}</>;
   }
 
-  // For other routes, check if onboarding is completed when required
-  if (user.emailVerified && !user.profile?.onboardingCompleted) {
-    // Only redirect to onboarding if we're not already there
-    if (location.pathname !== '/onboarding') {
-      return <Navigate to="/onboarding" replace />;
-    }
+  // Enforce email verification if required
+  if (requireEmailVerification && !user.emailVerified && !isVerifyEmailRoute) {
+    return <Navigate to="/verify-email" replace />;
   }
 
+  // Redirect to onboarding if email is verified but onboarding not completed
+  if (user.emailVerified && !user.profile?.onboardingCompleted && !isOnboardingRoute) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  // All checks passed; render the protected content
   return <>{children}</>;
 }
