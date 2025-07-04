@@ -74,6 +74,7 @@ export function VerifyEmailPage() {
   const handleResendVerification = async () => {
     if (!auth.currentUser || resendDisabled) return;
     
+    console.log("VERIFY DEBUG: Resending verification email");
     try {
       await sendEmailVerification(auth.currentUser);
       toast.success('Verification email sent! Please check your inbox.');
@@ -86,6 +87,14 @@ export function VerifyEmailPage() {
   };
 
   const actionCode = searchParams.get('oobCode');
+  
+  console.log("VERIFY DEBUG: Render state", {
+    verifying,
+    success,
+    error,
+    hasActionCode: !!actionCode,
+    userEmail: user?.email
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">

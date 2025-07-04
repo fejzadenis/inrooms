@@ -48,11 +48,13 @@ export interface UserRole {
 export const onboardingService = {
   async completeOnboarding(userId: string, onboardingData: OnboardingData): Promise<void> {
     try {
+      console.log("ONBOARDING DEBUG: Completing onboarding for user", userId);
       const userRef = doc(db, 'users', userId);
       
       // Prepare update data with safe defaults for all fields
       const updateData: any = {
         updatedAt: serverTimestamp(),
+        isNewUser: false, // Explicitly set isNewUser to false when onboarding is completed
       };
 
       // Professional Background - with safe defaults
@@ -123,13 +125,16 @@ export const onboardingService = {
       // Assigned Role & Completion - with safe defaults
       if (onboardingData.assignedRole) {
         updateData['profile.assignedRole'] = onboardingData.assignedRole;
+        console.log("ONBOARDING DEBUG: Setting assigned role", onboardingData.assignedRole);
       }
       updateData['profile.onboardingCompleted'] = true;
+      console.log("ONBOARDING DEBUG: Setting onboardingCompleted to true");
       if (onboardingData.completedAt) {
         updateData['profile.onboardingCompletedAt'] = onboardingData.completedAt;
       }
 
       await updateDoc(userRef, updateData);
+      console.log("ONBOARDING DEBUG: Onboarding completed successfully");
     } catch (error) {
       console.error('Error completing onboarding:', error);
       throw error;

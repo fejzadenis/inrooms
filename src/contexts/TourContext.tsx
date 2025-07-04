@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { toast } from 'react-hot-toast';
 
@@ -36,7 +36,7 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { user } = useAuth();
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [currentTour, setCurrentTour] = useState<TourType | null>(null);
-  const [tourStep, setTourStep] = useState(0);
+  const [tourStep, setTourStep] = useState(0); 
   const [shownTours, setShownTours] = useState<Record<string, boolean>>({});
 
   // Load completed tours from user profile
@@ -65,15 +65,18 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const startTour = (tourType: TourType) => {
     // Don't start the tour if it's already been shown
     if (shownTours[tourType]) {
+      console.log(`TOUR DEBUG: Not starting ${tourType} tour - already shown`);
       return;
     }
     
+    console.log(`TOUR DEBUG: Starting ${tourType} tour`);
     setCurrentTour(tourType);
     setTourStep(0);
     setIsTourOpen(true);
   };
 
   const closeTour = () => {
+    console.log(`TOUR DEBUG: Closing tour ${currentTour}`);
     setIsTourOpen(false);
     setCurrentTour(null);
     setTourStep(0);
@@ -81,6 +84,7 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const completeTour = async (tourType: TourType, userId?: string) => {
     // Mark tour as shown locally
+    console.log(`TOUR DEBUG: Completing tour ${tourType}`);
     setShownTours(prev => ({
       ...prev,
       [tourType]: true
@@ -90,11 +94,25 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const id = userId || user?.id;
     if (id) {
       try {
+        console.log(`TOUR DEBUG: Saving completed tour ${tourType} for user ${id}`);
         const userRef = doc(db, 'users', id);
-        await updateDoc(userRef, {
+        
+        // Update the completedTours object and also set isNewUser to false
+        const updateData = {
           [`profile.completedTours.${tourType}`]: true
-        });
+        };
+        
+        // If this is the main tour, also set isNewUser to false
+        if (tourType === 'main') {
+          console.log(`TOUR DEBUG: Setting isNewUser to false for user ${id}`);
+          updateData.isNewUser = false;
+          updateData.updatedAt = serverTimestamp();
+        }
+        
+        await updateDoc(userRef, updateData);
+        
       } catch (error) {
+        console.error(`TOUR DEBUG: Error saving completed tour ${tourType}:`, error);
         console.error('Error saving completed tour:', error);
       }
     }
@@ -102,6 +120,7 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const skipTour = () => {
     if (currentTour) {
+      console.log(`TOUR DEBUG: Skipping tour ${currentTour}`);
       completeTour(currentTour);
     }
     closeTour();
@@ -110,15 +129,21 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const askForTourPermission = async (tourType: TourType): Promise<boolean> => {
     // Check if this tour has already been shown
     if (shownTours[tourType]) {
+      console.log(`TOUR DEBUG: Tour ${tourType} already shown, not asking permission`);
       return false;
     }
     
     // For new users, automatically show the main tour without asking
     if (user?.isNewUser && tourType === 'main') {
+      console.log(`TOUR DEBUG: User is new, automatically showing main tour`);
       return true;
     }
     
     // For other tours, only show if the user is new and hasn't seen this tour yet
+    console.log(`TOUR DEBUG: Permission check for ${tourType} tour:`, {
+      isNewUser: user?.isNewUser,
+      result: user?.isNewUser || false
+    });
     return user?.isNewUser || false;
   };
 
