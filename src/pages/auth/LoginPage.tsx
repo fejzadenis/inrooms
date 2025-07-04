@@ -40,38 +40,50 @@ export function LoginPage() {
 
   const checkOnboardingAndRedirect = async (userId: string) => {
     try {
+      console.log("LOGIN DEBUG: Checking onboarding status for user", userId);
       // Get user document to check onboarding status
       const userRef = doc(db, 'users', userId);
       const userDoc = await getDoc(userRef);
       
       if (userDoc.exists()) {
         const userData = userDoc.data();
+        console.log("LOGIN DEBUG: User data retrieved", { 
+          role: userData.role,
+          onboardingCompleted: userData.profile?.onboardingCompleted,
+          emailVerified: auth.currentUser?.emailVerified
+        });
 
         // Check if email is verified
         if (!auth.currentUser?.emailVerified) {
+          console.log("LOGIN DEBUG: Email not verified, redirecting to verify-email");
           navigate('/verify-email');
           return;
         }
         
         // Check if user is admin
         if (userData.role === 'admin') {
+          console.log("LOGIN DEBUG: User is admin, redirecting to admin dashboard");
           navigate('/admin');
           return;
         }
         
         // Check if onboarding is completed
         if (userData.profile?.onboardingCompleted) {
+          console.log("LOGIN DEBUG: Onboarding completed, redirecting to", from);
           navigate(from);
         } else {
+          console.log("LOGIN DEBUG: Onboarding not completed, redirecting to onboarding");
           navigate('/onboarding');
         }
       } else {
         // Default to onboarding if user document doesn't exist
+        console.log("LOGIN DEBUG: User document doesn't exist, redirecting to onboarding");
         navigate('/onboarding');
       }
     } catch (error) {
       console.error('Error checking onboarding status:', error);
       // Default to onboarding on error
+      console.log("LOGIN DEBUG: Error checking onboarding status, defaulting to onboarding");
       navigate('/onboarding');
     }
   };

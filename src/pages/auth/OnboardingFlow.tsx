@@ -219,6 +219,11 @@ export function OnboardingFlow() {
     }
 
     setIsSubmitting(true);
+    console.log("ONBOARDING DEBUG: Starting onboarding completion", {
+      userId: user.id,
+      selectedRole,
+      emailVerified: user.emailVerified
+    });
     try {
       // Combine all form data with proper null checks and defaults
       const step1Data = formData.step1 || {};
@@ -287,6 +292,10 @@ export function OnboardingFlow() {
       // Update user profile first
       await updateUserProfile(user.id, profileData);
       
+      console.log("ONBOARDING DEBUG: Profile updated successfully", {
+        onboardingCompleted: true
+      });
+      
       // Complete onboarding with all the detailed data
       await onboardingService.completeOnboarding(user.id, onboardingData);
 
@@ -294,6 +303,7 @@ export function OnboardingFlow() {
       
       // Ask if the user wants a tour
       const shouldStartTour = await askForTourPermission('main');
+      console.log("ONBOARDING DEBUG: Redirecting to events page with replace=true");
       
       // Redirect to events page and replace the history entry to prevent back navigation to onboarding
       navigate('/events', { replace: true });

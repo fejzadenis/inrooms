@@ -21,6 +21,11 @@ export function VerifyEmailPage() {
 
   useEffect(() => {
     const actionCode = searchParams.get('oobCode');
+    console.log("VERIFY DEBUG: Page loaded", { 
+      hasActionCode: !!actionCode, 
+      currentUser: !!user,
+      userEmailVerified: user?.emailVerified
+    });
     
     if (actionCode) {
       // We have an action code, so we're verifying an email
@@ -29,9 +34,11 @@ export function VerifyEmailPage() {
       const verifyUserEmail = async () => {
         try {
           await verifyEmail(actionCode);
+          console.log("VERIFY DEBUG: Email verified successfully");
           setSuccess(true);
           // Add a delay before redirecting to login
           setTimeout(() => {
+            console.log("VERIFY DEBUG: Redirecting to onboarding after verification");
             navigate('/onboarding');
           }, 3000);
         } catch (err: any) {
@@ -45,6 +52,7 @@ export function VerifyEmailPage() {
       verifyUserEmail();
     } else if (user && user.emailVerified) {
       // If user is already verified, redirect to appropriate page
+      console.log("VERIFY DEBUG: User already verified, redirecting to onboarding");
       navigate('/onboarding');
     }
   }, [searchParams, verifyEmail, navigate, user]);
@@ -159,7 +167,13 @@ export function VerifyEmailPage() {
                 onClick={async () => {
                   if (auth.currentUser) {
                     try {
+                      console.log("VERIFY DEBUG: Manual verification check - before reload", {
+                        emailVerified: auth.currentUser.emailVerified
+                      });
                       await auth.currentUser.reload();
+                      console.log("VERIFY DEBUG: Manual verification check - after reload", {
+                        emailVerified: auth.currentUser.emailVerified
+                      });
                       if (auth.currentUser.emailVerified) {
                         toast.success('Email verified! Redirecting to onboarding...');
                         navigate('/onboarding');

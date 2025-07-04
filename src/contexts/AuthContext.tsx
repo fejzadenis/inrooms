@@ -83,11 +83,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
+          console.log("AUTH DEBUG: User found in onAuthStateChanged", { 
+            uid: firebaseUser.uid, 
+            emailVerified: firebaseUser.emailVerified 
+          });
+          
           // Force reload from server to get latest emailVerified status
           await firebaseUser.reload();
 
           // Check again after reload
           const refreshedUser = auth.currentUser;
+          console.log("AUTH DEBUG: After reload", { 
+            refreshedUser: !!refreshedUser, 
+            emailVerified: refreshedUser?.emailVerified 
+          });
+          
           if (!refreshedUser) {
             setUser(null);
             setLoading(false);
@@ -112,12 +122,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const getUserData = async (firebaseUser: FirebaseUser): Promise<User> => {
     const userRef = doc(db, 'users', firebaseUser.uid);
     const userSnap = await getDoc(userRef);
+    
+    console.log("AUTH DEBUG: Getting user data", { 
+      uid: firebaseUser.uid, 
+      emailVerified: firebaseUser.emailVerified,
+      docExists: userSnap.exists()
+    });
 
     if (userSnap.exists()) {
       const userData = userSnap.data();
       
       // Convert Firestore timestamps to Date objects
       const trialEndsAt = userData.subscription?.trialEndsAt?.toDate?.();
+      
+      console.log("AUTH DEBUG: User data from Firestore", { 
+        name: userData.name,
+        role: userData.role,
+        onboardingCompleted: userData.profile?.onboardingCompleted
+      });
       
       return {
         id: firebaseUser.uid,
@@ -140,6 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Create a new user document if it doesn't exist
       const newUser = {
         id: firebaseUser.uid,
+        
         name: firebaseUser.displayName || '',
         email: firebaseUser.email || '',
         role: 'user',
@@ -155,6 +178,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updatedAt: serverTimestamp(),
         isNewUser: true
       };
+      
+      console.log("AUTH DEBUG: Creating new user document", { 
+        uid: firebaseUser.uid,
+        isNewUser: true
+      });
 
       await setDoc(userRef, {
         name: newUser.name,
