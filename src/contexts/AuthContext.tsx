@@ -83,8 +83,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          // Reload the user to get the latest emailVerified status
-          await reload(firebaseUser);
+          // Force reload from server to get latest emailVerified status
+          await firebaseUser.reload();
+
+          // Check again after reload
+          const refreshedUser = auth.currentUser;
+          if (!refreshedUser) {
+            setUser(null);
+            setLoading(false);
+            return;
+          }
+
           const userData = await getUserData(firebaseUser);
           setUser(userData);
         } catch (err) {

@@ -295,8 +295,8 @@ export function OnboardingFlow() {
       // Ask if the user wants a tour
       const shouldStartTour = await askForTourPermission('main');
       
-      // Redirect to events page
-      navigate('/events');
+      // Redirect to events page and replace the history entry to prevent back navigation to onboarding
+      navigate('/events', { replace: true });
     } catch (error) {
       console.error('Error completing onboarding:', error);
       toast.error('Failed to complete setup. Please try again.');

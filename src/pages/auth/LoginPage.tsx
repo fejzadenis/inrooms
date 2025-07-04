@@ -46,6 +46,12 @@ export function LoginPage() {
       
       if (userDoc.exists()) {
         const userData = userDoc.data();
+
+        // Check if email is verified
+        if (!auth.currentUser?.emailVerified) {
+          navigate('/verify-email');
+          return;
+        }
         
         // Check if user is admin
         if (userData.role === 'admin') {

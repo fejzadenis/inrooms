@@ -156,6 +156,28 @@ export function VerifyEmailPage() {
                 If you don't see the email, check your spam folder or click the button below to resend the verification email.
               </p>
               <Button 
+                onClick={async () => {
+                  if (auth.currentUser) {
+                    try {
+                      await auth.currentUser.reload();
+                      if (auth.currentUser.emailVerified) {
+                        toast.success('Email verified! Redirecting to onboarding...');
+                        navigate('/onboarding');
+                      } else {
+                        toast.info('Email not verified yet. Please check your inbox.');
+                      }
+                    } catch (error) {
+                      console.error('Error reloading user:', error);
+                      toast.error('Failed to check verification status');
+                    }
+                  }
+                }}
+                className="w-full mb-4"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                I've Verified My Email
+              </Button>
+              <Button 
                 onClick={handleResendVerification} 
                 disabled={resendDisabled}
                 className="w-full mb-4"
