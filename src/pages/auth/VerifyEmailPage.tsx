@@ -35,11 +35,8 @@ export function VerifyEmailPage() {
       const verifyUserEmail = async () => {
         try {
           await verifyEmail(actionCode);
+          // Success state is set here, but don't navigate - let AuthContext handle it
           console.log("VERIFY DEBUG: Email verified successfully");
-          setSuccess(true);
-          // Don't navigate here - let AuthContext handle it
-          // The user will be redirected automatically once AuthContext
-          // detects the emailVerified status change
         } catch (err: any) {
           console.error('Verification error:', err);
           setError(err.message || 'Failed to verify email. The link may have expired.');
@@ -174,12 +171,12 @@ export function VerifyEmailPage() {
                       console.log("VERIFY DEBUG: Manual verification check - after reload", {
                         emailVerified: auth.currentUser.emailVerified
                       });
-                      // Let the AuthContext handle the redirection
-                      // Just update the UI to show success
-                      setSuccess(true);
+                      
                       if (auth.currentUser.emailVerified) {
+                        setSuccess(true);
                         toast.success('Email verified! Redirecting to onboarding...');
-                        navigate('/onboarding');
+                        // Let the AuthContext handle redirection through its state update
+                        // The ProtectedRoute will automatically redirect based on the updated emailVerified status
                       } else {
                         toast.info('Email not verified yet. Please check your inbox.');
                       }

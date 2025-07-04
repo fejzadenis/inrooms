@@ -449,6 +449,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const verifyEmail = async (actionCode: string) => {
     try {
       await applyActionCode(auth, actionCode);
+      
+      // After applying the action code, reload the current user to get updated emailVerified status
+      if (auth.currentUser) {
+        await auth.currentUser.reload();
+        
+        // Get the refreshed user data and update the user state
+        if (auth.currentUser) {
+          const updatedUserData = await getUserData(auth.currentUser);
+          setUser(updatedUserData);
+        }
+      }
+      
       toast.success('Email verified successfully!');
     } catch (err: any) {
       console.error('Error verifying email:', err);
