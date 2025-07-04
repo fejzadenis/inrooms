@@ -172,18 +172,19 @@ export function VerifyEmailPage() {
                       });
                       await auth.currentUser.reload();
                       console.log("VERIFY DEBUG: Manual verification check - after reload", {
-                         // Let the AuthContext handle the redirection
-                         // Just update the UI to show success
-                         setSuccess(true);
+                        emailVerified: auth.currentUser.emailVerified
                       });
+                      // Let the AuthContext handle the redirection
+                      // Just update the UI to show success
+                      setSuccess(true);
                       if (auth.currentUser.emailVerified) {
                         toast.success('Email verified! Redirecting to onboarding...');
                         navigate('/onboarding');
                       } else {
                         toast.info('Email not verified yet. Please check your inbox.');
-                     } finally {
-                       setIsLoading(false);
                       }
+                    } finally {
+                      setIsLoading(false);
                     } catch (error) {
                       console.error('Error reloading user:', error);
                       toast.error('Failed to check verification status');
