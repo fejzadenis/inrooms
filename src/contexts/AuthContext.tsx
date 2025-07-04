@@ -11,7 +11,8 @@ import {
   verifyPasswordResetCode,
   confirmPasswordReset,
   sendEmailVerification,
-  applyActionCode
+  applyActionCode,
+  reload
 } from 'firebase/auth';
 import { 
   doc, 
@@ -82,6 +83,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
+          // Reload the user to get the latest emailVerified status
+          await reload(firebaseUser);
           const userData = await getUserData(firebaseUser);
           setUser(userData);
         } catch (err) {
