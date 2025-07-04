@@ -32,7 +32,7 @@ export function VerifyEmailPage() {
           setSuccess(true);
           // Add a delay before redirecting to login
           setTimeout(() => {
-            navigate('/login?emailVerified=true');
+            navigate('/onboarding');
           }, 3000);
         } catch (err: any) {
           console.error('Verification error:', err);

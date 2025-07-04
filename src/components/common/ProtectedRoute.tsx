@@ -27,7 +27,10 @@ export function ProtectedRoute({ children, requireEmailVerification = false }: P
 
   // Check if email verification is required and user's email is not verified
   if (requireEmailVerification && !user.emailVerified) {
-    return <Navigate to="/verify-email" replace />;
+    // Only redirect to verify-email if we're not already there
+    if (location.pathname !== '/verify-email') {
+      return <Navigate to="/verify-email" replace />;
+    }
   }
 
   // For the onboarding route specifically, we don't need to check if onboarding is completed
@@ -37,7 +40,10 @@ export function ProtectedRoute({ children, requireEmailVerification = false }: P
 
   // For other routes, check if onboarding is completed when required
   if (user.emailVerified && !user.profile?.onboardingCompleted) {
-    return <Navigate to="/onboarding" replace />;
+    // Only redirect to onboarding if we're not already there
+    if (location.pathname !== '/onboarding') {
+      return <Navigate to="/onboarding" replace />;
+    }
   }
 
   return <>{children}</>;
