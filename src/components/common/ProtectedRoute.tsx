@@ -27,7 +27,12 @@ export function ProtectedRoute({ children, requireEmailVerification = false }: P
 
   // Check if email verification is required and user's email is not verified
   if (requireEmailVerification && !user.emailVerified) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/verify-email" replace />;
+  }
+
+  // Check if onboarding is completed when required
+  if (requireEmailVerification && !user.profile?.onboardingCompleted) {
+    return <Navigate to="/onboarding" replace />;
   }
 
   return <>{children}</>;

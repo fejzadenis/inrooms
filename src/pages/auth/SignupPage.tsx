@@ -36,11 +36,9 @@ export function SignupPage() {
   const onSubmit = async (data: SignupFormData) => {
     try {
       // Set isNewUser flag to true for newly registered users
-      const userCredential = await signup(data.email, data.password, data.name, true);
-      // Redirect to onboarding
-      if (userCredential && userCredential.user) {
-        navigate('/onboarding');
-      }
+      await signup(data.email, data.password, data.name, true);
+      // Redirect to verify email page
+      navigate('/verify-email');
     } catch (error) {
       // AuthContext handles error display
     }
@@ -50,9 +48,12 @@ export function SignupPage() {
     setIsGoogleLoading(true);
     try {
       // Set isNewUser flag to true for newly registered users
-      await loginWithGoogle(true);
-      // Google auth automatically verifies email, so redirect to onboarding
-      navigate('/onboarding');
+      const result = await loginWithGoogle(true);
+      
+      // Google auth automatically verifies email, so check if onboarding is needed
+      if (result && result.user) {
+        navigate('/onboarding');
+      }
     } catch (error) {
       // AuthContext handles error display
     } finally {

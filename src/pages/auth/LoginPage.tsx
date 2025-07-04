@@ -2,7 +2,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/common/Button';
 import { GoogleSignInButton } from '../../components/auth/GoogleSignInButton';
@@ -20,6 +20,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export function LoginPage() {
   const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
   
@@ -33,6 +34,9 @@ export function LoginPage() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
+
+  // Get the redirect path from location state
+  const from = location.state?.from?.pathname || '/events';
 
   const checkOnboardingAndRedirect = async (userId: string) => {
     try {
@@ -51,7 +55,7 @@ export function LoginPage() {
         
         // Check if onboarding is completed
         if (userData.profile?.onboardingCompleted) {
-          navigate('/events');
+          navigate(from);
         } else {
           navigate('/onboarding');
         }
