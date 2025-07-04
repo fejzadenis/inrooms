@@ -241,6 +241,7 @@ export function OnboardingFlow() {
         linkedin: step2Data.linkedin || '',
         about: step7Data.about || '',
         skills: step4Data.skills ? step4Data.skills.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+        onboardingCompleted: true, // Mark onboarding as completed
       };
 
       // Create onboarding data for role assignment and recommendations with safe defaults
