@@ -17,6 +17,7 @@ export function VerifyEmailPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resendDisabled, setResendDisabled] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
@@ -36,11 +37,9 @@ export function VerifyEmailPage() {
           await verifyEmail(actionCode);
           console.log("VERIFY DEBUG: Email verified successfully");
           setSuccess(true);
-          // Add a delay before redirecting to login
-          setTimeout(() => {
-            console.log("VERIFY DEBUG: Redirecting to onboarding after verification");
-            navigate('/onboarding');
-          }, 3000);
+          // Don't navigate here - let AuthContext handle it
+          // The user will be redirected automatically once AuthContext
+          // detects the emailVerified status change
         } catch (err: any) {
           console.error('Verification error:', err);
           setError(err.message || 'Failed to verify email. The link may have expired.');
@@ -166,19 +165,24 @@ export function VerifyEmailPage() {
               <Button 
                 onClick={async () => {
                   if (auth.currentUser) {
+                     setIsLoading(true);
                     try {
                       console.log("VERIFY DEBUG: Manual verification check - before reload", {
                         emailVerified: auth.currentUser.emailVerified
                       });
                       await auth.currentUser.reload();
                       console.log("VERIFY DEBUG: Manual verification check - after reload", {
-                        emailVerified: auth.currentUser.emailVerified
+                         // Let the AuthContext handle the redirection
+                         // Just update the UI to show success
+                         setSuccess(true);
                       });
                       if (auth.currentUser.emailVerified) {
                         toast.success('Email verified! Redirecting to onboarding...');
                         navigate('/onboarding');
                       } else {
                         toast.info('Email not verified yet. Please check your inbox.');
+                     } finally {
+                       setIsLoading(false);
                       }
                     } catch (error) {
                       console.error('Error reloading user:', error);
@@ -187,6 +191,7 @@ export function VerifyEmailPage() {
                   }
                 }}
                 className="w-full mb-4"
+                isLoading={isLoading}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 I've Verified My Email

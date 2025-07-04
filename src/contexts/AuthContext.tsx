@@ -82,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        console.log("AUTH DEBUG: onAuthStateChanged triggered with user", firebaseUser.uid);
         try {
           console.log("AUTH DEBUG: User found in onAuthStateChanged", { 
             uid: firebaseUser.uid, 
@@ -89,6 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
           
           // Force reload from server to get latest emailVerified status
+          console.log("AUTH DEBUG: Reloading user to get latest status");
           await firebaseUser.reload();
 
           // Check again after reload
@@ -99,18 +101,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
           
           if (!refreshedUser) {
+            console.log("AUTH DEBUG: No refreshed user after reload, setting user to null");
             setUser(null);
             setLoading(false);
             return;
           }
 
-          const userData = await getUserData(firebaseUser);
+          console.log("AUTH DEBUG: Getting user data for refreshed user");
+          const userData = await getUserData(refreshedUser);
+          console.log("AUTH DEBUG: Setting user state with updated data", {
+            emailVerified: refreshedUser.emailVerified,
+            onboardingCompleted: userData.profile?.onboardingCompleted
+          });
           setUser(userData);
         } catch (err) {
           console.error('Error getting user data:', err);
+          console.log("AUTH DEBUG: Error in onAuthStateChanged, setting user to null");
           setUser(null);
         }
       } else {
+        console.log("AUTH DEBUG: No user in onAuthStateChanged, setting user to null");
         setUser(null);
       }
       setLoading(false);
