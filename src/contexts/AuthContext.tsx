@@ -22,6 +22,7 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
+import { supabase } from '../config/supabase';
 import { toast } from 'react-hot-toast';
 
 interface User {
@@ -31,6 +32,7 @@ interface User {
   role: 'user' | 'admin';
   photoURL?: string;
   emailVerified: boolean;
+  dbEmailVerified: boolean;
   profile?: {
     title?: string;
     company?: string;
@@ -67,6 +69,7 @@ interface AuthContextType {
   updateUserProfile: (userId: string, profileData: any) => Promise<void>;
   startFreeTrial: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  markEmailVerified: (userId: string) => Promise<void>;
   confirmResetPassword: (code: string, newPassword: string) => Promise<void>;
   sendVerificationEmail: (user: FirebaseUser) => Promise<void>;
   verifyEmail: (actionCode: string) => Promise<void>;
@@ -142,6 +145,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (userSnap.exists()) {
       const userData = userSnap.data();
       
+      // Get email verification status from database
+      const dbEmailVerified = userData.email_verified || false;
+      
       // Convert Firestore timestamps to Date objects
       const trialEndsAt = userData.subscription?.trialEndsAt?.toDate?.();
       
@@ -158,6 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: userData.role || 'user',
         photoURL: userData.photoURL || firebaseUser.photoURL || undefined,
         emailVerified: firebaseUser.emailVerified,
+        dbEmailVerified: dbEmailVerified,
         profile: userData.profile || {},
         subscription: {
           status: userData.subscription?.status || 'inactive',
@@ -178,6 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: 'user',
         photoURL: firebaseUser.photoURL || undefined,
         emailVerified: firebaseUser.emailVerified,
+        dbEmailVerified: false,
         profile: {},
         subscription: {
           status: 'inactive',
@@ -451,21 +459,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await applyActionCode(auth, actionCode);
       
       // After applying the action code, reload the current user to get updated emailVerified status
+      let updatedEmailVerified = false;
       if (auth.currentUser) {
         await auth.currentUser.reload();
+        updatedEmailVerified = auth.currentUser.emailVerified;
         
         // Get the refreshed user data and update the user state
         if (auth.currentUser) {
           const updatedUserData = await getUserData(auth.currentUser);
           setUser(updatedUserData);
+          
+          // Also update the database verification status
+          if (updatedEmailVerified) {
+            await markEmailVerified(auth.currentUser.uid);
+          }
         }
       }
       
       toast.success('Email verified successfully!');
+      return updatedEmailVerified;
     } catch (err: any) {
       console.error('Error verifying email:', err);
       toast.error(err.message || 'Failed to verify email');
       throw err;
+    }
+  };
+
+  const markEmailVerified = async (userId: string) => {
+    try {
+      // Update Firestore
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, {
+        'email_verified': true,
+        'email_verified_at': serverTimestamp(),
+        'updatedAt': serverTimestamp()
+      });
+      
+      // Update Supabase
+      const { error } = await supabase
+        .from('users')
+        .update({ 
+          email_verified: true,
+          email_verified_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+        
+      if (error) {
+        console.error('Error updating Supabase email verification:', error);
+      }
+      
+      // Update local state
+      setUser(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          dbEmailVerified: true
+        };
+      });
+      
+      console.log("AUTH DEBUG: Email verification status updated in database for user", userId);
+    } catch (error) {
+      console.error('Error marking email as verified in database:', error);
+      throw error;
     }
   };
 
@@ -482,6 +538,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updateUserProfile,
         startFreeTrial,
         resetPassword,
+        markEmailVerified,
         confirmResetPassword,
         sendVerificationEmail,
         verifyEmail

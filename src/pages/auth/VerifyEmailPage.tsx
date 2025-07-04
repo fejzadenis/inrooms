@@ -3,14 +3,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/common/Button';
 import { Logo } from '../../components/common/Logo';
-import { CheckCircle, XCircle, Loader, Mail, RefreshCw } from 'lucide-react';
+import { CheckCircle, XCircle, Loader, Mail, RefreshCw, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { auth } from '../../config/firebase';
 import { sendEmailVerification } from 'firebase/auth';
 import { toast } from 'react-hot-toast';
 
 export function VerifyEmailPage() {
-  const { verifyEmail, user } = useAuth();
+  const { verifyEmail, user, markEmailVerified } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [verifying, setVerifying] = useState(false);
@@ -34,9 +34,17 @@ export function VerifyEmailPage() {
       
       const verifyUserEmail = async () => {
         try {
-          await verifyEmail(actionCode);
-          // Success state is set here, but don't navigate - let AuthContext handle it
-          console.log("VERIFY DEBUG: Email verified successfully");
+          console.log("VERIFY DEBUG: Starting verification with action code");
+          const verified = await verifyEmail(actionCode);
+          setSuccess(true);
+          
+          if (verified) {
+            console.log("VERIFY DEBUG: Email verified successfully, redirecting in 3 seconds");
+            // Add a delay before redirecting to login to show success message
+            setTimeout(() => {
+              navigate('/login?emailVerified=true');
+            }, 3000);
+          }
         } catch (err: any) {
           console.error('Verification error:', err);
           setError(err.message || 'Failed to verify email. The link may have expired.');
@@ -46,9 +54,9 @@ export function VerifyEmailPage() {
       };
 
       verifyUserEmail();
-    } else if (user && user.emailVerified) {
+    } else if (user && (user.emailVerified || user.dbEmailVerified)) {
       // If user is already verified, redirect to appropriate page
-      console.log("VERIFY DEBUG: User already verified, redirecting to onboarding");
+      console.log("VERIFY DEBUG: User already verified (Firebase or DB), redirecting to onboarding");
       navigate('/onboarding');
     }
   }, [searchParams, verifyEmail, navigate, user]);
@@ -165,20 +173,27 @@ export function VerifyEmailPage() {
                      setIsLoading(true);
                     try {
                       console.log("VERIFY DEBUG: Manual verification check - before reload", {
-                        emailVerified: auth.currentUser.emailVerified
+                        emailVerified: auth.currentUser.emailVerified,
+                        userId: auth.currentUser.uid
                       });
                       await auth.currentUser.reload();
                       console.log("VERIFY DEBUG: Manual verification check - after reload", {
-                        emailVerified: auth.currentUser.emailVerified
+                        emailVerified: auth.currentUser.emailVerified,
+                        userId: auth.currentUser.uid
                       });
                       
                       if (auth.currentUser.emailVerified) {
+                         // Update database verification status
+                         await markEmailVerified(auth.currentUser.uid);
                         setSuccess(true);
                         toast.success('Email verified! Redirecting to onboarding...');
-                        // Let the AuthContext handle redirection through its state update
-                        // The ProtectedRoute will automatically redirect based on the updated emailVerified status
+                        
+                        // Add a short delay before redirecting
+                        setTimeout(() => {
+                          navigate('/onboarding');
+                        }, 1500);
                       } else {
-                        toast.info('Email not verified yet. Please check your inbox.');
+                        toast.info('Email not verified yet. Please check your inbox and click the verification link.');
                       }
                     } catch (error) {
                       console.error('Error reloading user:', error);
@@ -194,6 +209,17 @@ export function VerifyEmailPage() {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 I've Verified My Email
               </Button>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div className="flex items-start">
+                  <AlertCircle className="w-5 h-5 text-blue-600 mr-2 mt-0.5" />
+                  <p className="text-sm text-blue-700">
+                    If you've clicked the verification link in your email but are still seeing this page, 
+                    click the "I've Verified My Email" button above to refresh your verification status.
+                  </p>
+                </div>
+              </div>
+              
               <Button 
                 onClick={handleResendVerification} 
                 disabled={resendDisabled}

@@ -52,13 +52,16 @@ export function LoginPage() {
           onboardingCompleted: userData.profile?.onboardingCompleted,
           emailVerified: auth.currentUser?.emailVerified
         });
+      
+      // Check if email is verified in either Firebase or database
+      const isEmailVerified = auth.currentUser?.emailVerified || userData.email_verified === true;
 
-        // Check if email is verified
-        if (!auth.currentUser?.emailVerified) {
-          console.log("LOGIN DEBUG: Email not verified, redirecting to verify-email");
-          navigate('/verify-email');
-          return;
-        }
+      // Check if email is verified
+      if (!isEmailVerified) {
+        console.log("LOGIN DEBUG: Email not verified in Firebase or DB, redirecting to verify-email");
+        navigate('/verify-email');
+        return;
+      }
         
         // Check if user is admin
         if (userData.role === 'admin') {

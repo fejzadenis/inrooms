@@ -20,6 +20,7 @@ export function ProtectedRoute({
     loading,
     userExists: !!user,
     emailVerified: user?.emailVerified,
+    dbEmailVerified: user?.dbEmailVerified,
     onboardingCompleted: user?.profile?.onboardingCompleted,
     requireEmailVerification
   });
@@ -54,14 +55,14 @@ export function ProtectedRoute({
   }
 
   // Enforce email verification if required
-  if (requireEmailVerification && !user.emailVerified && !isVerifyEmailRoute) {
-    console.log("ROUTE DEBUG: Email verification required but not verified, redirecting to verify-email");
+  if (requireEmailVerification && !user.emailVerified && !user.dbEmailVerified && !isVerifyEmailRoute) {
+    console.log("ROUTE DEBUG: Email verification required but not verified in either Firebase or DB, redirecting to verify-email");
     return <Navigate to="/verify-email" replace />;
   }
 
   // Redirect to onboarding if email is verified but onboarding not completed
-  if (user.emailVerified && !user.profile?.onboardingCompleted && !isOnboardingRoute) {
-    console.log("ROUTE DEBUG: Email verified but onboarding not completed, redirecting to onboarding");
+  if ((user.emailVerified || user.dbEmailVerified) && !user.profile?.onboardingCompleted && !isOnboardingRoute) {
+    console.log("ROUTE DEBUG: Email verified (Firebase or DB) but onboarding not completed, redirecting to onboarding");
     return <Navigate to="/onboarding" replace />;
   }
 
