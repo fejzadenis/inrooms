@@ -22,11 +22,6 @@ export function VerifyEmailPage() {
 
   useEffect(() => {
     const actionCode = searchParams.get('oobCode');
-    console.log("VERIFY DEBUG: Page loaded", { 
-      hasActionCode: !!actionCode, 
-      currentUser: !!user,
-      userEmailVerified: user?.emailVerified
-    });
     
     if (actionCode) {
       // We have an action code, so we're verifying an email
@@ -34,12 +29,10 @@ export function VerifyEmailPage() {
       
       const verifyUserEmail = async () => {
         try {
-          console.log("VERIFY DEBUG: Starting verification with action code");
           const verified = await verifyEmail(actionCode);
           setSuccess(true);
           
           if (verified) {
-            console.log("VERIFY DEBUG: Email verified successfully, redirecting in 3 seconds");
             // Add a delay before redirecting to login to show success message
             setTimeout(() => {
               navigate('/login?emailVerified=true');
@@ -56,7 +49,6 @@ export function VerifyEmailPage() {
       verifyUserEmail();
     } else if (user && (user.emailVerified || user.dbEmailVerified)) {
       // If user is already verified, redirect to appropriate page
-      console.log("VERIFY DEBUG: User already verified (Firebase or DB), redirecting to onboarding");
       navigate('/onboarding');
     }
   }, [searchParams, verifyEmail, navigate, user]);
@@ -74,7 +66,6 @@ export function VerifyEmailPage() {
   const handleResendVerification = async () => {
     if (!auth.currentUser || resendDisabled) return;
     
-    console.log("VERIFY DEBUG: Resending verification email");
     try {
       await sendEmailVerification(auth.currentUser);
       toast.success('Verification email sent! Please check your inbox.');
@@ -87,14 +78,6 @@ export function VerifyEmailPage() {
   };
 
   const actionCode = searchParams.get('oobCode');
-  
-  console.log("VERIFY DEBUG: Render state", {
-    verifying,
-    success,
-    error,
-    hasActionCode: !!actionCode,
-    userEmail: user?.email
-  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -181,15 +164,7 @@ export function VerifyEmailPage() {
                   if (auth.currentUser) {
                      setIsLoading(true);
                     try {
-                      console.log("VERIFY DEBUG: Manual verification check - before reload", {
-                        emailVerified: auth.currentUser.emailVerified,
-                        userId: auth.currentUser.uid
-                      });
                       await auth.currentUser.reload();
-                      console.log("VERIFY DEBUG: Manual verification check - after reload", {
-                        emailVerified: auth.currentUser.emailVerified,
-                        userId: auth.currentUser.uid
-                      });
                       
                       if (auth.currentUser.emailVerified) {
                          // Update database verification status
