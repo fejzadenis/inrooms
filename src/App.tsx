@@ -59,7 +59,7 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/reputation" element={<ReputationPage />} />
-            <Route path="/faq" element={
+            <Route
               path="/profile"
               element={
                 <ProtectedRoute requireEmailVerification={true}>
