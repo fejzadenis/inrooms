@@ -91,7 +91,7 @@ export function HomePage() {
                   <div className="mt-5 sm:mt-8 flex flex-col sm:flex-row justify-center lg:justify-start gap-3 sm:gap-4">
                     <Button 
                       onClick={handleGetStarted} 
-                      className="w-full sm:w-auto px-8 py-3 text-base font-medium"
+                      className="w-full sm:w-auto px-8 py-3 text-base font-medium flex items-center"
                     >
                       Get started
                       <ArrowRight className="ml-2 w-4 h-4" />
@@ -99,6 +99,11 @@ export function HomePage() {
                     <Link to={user ? "/billing" : "/login"} className="w-full sm:w-auto">
                       <Button variant="outline" className="w-full sm:w-auto px-8 py-3 text-base font-medium">
                         View Plans
+                      </Button>
+                    </Link>
+                    <Link to="/about" className="w-full sm:w-auto">
+                      <Button variant="outline" className="w-full sm:w-auto px-8 py-3 text-base font-medium">
+                        Learn More
                       </Button>
                     </Link>
                   </div>

@@ -44,21 +44,21 @@ export function HelpPage() {
   const faqs = [
     {
       id: '1',
-      category: 'getting-started',
-      question: 'How do I create my profile?',
-      answer: 'To create your profile, navigate to the Profile page from the user menu. Click "Edit Profile" and fill in your professional information including your title, company, location, and skills. A complete profile helps you connect with relevant professionals.'
+      category: 'getting-started', 
+      question: 'How do I create a founder-focused profile?',
+      answer: 'To create your founder profile, navigate to the Profile page from the user menu. Click "Edit Profile" and fill in your startup information including your role, company stage, industry focus, and skills. Be sure to highlight your startup\'s mission and your specific expertise. A complete profile helps you connect with relevant co-founders, investors, and collaborators who can help grow your venture.'
     },
     {
       id: '2',
       category: 'getting-started',
       question: 'What is the free trial and how does it work?',
-      answer: 'The free trial gives you 7 days of full access to the platform with 2 event registrations. After the trial, you can choose from our subscription plans to continue networking. Your trial starts immediately upon signup.'
+      answer: 'The free trial gives you 7 days of full access to the platform with 2 Room registrations. This allows you to experience our curated networking spaces, connect with other founders, and explore potential collaborations. After the trial, you can choose from our subscription plans to continue building your startup network. Your trial starts immediately upon signup with no credit card required.'
     },
     {
       id: '3',
       category: 'events',
-      question: 'How do I join a networking event?',
-      answer: 'Browse events on the Events page, select an event you\'re interested in, and click "Register Now". Once registered, you\'ll receive a confirmation email with the meeting link. You can join the event 15 minutes before it starts.'
+      question: 'How do I join a Room?',
+      answer: 'Browse available Rooms on the Events page, select one that aligns with your startup\'s needs or interests, and click "Register Now". Rooms are curated based on startup stage, industry focus, or specific challenges. Once registered, you\'ll receive a confirmation email with the meeting link and preparation materials. You can join the Room 15 minutes before it starts to network with other participants.'
     },
     {
       id: '4',
@@ -75,14 +75,14 @@ export function HelpPage() {
     {
       id: '6',
       category: 'networking',
-      question: 'How do I connect with other professionals?',
-      answer: 'Visit the Network page to discover professionals with similar interests. You can send connection requests, view profiles, and start conversations. Connections made during events often lead to valuable business relationships.'
+      question: 'How do I connect with other founders and potential collaborators?',
+      answer: 'Visit the Network page to discover founders, operators, and builders with complementary skills or similar industry focus. Our matching algorithm suggests connections based on your startup stage, technical needs, and business goals. You can send personalized connection requests, view detailed founder profiles, and start meaningful conversations. Connections made during Rooms often lead to co-founding relationships, technical partnerships, or investment opportunities.'
     },
     {
       id: '7',
       category: 'networking',
       question: 'How does the messaging system work?',
-      answer: 'Once connected with someone, you can send direct messages through the Messages page. All conversations are private and secure. You can share contact information, schedule follow-up calls, or discuss business opportunities.'
+      answer: 'Once connected with someone, you can send direct messages through the Messages page. All conversations are private and secure. You can share pitch decks, technical specifications, or schedule follow-up calls to discuss potential collaborations. Our messaging system includes file sharing capabilities and integration with calendar tools to make scheduling follow-up meetings seamless.'
     },
     {
       id: '8',
@@ -93,8 +93,8 @@ export function HelpPage() {
     {
       id: '9',
       category: 'billing',
-      question: 'What happens after my free trial ends?',
-      answer: 'After your 7-day free trial, you\'ll need to choose a subscription plan to continue accessing events. You can select from Starter ($49/month), Professional ($99/month), or Enterprise ($199/month) plans based on your networking needs.'
+      question: 'What happens after my founder free trial ends?',
+      answer: 'After your 7-day free trial, you\'ll need to choose a subscription plan to continue accessing Rooms and building your startup network. You can select from Starter ($39/month), Professional ($79/month), or Enterprise ($149/month) plans based on your startup\'s stage and networking needs. We offer special discounts for pre-seed startups and first-time founders - just reach out to our support team after signing up.'
     },
     {
       id: '10',
@@ -123,36 +123,36 @@ export function HelpPage() {
     {
       id: '14',
       category: 'technical',
-      question: 'I\'m not receiving email notifications',
-      answer: 'Check your spam/junk folder and add noreply@inrooms.com to your contacts. Verify your email address in your profile settings. You can also adjust notification preferences in your account settings.'
+      question: 'How do Open Build Rooms work for founders?',
+      answer: 'Open Build Rooms are collaborative spaces where founders can drop in anytime to co-work, share their screen, test ideas, and get feedback in real-time. Unlike scheduled events, these rooms have ongoing availability with flexible participation. You might join to work on your pitch deck and get investor feedback, collaborate on solving a technical challenge with other builders, or simply work alongside other founders for accountability and motivation. These spaces are particularly valuable for solo founders seeking community and early-stage teams working through product challenges. Think of them as digital coworking spaces with momentum and purpose. This feature is coming soon and will be available to all subscription tiers.'
     }
   ];
 
   const quickActions = [
     {
       title: 'Contact Support',
-      description: 'Get help from our support team',
+      description: 'Get personalized founder support',
       icon: MessageCircle,
       action: 'mailto:support@inrooms.com',
       color: 'bg-blue-500'
     },
     {
       title: 'Schedule a Call',
-      description: 'Book a 15-minute onboarding call',
+      description: 'Book a founder onboarding call',
       icon: Phone,
       action: '#',
       color: 'bg-green-500'
     },
     {
       title: 'Video Tutorials',
-      description: 'Watch step-by-step guides',
+      description: 'Watch founder success guides',
       icon: Video,
       action: '/docs',
       color: 'bg-purple-500'
     },
     {
       title: 'Feature Requests',
-      description: 'Suggest new features',
+      description: 'Suggest founder-focused features',
       icon: Mail,
       action: 'mailto:feedback@inrooms.com',
       color: 'bg-orange-500'

@@ -38,12 +38,14 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentTour, setCurrentTour] = useState<TourType | null>(null);
   const [tourStep, setTourStep] = useState(0); 
   const [shownTours, setShownTours] = useState<Record<string, boolean>>({});
+  const [hasCheckedTours, setHasCheckedTours] = useState(false);
 
   // Load completed tours from user profile
   useEffect(() => {
-    const loadCompletedTours = async () => {
-      if (user?.id) {
+    const loadCompletedTours = async () => {      
+      if (user?.id && !hasCheckedTours) {
         try {
+          setHasCheckedTours(true);
           const userRef = doc(db, 'users', user.id);
           const userDoc = await getDoc(userRef);
           
@@ -60,7 +62,7 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     loadCompletedTours();
-  }, [user]);
+  }, [user, hasCheckedTours]);
 
   const startTour = (tourType: TourType) => {
     // Don't start the tour if it's already been shown
@@ -129,27 +131,23 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const askForTourPermission = async (tourType: TourType): Promise<boolean> => {
     // Check if this tour has already been shown
     if (shownTours[tourType]) {
-      console.log(`TOUR DEBUG: Tour ${tourType} already shown, not asking permission`);
+      // Tour already shown, don't ask again
       return false;
     }
     
     // For new users, automatically show the main tour without asking
     if (user?.isNewUser && tourType === 'main') {
-      console.log(`TOUR DEBUG: User is new, automatically showing main tour`);
+      // User is new, show main tour
       return true;
     }
     
     // For profile tour, never show automatically
     if (tourType === 'profile') {
-      console.log(`TOUR DEBUG: Profile tour should not appear automatically`);
+      // Profile tour should not appear automatically
       return false;
     }
     
     // For other tours (events, network, solutions), only show if the user is new
-    console.log(`TOUR DEBUG: Permission check for ${tourType} tour:`, {
-      isNewUser: user?.isNewUser,
-      result: user?.isNewUser || false
-    });
     return user?.isNewUser || false;
   };
 

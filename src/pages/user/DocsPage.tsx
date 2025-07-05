@@ -69,56 +69,56 @@ export function DocsPage() {
     {
       id: 'platform-overview',
       section: 'getting-started',
-      title: 'Platform Overview',
-      description: 'Learn about inrooms and how it can help your sales career',
+      title: 'Founder Platform Overview',
+      description: 'Learn how inrooms helps founders connect and build',
       type: 'guide',
       readTime: '5 min',
       content: `
-# Platform Overview
+# Founder Platform Overview
 
-Welcome to inrooms, the premier networking platform for tech sales professionals. Our platform is designed to help you build meaningful connections, attend valuable events, and accelerate your sales career.
+Welcome to inrooms, the premier networking platform for early-stage founders, operators, and builders. Our platform is designed to help you find co-founders, connect with investors, get user feedback, and accelerate your startup journey.
 
 ## What is inrooms?
 
-inrooms is a curated networking platform that connects tech sales professionals through:
-- **Exclusive Events**: Join intimate networking sessions with industry experts
-- **Quality Connections**: Connect with verified professionals in your field
-- **Career Growth**: Access resources, mentorship, and opportunities
-- **Community**: Be part of a supportive community of sales professionals
+inrooms is a curated networking platform that connects startup founders through:
+- **Curated Rooms**: Join intimate, focused sessions with other builders
+- **Quality Connections**: Connect with verified founders, operators, and investors
+- **Startup Growth**: Access resources, mentorship, and funding opportunities
+- **Builder Community**: Be part of a supportive ecosystem of startup founders
 
 ## Key Features
 
-### Events & Workshops
-- Weekly networking events with industry leaders
-- Skill-building workshops and masterclasses
-- Panel discussions with successful sales executives
-- Q&A sessions with experts
+### Rooms & Workshops
+- Weekly founder networking sessions
+- Skill-building workshops on fundraising, product, and growth
+- Panel discussions with successful founders and investors
+- Tactical keynotes from experienced operators
 
 ### Networking Tools
-- Advanced profile system with skills matching
+- Founder profile system with startup stage matching
 - Direct messaging with connections
 - LinkedIn integration for seamless networking
-- Connection recommendations based on your interests
+- Connection recommendations based on your startup needs
 
-### Career Resources
-- Sales templates and playbooks
-- Training videos and tutorials
-- Industry insights and trends
-- Job opportunities and referrals
+### Founder Resources
+- Pitch deck templates and fundraising playbooks
+- Product development tutorials
+- Market validation frameworks
+- Investor introductions and hiring resources
 
 ## Getting Started
 
 1. **Complete Your Profile**: Add your professional information, skills, and photo
-2. **Connect Your LinkedIn**: Import your network and enhance your profile
-3. **Browse Events**: Find events that match your interests and schedule
-4. **Start Networking**: Connect with other professionals and join conversations
-5. **Attend Events**: Participate in live networking sessions and workshops
+2. **Connect Your LinkedIn**: Import your network and enhance your founder profile
+3. **Browse Rooms**: Find sessions that match your startup's stage and needs
+4. **Start Networking**: Connect with potential co-founders, investors, and early users
+5. **Join Rooms**: Participate in live collaboration sessions and founder workshops
 
 ## Success Tips
 
 - **Be Active**: Regular participation leads to better connections
 - **Be Authentic**: Genuine interactions create lasting relationships
-- **Follow Up**: Connect with people you meet at events
+- **Follow Up**: Connect with founders you meet in Rooms
 - **Share Value**: Help others and they'll help you in return
       `
     },
@@ -235,26 +235,26 @@ Once your profile is complete:
     {
       id: 'first-event',
       section: 'getting-started',
-      title: 'Attending Your First Event',
-      description: 'How to prepare for and make the most of your first networking event',
+      title: 'Attending Your First Room',
+      description: 'How to prepare for and make the most of your first founder networking session',
       type: 'guide',
       readTime: '8 min',
       content: `
-# Attending Your First Event
+# Attending Your First Founder Room
 
 Make a great first impression and maximize your networking success with this comprehensive guide.
 
 ## Before the Event
 
 ### Preparation (1-2 days before)
-1. **Review the Event Details**
+1. **Review the Room Details**
    - Read the agenda and speaker bios
-   - Understand the event format and duration
+   - Understand the Room format and focus area
    - Note the meeting link and time zone
 
 2. **Prepare Your Introduction**
    - Craft a 30-second elevator pitch
-   - Practice explaining what you do clearly
+   - Practice explaining your startup clearly
    - Prepare 2-3 questions to ask others
 
 3. **Technical Setup**
@@ -273,10 +273,10 @@ Make a great first impression and maximize your networking success with this com
 
 ### Making Connections
 1. **Be Engaged**
-   - Turn on your camera
+   - Always turn on your camera
    - Use the chat feature appropriately
    - Ask thoughtful questions
-   - Share relevant experiences
+   - Share relevant founder experiences
 
 2. **Networking Etiquette**
    - Introduce yourself when prompted
@@ -286,29 +286,35 @@ Make a great first impression and maximize your networking success with this com
 
 3. **Take Notes**
    - Write down interesting insights
-   - Note people you'd like to connect with
+   - Note potential co-founders or collaborators
    - Record action items or follow-ups
    - Save useful resources shared
 
 ### Common Event Formats
 
-**Roundtable Discussions**
+**Founder Roundtables**
 - Small groups (5-8 people)
 - Facilitated conversation
 - Everyone gets to share
 - More intimate networking
 
-**Panel Sessions**
-- Expert speakers present
+**Founder Panel Sessions**
+- Successful founders share experiences
 - Q&A opportunities
 - Larger audience
 - Learning-focused
 
-**Workshops**
+**Founder Workshops**
 - Interactive learning
 - Hands-on activities
 - Skill development
 - Practical takeaways
+
+**Open Build Rooms**
+- Drop-in co-working sessions
+- Screen sharing for feedback
+- Collaborative problem solving
+- Accountability and momentum
 
 ## After the Event
 
@@ -352,7 +358,7 @@ Make a great first impression and maximize your networking success with this com
 
 ## Sample Introduction
 
-"Hi, I'm [Name], an Enterprise Sales Manager at [Company]. I help SaaS startups scale their sales operations and have been in tech sales for about 5 years. I'm excited to be here because I'm always looking to learn new strategies and connect with other sales professionals. What brings you to this event?"
+"Hi, I'm [Name], founder of [Startup]. We're building [brief description] to solve [problem]. We're currently at [stage] and I'm looking for [specific need - co-founder/investment/feedback]. I'm excited to be here because I'm looking to connect with other founders who understand the challenges of building something from scratch. What are you working on?"
 
 ## Making the Most of Your Investment
 
@@ -362,7 +368,7 @@ Remember, networking is about building relationships, not just collecting contac
 - Building long-term relationships
 - Continuous learning and growth
 
-Your first event is just the beginning of your networking journey with inrooms!
+Your first Room is just the beginning of your founder journey with inrooms!
       `
     },
 
