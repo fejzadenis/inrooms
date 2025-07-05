@@ -150,7 +150,7 @@ export function DemoScheduleModal({ isOpen, onClose, onSuccess }: {
                     type="text"
                     {...register('title')}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="e.g., Enterprise CRM Solution Demo"
+                    placeholder="e.g., AI-Powered Task Management App"
                   />
                   {errors.title && (
                     <p className="text-red-600 text-sm mt-1">{errors.title.message}</p>
@@ -213,7 +213,7 @@ export function DemoScheduleModal({ isOpen, onClose, onSuccess }: {
                     type="text"
                     {...register('tags')}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="e.g., CRM, Sales, Enterprise, Automation"
+                    placeholder="e.g., AI, Productivity, Mobile, SaaS"
                   />
                 </div>
               </div>
@@ -246,7 +246,7 @@ export function DemoScheduleModal({ isOpen, onClose, onSuccess }: {
                       type="text"
                       {...register('hostTitle')}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      placeholder="Your job title"
+                      placeholder="e.g., Founder & CEO"
                     />
                     {errors.hostTitle && (
                       <p className="text-red-600 text-sm mt-1">{errors.hostTitle.message}</p>

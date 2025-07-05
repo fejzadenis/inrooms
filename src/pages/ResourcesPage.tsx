@@ -48,7 +48,7 @@ export function ResourcesPage() {
       id: '1',
       category: 'general',
       question: 'Who is inRooms for? Is it only for founders?',
-      answer: 'inRooms is designed for all tech sales professionals, not just founders. While we welcome founders, our platform serves enterprise sales executives, account managers, sales leaders, technical sales specialists, and anyone looking to grow their career in tech sales. Whether you\'re just starting out or leading a large team, inRooms provides valuable networking opportunities tailored to your specific needs and goals.'
+      answer: 'inRooms is designed for all early-stage founders, operators, and builders. Our platform serves entrepreneurs, technical co-founders, product leaders, designers, and anyone looking to build and grow their startup. Whether you\'re just starting out or leading a growing team, inRooms provides valuable networking opportunities tailored to your specific needs and goals.'
     },
     {
       id: '2',
@@ -96,13 +96,13 @@ export function ResourcesPage() {
       id: '9',
       category: 'general',
       question: 'How is inRooms different from LinkedIn or other networking platforms?',
-      answer: 'Unlike LinkedIn, which focuses on static connections and content, inRooms is built for active, purposeful networking. We emphasize quality interactions over quantity of connections. Our platform features curated Rooms instead of feeds, verified reputation instead of self-reported experience, and structured networking events instead of random outreach. We also focus exclusively on tech sales professionals, ensuring all connections are relevant to your career growth. Think of us as the difference between a curated dinner party and a massive conference hall.'
+      answer: 'Unlike LinkedIn, which focuses on static connections and content, inRooms is built for active, purposeful networking. We emphasize quality interactions over quantity of connections. Our platform features curated Rooms instead of feeds, verified reputation instead of self-reported experience, and structured networking events instead of random outreach. We also focus exclusively on startup founders and builders, ensuring all connections are relevant to your growth journey. Think of us as the difference between a curated dinner party and a massive conference hall.'
     },
     {
       id: '10',
       category: 'products',
       question: 'Can I showcase my product or solution on inRooms?',
-      answer: 'Yes, Enterprise subscribers can showcase products through our Solutions page. This feature allows you to schedule live demo sessions, upload recorded presentations, and connect with potential customers, partners, or investors. Your product showcases can be public or private, and you can track engagement metrics. This isn\'t just a listing - it\'s an interactive way to demonstrate your solution to a targeted audience of tech sales professionals who might become customers or recommend your product to their networks.'
+      answer: 'Yes, Enterprise subscribers can showcase products through our Product Showcase page. This feature allows you to schedule live demo sessions, upload recorded presentations, and connect with potential users, partners, or investors. Your product showcases can be public or private, and you can track engagement metrics. This isn\'t just a listing - it\'s an interactive way to demonstrate your solution to a targeted audience of founders and builders who might become users, partners, or recommend your product to their networks.'
     },
     {
       id: '11',
@@ -126,7 +126,7 @@ export function ResourcesPage() {
       id: '14',
       category: 'general',
       question: 'How do Open Build Rooms work?',
-      answer: 'Open Build Rooms are collaborative spaces where you can drop in anytime to co-work, share your screen, test ideas, and get feedback in real-time. Unlike scheduled events, these rooms have ongoing availability with flexible participation. You might join to work on a sales deck and get feedback, collaborate on solving a specific challenge, or simply work alongside other professionals in your field. Think of them as digital coworking spaces with momentum and purpose. This feature is coming soon and will be available to all subscription tiers.'
+      answer: 'Open Build Rooms are collaborative spaces where you can drop in anytime to co-work, share your screen, test ideas, and get feedback in real-time. Unlike scheduled events, these rooms have ongoing availability with flexible participation. You might join to work on a pitch deck and get feedback, collaborate on solving a specific challenge, or simply work alongside other founders in your field. Think of them as digital coworking spaces with momentum and purpose. This feature is coming soon and will be available to all subscription tiers.'
     },
     {
       id: '15',

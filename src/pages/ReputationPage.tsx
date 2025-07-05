@@ -55,7 +55,7 @@ export function ReputationPage() {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">Michael Chen</h2>
-                    <p className="text-gray-600">Enterprise Sales Director at CloudTech Solutions</p>
+                    <p className="text-gray-600">Founder & CEO at CloudTech Solutions</p>
                     <p className="text-sm text-gray-500 mt-1">San Francisco, CA</p>
                   </div>
                   
@@ -127,8 +127,8 @@ export function ReputationPage() {
                         <Zap className="w-6 h-6 text-red-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">Deal Maker</p>
-                        <p className="text-sm text-gray-500">8 deals facilitated</p>
+                        <p className="font-medium text-gray-900">Startup Founder</p>
+                        <p className="text-sm text-gray-500">2 startups launched</p>
                       </div>
                     </div>
                     
@@ -154,7 +154,7 @@ export function ReputationPage() {
                             <Calendar className="w-5 h-5 text-blue-600" />
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900">Hosted "Enterprise Sales Strategies" workshop</p>
+                            <p className="font-medium text-gray-900">Hosted "Startup Funding Strategies" workshop</p>
                             <p className="text-sm text-gray-500 mt-1">Shared insights with 45 attendees • May 15, 2025</p>
                           </div>
                         </div>
@@ -172,7 +172,7 @@ export function ReputationPage() {
                           </div>
                           <div>
                             <p className="font-medium text-gray-900">Connected Sarah Johnson with Alex Rodriguez</p>
-                            <p className="text-sm text-gray-500 mt-1">Successful introduction led to partnership • April 28, 2025</p>
+                            <p className="text-sm text-gray-500 mt-1">Successful introduction led to co-founding • April 28, 2025</p>
                           </div>
                         </div>
                         <div className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
@@ -222,19 +222,16 @@ export function ReputationPage() {
                   <h3 className="text-lg font-medium text-gray-900 mb-3">Expertise</h3>
                   <div className="flex flex-wrap gap-2">
                     <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
-                      Enterprise Sales
-                    </span>
-                    <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
                       SaaS
                     </span>
                     <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
                       Strategic Partnerships
                     </span>
                     <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
-                      Sales Leadership
+                      Startup Leadership
                     </span>
                     <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
-                      Deal Negotiation
+                      Fundraising
                     </span>
                     <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
                       Team Building
@@ -254,7 +251,7 @@ export function ReputationPage() {
                       <div>
                         <p className="font-medium text-gray-900">Sarah Johnson</p>
                         <p className="text-sm text-gray-500">
-                          "Michael's strategic insights helped us close our biggest enterprise deal to date."
+                          "Michael's strategic insights helped us secure our seed round in record time."
                         </p>
                       </div>
                     </div>

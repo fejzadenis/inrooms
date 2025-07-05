@@ -174,7 +174,7 @@ export function DemoRegistrationModal({
                 {isFull && (
                   <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-sm text-red-800">
-                      This demo is currently full. You can still register to be added to the waitlist.
+                      This showcase is currently full. You can still register to be added to the waitlist.
                     </p>
                   </div>
                 )}
@@ -246,7 +246,7 @@ export function DemoRegistrationModal({
                     isLoading={isSubmitting}
                     className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
                   >
-                    {isFull ? 'Join Waitlist' : 'Register for Demo'}
+                    {isFull ? 'Join Waitlist' : 'Register for Showcase'}
                   </Button>
                 </div>
               </form>

@@ -152,7 +152,7 @@ export function AboutPage() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">Sarah J.</p>
-                  <p className="text-sm text-gray-500">Enterprise Sales Director</p>
+                  <p className="text-sm text-gray-500">Startup Founder</p>
                 </div>
               </div>
             </div>
@@ -167,7 +167,7 @@ export function AboutPage() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">Michael C.</p>
-                  <p className="text-sm text-gray-500">Startup Sales Lead</p>
+                  <p className="text-sm text-gray-500">Tech Entrepreneur</p>
                 </div>
               </div>
             </div>

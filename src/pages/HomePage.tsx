@@ -78,12 +78,12 @@ export function HomePage() {
                 <div className="text-center lg:text-left">
                   <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
                     <span className="block">Meet Your Next</span>
-                    <span className="block bg-gradient-to-r from-[#003B7A] to-[#00B2FF] text-transparent bg-clip-text min-h-[1.2em] transition-all duration-500 ease-in-out">
+                    <span className="block bg-gradient-to-r from-indigo-600 to-purple-600 text-transparent bg-clip-text min-h-[1.2em] transition-all duration-500 ease-in-out">
                       {words[currentWordIndex]}
                     </span>
                   </h1>
                   <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                    Curated virtual Rooms where early-stage startup builders connect, collaborate, and build momentum. Join private Rooms, hear tactical keynotes, and build reputation with live connections.
+                    Curated virtual Rooms where early-stage founders, operators, and builders connect, collaborate, and build momentum. Join private Rooms, hear tactical keynotes, and build reputation with live connections.
                   </p>
                   <div className="mt-2 text-sm text-indigo-600 font-medium sm:text-base">
                     Free Founder access now — upgrade later to unlock Pro features like unlimited Rooms, team tools, and analytics.
@@ -275,22 +275,22 @@ export function HomePage() {
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-3xl font-extrabold text-gray-900">Why choose inRooms?</h2>
               <p className="mt-4 text-lg text-gray-500">
-                We're building the most effective networking platform for tech sales professionals.
+                We're building the most effective networking platform for early-stage founders and entrepreneurs.
               </p>
             </div>
             <dl className="mt-12 space-y-10 sm:space-y-0 sm:grid sm:grid-cols-1 md:grid-cols-3 sm:gap-8">
               {[
                 {
-                  title: 'Curated Events',
-                  description: 'Carefully selected topics and participants to ensure meaningful connections.',
+                  title: 'Curated by Design',
+                  description: 'Every Room is intentionally built around niche, role, or stage. You meet the right people — not just more people.',
                 },
                 {
-                  title: 'Expert Networking',
-                  description: 'Connect with industry leaders and experienced professionals in tech sales.',
+                  title: 'Tactical Keynotes',
+                  description: 'Fast, focused sessions led by real builders. No fluff, just valuable insights you can apply right away.',
                 },
                 {
-                  title: 'Career Growth',
-                  description: 'Learn from peers, share experiences, and discover new opportunities.',
+                  title: 'Live Collaboration',
+                  description: 'Drop in anytime to co-work, share your screen, test ideas, or get feedback in real time from other founders.',
                 },
               ].map((feature) => (
                 <div key={feature.title} className="relative">

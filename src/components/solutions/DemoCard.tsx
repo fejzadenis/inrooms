@@ -165,7 +165,7 @@ export function DemoCard({
             </div>
           )}
         </div>
-
+              <p className="text-xs text-gray-500">{demo.hostTitle} • {demo.hostCompany}</p>
         <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
           {demo.title}
         </h3>
@@ -254,7 +254,7 @@ export function DemoCard({
         {/* Primary Actions */}
         {!isCompleted && !isRegistered && !isFull && (
           <Button onClick={onRegister} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
-            <Users className="w-4 h-4 mr-2" />
+              Register for Showcase
             Register for Demo
           </Button>
         )}
@@ -268,14 +268,14 @@ export function DemoCard({
 
         {canJoin && (
           <Button onClick={onJoin} className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
-            <Video className="w-4 h-4 mr-2" />
+              {isLive ? 'Join Live Showcase' : 'Join Showcase'}
             {isLive ? 'Join Live Demo' : 'Join Demo'}
           </Button>
         )}
 
         {isFull && !isRegistered && (
           <Button variant="outline" disabled className="w-full">
-            <Users className="w-4 h-4 mr-2" />
+              Showcase Full
             Demo Full
           </Button>
         )}

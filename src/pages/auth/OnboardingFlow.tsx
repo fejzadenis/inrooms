@@ -97,51 +97,51 @@ const TOTAL_STEPS = 9; // 8 data collection steps + 1 role assignment step
 const roles = [
   {
     id: 'enterprise_closer',
-    name: 'Enterprise Closer',
-    description: 'Focus on large-scale enterprise deals and strategic partnerships',
+    name: 'Serial Entrepreneur',
+    description: 'Focus on building and scaling multiple ventures simultaneously',
     icon: '🏢',
     color: 'from-blue-500 to-blue-600',
-    features: ['Enterprise Sales', 'Strategic Partnerships', 'C-Level Networking', 'Complex Deal Management']
+    features: ['Multiple Ventures', 'Strategic Partnerships', 'Investor Relations', 'Exit Strategy']
   },
   {
     id: 'startup_hustler',
     name: 'Startup Hustler',
-    description: 'Thrive in fast-paced startup environments with diverse responsibilities',
+    description: 'Thrive in fast-paced startup environments with a focus on growth',
     icon: '🚀',
     color: 'from-green-500 to-green-600',
-    features: ['Growth Hacking', 'Multi-Channel Sales', 'Product Development Input', 'Rapid Scaling']
+    features: ['Growth Hacking', 'Product-Market Fit', 'Bootstrapping', 'Rapid Iteration']
   },
   {
     id: 'saas_specialist',
-    name: 'SaaS Specialist',
-    description: 'Expert in software-as-a-service sales and subscription models',
+    name: 'Tech Founder',
+    description: 'Expert in building software products and subscription models',
     icon: '💻',
     color: 'from-purple-500 to-purple-600',
-    features: ['Subscription Sales', 'Product Demos', 'Customer Success', 'Recurring Revenue']
+    features: ['Product Development', 'Technical Leadership', 'SaaS Models', 'Engineering Management']
   },
   {
     id: 'relationship_builder',
-    name: 'Relationship Builder',
-    description: 'Excel at building long-term client relationships and account management',
+    name: 'Community Builder',
+    description: 'Excel at building communities and fostering engagement',
     icon: '🤝',
     color: 'from-orange-500 to-orange-600',
-    features: ['Account Management', 'Client Retention', 'Upselling', 'Customer Success']
+    features: ['Community Management', 'User Engagement', 'Network Effects', 'Platform Building']
   },
   {
     id: 'sales_leader',
-    name: 'Sales Leader',
-    description: 'Lead and mentor sales teams while driving strategic initiatives',
+    name: 'Visionary Leader',
+    description: 'Lead teams and drive strategic initiatives with a clear vision',
     icon: '👑',
     color: 'from-red-500 to-red-600',
-    features: ['Team Leadership', 'Sales Strategy', 'Coaching & Mentoring', 'Performance Management']
+    features: ['Team Leadership', 'Vision Setting', 'Strategic Planning', 'Organizational Development']
   },
   {
     id: 'technical_seller',
-    name: 'Technical Seller',
-    description: 'Bridge the gap between technical solutions and business needs',
+    name: 'Product Innovator',
+    description: 'Bridge the gap between technical solutions and market needs',
     icon: '⚙️',
     color: 'from-indigo-500 to-indigo-600',
-    features: ['Technical Demos', 'Solution Architecture', 'Developer Relations', 'API Integration']
+    features: ['Product Innovation', 'User Experience', 'Market Research', 'Prototype Development']
   }
 ];
 

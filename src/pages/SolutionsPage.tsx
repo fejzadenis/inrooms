@@ -525,30 +525,30 @@ export function SolutionsPage() {
             transition={{ delay: 0.8, duration: 0.6 }}
             className="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 rounded-xl p-8 md:p-10 text-white shadow-xl border border-indigo-500" 
             data-tour="solutions-cta"
-          >
+            <h2 className="text-2xl font-bold text-center mb-8">Why Showcase Your Product</h2>
             <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')] opacity-10 bg-cover bg-center mix-blend-overlay"></div>
             
             <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-500 rounded-full filter blur-3xl opacity-20"></div>
             <div className="absolute -top-24 -right-24 w-64 h-64 bg-purple-500 rounded-full filter blur-3xl opacity-20"></div>
             
             <div className="relative z-10 text-center">
-              <div className="inline-flex items-center justify-center p-3 bg-white bg-opacity-10 backdrop-blur-lg rounded-full border border-white border-opacity-20 mb-6">
-                <Lightbulb className="w-8 h-8 text-yellow-300" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Connect with Users</h3>
+                <p className="text-gray-600">Get valuable feedback from early adopters and build your initial user base.</p>
               </div>
               
               <h3 className="text-2xl md:text-3xl font-bold mb-4">Showcase Your Innovation</h3>
               <p className="text-indigo-100 mb-8 max-w-2xl mx-auto text-sm md:text-base">
                 Upgrade to an Enterprise plan to showcase your products, share demos, 
-                and connect with potential customers, partners, and investors.
-              </p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Attract Investors</h3>
+                <p className="text-gray-600">Demonstrate your product's potential to investors looking for the next big opportunity.</p>
               <div className="flex justify-center">
                 <Button 
                   className="bg-white text-indigo-600 hover:bg-gray-100 shadow-lg px-6 py-3"
                   onClick={handleUpgradeClick}
                 >
                   <Zap className="w-5 h-5 mr-2" />
-                  Upgrade to Enterprise
-                </Button>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Find Partners</h3>
+                <p className="text-gray-600">Discover potential partners to help scale your product and reach new markets.</p>
               </div>
             </div>
           </motion.div>

@@ -350,13 +350,13 @@ export function ProfilePage() {
 
   const getRoleLabel = (role: string) => {
     switch (role) {
-      case 'enterprise_closer': return 'Enterprise Closer';
+      case 'enterprise_closer': return 'Serial Entrepreneur';
       case 'startup_hustler': return 'Startup Hustler';
-      case 'saas_specialist': return 'SaaS Specialist';
-      case 'relationship_builder': return 'Relationship Builder';
-      case 'sales_leader': return 'Sales Leader';
-      case 'technical_seller': return 'Technical Seller';
-      default: return 'Sales Professional';
+      case 'saas_specialist': return 'Tech Founder';
+      case 'relationship_builder': return 'Community Builder';
+      case 'sales_leader': return 'Visionary Leader';
+      case 'technical_seller': return 'Product Innovator';
+      default: return 'Startup Founder';
     }
   };
 
