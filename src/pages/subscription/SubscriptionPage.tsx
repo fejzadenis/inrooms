@@ -65,8 +65,13 @@ export function SubscriptionPage() {
     setSelectedPlan(plan);
 
     try {
+      // For yearly billing, use the annual payment link
+      const paymentLink = billingInterval === 'yearly' && plan.interval === 'month' 
+        ? plan.paymentLink.replace('monthly', 'annual') // Assuming payment links follow a pattern
+        : plan.paymentLink;
+        
       // Redirect to the Stripe payment link
-      stripeService.redirectToPaymentLink(plan.paymentLink);
+      stripeService.redirectToPaymentLink(paymentLink);
     } catch (error) {
       console.error('Error redirecting to payment page:', error);
       toast.error('Failed to redirect to payment page. Please try again.');

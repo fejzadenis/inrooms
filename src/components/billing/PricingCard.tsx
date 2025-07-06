@@ -42,29 +42,21 @@ export function PricingCard({
     switch (planId) {
       case 'starter':
         return 'from-blue-500 to-blue-600';
-      case 'professional':
-        return 'from-indigo-500 to-purple-600';
-      case 'enterprise':
-        return 'from-purple-500 to-pink-600';
-      case 'team':
-        return 'from-green-500 to-teal-600';
-      case 'custom':
-        return 'from-gray-700 to-gray-900';
-      default:
-        return 'from-gray-500 to-gray-600';
-    }
-  };
-
   // Calculate annual savings
   const annualSavings = billingInterval === 'yearly' && !plan.isCustom ? 
     stripeService.calculateAnnualSavings(plan.interval === 'month' ? plan.price : plan.price / 12) : 0;
 
-  // Calculate display price based on billing interval
-  const displayPrice = plan.price;
+  // Calculate display price based on billing interval and plan interval
+  const displayPrice = billingInterval === 'yearly' && plan.interval === 'month' && !plan.isCustom ? 
+    Math.round(plan.price * 12 * 0.8) : plan.price;
 
   // Calculate price per month for yearly plans
   const pricePerMonth = billingInterval === 'yearly' && plan.interval === 'year' && !plan.isCustom ? 
     Math.round(displayPrice / 12) : displayPrice;
+  
+  // For monthly plans shown in yearly view, calculate the monthly price with discount
+  const monthlyPriceWithDiscount = billingInterval === 'yearly' && plan.interval === 'month' && !plan.isCustom ?
+    Math.round(plan.price * 0.8) : plan.price;
 
   const handleAction = () => {
     if (plan.isCustom && onRequestQuote) {
@@ -154,7 +146,7 @@ export function PricingCard({
                 <span className={`text-5xl font-bold ${
                   plan.isPopular ? 'text-indigo-900' : isCurrentPlan ? 'text-green-900' : 'text-gray-900'
                 }`}>
-                  ${billingInterval === 'yearly' && plan.interval === 'year' ? pricePerMonth : displayPrice}
+                  ${billingInterval === 'yearly' && plan.interval === 'month' ? monthlyPriceWithDiscount : pricePerMonth}
                 </span>
                 <span className={`text-lg ml-2 ${
                   plan.isPopular ? 'text-indigo-600' : isCurrentPlan ? 'text-green-600' : 'text-gray-500'
@@ -168,6 +160,12 @@ export function PricingCard({
           {billingInterval === 'yearly' && plan.interval === 'year' && !plan.isCustom && (
             <div className="text-sm text-gray-500 mt-1">
               Billed annually (${displayPrice}/year)
+            </div>
+          )}
+          
+          {billingInterval === 'yearly' && plan.interval === 'month' && !plan.isCustom && (
+            <div className="text-sm text-gray-500 mt-1">
+              Billed annually (${Math.round(plan.price * 12 * 0.8)}/year)
             </div>
           )}
         </div>

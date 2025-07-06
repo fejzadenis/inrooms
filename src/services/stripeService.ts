@@ -381,6 +381,11 @@ export const stripeService = {
     return Math.round(monthlyCost - annualCost);
   },
 
+  // Calculate annual price with 20% discount
+  calculateAnnualPrice(monthlyPrice: number): number {
+    return Math.round(monthlyPrice * 12 * 0.8); // 20% discount
+  },
+
   async addPaymentMethod(customerId: string) {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
