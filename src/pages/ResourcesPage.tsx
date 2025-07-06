@@ -48,7 +48,7 @@ export function ResourcesPage() {
       id: '1',
       category: 'general',
       question: 'Who is inRooms for? Is it only for founders?',
-      answer: 'inRooms is designed for all early-stage founders, operators, and builders. Our platform serves entrepreneurs, technical co-founders, product leaders, designers, and anyone looking to build and grow their startup. Whether you\'re just starting out or leading a growing team, inRooms provides valuable networking opportunities tailored to your specific needs and goals.'
+      answer: 'inRooms is built for tech sales professionals and aspiring entrepreneurs — especially those with dreams of launching their own startup but unsure where to begin. Whether you\'re a founder, sales leader, account executive, or technical sales specialist, inRooms connects you with like-minded peers, mentors, and opportunities tailored to your growth in the tech startup space.'
     },
     {
       id: '2',
