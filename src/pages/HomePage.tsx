@@ -86,7 +86,7 @@ export function HomePage() {
                     Curated virtual Rooms where early-stage founders, operators, and builders connect, collaborate, and build momentum. Join private Rooms, hear tactical keynotes, and build reputation with live connections.
                   </p>
                   <div className="mt-2 text-sm text-indigo-600 font-medium sm:text-base">
-                    Free Founder access now — upgrade later to unlock Pro features like unlimited Rooms, team tools, and analytics.
+                    Beta Founder access now — upgrade later to unlock Pro features like unlimited Rooms, team tools, and analytics.
                   </div>
                   <div className="mt-5 sm:mt-8 flex flex-col sm:flex-row justify-center lg:justify-start gap-3 sm:gap-4">
                     <Button 
