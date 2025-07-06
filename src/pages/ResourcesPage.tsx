@@ -72,7 +72,7 @@ export function ResourcesPage() {
       id: '5',
       category: 'billing',
       question: 'Is it really free to start using inRooms?',
-      answer: 'Yes, we offer a 7-day free trial that gives you full access to the platform with 2 event registrations included. No credit card is required to start your trial. After the trial period, you can choose from our subscription plans starting at $39/month, or continue with limited functionality until you\'re ready to subscribe. We believe in letting you experience the value before committing.'
+      answer: 'While we no longer offer a free trial, we stand behind the value of inRooms with a 7-day money-back satisfaction guarantee. You’ll get full access to the platform, including 2 event registrations, from day one. If you’re not satisfied within the first 7 days, simply contact us for a full refund — no questions asked.'
     },
     {
       id: '6',
