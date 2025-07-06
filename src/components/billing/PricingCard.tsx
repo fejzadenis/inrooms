@@ -42,6 +42,19 @@ export function PricingCard({
     switch (planId) {
       case 'starter':
         return 'from-blue-500 to-blue-600';
+      case 'professional':
+        return 'from-indigo-500 to-indigo-600';
+      case 'enterprise':
+        return 'from-purple-500 to-purple-600';
+      case 'team':
+        return 'from-green-500 to-green-600';
+      case 'custom':
+        return 'from-gray-700 to-gray-900';
+      default:
+        return 'from-indigo-500 to-indigo-600';
+    }
+  };
+
   // Calculate annual savings
   const annualSavings = billingInterval === 'yearly' && !plan.isCustom ? 
     stripeService.calculateAnnualSavings(plan.interval === 'month' ? plan.price : plan.price / 12) : 0;
