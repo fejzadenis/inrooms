@@ -16,7 +16,10 @@ import {
   Code,
   Coffee,
   Lightbulb,
-  Target
+  Target,
+  Activity,
+  User,
+  Rocket
 } from 'lucide-react';
 import { Button } from '../components/common/Button';
 import { Link, useParams } from 'react-router-dom';
