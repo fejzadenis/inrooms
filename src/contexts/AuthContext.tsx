@@ -114,6 +114,7 @@ const setCachedUserData = (userId: string, userData: User): void => {
     timestamp: Date.now()
   });
 };
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -184,69 +185,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-    const userRef = doc(db, 'users', firebaseUser.uid);
-    const userSnap = await getDoc(userRef);
+      const userRef = doc(db, 'users', firebaseUser.uid);
+      const userSnap = await getDoc(userRef);
 
-    if (userSnap.exists()) {
-      const userData = userSnap.data();
-      
-      // Get email verification status from database
-      const dbEmailVerified = userData.email_verified || false;
-      
-      const trialEndsAt = userData.subscription?.trialEndsAt?.toDate?.();
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        
+        // Get email verification status from database
+        const dbEmailVerified = userData.email_verified || false;
+        
+        const trialEndsAt = userData.subscription?.trialEndsAt?.toDate?.();
 
-      return {
-        id: firebaseUser.uid,
-        name: userData.name || firebaseUser.displayName || '',
-        email: userData.email || firebaseUser.email || '',
-        role: userData.role || 'user',
-        photoURL: userData.photoURL || firebaseUser.photoURL || undefined,
-        emailVerified: firebaseUser.emailVerified,
-        dbEmailVerified: dbEmailVerified,
-        profile: userData.profile || {},
-        subscription: {
-          status: userData.subscription?.status || 'inactive',
-          eventsQuota: userData.subscription?.eventsQuota || 0,
-          eventsUsed: userData.subscription?.eventsUsed || 0,
-          trialEndsAt: trialEndsAt || undefined
-        },
-        stripe_customer_id: userData.stripe_customer_id,
-        isNewUser: userData.isNewUser || false
-      };
-    } else {
-      // Create a new user document if it doesn't exist
-      const newUser = {
-        id: firebaseUser.uid,
-        name: firebaseUser.displayName || '',
-        email: firebaseUser.email || '',
-        role: 'user',
-        photoURL: firebaseUser.photoURL || null,
-        emailVerified: firebaseUser.emailVerified,
-        dbEmailVerified: false,
-        profile: {},
-        subscription: {
-          status: 'inactive',
-          eventsQuota: 0,
-          eventsUsed: 0
-        },
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        isNewUser: true
-      };
-      
-      await setDoc(userRef, {
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-        photoURL: newUser.photoURL,
-        profile: newUser.profile,
-        subscription: newUser.subscription,
-        createdAt: newUser.createdAt,
-        updatedAt: newUser.updatedAt,
-        isNewUser: true
-      });
+        return {
+          id: firebaseUser.uid,
+          name: userData.name || firebaseUser.displayName || '',
+          email: userData.email || firebaseUser.email || '',
+          role: userData.role || 'user',
+          photoURL: userData.photoURL || firebaseUser.photoURL || undefined,
+          emailVerified: firebaseUser.emailVerified,
+          dbEmailVerified: dbEmailVerified,
+          profile: userData.profile || {},
+          subscription: {
+            status: userData.subscription?.status || 'inactive',
+            eventsQuota: userData.subscription?.eventsQuota || 0,
+            eventsUsed: userData.subscription?.eventsUsed || 0,
+            trialEndsAt: trialEndsAt || undefined
+          },
+          stripe_customer_id: userData.stripe_customer_id,
+          isNewUser: userData.isNewUser || false
+        };
+      } else {
+        // Create a new user document if it doesn't exist
+        const newUser = {
+          id: firebaseUser.uid,
+          name: firebaseUser.displayName || '',
+          email: firebaseUser.email || '',
+          role: 'user',
+          photoURL: firebaseUser.photoURL || null,
+          emailVerified: firebaseUser.emailVerified,
+          dbEmailVerified: false,
+          profile: {},
+          subscription: {
+            status: 'inactive',
+            eventsQuota: 0,
+            eventsUsed: 0
+          },
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          isNewUser: true
+        };
+        
+        await setDoc(userRef, {
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role,
+          photoURL: newUser.photoURL,
+          profile: newUser.profile,
+          subscription: newUser.subscription,
+          createdAt: newUser.createdAt,
+          updatedAt: newUser.updatedAt,
+          isNewUser: true
+        });
 
-      return newUser;
+        return newUser;
+      }
+    } catch (err) {
+      console.error('Error in getUserData:', err);
+      throw err;
     }
   };
 
@@ -312,80 +317,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-    } catch (err: any) {
-      // Handle quota exceeded errors gracefully
-      if (err.code === 'resource-exhausted') {
-        console.warn('Firestore quota exceeded, using fallback data');
-        // Return minimal user data from Firebase Auth
-        return {
-          id: firebaseUser.uid,
-          name: firebaseUser.displayName || '',
-          email: firebaseUser.email || '',
-          role: 'user',
-          photoURL: firebaseUser.photoURL || undefined,
-          emailVerified: firebaseUser.emailVerified,
-          dbEmailVerified: false,
-      
-      // Provide more specific error messages for quota issues
-      if (err.code === 'resource-exhausted') {
-        setError('Service temporarily unavailable. Please try again in a few minutes.');
-        toast.error('Service temporarily unavailable. Please try again in a few minutes.');
-      } else {
-        setError(err.message || 'Failed to create account');
-        toast.error(err.message || 'Failed to create account');
-      }
-            status: 'inactive',
-            eventsQuota: 0,
-            eventsUsed: 0
-          }
-        };
-      }
-      throw err;
-      
-      // Rate limit login attempts
-      if (shouldRateLimit('login')) {
-        throw new Error('Please wait before attempting to log in again');
-      }
-      
-    }
       
       // Check if this is a new user
       const userRef = doc(db, 'users', result.user.uid);
       const userSnap = await getDoc(userRef);
       
-      
-      // Rate limit signup attempts
-      if (shouldRateLimit('signup')) {
-        throw new Error('Please wait before attempting to sign up again');
-      }
-      
-      
-      // Provide more specific error messages for quota issues
-      if (err.code === 'resource-exhausted') {
-        setError('Service temporarily unavailable. Please try again in a few minutes.');
-        toast.error('Service temporarily unavailable. Please try again in a few minutes.');
-      } else {
-        setError(err.message || 'Failed to log in');
-        toast.error(err.message || 'Failed to log in');
-      }
-        // Rate limit user creation
-      try {
-        await sendVerificationEmail(userCredential.user);
-      } catch (emailError) {
-        console.warn('Failed to send verification email:', emailError);
-        // Don't fail the entire signup process if email sending fails
-      }
-      
-      // Rate limit Google login attempts
-      if (shouldRateLimit('googleLogin')) {
-        throw new Error('Please wait before attempting to log in again');
-      }
-      
-          throw new Error('Rate limited: Please wait before creating user');
-        }
-      try {
-
-      try {
+      if (!userSnap.exists()) {
         await setDoc(userRef, {
           name: result.user.displayName,
           email: result.user.email,
@@ -401,33 +338,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           updatedAt: serverTimestamp(),
           isNewUser
         });
-      } catch (firestoreError: any) {
-        console.warn('Failed to create user document in Firestore:', firestoreError);
-        // If Firestore fails, we can still proceed with the signup
-        // The user document will be created later when they log in
-      }
         toast.success('Account created successfully!');
       } else {
-        toast.success('Logged in successfully!');
-      }
-      } catch (firestoreError: any) {
-        console.warn('Failed to check/create user document:', firestoreError);
-        // Continue with login even if Firestore operations fail
         toast.success('Logged in successfully!');
       }
       
       return result;
     } catch (err: any) {
       console.error('Google login error:', err);
-      
-      // Provide more specific error messages for quota issues
-      if (err.code === 'resource-exhausted') {
-        setError('Service temporarily unavailable. Please try again in a few minutes.');
-        toast.error('Service temporarily unavailable. Please try again in a few minutes.');
-      } else {
-        setError(err.message || 'Failed to log in with Google');
-        toast.error(err.message || 'Failed to log in with Google');
-      }
+      setError(err.message || 'Failed to log in with Google');
+      toast.error(err.message || 'Failed to log in with Google');
       throw err;
     }
   };
