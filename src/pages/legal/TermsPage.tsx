@@ -15,7 +15,7 @@ export function TermsPage() {
             <p className="text-xl text-gray-600">
               Please read these terms carefully before using our platform.
             </p>
-            <p className="text-sm text-gray-500 mt-2">Last updated: January 2025</p>
+            <p className="text-sm text-gray-500 mt-2">Last updated: July 2025</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-lg p-8 space-y-8">
