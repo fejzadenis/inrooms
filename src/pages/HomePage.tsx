@@ -78,7 +78,7 @@ export function HomePage() {
                 <div className="text-center lg:text-left">
                   <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
                     <span className="block">Discover Your</span>
-                    <span className="block bg-gradient-to-r from-indigo-600 to-purple-600 text-transparent bg-clip-text min-h-[1.2em] transition-all duration-500 ease-in-out">
+                    <span className="block bg-gradient-to-r from-[#003B7A] to-[#00B2FF] text-transparent bg-clip-text min-h-[1.2em] transition-all duration-500 ease-in-out">
                       {words[currentWordIndex]}
                     </span>
                   </h1>
