@@ -183,7 +183,7 @@ export function NetworkPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4" data-tour="network-header">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">My Network</h1>
-            <p className="text-gray-600 mt-2">Connect with tech sales leaders, founders, and future entrepreneurs shaping the startup world.</p>
+            <p className="text-gray-600 mt-2">Connect with founders, operators, and future builders turning bold ideas into real startups.</p>
           </div>
           <div className="flex space-x-4 w-full md:w-auto">
             <Button 
