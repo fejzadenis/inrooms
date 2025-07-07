@@ -177,7 +177,7 @@ export function VerifyEmailPage() {
                           navigate('/onboarding');
                         }, 1500);
                       } else {
-                        toast.info('Email not verified yet. Please check your inbox and click the verification link.');
+                        toast('Email not verified yet. Please check your inbox and click the verification link.');
                       }
                     } catch (error) {
                       console.error('Error reloading user:', error);
