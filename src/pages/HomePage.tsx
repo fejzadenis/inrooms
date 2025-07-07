@@ -9,7 +9,7 @@ export function HomePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [currentWordIndex, setCurrentWordIndex] = React.useState(0);
-  const words = ['Co-founder', 'Mentor', 'Collaborator', 'Hire', 'Beta tester', 'Partner'];
+  const words = ['Momentum', 'Potential', 'Next Step', 'Solution', 'Community'];
   const [currentSpeakerIndex, setCurrentSpeakerIndex] = React.useState(0);
 
   React.useEffect(() => {
@@ -77,7 +77,7 @@ export function HomePage() {
               <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
                 <div className="text-center lg:text-left">
                   <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-                    <span className="block">Meet Your Next</span>
+                    <span className="block">Discover Your</span>
                     <span className="block bg-gradient-to-r from-indigo-600 to-purple-600 text-transparent bg-clip-text min-h-[1.2em] transition-all duration-500 ease-in-out">
                       {words[currentWordIndex]}
                     </span>
