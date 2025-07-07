@@ -75,7 +75,7 @@ interface AuthContextType {
   verifyEmail: (actionCode: string) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -419,12 +419,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const verifyEmail = async (actionCode: string) => {
     try {
       await applyActionCode(auth, actionCode);
+      console.log("Email verification code applied successfully");
       
       // After applying the action code, reload the current user to get updated emailVerified status
       let updatedEmailVerified = false;
       if (auth.currentUser) {
         await auth.currentUser.reload();
         updatedEmailVerified = auth.currentUser.emailVerified;
+        console.log("User reloaded, emailVerified status:", updatedEmailVerified);
         
         // Get the refreshed user data and update the user state
         if (auth.currentUser) {
@@ -433,6 +435,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           // Also update the database verification status
           if (updatedEmailVerified) {
+            console.log("Updating database email verification status");
             await markEmailVerified(auth.currentUser.uid);
           }
         }
@@ -450,6 +453,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const markEmailVerified = async (userId: string) => {
     try {
       // Update Firestore
+      console.log("Updating Firestore email verification for user", userId);
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, {
         'email_verified': true,
@@ -458,6 +462,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       
       // Update Supabase
+      console.log("Updating Supabase email verification for user", userId);
       const { error } = await supabase
         .from('users')
         .update({ 
@@ -474,6 +479,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Update local state
       setUser(prev => {
         if (!prev) return null;
+        console.log("Updating local user state with verified email");
         return {
           ...prev,
           dbEmailVerified: true

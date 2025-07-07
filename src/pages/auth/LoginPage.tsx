@@ -23,9 +23,15 @@ export function LoginPage() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
+  const [verificationSuccess, setVerificationSuccess] = React.useState(false);
   
   // Check for verification success from URL params
-  const verificationSuccess = searchParams.get('emailVerified') === 'true';
+  React.useEffect(() => {
+    const emailVerified = searchParams.get('emailVerified') === 'true';
+    if (emailVerified) {
+      setVerificationSuccess(true);
+    }
+  }, [searchParams]);
   
   const {
     register,

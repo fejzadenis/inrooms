@@ -21,7 +21,8 @@ export function VerifyEmailPage() {
   const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
-    const actionCode = searchParams.get('oobCode');
+    // Check for both oobCode (Firebase) and code (custom parameter)
+    const actionCode = searchParams.get('oobCode') || searchParams.get('code');
     
     if (actionCode) {
       // We have an action code, so we're verifying an email
@@ -80,7 +81,7 @@ export function VerifyEmailPage() {
   const actionCode = searchParams.get('oobCode');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8" data-testid="verify-email-page">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <Logo />
@@ -166,7 +167,10 @@ export function VerifyEmailPage() {
                     try {
                       await auth.currentUser.reload();
                       
-                      if (auth.currentUser.emailVerified) {
+                      // Check both Firebase emailVerified and our database flag
+                      const isVerified = auth.currentUser.emailVerified || user?.dbEmailVerified;
+                      
+                      if (isVerified) {
                          // Update database verification status
                          await markEmailVerified(auth.currentUser.uid);
                         setSuccess(true);
@@ -177,7 +181,9 @@ export function VerifyEmailPage() {
                           navigate('/onboarding');
                         }, 1500);
                       } else {
-                        toast('Email not verified yet. Please check your inbox and click the verification link.');
+                        toast.info('Email not verified yet. Please check your inbox and click the verification link.', {
+                          id: 'email-verification-pending'
+                        });
                       }
                     } catch (error) {
                       console.error('Error reloading user:', error);
@@ -207,7 +213,8 @@ export function VerifyEmailPage() {
               <Button 
                 onClick={handleResendVerification} 
                 disabled={resendDisabled}
-                className="w-full mb-4"
+                className="w-full mb-4" 
+                data-testid="resend-verification-button"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 {resendDisabled 
