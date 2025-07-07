@@ -83,7 +83,7 @@ export function HomePage() {
                     </span>
                   </h1>
                   <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                    Curated virtual Rooms where early-stage founders, operators, and builders connect, collaborate, and build momentum. Join private Rooms, hear tactical keynotes, and build reputation with live connections.
+                 The place where founders (and future ones) gain momentum, clarity, and community. Join private Rooms, hear tactical keynotes, and build reputation with live connections.
                   </p>
                   <div className="mt-2 text-sm text-indigo-600 font-medium sm:text-base">
                     Beta Founder access now — upgrade later to unlock Pro features like unlimited Rooms, team tools, and analytics.
