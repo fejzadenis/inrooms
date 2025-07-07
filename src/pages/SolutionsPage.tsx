@@ -50,6 +50,7 @@ export function SolutionsPage() {
   const [isUploadModalOpen, setIsUploadModalOpen] = React.useState(false);
   const [selectedDemo, setSelectedDemo] = React.useState<Demo | null>(null);
   const [featuringDemo, setFeaturingDemo] = React.useState<Demo | null>(null);
+  const [featuringDemo, setFeaturingDemo] = React.useState<Demo | null>(null);
   
   // Refs for animation
   const headerRef = useRef<HTMLDivElement>(null);
@@ -565,6 +566,7 @@ export function SolutionsPage() {
                   onViewRecording={() => handleViewRecording(demo)}
                   onUploadRecording={() => handleUploadRecording(demo)}
                   onToggleFeatured={() => handleToggleFeatured(demo)}
+                  isFeaturingInProgress={featuringDemo?.id === demo.id}
                   isFeaturingInProgress={featuringDemo?.id === demo.id}
                 />
               </motion.div>

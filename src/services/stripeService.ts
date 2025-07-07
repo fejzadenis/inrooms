@@ -269,6 +269,8 @@ export const stripeService = {
 
       return await response.json();
     } catch (error) {
+    }
+  }
   async createCustomerPortalSession(customerId: string, returnUrl: string) {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
