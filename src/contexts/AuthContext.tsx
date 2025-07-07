@@ -77,17 +77,72 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// Cache for user data to prevent excessive Firestore reads
+const userDataCache = new Map<string, { data: User; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Rate limiting for operations
+const operationTimestamps = new Map<string, number>();
+const RATE_LIMIT_DELAY = 1000; // 1 second between operations
+
+// Helper function to check if operation should be rate limited
+const shouldRateLimit = (operation: string): boolean => {
+  const now = Date.now();
+  const lastOperation = operationTimestamps.get(operation);
+  
+  if (lastOperation && now - lastOperation < RATE_LIMIT_DELAY) {
+    return true;
+  }
+  
+  operationTimestamps.set(operation, now);
+  return false;
+};
+
+// Helper function to get cached user data
+const getCachedUserData = (userId: string): User | null => {
+  const cached = userDataCache.get(userId);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  return null;
+};
+
+// Helper function to cache user data
+const setCachedUserData = (userId: string, userData: User): void => {
+  userDataCache.set(userId, {
+    data: userData,
+    timestamp: Date.now()
+  });
+};
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authStateInitialized, setAuthStateInitialized] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Prevent multiple rapid calls during auth state changes
+      if (shouldRateLimit('authStateChange')) {
+        return;
+      }
+
       if (firebaseUser) {
         try {
+          // Check cache first
+          const cachedData = getCachedUserData(firebaseUser.uid);
+          if (cachedData && authStateInitialized) {
+            setUser(cachedData);
+            setLoading(false);
+            return;
+          }
+
           // Force reload from server to get latest emailVerified status
-          await firebaseUser.reload();
+          try {
+            await firebaseUser.reload();
+          } catch (reloadError) {
+            console.warn('Failed to reload user, continuing with cached data:', reloadError);
+          }
 
           // Check again after reload
           const refreshedUser = auth.currentUser;
@@ -99,14 +154,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           const userData = await getUserData(refreshedUser);
+          setCachedUserData(refreshedUser.uid, userData);
           setUser(userData);
         } catch (err) {
           console.error('Error getting user data:', err);
-          setUser(null);
+          // If we have cached data, use it as fallback
+          const cachedData = getCachedUserData(firebaseUser.uid);
+          if (cachedData) {
+            setUser(cachedData);
+          } else {
+            setUser(null);
+          }
         }
       } else {
         setUser(null);
+        userDataCache.clear(); // Clear cache on logout
       }
+      setAuthStateInitialized(true);
       setLoading(false);
     });
 
@@ -114,6 +178,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const getUserData = async (firebaseUser: FirebaseUser): Promise<User> => {
+    // Rate limit getUserData calls
+    if (shouldRateLimit(`getUserData-${firebaseUser.uid}`)) {
+      throw new Error('Rate limited: Too many requests');
+    }
+
+    try {
     const userRef = doc(db, 'users', firebaseUser.uid);
     const userSnap = await getDoc(userRef);
 
@@ -242,13 +312,80 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
+    } catch (err: any) {
+      // Handle quota exceeded errors gracefully
+      if (err.code === 'resource-exhausted') {
+        console.warn('Firestore quota exceeded, using fallback data');
+        // Return minimal user data from Firebase Auth
+        return {
+          id: firebaseUser.uid,
+          name: firebaseUser.displayName || '',
+          email: firebaseUser.email || '',
+          role: 'user',
+          photoURL: firebaseUser.photoURL || undefined,
+          emailVerified: firebaseUser.emailVerified,
+          dbEmailVerified: false,
+      
+      // Provide more specific error messages for quota issues
+      if (err.code === 'resource-exhausted') {
+        setError('Service temporarily unavailable. Please try again in a few minutes.');
+        toast.error('Service temporarily unavailable. Please try again in a few minutes.');
+      } else {
+        setError(err.message || 'Failed to create account');
+        toast.error(err.message || 'Failed to create account');
+      }
+            status: 'inactive',
+            eventsQuota: 0,
+            eventsUsed: 0
+          }
+        };
+      }
+      throw err;
+      
+      // Rate limit login attempts
+      if (shouldRateLimit('login')) {
+        throw new Error('Please wait before attempting to log in again');
+      }
+      
+    }
       
       // Check if this is a new user
       const userRef = doc(db, 'users', result.user.uid);
       const userSnap = await getDoc(userRef);
       
-      if (!userSnap.exists()) {
-        // Create user document for new Google sign-ins
+      
+      // Rate limit signup attempts
+      if (shouldRateLimit('signup')) {
+        throw new Error('Please wait before attempting to sign up again');
+      }
+      
+      
+      // Provide more specific error messages for quota issues
+      if (err.code === 'resource-exhausted') {
+        setError('Service temporarily unavailable. Please try again in a few minutes.');
+        toast.error('Service temporarily unavailable. Please try again in a few minutes.');
+      } else {
+        setError(err.message || 'Failed to log in');
+        toast.error(err.message || 'Failed to log in');
+      }
+        // Rate limit user creation
+      try {
+        await sendVerificationEmail(userCredential.user);
+      } catch (emailError) {
+        console.warn('Failed to send verification email:', emailError);
+        // Don't fail the entire signup process if email sending fails
+      }
+      
+      // Rate limit Google login attempts
+      if (shouldRateLimit('googleLogin')) {
+        throw new Error('Please wait before attempting to log in again');
+      }
+      
+          throw new Error('Rate limited: Please wait before creating user');
+        }
+      try {
+
+      try {
         await setDoc(userRef, {
           name: result.user.displayName,
           email: result.user.email,
@@ -264,22 +401,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           updatedAt: serverTimestamp(),
           isNewUser
         });
+      } catch (firestoreError: any) {
+        console.warn('Failed to create user document in Firestore:', firestoreError);
+        // If Firestore fails, we can still proceed with the signup
+        // The user document will be created later when they log in
+      }
         toast.success('Account created successfully!');
       } else {
+        toast.success('Logged in successfully!');
+      }
+      } catch (firestoreError: any) {
+        console.warn('Failed to check/create user document:', firestoreError);
+        // Continue with login even if Firestore operations fail
         toast.success('Logged in successfully!');
       }
       
       return result;
     } catch (err: any) {
       console.error('Google login error:', err);
-      setError(err.message || 'Failed to log in with Google');
-      toast.error(err.message || 'Failed to log in with Google');
+      
+      // Provide more specific error messages for quota issues
+      if (err.code === 'resource-exhausted') {
+        setError('Service temporarily unavailable. Please try again in a few minutes.');
+        toast.error('Service temporarily unavailable. Please try again in a few minutes.');
+      } else {
+        setError(err.message || 'Failed to log in with Google');
+        toast.error(err.message || 'Failed to log in with Google');
+      }
       throw err;
     }
   };
 
   const logout = async () => {
     try {
+      // Clear cache on logout
+      userDataCache.clear();
+      operationTimestamps.clear();
+      
       await signOut(auth);
       toast.success('Logged out successfully');
     } catch (err: any) {
@@ -292,6 +450,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateUserProfile = async (userId: string, profileData: any) => {
     try {
+      // Rate limit profile updates
+      if (shouldRateLimit(`updateProfile-${userId}`)) {
+        throw new Error('Please wait before updating your profile again');
+      }
+      
       const userRef = doc(db, 'users', userId);
       
       // Prepare update data
@@ -312,12 +475,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       await updateDoc(userRef, updateData);
       
+      // Clear cache for this user to force refresh
+      userDataCache.delete(userId);
+      
       // Update local user state
       if (user && user.id === userId) {
         setUser(prev => {
           if (!prev) return null;
           
-          return {
+          const updatedUser = {
             ...prev,
             name: profileData.name || prev.name,
             photoURL: profileData.photoURL !== undefined ? profileData.photoURL : prev.photoURL,
@@ -330,13 +496,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               )
             }
           };
+          
+          // Update cache with new data
+          setCachedUserData(userId, updatedUser);
+          return updatedUser;
         });
       }
       
       toast.success('Profile updated successfully!');
     } catch (err: any) {
       console.error('Profile update error:', err);
-      toast.error(err.message || 'Failed to update profile');
+      
+      if (err.code === 'resource-exhausted') {
+        toast.error('Service temporarily unavailable. Please try again in a few minutes.');
+      } else {
+        toast.error(err.message || 'Failed to update profile');
+      }
       throw err;
     }
   };
@@ -345,6 +520,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) throw new Error('User not authenticated');
 
     try {
+      // Rate limit trial activation
+      if (shouldRateLimit(`startTrial-${user.id}`)) {
+        throw new Error('Please wait before trying again');
+      }
+      
       const userRef = doc(db, 'users', user.id);
       
       // Set trial end date (7 days from now)
@@ -359,11 +539,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         'updatedAt': serverTimestamp()
       });
       
+      // Clear cache to force refresh
+      userDataCache.delete(user.id);
+      
       // Update local user state
       setUser(prev => {
         if (!prev) return null;
         
-        return {
+        const updatedUser = {
           ...prev,
           subscription: {
             ...prev.subscription,
@@ -373,18 +556,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             trialEndsAt
           }
         };
+        
+        // Update cache with new data
+        setCachedUserData(prev.id, updatedUser);
+        return updatedUser;
       });
       
       toast.success('Free trial activated successfully!');
     } catch (err: any) {
       console.error('Free trial activation error:', err);
-      toast.error(err.message || 'Failed to activate free trial');
+      
+      if (err.code === 'resource-exhausted') {
+        toast.error('Service temporarily unavailable. Please try again in a few minutes.');
+      } else {
+        toast.error(err.message || 'Failed to activate free trial');
+      }
       throw err;
     }
   };
 
   const resetPassword = async (email: string) => {
     try {
+      // Rate limit password reset requests
+      if (shouldRateLimit(`resetPassword-${email}`)) {
+        throw new Error('Please wait before requesting another password reset');
+      }
+      
       await sendPasswordResetEmail(auth, email);
       toast.success('Password reset email sent! Please check your inbox.');
     } catch (err: any) {
@@ -407,6 +604,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const sendVerificationEmail = async (user: FirebaseUser) => {
     try {
+      // Rate limit verification email sending
+      if (shouldRateLimit(`sendVerification-${user.uid}`)) {
+        throw new Error('Please wait before requesting another verification email');
+      }
+      
       await sendEmailVerification(user);
       toast.success('Verification email sent! Please check your inbox.');
     } catch (err: any) {
@@ -424,19 +626,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // After applying the action code, reload the current user to get updated emailVerified status
       let updatedEmailVerified = false;
       if (auth.currentUser) {
-        await auth.currentUser.reload();
+        try {
+          await auth.currentUser.reload();
+        } catch (reloadError) {
+          console.warn('Failed to reload user after email verification:', reloadError);
+        }
         updatedEmailVerified = auth.currentUser.emailVerified;
         console.log("User reloaded, emailVerified status:", updatedEmailVerified);
         
         // Get the refreshed user data and update the user state
         if (auth.currentUser) {
+          // Clear cache to force fresh data
+          userDataCache.delete(auth.currentUser.uid);
           const updatedUserData = await getUserData(auth.currentUser);
           setUser(updatedUserData);
           
           // Also update the database verification status
           if (updatedEmailVerified) {
             console.log("Updating database email verification status");
-            await markEmailVerified(auth.currentUser.uid);
+            try {
+              await markEmailVerified(auth.currentUser.uid);
+            } catch (markError) {
+              console.warn('Failed to mark email as verified in database:', markError);
+            }
           }
         }
       }
@@ -452,14 +664,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const markEmailVerified = async (userId: string) => {
     try {
+      // Rate limit email verification marking
+      if (shouldRateLimit(`markEmailVerified-${userId}`)) {
+        console.warn('Rate limited: markEmailVerified');
+        return;
+      }
+      
       // Update Firestore
       console.log("Updating Firestore email verification for user", userId);
       const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
-        'email_verified': true,
-        'email_verified_at': serverTimestamp(),
-        'updatedAt': serverTimestamp()
-      });
+      try {
+        await updateDoc(userRef, {
+          'email_verified': true,
+          'email_verified_at': serverTimestamp(),
+          'updatedAt': serverTimestamp()
+        });
+      } catch (firestoreError: any) {
+        console.warn('Failed to update Firestore email verification:', firestoreError);
+        // Continue with Supabase update even if Firestore fails
+      }
       
       // Update Supabase
       console.log("Updating Supabase email verification for user", userId);
@@ -476,14 +699,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Error updating Supabase email verification:', error);
       }
       
+      // Clear cache to force refresh
+      userDataCache.delete(userId);
+      
       // Update local state
       setUser(prev => {
         if (!prev) return null;
         console.log("Updating local user state with verified email");
-        return {
+        const updatedUser = {
           ...prev,
           dbEmailVerified: true
         };
+        
+        // Update cache with new data
+        setCachedUserData(userId, updatedUser);
+        return updatedUser;
       });
       
       console.log("AUTH DEBUG: Email verification status updated in database for user", userId);
