@@ -36,103 +36,133 @@ export function ResourcesPage() {
 
   const categories = [
     { id: 'general', name: 'General', icon: HelpCircle, color: 'bg-blue-500' },
-    { id: 'account', name: 'Account', icon: Users, color: 'bg-green-500' },
-    { id: 'billing', name: 'Billing', icon: CreditCard, color: 'bg-purple-500' },
-    { id: 'events', name: 'Events', icon: Calendar, color: 'bg-orange-500' },
-    { id: 'products', name: 'Products', icon: Rocket, color: 'bg-red-500' },
-    { id: 'reputation', name: 'Reputation', icon: Award, color: 'bg-yellow-500' },
+    { id: 'founder', name: 'Founder Basics', icon: Users, color: 'bg-green-500' },
+    { id: 'funding', name: 'Funding', icon: CreditCard, color: 'bg-purple-500' },
+    { id: 'rooms', name: 'Rooms', icon: Calendar, color: 'bg-orange-500' },
+    { id: 'showcase', name: 'Showcase', icon: Rocket, color: 'bg-red-500' },
+    { id: 'community', name: 'Community', icon: Award, color: 'bg-yellow-500' },
   ];
 
   const faqs: FAQItem[] = [
     {
       id: '1',
-      category: 'general',
+      category: 'founder',
       question: 'Who is inRooms for? Is it only for founders?',
       answer: 'inRooms is built for tech sales professionals and aspiring entrepreneurs — especially those with dreams of launching their own startup but unsure where to begin. Whether you\'re a founder, sales leader, account executive, or technical sales specialist, inRooms connects you with like-minded peers, mentors, and opportunities tailored to your growth in the tech startup space.'
     },
     {
       id: '2',
-      category: 'general',
+      category: 'rooms',
       question: 'What exactly is a "Room" on inRooms?',
       answer: 'A Room is a virtual space where focused networking happens. Unlike generic video calls, Rooms are purpose-built for specific topics, industries, or goals. They can be scheduled networking events, impromptu collaboration sessions, or ongoing communities. Each Room has a host, a clear purpose, and tools designed for meaningful connection. Think of Rooms as curated networking spaces where you\'ll meet the right people, not just more people.'
     },
     {
       id: '3',
-      category: 'reputation',
+      category: 'community',
       question: 'What is "Proof of Work" and how does it benefit me?',
       answer: 'Proof of Work is our verification system that showcases your real contributions and achievements. Unlike traditional profiles that rely on self-reported information, your inRooms profile displays badges and credentials earned through verified activities like hosting events, making successful connections, and receiving peer endorsements. This creates a trustworthy professional identity based on actual impact, making it easier to establish credibility and open doors to new opportunities.'
     },
     {
       id: '4',
-      category: 'events',
-      question: 'How often are networking events held?',
-      answer: 'We host multiple events weekly across various topics and formats. The exact frequency depends on your interests and industry focus. Most members attend 2-4 events per month, but your subscription plan determines how many you can register for. Our calendar is constantly updated with new events, and you can filter by topic, format, or time to find ones that match your schedule and goals. Enterprise members can also request custom events for their specific needs.'
+      category: 'rooms',
+      question: 'How often are founder Rooms held?',
+      answer: 'We host multiple founder Rooms weekly across various startup topics and formats. The exact frequency depends on your interests and startup stage. Most founders attend 2-4 Rooms per month, but your subscription plan determines how many you can register for. Our calendar is constantly updated with new Rooms, and you can filter by topic, format, or time to find ones that match your schedule and startup goals. Enterprise members can also request custom Rooms for their specific needs.'
     },
     {
       id: '5',
-      category: 'billing',
+      category: 'general',
       question: 'Is it really free to start using inRooms?',
-      answer: 'While we no longer offer a free trial, we stand behind the value of inRooms with a 7-day money-back satisfaction guarantee. You’ll get full access to the platform, including 2 event registrations, from day one. If you’re not satisfied within the first 7 days, simply contact us for a full refund — no questions asked.'
+      answer: 'While we no longer offer a free trial, we stand behind the value of inRooms with a 7-day money-back satisfaction guarantee. You'll get full access to the platform, including 2 Room registrations, from day one. If you're not satisfied within the first 7 days, simply contact us for a full refund — no questions asked.'
     },
     {
       id: '6',
-      category: 'account',
-      question: 'How do I set up my profile for maximum networking success?',
-      answer: 'For maximum success, complete all profile sections including your professional background, skills, and goals. Upload a professional photo, connect your LinkedIn account, and specify your networking preferences. The more complete your profile, the better our matching algorithms can connect you with relevant professionals. Focus on highlighting your unique expertise and what you\'re looking to achieve through networking. Our onboarding process will guide you through optimizing your profile step by step.'
+      category: 'founder',
+      question: 'How do I set up my founder profile for maximum networking success?',
+      answer: 'For maximum founder success, complete all profile sections including your startup details, founder background, skills, and goals. Upload a professional photo, connect your LinkedIn account, and specify your startup stage and needs. The more complete your profile, the better our matching algorithms can connect you with relevant co-founders, investors, and partners. Focus on highlighting your unique founder journey and what you\'re looking to achieve with your startup. Our onboarding process will guide you through optimizing your founder profile step by step.'
     },
     {
       id: '7',
-      category: 'events',
-      question: 'What types of events can I attend?',
-      answer: 'inRooms offers a diverse range of events including roundtable discussions, panel sessions with industry experts, skill-building workshops, networking mixers, and 1:1 matching sessions. Events are categorized by industry, role, and experience level to ensure relevant connections. Some events are structured with specific agendas, while others provide more open networking opportunities. You can browse the full calendar and filter by type, topic, and time to find events that match your interests.'
+      category: 'rooms',
+      question: 'What types of Rooms can founders attend?',
+      answer: 'inRooms offers a diverse range of founder-focused Rooms including co-founder matching sessions, investor roundtables, pitch practice workshops, technical co-founder meetups, and startup problem-solving sessions. Rooms are categorized by startup stage, industry, and specific founder challenges to ensure relevant connections. Some Rooms are structured with specific agendas, while others provide more open networking opportunities. You can browse the full calendar and filter by type, topic, and time to find Rooms that match your startup\'s current needs.'
     },
     {
       id: '8',
-      category: 'reputation',
+      category: 'community',
       question: 'How do I earn reputation badges?',
-      answer: 'Badges are earned through verified activities on the platform. For example, host three events to earn the "Event Host" badge, make five successful introductions for the "Connector" badge, or receive multiple positive mentorship reviews for the "Mentor" badge. Each badge has specific criteria, and you\'ll be notified when you\'re close to earning one. Badges appear on your profile and increase your visibility in search results and recommendations. Unlike self-reported skills, these badges represent verified contributions.'
+      answer: 'Badges are earned through verified founder activities on the platform. For example, host three Rooms to earn the "Room Host" badge, make five successful co-founder introductions for the "Connector" badge, or receive multiple positive mentorship reviews for the "Mentor" badge. Each badge has specific criteria, and you\'ll be notified when you\'re close to earning one. Badges appear on your founder profile and increase your visibility to investors and potential co-founders. Unlike self-reported skills, these badges represent verified founder contributions and achievements.'
     },
     {
       id: '9',
       category: 'general',
       question: 'How is inRooms different from LinkedIn or other networking platforms?',
-      answer: 'Unlike LinkedIn, which focuses on static connections and content, inRooms is built for active, purposeful networking. We emphasize quality interactions over quantity of connections. Our platform features curated Rooms instead of feeds, verified reputation instead of self-reported experience, and structured networking events instead of random outreach. We also focus exclusively on startup founders and builders, ensuring all connections are relevant to your growth journey. Think of us as the difference between a curated dinner party and a massive conference hall.'
+      answer: 'Unlike LinkedIn, which focuses on static connections and content, inRooms is built for active, purposeful founder networking. We emphasize quality interactions over quantity of connections. Our platform features curated founder Rooms instead of feeds, verified founder reputation instead of self-reported experience, and structured networking events instead of random outreach. We also focus exclusively on startup founders and builders, ensuring all connections are relevant to your growth journey. Think of us as the difference between a curated dinner party and a massive conference hall.'
     },
     {
       id: '10',
-      category: 'products',
+      category: 'showcase',
       question: 'Can I showcase my product or solution on inRooms?',
-      answer: 'Yes, Enterprise subscribers can showcase products through our Product Showcase page. This feature allows you to schedule live demo sessions, upload recorded presentations, and connect with potential users, partners, or investors. Your product showcases can be public or private, and you can track engagement metrics. This isn\'t just a listing - it\'s an interactive way to demonstrate your solution to a targeted audience of founders and builders who might become users, partners, or recommend your product to their networks.'
+      answer: 'Yes, Enterprise subscribers can showcase their startups through our Solutions page. This feature allows founders to schedule live demo sessions, upload recorded presentations, and connect with potential users, partners, or investors. Your startup showcases can be public or private, and you can track engagement metrics. This isn\'t just a listing - it\'s an interactive way to demonstrate your solution to a targeted audience of founders and builders who might become users, partners, or recommend your product to their networks.'
     },
     {
       id: '11',
-      category: 'events',
-      question: 'What happens if I miss an event I registered for?',
-      answer: 'If you miss an event, you\'ll still have access to any recordings or resources shared (available for 30 days on Starter plans, longer on higher tiers). Your event credit is used regardless of attendance, but we send reminders to help you remember. For popular events that reach capacity, we encourage canceling your registration at least 2 hours in advance if you can\'t attend, to free up your spot for others. Consistent no-shows may affect your ability to register for high-demand events in the future.'
+      category: 'rooms',
+      question: 'What happens if I miss a Room I registered for?',
+      answer: 'If you miss a Room, you\'ll still have access to any recordings or resources shared (available for 30 days on Starter plans, longer on higher tiers). Your Room credit is used regardless of attendance, but we send reminders to help you remember. For popular Rooms that reach capacity, we encourage canceling your registration at least 2 hours in advance if you can\'t attend, to free up your spot for other founders. Consistent no-shows may affect your ability to register for high-demand Rooms in the future.'
     },
     {
       id: '12',
-      category: 'billing',
+      category: 'funding',
       question: 'What\'s included in each subscription tier?',
-      answer: 'Our Starter plan ($39/month) includes 3 events monthly, basic profile features, and standard networking tools. The Professional plan ($79/month) offers 8 events monthly, enhanced profile features, priority registration, and advanced networking tools. Our Enterprise plan ($149/month) provides 15 events monthly, custom event creation, premium profile badges, and dedicated support. All plans include access to our platform, messaging, and basic features. Annual subscriptions save 20% compared to monthly billing. You can view detailed plan comparisons on our Subscription page.'
+      answer: 'Our Starter plan ($39/month) includes 3 founder Rooms monthly, basic founder profile features, and standard networking tools. The Professional plan ($79/month) offers 8 Rooms monthly, enhanced founder profile features, priority registration, and advanced co-founder matching tools. Our Enterprise plan ($149/month) provides 15 Rooms monthly, custom Room creation, premium founder badges, investor introductions, and dedicated support. All plans include access to our platform, messaging, and basic features. Annual subscriptions save 20% compared to monthly billing.'
     },
     {
       id: '13',
-      category: 'reputation',
+      category: 'community',
       question: 'Can I display my inRooms reputation on other platforms?',
-      answer: 'Yes, we provide embeddable reputation badges that you can add to your personal website, email signature, or other profiles. These badges are dynamically updated as your reputation grows and include verification links so others can confirm their authenticity. We\'re also developing integrations with LinkedIn and other platforms to allow seamless sharing of your verified achievements. Your reputation becomes a portable asset that enhances your professional brand across the digital landscape.'
+      answer: 'Yes, we provide embeddable founder reputation badges that you can add to your startup website, email signature, pitch deck, or other profiles. These badges are dynamically updated as your founder reputation grows and include verification links so investors and partners can confirm their authenticity. We\'re also developing integrations with LinkedIn and other platforms to allow seamless sharing of your verified founder achievements. Your reputation becomes a portable asset that enhances your founder brand across the digital landscape.'
     },
     {
       id: '14',
-      category: 'general',
+      category: 'rooms',
       question: 'How do Open Build Rooms work?',
-      answer: 'Open Build Rooms are collaborative spaces where you can drop in anytime to co-work, share your screen, test ideas, and get feedback in real-time. Unlike scheduled events, these rooms have ongoing availability with flexible participation. You might join to work on a pitch deck and get feedback, collaborate on solving a specific challenge, or simply work alongside other founders in your field. Think of them as digital coworking spaces with momentum and purpose. This feature is coming soon and will be available to all subscription tiers.'
+      answer: 'Open Build Rooms are collaborative spaces where founders can drop in anytime to co-work, share their screen, test ideas, and get feedback in real-time. Unlike scheduled events, these rooms have ongoing availability with flexible participation. You might join to work on your pitch deck and get investor feedback, collaborate on solving a technical challenge with other builders, or simply work alongside other founders for accountability and motivation. These spaces are particularly valuable for solo founders seeking community and early-stage teams working through product challenges. Think of them as digital coworking spaces with momentum and purpose. This feature is coming soon and will be available to all subscription tiers.'
     },
     {
       id: '15',
-      category: 'account',
+      category: 'general',
       question: 'Is my information secure and private?',
-      answer: 'Yes, we take data security and privacy seriously. Your personal information is encrypted and never shared with third parties without your consent. You control what appears on your public profile versus what\'s only visible to connections. All payment information is processed securely through Stripe and never stored on our servers. We comply with GDPR, CCPA, and other relevant privacy regulations. You can review our full Privacy Policy for more details on how we protect your information.'
+      answer: 'Yes, we take founder data security and privacy seriously. Your startup and personal information is encrypted and never shared with third parties without your consent. You control what appears on your public founder profile versus what\'s only visible to connections. All payment information is processed securely through Stripe and never stored on our servers. We comply with GDPR, CCPA, and other relevant privacy regulations. You can review our full Privacy Policy for more details on how we protect your information.'
+    },
+    {
+      id: '16',
+      category: 'funding',
+      question: 'How can inRooms help me raise funding?',
+      answer: 'inRooms helps founders raise funding in multiple ways: 1) Access to dedicated investor Rooms where you can pitch and connect with angels and VCs, 2) Verified founder reputation that builds credibility with investors, 3) Pitch practice sessions with experienced founders and investors, 4) Personalized investor introductions for Enterprise members, and 5) Fundraising workshops and resources. Many founders have secured pre-seed and seed funding through connections made on inRooms.'
+    },
+    {
+      id: '17',
+      category: 'founder',
+      question: 'How do I find a technical co-founder?',
+      answer: 'inRooms offers several ways to find technical co-founders: 1) Co-founder matching Rooms specifically designed to connect non-technical and technical founders, 2) Advanced search filters to find developers and engineers with relevant skills, 3) Technical founder roundtables where you can showcase your vision and connect with potential technical partners, and 4) Our co-founder compatibility algorithm that suggests matches based on complementary skills, shared values, and startup vision alignment.'
+    },
+    {
+      id: '18',
+      category: 'showcase',
+      question: 'How do I get featured on the Solutions page?',
+      answer: 'To get your startup featured on the Solutions page: 1) Subscribe to our Enterprise plan which includes product showcase capabilities, 2) Create a compelling demo that highlights your product\'s unique value proposition, 3) Schedule a live demo session or upload a pre-recorded presentation, and 4) Purchase a Featured placement for $49 which prominently displays your startup at the top of the Solutions page for 30 days. Featured startups typically see 5x more engagement than standard listings.'
+    },
+    {
+      id: '19',
+      category: 'community',
+      question: 'What\'s the difference between connections and followers?',
+      answer: 'On inRooms, connections are mutual relationships where both founders have accepted a connection request. This gives you full profile access and messaging capabilities with each other. Followers are one-way relationships where someone can follow your public updates without requiring mutual acceptance. As a founder, you\'ll want to focus on quality connections with potential co-founders, investors, and strategic partners rather than accumulating followers.'
+    },
+    {
+      id: '20',
+      category: 'rooms',
+      question: 'Can I host my own founder Room?',
+      answer: 'Yes! Professional and Enterprise members can host their own founder Rooms. To host a Room: 1) Navigate to the Rooms page and click "Host a Room", 2) Choose your Room format (roundtable, workshop, pitch practice, etc.), 3) Set the date, time, and capacity, 4) Create a compelling description that clearly states the value for participants, and 5) Invite relevant connections or make it public. Hosting Rooms is a great way to build your founder reputation and connect with specific people in the ecosystem.'
     }
   ];
 
@@ -170,12 +200,12 @@ export function ResourcesPage() {
           >
             <div className="flex items-center justify-center mb-6">
               <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-full p-4 border border-white border-opacity-20">
-                <HelpCircle className="w-10 h-10 text-white" />
+                <Rocket className="w-10 h-10 text-white" />
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Frequently Asked Questions</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Founder FAQ</h1>
             <p className="mt-4 text-lg md:text-xl text-blue-100 max-w-3xl mx-auto">
-              Find answers to common questions about inRooms, our features, and how to make the most of your experience.
+              Find answers to common founder questions about inRooms, our features, and how to make the most of your startup journey.
             </p>
           </motion.div>
         </motion.div>
@@ -190,8 +220,8 @@ export function ResourcesPage() {
           <div className="relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-indigo-400 h-5 w-5" />
             <input
-              type="text"
-              placeholder="Search for answers..."
+              type="text" 
+              placeholder="Search for founder answers..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-12 pr-4 py-4 text-lg border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm bg-indigo-50"
@@ -208,18 +238,18 @@ export function ResourcesPage() {
         >
           <a href="mailto:support@inrooms.com" className="group bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg border border-blue-400">
             <MessageSquare className="w-8 h-8 mb-4 group-hover:scale-110 transition-transform duration-200" />
-            <h3 className="text-xl font-semibold mb-2">Contact Support</h3>
-            <p className="text-blue-100">Get personalized help from our team</p>
+            <h3 className="text-xl font-semibold mb-2">Contact Founder Support</h3>
+            <p className="text-blue-100">Get personalized help for your startup journey</p>
           </a>
           <a href="/help" className="group bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg border border-green-400">
             <HelpCircle className="w-8 h-8 mb-4 group-hover:scale-110 transition-transform duration-200" />
-            <h3 className="text-xl font-semibold mb-2">Help Center</h3>
-            <p className="text-green-100">Browse our comprehensive help articles</p>
+            <h3 className="text-xl font-semibold mb-2">Founder Help Center</h3>
+            <p className="text-green-100">Browse our founder-focused help articles</p>
           </a>
           <a href="mailto:feedback@inrooms.com" className="group bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg border border-purple-400">
             <Mail className="w-8 h-8 mb-4 group-hover:scale-110 transition-transform duration-200" />
-            <h3 className="text-xl font-semibold mb-2">Send Feedback</h3>
-            <p className="text-purple-100">Help us improve your experience</p>
+            <h3 className="text-xl font-semibold mb-2">Founder Feedback</h3>
+            <p className="text-purple-100">Help us improve the founder experience</p>
           </a>
         </motion.div>
 
@@ -245,7 +275,7 @@ export function ResourcesPage() {
                 }`}>
                   <Star className={`w-6 h-6 ${!activeCategory ? 'text-white' : 'text-indigo-600'}`} />
                 </div>
-                <h3 className={`font-medium ${!activeCategory ? 'text-white' : 'text-gray-900'}`}>All Topics</h3>
+                <h3 className="font-medium ${!activeCategory ? 'text-white' : 'text-gray-900'}`}>All Founder Topics</h3>
                 <p className={`text-sm mt-1 ${!activeCategory ? 'text-indigo-100' : 'text-gray-500'}`}>
                   {faqs.length} answers
                 </p>
@@ -295,8 +325,8 @@ export function ResourcesPage() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900">
               {activeCategory 
-                ? `${categories.find(c => c.id === activeCategory)?.name} Questions`
-                : 'Frequently Asked Questions'
+                ? `${categories.find(c => c.id === activeCategory)?.name} FAQ`
+                : 'Founder Frequently Asked Questions'
               }
             </h2>
             <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
@@ -377,66 +407,66 @@ export function ResourcesPage() {
           <div className="relative z-10 text-center">
             <h3 className="text-2xl font-bold mb-4">Still need help?</h3>
             <p className="text-indigo-100 mb-6 max-w-2xl mx-auto">
-              Our support team is here to help you succeed. Get personalized assistance with your account, 
-              technical issues, or questions about our platform.
+              Our founder support team is here to help you succeed. Get personalized assistance with your startup journey, 
+              technical issues, or questions about our platform features.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a href="mailto:support@inrooms.com">
                 <Button variant="outline" className="bg-white text-indigo-600 hover:bg-gray-50 border-white">
                   <Mail className="w-4 h-4 mr-2" />
-                  Email Support
+                  Email Founder Support
                 </Button>
               </a>
               <Button className="bg-indigo-700 hover:bg-indigo-800 text-white border border-indigo-600">
                 <MessageSquare className="w-4 h-4 mr-2" />
-                Live Chat
+                Founder Chat Support
               </Button>
             </div>
           </div>
         </motion.div>
 
         {/* Quick Answers Section */}
-        <div className="bg-white rounded-xl shadow-md p-8 border border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Answers</h2>
+        <div className="bg-white rounded-xl shadow-md p-8 border border-gray-200 mt-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Founder Answers</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-indigo-50 rounded-lg p-5 border border-indigo-100">
               <h3 className="font-semibold text-indigo-900 mb-2 flex items-center">
-                <Clock className="w-5 h-5 mr-2 text-indigo-600" />
-                How much time should I commit?
+                <Rocket className="w-5 h-5 mr-2 text-indigo-600" />
+                How do I validate my startup idea?
               </h3>
               <p className="text-indigo-800">
-                Most members spend 2-4 hours per month and see significant value. Start with one event per week and adjust based on your goals.
+                Join our Idea Validation Rooms where you can present your concept and get feedback from experienced founders. Our platform also connects you with potential early users for testing and validation interviews.
               </p>
             </div>
             
             <div className="bg-green-50 rounded-lg p-5 border border-green-100">
               <h3 className="font-semibold text-green-900 mb-2 flex items-center">
-                <Building className="w-5 h-5 mr-2 text-green-600" />
-                Can my whole team join?
+                <Code className="w-5 h-5 mr-2 text-green-600" />
+                How do I find a technical co-founder?
               </h3>
               <p className="text-green-800">
-                Yes! Our Team plan ($99/user/month, minimum 3 users) includes team management tools and bulk event registration.
+                Our Co-Founder Matching Rooms connect non-technical founders with technical talent. We also offer compatibility assessments and guided introductions to help you find the right technical partner for your startup vision.
               </p>
             </div>
             
             <div className="bg-purple-50 rounded-lg p-5 border border-purple-100">
               <h3 className="font-semibold text-purple-900 mb-2 flex items-center">
-                <Users className="w-5 h-5 mr-2 text-purple-600" />
-                How are connections verified?
+                <CreditCard className="w-5 h-5 mr-2 text-purple-600" />
+                How can inRooms help with fundraising?
               </h3>
               <p className="text-purple-800">
-                Connections require mutual acceptance and are based on actual interactions within the platform, creating a network of genuine relationships.
+                Enterprise members get access to investor-only Rooms, pitch practice sessions with feedback, and personalized introductions to relevant investors. Our Proof of Work system also builds credibility that helps during due diligence.
               </p>
             </div>
             
             <div className="bg-orange-50 rounded-lg p-5 border border-orange-100">
               <h3 className="font-semibold text-orange-900 mb-2 flex items-center">
-                <Shield className="w-5 h-5 mr-2 text-orange-600" />
-                Is my data private and secure?
+                <Zap className="w-5 h-5 mr-2 text-orange-600" />
+                What are Open Build Rooms?
               </h3>
               <p className="text-orange-800">
-                Absolutely. We use enterprise-grade encryption, never sell your data, and give you full control over your privacy settings.
+                Open Build Rooms are collaborative spaces where founders can drop in anytime to co-work, share screens, test ideas, and get real-time feedback. They create accountability and momentum for solo founders and early-stage teams.
               </p>
             </div>
           </div>

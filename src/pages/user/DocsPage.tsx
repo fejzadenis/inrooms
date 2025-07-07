@@ -2,7 +2,7 @@ import React from 'react';
 import { MainLayout } from '../../layouts/MainLayout';
 import { 
   FileText, 
-  Book, 
+  Rocket, 
   Video, 
   Download, 
   ExternalLink, 
@@ -17,7 +17,12 @@ import {
   CreditCard,
   Users,
   Star,
-  Bookmark
+  Bookmark,
+  Building,
+  Target,
+  Zap,
+  Code,
+  Briefcase
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Link } from 'react-router-dom';
@@ -29,37 +34,37 @@ export function DocsPage() {
   const sections = [
     {
       id: 'getting-started',
-      title: 'Getting Started',
-      icon: Book,
-      description: 'Everything you need to know to get up and running',
+      title: 'Founder Essentials',
+      icon: Rocket,
+      description: 'Everything founders need to know to get started',
       color: 'bg-blue-500'
     },
     {
       id: 'user-guide',
-      title: 'User Guide',
+      title: 'Founder Profile',
       icon: User,
-      description: 'Complete guide to using all platform features',
+      description: 'Optimize your founder profile for maximum connections',
       color: 'bg-green-500'
     },
     {
       id: 'events',
-      title: 'Events & Networking',
+      title: 'Rooms & Networking',
       icon: Calendar,
-      description: 'How to join events and network effectively',
+      description: 'How to join Rooms and network with other founders',
       color: 'bg-purple-500'
     },
     {
       id: 'account',
-      title: 'Account Management',
+      title: 'Startup Tools',
       icon: Settings,
-      description: 'Manage your profile, billing, and preferences',
+      description: 'Tools to help you build and grow your startup',
       color: 'bg-orange-500'
     },
     {
       id: 'troubleshooting',
-      title: 'Troubleshooting',
+      title: 'Founder FAQs',
       icon: FileText,
-      description: 'Solutions to common issues and problems',
+      description: 'Common questions from startup founders',
       color: 'bg-red-500'
     }
   ];
@@ -67,7 +72,7 @@ export function DocsPage() {
   const documentation = [
     // Getting Started
     {
-      id: 'platform-overview',
+      id: 'founder-platform-overview',
       section: 'getting-started',
       title: 'Founder Platform Overview',
       description: 'Learn how inrooms helps founders connect and build',
@@ -124,17 +129,17 @@ inrooms is a curated networking platform that connects startup founders through:
     },
     {
       id: 'account-setup',
-      section: 'getting-started',
-      title: 'Account Setup Guide',
-      description: 'Step-by-step guide to setting up your account',
+      section: 'user-guide',
+      title: 'Founder Profile Setup',
+      description: 'Create a compelling founder profile that attracts the right connections',
       type: 'guide',
       readTime: '10 min',
       content: `
-# Account Setup Guide
+# Founder Profile Setup Guide
 
-Follow this comprehensive guide to set up your inrooms account for maximum networking success.
+Follow this comprehensive guide to set up your inrooms founder profile for maximum startup networking success.
 
-## Step 1: Create Your Account
+## Step 1: Create Your Founder Account
 
 1. Visit the signup page and choose your registration method:
    - Email and password
@@ -144,18 +149,18 @@ Follow this comprehensive guide to set up your inrooms account for maximum netwo
 
 3. Choose your subscription plan or start with the free trial
 
-## Step 2: Complete Your Profile
+## Step 2: Complete Your Founder Profile
 
 ### Basic Information
 - **Full Name**: Use your professional name
-- **Job Title**: Be specific (e.g., "Senior Enterprise Sales Manager")
-- **Company**: Current employer
+- **Founder Title**: Be specific (e.g., "Founder & CEO" or "Technical Co-Founder")
+- **Startup Name**: Your current venture
 - **Location**: City and state/country
 
-### Professional Details
-- **About Section**: Write a compelling 2-3 sentence summary
-- **Skills**: Add relevant sales skills (CRM, Lead Generation, etc.)
-- **Experience**: Highlight your sales achievements
+### Founder Details
+- **About Section**: Write a compelling 2-3 sentence summary about your founder journey
+- **Skills**: Add relevant founder skills (Product Development, Fundraising, etc.)
+- **Startup Stage**: Indicate your venture's current stage (Idea, MVP, Seed, etc.)
 - **Contact Information**: Add phone and website if comfortable
 
 ### Profile Photo
@@ -164,79 +169,79 @@ Follow this comprehensive guide to set up your inrooms account for maximum netwo
 - Smile and look approachable
 - Avoid group photos or casual images
 
-## Step 3: Connect Your LinkedIn
+## Step 3: Connect Your Founder Network
 
 1. Go to your Profile page
 2. Click "Connect LinkedIn"
 3. Authorize the connection
 4. Review and sync your professional information
 
-Benefits of LinkedIn integration:
+Benefits for founders:
 - Auto-populate profile information
 - Import existing connections
-- Enhanced networking recommendations
-- Credibility boost with verified profile
+- Enhanced co-founder and investor matching
+- Credibility boost with verified founder profile
 
-## Step 4: Set Your Preferences
+## Step 4: Set Your Founder Preferences
 
 ### Notification Settings
 - Event reminders
 - New connection requests
 - Message notifications
-- Weekly digest emails
+- Investor opportunity alerts
 
 ### Privacy Settings
 - Profile visibility
 - Contact information sharing
-- Event attendance visibility
-- Connection list privacy
+- Startup details visibility
+- Fundraising status privacy
 
-## Step 5: Explore the Platform
+## Step 5: Explore the Founder Platform
 
-### Browse Events
-- Check the Events page for upcoming sessions
+### Browse Rooms
+- Check the Rooms page for upcoming founder sessions
 - Filter by topic, date, or format
 - Read event descriptions and speaker bios
 - Register for events that interest you
 
-### Discover People
+### Discover Founders & Investors
 - Visit the Network page
 - Review connection recommendations
 - Send personalized connection requests
 - Start conversations with new connections
 
-## Profile Optimization Tips
+## Founder Profile Optimization Tips
 
 ### Write a Compelling About Section
-Good example: "Enterprise sales leader with 8+ years driving $10M+ in annual revenue. Passionate about building long-term client relationships and helping startups scale their sales operations."
+Good example: "Technical founder building AI-powered productivity tools for remote teams. Previously led engineering at [Company]. Passionate about solving collaboration challenges for distributed workforces. Seeking seed funding and technical co-founder."
 
-### Choose Relevant Skills
+### Choose Relevant Founder Skills
 Focus on:
-- Sales methodologies (SPIN, Challenger, etc.)
-- Industry expertise (SaaS, FinTech, etc.)
-- Tools and platforms (Salesforce, HubSpot, etc.)
-- Soft skills (Negotiation, Relationship Building, etc.)
+- Technical expertise (AI/ML, Mobile Development, etc.)
+- Business skills (Fundraising, Go-to-Market, etc.)
+- Industry knowledge (FinTech, HealthTech, etc.)
+- Founder soft skills (Leadership, Team Building, etc.)
 
 ### Keep Information Current
 - Update your role changes
 - Add new skills and certifications
 - Refresh your photo annually
-- Update your achievements and metrics
+- Update your startup milestones and metrics
 
 ## Next Steps
 
 Once your profile is complete:
-1. Register for your first event
-2. Send 3-5 connection requests
-3. Join relevant conversations
-4. Set up your calendar for regular networking
+1. Register for your first founder Room
+2. Connect with potential co-founders or investors
+3. Join startup-focused conversations
+4. Schedule your first pitch practice session
       `
     },
     {
-      id: 'first-event',
+      id: 'first-room',
       section: 'getting-started',
-      title: 'Attending Your First Room',
-      description: 'How to prepare for and make the most of your first founder networking session',
+      title: 'Attending Your First Founder Room',
+      description: 'How to prepare for and make the most of your first founder networking Room',
       type: 'guide',
       readTime: '8 min',
       content: `
@@ -253,8 +258,8 @@ Make a great first impression and maximize your networking success with this com
    - Note the meeting link and time zone
 
 2. **Prepare Your Introduction**
-   - Craft a 30-second elevator pitch
-   - Practice explaining your startup clearly
+   - Craft a 30-second founder pitch
+   - Practice explaining your startup vision clearly
    - Prepare 2-3 questions to ask others
 
 3. **Technical Setup**
@@ -276,7 +281,7 @@ Make a great first impression and maximize your networking success with this com
    - Always turn on your camera
    - Use the chat feature appropriately
    - Ask thoughtful questions
-   - Share relevant founder experiences
+   - Share relevant founder experiences and challenges
 
 2. **Networking Etiquette**
    - Introduce yourself when prompted
@@ -374,82 +379,82 @@ Your first Room is just the beginning of your founder journey with inrooms!
 
     // User Guide
     {
-      id: 'profile-management',
+      id: 'founder-profile-optimization',
       section: 'user-guide',
-      title: 'Profile Management',
-      description: 'How to create and maintain an effective professional profile',
+      title: 'Founder Profile Optimization',
+      description: 'How to create a compelling founder profile that attracts co-founders and investors',
       type: 'guide',
       readTime: '12 min',
       content: `
-# Profile Management
+# Founder Profile Optimization
 
-Your profile is your digital business card and the foundation of your networking success on inrooms.
+Your founder profile is your digital pitch deck and the foundation of your networking success on inrooms.
 
 ## Profile Sections Overview
 
 ### Basic Information
 - **Name**: Your professional name as you want to be known
-- **Title**: Current job title or professional designation
-- **Company**: Current employer or "Freelance/Consultant"
+- **Title**: Founder title (e.g., "Founder & CEO", "Technical Co-Founder")
+- **Company**: Your startup name
 - **Location**: City, State/Country for networking relevance
 
-### Professional Summary
+### Founder Summary
 - **About**: 2-3 sentences describing your expertise and goals
 - **Skills**: Relevant professional skills and competencies
-- **Experience**: Key achievements and career highlights
+- **Experience**: Key startup achievements and founder journey highlights
 
 ### Contact & Social
 - **Email**: Professional email address
 - **Phone**: Optional, for closer connections
-- **Website**: Personal website or portfolio
+- **Website**: Startup website or product landing page
 - **LinkedIn**: Professional LinkedIn profile
 
-## Writing an Effective About Section
+## Writing an Effective Founder About Section
 
 ### Structure
-1. **Current Role**: What you do now
-2. **Experience**: Years of experience and specialization
-3. **Value Proposition**: What makes you unique
-4. **Goals**: What you're looking to achieve
+1. **Founder Story**: Your entrepreneurial journey
+2. **Startup Mission**: What problem you're solving and why
+3. **Traction**: Key milestones achieved so far
+4. **Current Needs**: What you're looking for (co-founder, investment, etc.)
 
 ### Examples
 
 **Good Example:**
-"Enterprise Sales Director with 10+ years driving $50M+ in annual revenue for B2B SaaS companies. Specialized in complex deal cycles and building strategic partnerships. Passionate about mentoring emerging sales talent and exploring innovative sales technologies."
+"Serial founder with two successful B2B SaaS exits. Currently building Flowspace, an AI-powered workspace for distributed engineering teams that increases productivity by 35%. Reached $10K MRR with 40 paying customers. Seeking seed funding and connections to enterprise CIOs for pilot programs."
 
 **Avoid:**
-"Sales professional looking for opportunities. Hard worker with great communication skills."
+"Entrepreneur working on a startup. Looking for help and connections."
 
-## Skills Selection Strategy
+## Founder Skills Selection Strategy
 
 ### Categories to Include
 
-**Sales Methodologies**
-- SPIN Selling
-- Challenger Sale
-- Solution Selling
-- Consultative Selling
-- Account-Based Selling
+**Technical Expertise**
+- Full-Stack Development
+- AI/Machine Learning
+- Mobile Development
+- Blockchain/Web3
+- Data Science
 
-**Industry Expertise**
+**Business Expertise**
 - SaaS/Software
 - FinTech
 - HealthTech
-- Enterprise Software
-- Cybersecurity
+- Product Management
+- Growth Marketing
 
-**Tools & Platforms**
-- Salesforce
-- HubSpot
-- Outreach
-- SalesLoft
-- LinkedIn Sales Navigator
+**Founder Skills**
+- Fundraising
+- Team Building
+- Product-Market Fit
+- Go-to-Market Strategy
+- Pitch Development
 
 **Soft Skills**
-- Relationship Building
+- Leadership
 - Negotiation
-- Presentation Skills
-- Team Leadership
+- Resilience
+- Vision Setting
 - Strategic Planning
 
 ### Skill Optimization Tips
@@ -482,7 +487,7 @@ Your profile is your digital business card and the foundation of your networking
 
 ### Information Sharing Controls
 - **Contact Information**: Choose what to share
-- **Event Attendance**: Show/hide event participation
+- **Room Attendance**: Show/hide Room participation
 - **Connection List**: Public or private connections
 - **Activity Status**: Show when you're online
 
@@ -533,7 +538,7 @@ Your profile is your digital business card and the foundation of your networking
 - **Profile Views**: How often people view your profile
 - **Connection Requests**: Incoming networking interest
 - **Message Response Rate**: Engagement quality
-- **Event Attendance**: Networking activity level
+- **Room Attendance**: Networking activity level
 
 ### Optimization Strategies
 - A/B test different about sections
@@ -552,8 +557,8 @@ Your profile is your digital business card and the foundation of your networking
 
 ### Red Flags for Connections
 - Missing profile photo
-- No company information
-- Vague job titles
+- No startup information
+- Vague founder titles
 - Empty about section
 - No mutual connections or context
 
@@ -568,91 +573,91 @@ Your profile is your digital business card and the foundation of your networking
 - ✅ Appropriate privacy settings
 - ✅ Regular updates and maintenance
 
-Your profile is an investment in your networking success. Take time to craft it thoughtfully and maintain it regularly.
+Your founder profile is an investment in your startup's success. Take time to craft it thoughtfully and maintain it regularly.
       `
     },
 
     // Events & Networking
     {
-      id: 'event-types',
+      id: 'room-types',
       section: 'events',
-      title: 'Types of Events',
-      description: 'Understanding different event formats and how to choose the right ones',
+      title: 'Types of Founder Rooms',
+      description: 'Understanding different Room formats and how to choose the right ones for your startup journey',
       type: 'guide',
       readTime: '7 min',
       content: `
-# Types of Events
+# Types of Founder Rooms
 
-inrooms offers various event formats designed to meet different networking and learning objectives.
+inrooms offers various Room formats designed to meet different founder networking and startup growth objectives.
 
-## Event Categories
+## Room Categories
 
-### Networking Events
-**Purpose**: Building professional relationships and expanding your network
+### Founder Networking Rooms
+**Purpose**: Building founder relationships and expanding your startup network
 
 **Roundtable Discussions**
 - 6-10 participants
 - Facilitated conversations
-- Topic-focused discussions
+- Startup-focused discussions
 - Equal participation opportunity
 - Duration: 60-90 minutes
 
-**Speed Networking**
+**Founder Speed Networking**
 - Quick 1-on-1 conversations
 - Rotating format
 - High volume connections
 - Efficient relationship building
 - Duration: 60 minutes
 
-**Industry Mixers**
+**Startup Ecosystem Mixers**
 - Casual networking atmosphere
 - Open conversations
 - Multiple breakout rooms
 - Self-directed networking
 - Duration: 90-120 minutes
 
-### Educational Workshops
-**Purpose**: Skill development and knowledge sharing
+### Founder Workshops
+**Purpose**: Startup skill development and founder knowledge sharing
 
-**Sales Masterclasses**
+**Founder Masterclasses**
 - Expert-led training sessions
 - Interactive learning
 - Practical exercises
 - Q&A opportunities
 - Duration: 2-3 hours
 
-**Tool Training**
+**Startup Tool Training**
 - Platform-specific education
 - Hands-on practice
 - Implementation guidance
 - Best practices sharing
 - Duration: 60-90 minutes
 
-**Strategy Sessions**
+**Startup Strategy Sessions**
 - High-level strategic discussions
 - Case study analysis
 - Group problem-solving
 - Peer learning
 - Duration: 90 minutes
 
-### Panel Discussions
-**Purpose**: Industry insights and thought leadership
+### Founder Panels
+**Purpose**: Startup insights and founder thought leadership
 
-**Expert Panels**
+**Founder Expert Panels**
 - 3-4 industry leaders
 - Moderated discussions
 - Audience Q&A
 - Diverse perspectives
 - Duration: 60 minutes
 
-**Fireside Chats**
+**Founder Fireside Chats**
 - Intimate conversations
 - One-on-one interviews
 - Personal stories
-- Career insights
+- Founder journey insights
 - Duration: 45 minutes
 
-## Event Formats
+## Room Formats
 
 ### Live Interactive Events
 - Real-time participation
@@ -661,41 +666,44 @@ inrooms offers various event formats designed to meet different networking and l
 - Breakout rooms
 - Immediate networking
 
-### Webinar Style
+### Pitch Style
 - Presentation focused
 - Limited audience interaction
 - Q&A sessions
-- Educational content
-- Larger audiences
+- Startup pitch content
+- Investor audiences
 
-### Hybrid Events
+### Hybrid Rooms
 - Multiple participation options
 - Live and recorded elements
 - Various engagement levels
 - Flexible attendance
 - Extended reach
 
-## Choosing the Right Events
+## Choosing the Right Rooms for Your Startup Stage
 
 ### Consider Your Goals
 
-**For Networking**
+**For Early-Stage Founders**
 - Roundtable discussions
-- Speed networking
-- Industry mixers
-- Smaller group events
+- Idea validation sessions
+- Co-founder matching
+- MVP feedback Rooms
+- Smaller founder groups
 
-**For Learning**
+**For Growth-Stage Founders**
 - Workshops and masterclasses
-- Panel discussions
-- Expert presentations
-- Skill-specific sessions
+- Investor panels
+- Growth strategy sessions
+- Team building workshops
+- Scaling challenges Rooms
 
-**For Career Development**
+**For Scaling Founders**
 - Leadership panels
-- Mentorship sessions
-- Career strategy workshops
-- Industry trend discussions
+- Enterprise sales strategy
+- Fundraising masterclasses
+- Executive hiring sessions
+- International expansion Rooms
 
 ### Evaluate Your Schedule
 - **Time Commitment**: Match event duration to availability
@@ -703,13 +711,13 @@ inrooms offers various event formats designed to meet different networking and l
 - **Time Zones**: Consider global event timing
 - **Preparation Time**: Factor in pre-event preparation
 
-### Assess Your Experience Level
+### Assess Your Founder Experience Level
 - **Beginner**: Start with educational workshops
 - **Intermediate**: Mix networking and learning events
 - **Advanced**: Focus on leadership and strategy sessions
 - **Expert**: Consider speaking or hosting opportunities
 
-## Event Preparation Strategies
+## Room Preparation Strategies for Founders
 
 ### Before Registering
 1. Read event descriptions carefully
@@ -718,30 +726,30 @@ inrooms offers various event formats designed to meet different networking and l
 4. Confirm technical requirements
 5. Block calendar time appropriately
 
-### Pre-Event Preparation
+### Pre-Room Preparation
 1. Review agenda and materials
-2. Prepare relevant questions
-3. Set networking objectives
+2. Prepare relevant founder questions
+3. Set specific networking objectives
 4. Test technical setup
 5. Plan follow-up strategy
 
-## Maximizing Event Value
+## Maximizing Room Value for Your Startup
 
-### During the Event
+### During the Room
 - **Arrive Early**: Join 5-10 minutes before start
 - **Be Engaged**: Participate actively in discussions
 - **Take Notes**: Capture key insights and contacts
 - **Ask Questions**: Engage with speakers and participants
 - **Exchange Information**: Connect with relevant attendees
 
-### Post-Event Actions
+### Post-Room Actions
 - **Follow Up**: Connect within 24-48 hours
 - **Share Insights**: Discuss learnings with your team
 - **Implement Ideas**: Apply new strategies or tools
 - **Provide Feedback**: Help improve future events
 - **Schedule Follow-ups**: Plan deeper conversations
 
-## Event Etiquette
+## Founder Room Etiquette
 
 ### Professional Behavior
 - **Punctuality**: Join on time and stay for duration
@@ -757,46 +765,47 @@ inrooms offers various event formats designed to meet different networking and l
 - **Professional Background**: Use appropriate virtual backgrounds
 - **Camera On**: Engage visually when possible
 
-## Event ROI Measurement
+## Founder Room ROI Measurement
 
 ### Quantitative Metrics
-- Number of new connections made
-- Follow-up meetings scheduled
-- Business opportunities identified
-- Skills or knowledge gained
-- Time invested vs. value received
+- Number of potential co-founders met
+- Investor meetings scheduled
+- Partnership opportunities identified
+- Startup skills or knowledge gained
+- Time invested vs. startup value received
 
 ### Qualitative Benefits
-- Relationship quality improvements
-- Industry insight development
-- Personal brand enhancement
-- Confidence building
-- Community engagement
+- Co-founder relationship development
+- Startup ecosystem insights
+- Founder brand enhancement
+- Pitch confidence building
+- Startup community engagement
 
-## Special Event Opportunities
+## Special Room Opportunities for Founders
 
-### VIP Events
+### Investor Rooms
 - Exclusive access for premium members
 - Smaller group sizes
-- High-profile speakers
-- Enhanced networking opportunities
-- Premium content and resources
+- High-profile investors
+- Pitch opportunities
+- Due diligence preparation
+- Funding strategy discussions
 
-### Member-Led Events
+### Founder-Led Rooms
 - Community-driven content
 - Peer-to-peer learning
 - Diverse perspectives
 - Collaborative format
 - Skill sharing opportunities
 
-### Partner Events
+### Startup Ecosystem Partner Rooms
 - Co-hosted with industry partners
 - Expanded networking reach
 - Specialized content
 - Cross-industry connections
 - Enhanced value proposition
 
-Choose events strategically based on your goals, schedule, and career stage for maximum networking success.
+Choose Rooms strategically based on your startup goals, founder schedule, and venture stage for maximum networking success.
       `
     },
 
@@ -804,60 +813,60 @@ Choose events strategically based on your goals, schedule, and career stage for 
     {
       id: 'billing-subscriptions',
       section: 'account',
-      title: 'Billing & Subscriptions',
-      description: 'Managing your subscription, billing, and payment information',
+      title: 'Founder Plans & Billing',
+      description: 'Managing your founder subscription, billing, and payment information',
       type: 'guide',
       readTime: '10 min',
       content: `
-# Billing & Subscriptions
+# Founder Plans & Billing
 
-Complete guide to managing your inrooms subscription, billing, and payment information.
+Complete guide to managing your inrooms founder subscription, billing, and payment information.
 
-## Subscription Plans
+## Founder Subscription Plans
 
 ### Free Trial
 - **Duration**: 7 days
-- **Events**: 2 event registrations
+- **Rooms**: 2 Room registrations
 - **Features**: Full platform access
 - **Limitations**: Limited event quota
 - **Upgrade**: Anytime during or after trial
 
-### Starter Plan - $49/month
-- **Events**: 2 events per month
+### Starter Plan - $39/month
+- **Rooms**: 3 Rooms per month
 - **Features**: 
-  - Event recordings access
-  - Basic profile features
+  - Room recordings access
+  - Basic founder profile features
   - Standard support
   - Mobile app access
-- **Best For**: Occasional networkers
+- **Best For**: Early-stage founders and aspiring entrepreneurs
 
-### Professional Plan - $99/month
-- **Events**: 5 events per month
+### Professional Plan - $79/month
+- **Rooms**: 8 Rooms per month
 - **Features**:
   - Everything in Starter
-  - Enhanced profile features
-  - Priority event registration
-  - Advanced networking tools
+  - Enhanced founder profile features
+  - Priority Room registration
+  - Advanced co-founder matching
   - Email support
-- **Best For**: Active networkers
+- **Best For**: Active founders and startup teams
 
-### Enterprise Plan - $199/month
-- **Events**: 12 events per month
+### Enterprise Plan - $149/month
+- **Rooms**: 15 Rooms per month
 - **Features**:
   - Everything in Professional
-  - Premium profile features
-  - Custom event scheduling
+  - Premium founder profile features
+  - Custom Room scheduling
   - Dedicated account manager
   - Phone support
-  - Analytics dashboard
-- **Best For**: Power networkers and teams
+  - Startup analytics dashboard
+- **Best For**: Scaling founders and venture-backed startups
 
 ## Managing Your Subscription
 
 ### Viewing Current Plan
 1. Navigate to Billing page
 2. View current plan details
-3. Check remaining event quota
+3. Check remaining Room quota
 4. Review next billing date
 5. See payment history
 
@@ -940,12 +949,12 @@ Complete guide to managing your inrooms subscription, billing, and payment infor
 4. **Account Suspension**: After grace period expires
 5. **Reactivation**: Update payment method to restore access
 
-## Event Quota Management
+## Room Quota Management
 
-### Understanding Event Quotas
-- **Monthly Allocation**: Events included in your plan
-- **Rollover Policy**: Unused events don't carry over
-- **Overage Charges**: Additional events at $25 each
+### Understanding Room Quotas
+- **Monthly Allocation**: Rooms included in your plan
+- **Rollover Policy**: Unused Rooms don't carry over
+- **Overage Charges**: Additional Rooms at $25 each
 - **Quota Reset**: Resets on billing cycle date
 
 ### Monitoring Usage
@@ -955,9 +964,9 @@ Complete guide to managing your inrooms subscription, billing, and payment infor
 4. Plan event attendance accordingly
 5. Upgrade if consistently exceeding quota
 
-### Purchasing Additional Events
+### Purchasing Additional Rooms
 1. Go to Billing page
-2. Click "Buy Additional Events"
+2. Click "Buy Additional Rooms"
 3. Select quantity needed
 4. Confirm purchase
 5. Events added immediately
@@ -1015,17 +1024,17 @@ Complete guide to managing your inrooms subscription, billing, and payment infor
 ### Maximizing Value
 1. **Plan Selection**: Choose plan matching your usage
 2. **Annual Billing**: Save 20% with annual plans
-3. **Event Planning**: Schedule events efficiently
+3. **Room Planning**: Schedule Rooms efficiently
 4. **Feature Utilization**: Use all included features
 5. **Regular Review**: Assess plan needs quarterly
 
 ### Budget Management
 - **Set Spending Limits**: Monitor monthly costs
-- **Usage Tracking**: Keep track of event attendance
+- **Usage Tracking**: Keep track of Room attendance
 - **Plan Adjustments**: Modify plan as needs change
 - **Cost Forecasting**: Plan for seasonal variations
 
-Your billing and subscription management is designed to be flexible and transparent, allowing you to focus on networking success.
+Your billing and subscription management is designed to be flexible and transparent, allowing you to focus on founder networking success.
       `
     }
   ];
@@ -1033,48 +1042,48 @@ Your billing and subscription management is designed to be flexible and transpar
   const videos = [
     {
       id: 'platform-walkthrough',
-      title: 'Platform Walkthrough',
-      description: 'Complete tour of the inrooms platform and its features',
+      title: 'Founder Platform Walkthrough',
+      description: 'Complete tour of the inrooms founder platform and its features',
       duration: '12:30',
       thumbnail: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg',
       category: 'getting-started'
     },
     {
-      id: 'profile-optimization',
-      title: 'Profile Optimization',
-      description: 'How to create a compelling professional profile',
+      id: 'founder-profile-optimization',
+      title: 'Founder Profile Optimization',
+      description: 'How to create a compelling founder profile that attracts co-founders and investors',
       duration: '8:45',
       thumbnail: 'https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg',
       category: 'user-guide'
     },
     {
-      id: 'networking-best-practices',
-      title: 'Networking Best Practices',
-      description: 'Expert tips for effective networking at virtual events',
+      id: 'founder-networking-best-practices',
+      title: 'Founder Networking Best Practices',
+      description: 'Expert tips for effective networking in founder Rooms',
       duration: '15:20',
       thumbnail: 'https://images.pexels.com/photos/3184293/pexels-photo-3184293.jpeg',
       category: 'events'
     },
     {
-      id: 'event-participation',
-      title: 'Event Participation Guide',
-      description: 'How to prepare for and participate in networking events',
+      id: 'pitch-preparation',
+      title: 'Founder Pitch Preparation',
+      description: 'How to craft and deliver a compelling startup pitch in Rooms',
       duration: '10:15',
       thumbnail: 'https://images.pexels.com/photos/3184294/pexels-photo-3184294.jpeg',
       category: 'events'
     },
     {
-      id: 'billing-management',
-      title: 'Billing & Subscription Management',
-      description: 'Managing your account, billing, and subscription settings',
+      id: 'fundraising-strategies',
+      title: 'Fundraising Strategies for Founders',
+      description: 'How to leverage inrooms to connect with investors and raise capital',
       duration: '6:30',
       thumbnail: 'https://images.pexels.com/photos/3184295/pexels-photo-3184295.jpeg',
       category: 'account'
     },
     {
-      id: 'troubleshooting-common-issues',
-      title: 'Troubleshooting Common Issues',
-      description: 'Solutions to frequently encountered technical problems',
+      id: 'co-founder-matching',
+      title: 'Finding the Right Co-Founder',
+      description: 'How to use inrooms to find and evaluate potential co-founders',
       duration: '9:45',
       thumbnail: 'https://images.pexels.com/photos/3184296/pexels-photo-3184296.jpeg',
       category: 'troubleshooting'
@@ -1083,25 +1092,25 @@ Your billing and subscription management is designed to be flexible and transpar
 
   const downloads = [
     {
-      id: 'networking-checklist',
-      title: 'Event Networking Checklist',
-      description: 'Pre-event preparation and follow-up checklist',
+      id: 'founder-networking-checklist',
+      title: 'Founder Room Checklist',
+      description: 'Pre-Room preparation and follow-up checklist for founders',
       type: 'PDF',
       size: '2.1 MB',
       category: 'events'
     },
     {
-      id: 'profile-template',
-      title: 'Professional Profile Template',
-      description: 'Template for creating an effective profile',
+      id: 'founder-profile-template',
+      title: 'Founder Profile Template',
+      description: 'Template for creating an effective founder profile',
       type: 'PDF',
       size: '1.8 MB',
       category: 'user-guide'
     },
     {
-      id: 'sales-conversation-starters',
-      title: 'Sales Conversation Starters',
-      description: 'Collection of conversation starters for networking',
+      id: 'founder-conversation-starters',
+      title: 'Founder Conversation Starters',
+      description: 'Collection of conversation starters for founder networking',
       type: 'PDF',
       size: '1.2 MB',
       category: 'events'
@@ -1115,12 +1124,12 @@ Your billing and subscription management is designed to be flexible and transpar
       category: 'user-guide'
     },
     {
-      id: 'troubleshooting-guide',
-      title: 'Technical Troubleshooting Guide',
-      description: 'Solutions for common technical issues',
+      id: 'pitch-deck-template',
+      title: 'Startup Pitch Deck Template',
+      description: 'Proven template for creating compelling investor pitch decks',
       type: 'PDF',
       size: '2.7 MB',
-      category: 'troubleshooting'
+      category: 'account'
     }
   ];
 
@@ -1152,7 +1161,7 @@ Your billing and subscription management is designed to be flexible and transpar
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900">Documentation</h1>
           <p className="mt-4 text-xl text-gray-600">
-            Comprehensive guides, tutorials, and resources to help you succeed
+            Comprehensive guides, tutorials, and resources to help founders succeed
           </p>
         </div>
 
@@ -1162,7 +1171,7 @@ Your billing and subscription management is designed to be flexible and transpar
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <input
               type="text"
-              placeholder="Search documentation, videos, and downloads..."
+              placeholder="Search founder guides, videos, and resources..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-12 pr-4 py-4 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm"
@@ -1175,17 +1184,17 @@ Your billing and subscription management is designed to be flexible and transpar
           <Link to="/help" className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-200">
             <MessageSquare className="w-8 h-8 mb-4" />
             <h3 className="text-xl font-semibold mb-2">Need Help?</h3>
-            <p className="text-blue-100">Get support from our help center</p>
+            <p className="text-blue-100">Get founder-focused support</p>
           </Link>
           <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
             <Video className="w-8 h-8 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Video Tutorials</h3>
-            <p className="text-green-100">Watch step-by-step guides</p>
+            <h3 className="text-xl font-semibold mb-2">Founder Tutorials</h3>
+            <p className="text-green-100">Watch founder-focused guides</p>
           </div>
           <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white">
             <Download className="w-8 h-8 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Downloads</h3>
-            <p className="text-purple-100">Get templates and resources</p>
+            <h3 className="text-xl font-semibold mb-2">Startup Resources</h3>
+            <p className="text-purple-100">Get founder templates and tools</p>
           </div>
         </div>
 
@@ -1203,7 +1212,7 @@ Your billing and subscription management is designed to be flexible and transpar
             >
               <div className="text-center">
                 <div className="bg-gray-100 text-gray-600 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <Book className="w-6 h-6" />
+                  <Rocket className="w-6 h-6" />
                 </div>
                 <h3 className="font-medium text-gray-900">All Sections</h3>
                 <p className="text-sm text-gray-500 mt-1">Everything</p>
@@ -1255,7 +1264,7 @@ Your billing and subscription management is designed to be flexible and transpar
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{doc.title}</h3>
                 <p className="text-gray-600 mb-4">{doc.description}</p>
                 <Button variant="outline" className="w-full">
-                  <Book className="w-4 h-4 mr-2" />
+                  <Rocket className="w-4 h-4 mr-2" />
                   Read Guide
                 </Button>
               </div>
@@ -1267,7 +1276,7 @@ Your billing and subscription management is designed to be flexible and transpar
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             <Video className="inline-block w-6 h-6 mr-2" />
-            Video Tutorials
+            Founder Video Tutorials
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredVideos.map((video) => (
@@ -1304,7 +1313,7 @@ Your billing and subscription management is designed to be flexible and transpar
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             <Download className="inline-block w-6 h-6 mr-2" />
-            Downloads & Resources
+            Founder Resources & Downloads
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredDownloads.map((download) => (

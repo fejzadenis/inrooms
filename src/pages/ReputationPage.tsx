@@ -18,6 +18,7 @@ import {
   Lightbulb,
   Target,
   Activity,
+  Activity,
   User,
   Rocket
 } from 'lucide-react';
