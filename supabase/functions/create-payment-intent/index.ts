@@ -10,6 +10,7 @@ const corsHeaders = {
 
 interface RequestBody {
   customerId: string
+  userId: string
   amount: number
   currency?: string
   description?: string
@@ -26,11 +27,11 @@ serve(async (req) => {
       apiVersion: '2023-10-16',
     })
 
-    const { customerId, amount, currency = 'usd', description, metadata = {} } = await req.json()
+    const { customerId, userId, amount, currency = 'usd', description, metadata = {} } = await req.json()
 
-    if (!customerId || !amount) {
+    if (!customerId || !userId || !amount) {
       return new Response(
-        JSON.stringify({ error: 'Customer ID and amount are required' }),
+        JSON.stringify({ error: 'Customer ID, user ID, and amount are required' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -43,7 +44,11 @@ serve(async (req) => {
       amount: Math.round(amount * 100), // Convert to cents
       currency,
       customer: customerId,
-      description,
+      description: description || 'Payment for inRooms services',
+      metadata: {
+        user_id: userId,
+        ...metadata
+      },
       metadata,
       automatic_payment_methods: {
         enabled: true,
