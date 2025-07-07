@@ -34,6 +34,7 @@ export function SolutionsPage() {
   const { user } = useAuth();
   const { askForTourPermission, startTour, completeTour } = useTour();
   const [searchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [demos, setDemos] = React.useState<Demo[]>([]);
   const [featuredDemos, setFeaturedDemos] = React.useState<Demo[]>([]);
@@ -81,6 +82,20 @@ export function SolutionsPage() {
 
     checkTourStatus();
   }, [user, loading, completeTour]);
+
+  React.useEffect(() => {
+    // Check for success/cancel parameters from Stripe redirect
+    const success = searchParams.get('success');
+    const demoId = searchParams.get('demoId');
+    const feature = searchParams.get('feature');
+    
+    if (success === 'true' && demoId && feature) {
+      toast.success('Payment successful! Your product will be featured shortly.');
+      loadDemos();
+    } else if (searchParams.get('canceled') === 'true') {
+      toast.error('Payment canceled. Your product was not featured.');
+    }
+  }, [searchParams]);
 
   React.useEffect(() => {
     // Check for success/cancel parameters from Stripe redirect
@@ -214,6 +229,41 @@ export function SolutionsPage() {
       return;
     }
 
+    // Admin can toggle featured status directly
+    if (user.role === 'admin') {
+      try {
+        await demoService.toggleFeaturedStatus(demo.id!, !demo.isFeatured);
+        toast.success(`Product ${demo.isFeatured ? 'removed from' : 'added to'} featured`);
+        loadDemos();
+      } catch (error) {
+        console.error('Failed to toggle featured status:', error);
+        toast.error('Failed to update product');
+      }
+      return;
+    }
+
+    // For non-admins, if they're the demo host and it's not already featured, 
+    // they need to purchase featured status
+    if (demo.hostId === user.id && !demo.isFeatured) {
+      handlePurchaseFeature(demo);
+    } else if (demo.hostId !== user.id) {
+      toast.error('You can only feature your own products');
+    } else {
+      toast.info('Please contact support to remove featured status');
+    }
+  };
+
+  const handlePurchaseFeature = async (demo: Demo) => {
+    if (!user) {
+      toast.error('Please log in to feature products');
+      return;
+    }
+
+    if (demo.hostId !== user.id && user.role !== 'admin') {
+      toast.error('You can only feature your own products');
+      return;
+    }
+
     try {
       setFeaturingDemo(demo);
       await stripeService.purchaseFeatureForDemo(
@@ -222,9 +272,14 @@ export function SolutionsPage() {
         demo.id!,
         'featured_demo'
       );
+        user.email,
+        demo.id!,
+        'featured_demo'
+      );
     } catch (error) {
       console.error('Failed to initiate feature purchase:', error);
       toast.error('Failed to process payment. Please try again.');
+      setFeaturingDemo(null);
       setFeaturingDemo(null);
     }
   };

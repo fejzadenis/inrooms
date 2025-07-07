@@ -196,8 +196,41 @@ export const annualPlans: SubscriptionPlan[] = subscriptionPlans
   });
 
 export const allPlans = [...subscriptionPlans, ...annualPlans];
-
 export const stripeService = {
+  // Redirect to Stripe payment link
+  redirectToPaymentLink(paymentLink: string): void {
+    window.location.href = paymentLink;
+  },
+
+  async purchaseFeatureForDemo(
+    userId: string,
+    userEmail: string,
+    demoId: string,
+    featureType: 'featured_demo'
+  ) {
+    try {
+      // For featured demo, use the hardcoded payment link with query parameters
+      const baseUrl = window.location.origin;
+      const successUrl = `${baseUrl}/solutions?success=true&demoId=${demoId}&feature=${featureType}`;
+      const cancelUrl = `${baseUrl}/solutions?canceled=true`;
+      
+      // Redirect to the payment link for featured demo
+      const paymentLink = addOns.find(a => a.id === 'featured_demo')?.paymentLink || '';
+      
+      if (!paymentLink) {
+        throw new Error('Payment link not found');
+      }
+      
+      // Add query parameters to the payment link
+      const paymentLinkWithParams = `${paymentLink}?client_reference_id=${userId}&prefilled_email=${encodeURIComponent(userEmail)}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`;
+      
+      this.redirectToPaymentLink(paymentLinkWithParams);
+    } catch (error) {
+      console.error('Error purchasing feature:', error);
+      throw error;
+    }
+  },
+
   // Redirect to Stripe payment link
   redirectToPaymentLink(paymentLink: string): void {
     window.location.href = paymentLink;
@@ -236,11 +269,6 @@ export const stripeService = {
 
       return await response.json();
     } catch (error) {
-      console.error('Error requesting custom quote:', error);
-      throw error;
-    }
-  },
-
   async createCustomerPortalSession(customerId: string, returnUrl: string) {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;

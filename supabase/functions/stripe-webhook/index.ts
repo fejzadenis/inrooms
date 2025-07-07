@@ -68,6 +68,10 @@ serve(async (request) => {
       case 'payment_method.detached':
         await handlePaymentMethodDetached(event.data.object as Stripe.PaymentMethod)
         break
+        
+      case 'checkout.session.completed':
+        await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session)
+        break
       
       default:
         console.log(`Unhandled event type: ${event.type}`)
@@ -373,6 +377,65 @@ async function handlePaymentMethodDetached(paymentMethod: Stripe.PaymentMethod) 
     .from('stripe_payment_methods')
     .delete()
     .eq('id', paymentMethod.id)
+}
+
+async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
+  // Check if this is a featured demo purchase
+  if (session.success_url?.includes('feature=featured_demo') && session.success_url?.includes('demoId=')) {
+    // Extract the demo ID from the success URL
+    const demoIdMatch = session.success_url.match(/demoId=([^&]+)/);
+    if (demoIdMatch && demoIdMatch[1]) {
+      const demoId = demoIdMatch[1];
+      
+      // Update the demo to be featured
+      const { error } = await supabaseClient
+        .from('demos')
+        .update({
+          is_featured: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', demoId);
+        
+      if (error) {
+        console.error('Error updating demo featured status:', error);
+      } else {
+        console.log(`Demo ${demoId} marked as featured`);
+      }
+    }
+  }
+  
+  // Check if this is a subscription purchase
+  if (session.mode === 'subscription' && session.client_reference_id) {
+    const userId = session.client_reference_id;
+    const customerId = session.customer as string;
+    const subscriptionId = session.subscription as string;
+    
+    // Get subscription details
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const priceId = subscription.items.data[0]?.price.id;
+    
+    // Get plan details from price ID
+    const planDetails = getPlanDetailsByPriceId(priceId);
+    
+    // Update user's subscription status
+    const { error } = await supabaseClient
+      .from('users')
+      .update({
+        stripe_customer_id: customerId,
+        stripe_subscription_id: subscriptionId,
+        subscription_status: 'active',
+        subscription_events_quota: planDetails.eventsQuota,
+        subscription_events_used: 0,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+      
+    if (error) {
+      console.error('Error updating user subscription:', error);
+    } else {
+      console.log(`User ${userId} subscription activated`);
+    }
+  }
 }
 
 function getPlanDetailsByPriceId(priceId: string): { planId: string; eventsQuota: number } {

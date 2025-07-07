@@ -8,17 +8,33 @@ import { Button } from '../../components/common/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { stripeService, type SubscriptionPlan } from '../../services/stripeService';
 import { toast } from 'react-hot-toast';
+import { useEffect } from 'react';
 import { CheckCircle, ArrowRight, Star, Zap, Users, Crown, DollarSign, Plus } from 'lucide-react';
 
 export function SubscriptionPage() {
   const { user, startFreeTrial } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = React.useState(false);
   const [selectedPlan, setSelectedPlan] = React.useState<SubscriptionPlan | null>(null);
   const [billingInterval, setBillingInterval] = React.useState<'monthly' | 'yearly'>('monthly');
   const [isQuoteModalOpen, setIsQuoteModalOpen] = React.useState(false);
   const [selectedAddOns, setSelectedAddOns] = React.useState<string[]>([]);
+
+  // Check for success/cancel parameters from Stripe redirect
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
+    
+    if (success === 'true') {
+      toast.success('Subscription activated successfully!');
+      navigate('/billing', { replace: true });
+    } else if (canceled === 'true') {
+      toast.error('Subscription canceled. You can try again anytime.');
+      navigate('/subscription', { replace: true });
+    }
+  }, [searchParams, navigate]);
 
   // Check for success/cancel parameters from Stripe redirect
   React.useEffect(() => {
