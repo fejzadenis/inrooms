@@ -21,6 +21,11 @@ export function BillingPage() {
   const [isQuoteModalOpen, setIsQuoteModalOpen] = React.useState(false);
   const [selectedAddOns, setSelectedAddOns] = React.useState<string[]>([]);
 
+  // Check if user has premium badge
+  const hasPremiumBadge = React.useMemo(() => {
+    return user?.profile?.has_premium_badge || false;
+  }, [user]);
+
   React.useEffect(() => {
     if (user?.stripe_customer_id) {
       loadBillingData();
@@ -334,12 +339,12 @@ export function BillingPage() {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {addOns.map((addOn) => (
               <AddOnCard
                 key={addOn.id}
                 addOn={addOn}
-                isActive={selectedAddOns.includes(addOn.id)}
+                isActive={addOn.id === 'premium_profile_badge' ? hasPremiumBadge : selectedAddOns.includes(addOn.id)}
                 onToggle={handleToggleAddOn}
                 loading={false}
               />
