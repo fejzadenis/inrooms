@@ -104,7 +104,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       'Priority support for fast-growing professionals'
     ],
     stripePriceId: 'price_professional_monthly',
-    paymentLink: 'https://buy.stripe.com/fZu00j4XtgXCdkb6A49bO01'
+    paymentLink: 'https://buy.stripe.com/00w9AT3Tpaze7ZR2jO9bO06'
   },
   {
     id: 'enterprise',
