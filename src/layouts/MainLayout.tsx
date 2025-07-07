@@ -17,7 +17,9 @@ import {
   Sparkles,
   Menu,
   X,
-  Award
+  Award,
+  Shield,
+  RefreshCw
 } from 'lucide-react';
 import { Logo } from '../components/common/Logo';
 import { useAuth } from '../contexts/AuthContext';

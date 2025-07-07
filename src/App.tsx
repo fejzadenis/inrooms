@@ -31,6 +31,9 @@ import { LinkedInCallback } from './pages/LinkedInCallback';
 import { SolutionsPage } from './pages/SolutionsPage';
 import { ReputationPage } from './pages/ReputationPage';
 import { MainTour } from './components/tour/MainTour';
+import { PrivacyPolicyPage } from './pages/legal/PrivacyPolicyPage';
+import { RefundPolicyPage } from './pages/legal/RefundPolicyPage';
+import { TermsPage } from './pages/legal/TermsPage';
 
 function App() {
   return (
@@ -59,6 +62,9 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/reputation" element={<ReputationPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+            <Route path="/refund-policy" element={<RefundPolicyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
             <Route
               path="/profile"
               element={
