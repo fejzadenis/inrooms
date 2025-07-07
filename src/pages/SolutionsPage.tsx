@@ -1,6 +1,3 @@
-Here's the fixed version with all missing closing brackets added:
-
-```javascript
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MainLayout } from '../layouts/MainLayout';
@@ -621,4 +618,3 @@ export function SolutionsPage() {
     </MainLayout>
   );
 }
-```

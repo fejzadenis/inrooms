@@ -15,7 +15,6 @@ export function SubscriptionPage() {
   const { user, startFreeTrial } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [searchParams] = useSearchParams();
   const [loading, setLoading] = React.useState(false);
   const [selectedPlan, setSelectedPlan] = React.useState<SubscriptionPlan | null>(null);
   const [billingInterval, setBillingInterval] = React.useState<'monthly' | 'yearly'>('monthly');
@@ -27,20 +26,6 @@ export function SubscriptionPage() {
     const success = searchParams.get('success');
     const canceled = searchParams.get('canceled');
     
-    if (success === 'true') {
-      toast.success('Subscription activated successfully!');
-      navigate('/billing', { replace: true });
-    } else if (canceled === 'true') {
-      toast.error('Subscription canceled. You can try again anytime.');
-      navigate('/subscription', { replace: true });
-    }
-  }, [searchParams, navigate]);
-
-  // Check for success/cancel parameters from Stripe redirect
-  React.useEffect(() => {
-    const success = searchParams.get('success');
-    const canceled = searchParams.get('canceled');
-
     if (success === 'true') {
       toast.success('Subscription activated successfully!');
       navigate('/billing', { replace: true });

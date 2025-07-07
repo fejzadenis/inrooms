@@ -231,11 +231,6 @@ export const stripeService = {
     }
   },
 
-  // Redirect to Stripe payment link
-  redirectToPaymentLink(paymentLink: string): void {
-    window.location.href = paymentLink;
-  },
-
   async requestCustomQuote(companyInfo: {
     companyName: string;
     contactName: string;
@@ -269,8 +264,11 @@ export const stripeService = {
 
       return await response.json();
     } catch (error) {
+      console.error('Error requesting custom quote:', error);
+      throw error;
     }
-  }
+  },
+
   async createCustomerPortalSession(customerId: string, returnUrl: string) {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
