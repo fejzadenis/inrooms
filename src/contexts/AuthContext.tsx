@@ -150,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         name: firebaseUser.displayName || '',
         email: firebaseUser.email || '',
         role: 'user',
-        photoURL: firebaseUser.photoURL || undefined,
+        photoURL: firebaseUser.photoURL || null,
         emailVerified: firebaseUser.emailVerified,
         dbEmailVerified: false,
         profile: {},
@@ -253,7 +253,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           name: result.user.displayName,
           email: result.user.email,
           role: 'user',
-          photoURL: result.user.photoURL,
+          photoURL: result.user.photoURL || null,
           profile: {},
           subscription: {
             status: 'inactive',
@@ -301,7 +301,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Handle top-level fields
       if (profileData.name) updateData.name = profileData.name;
-      if (profileData.photoURL !== undefined) updateData.photoURL = profileData.photoURL;
+      if (profileData.photoURL !== undefined) updateData.photoURL = profileData.photoURL || null;
       
       // Handle profile fields
       Object.keys(profileData).forEach(key => {
