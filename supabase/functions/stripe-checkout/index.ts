@@ -128,19 +128,17 @@ Deno.serve(async (req: Request) => {
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customer.id,
-      payment_method_types: ['card', 'us_bank_account'],
+      payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'subscription',
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: {
         user_id: userId,
-        ...metadata
       },
       subscription_data: {
         metadata: {
           user_id: userId,
-          ...metadata
         },
       },
       allow_promotion_codes: true,
@@ -148,14 +146,7 @@ Deno.serve(async (req: Request) => {
       customer_update: {
         address: 'auto',
         name: 'auto',
-        shipping: 'auto',
       },
-      phone_number_collection: {
-        enabled: true,
-      },
-      tax_id_collection: {
-        enabled: true,
-      }
     });
 
     return new Response(

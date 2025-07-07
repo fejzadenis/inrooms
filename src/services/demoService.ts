@@ -301,41 +301,10 @@ export const demoService = {
   async toggleFeaturedStatus(demoId: string, isFeatured: boolean): Promise<void> {
     try {
       const demoRef = doc(db, 'demos', demoId);
-      
-      if (isFeatured) {
-        // If featuring, use the Supabase function to handle payment verification
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        
-        if (!supabaseUrl || !supabaseAnonKey) {
-          throw new Error('Supabase configuration is missing');
-        }
-
-        const response = await fetch(`${supabaseUrl}/functions/v1/feature-demo`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${supabaseAnonKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            demoId,
-            userId: auth.currentUser?.uid,
-            duration: 30 // Default to 30 days
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to feature demo');
-        }
-      } else {
-        // If unfeaturing, just update the document
-        await updateDoc(demoRef, {
-          isFeatured: false,
-          featuredUntil: null,
-          updatedAt: serverTimestamp(),
-        });
-      }
+      await updateDoc(demoRef, {
+        isFeatured,
+        updatedAt: serverTimestamp(),
+      });
     } catch (error) {
       console.error('Error toggling featured status:', error);
       throw error;

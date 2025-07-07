@@ -15,7 +15,6 @@ export interface Demo {
   status: 'scheduled' | 'live' | 'completed' | 'cancelled';
   isPublic: boolean;
   isFeatured: boolean;
-  featuredUntil?: Date;
   meetingLink?: string;
   recordingUrl?: string;
   recordingDuration?: number;

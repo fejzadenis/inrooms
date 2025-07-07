@@ -134,104 +134,44 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   const userId = subscription.metadata?.user_id
   
   if (!userId) {
-    console.error('No user_id in subscription metadata, attempting to find from customer')
-    
-    // Try to get user ID from customer metadata
-    try {
-      const customer = await stripe.customers.retrieve(subscription.customer as string)
-      if (typeof customer !== 'string' && customer.metadata?.user_id) {
-        userId = customer.metadata.user_id
-      } else {
-        console.error('Could not find user_id in customer metadata')
-        return
-      }
-    } catch (error) {
-      console.error('Error retrieving customer:', error)
-      return
-    }
-    
-    if (!userId) {
-      console.error('Could not determine user_id for subscription')
-      return
-    }
-  }
-
-  console.log(`Processing subscription created for user ${userId}`)
-
-  // Get all items in the subscription to handle multiple products/add-ons
-  const subscriptionItems = subscription.items.data
-  if (!subscriptionItems || subscriptionItems.length === 0) {
-    console.error('No items found in subscription')
+    console.error('No user_id in subscription metadata')
     return
   }
 
   // Get plan details from price ID
-  const mainPriceId = subscriptionItems[0]?.price.id
-  const planDetails = getPlanDetailsByPriceId(mainPriceId)
-  
-  // Check for add-ons in the subscription
-  const addOns = subscriptionItems.slice(1).map(item => ({
-    priceId: item.price.id,
-    ...getAddOnDetailsByPriceId(item.price.id)
-  }))
-  
-  console.log(`Main plan: ${planDetails.planId}, Events quota: ${planDetails.eventsQuota}`)
-  if (addOns.length > 0) {
-    console.log(`Add-ons: ${addOns.map(a => a.addOnId).join(', ')}`)
-  }
+  const priceId = subscription.items.data[0]?.price.id
+  const planDetails = getPlanDetailsByPriceId(priceId)
 
   // Store subscription in stripe_subscriptions table
-  const { error: subscriptionError } = await supabaseClient
+  await supabaseClient
     .from('stripe_subscriptions')
     .insert({
       id: subscription.id,
       customer_id: subscription.customer as string,
       user_id: userId,
       status: subscription.status,
-      price_id: mainPriceId,
+      price_id: priceId,
       quantity: subscription.items.data[0]?.quantity || 1,
       current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
       current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
       cancel_at_period_end: subscription.cancel_at_period_end,
-      metadata: {
-        plan: planDetails.planId,
-        addOns: addOns.map(a => a.addOnId)
-      }
     })
 
-  if (subscriptionError) {
-    console.error('Error storing subscription:', subscriptionError)
-  }
-
-  // Prepare user update data
-  const updateData: any = {
-    stripe_subscription_id: subscription.id,
-    stripe_subscription_status: subscription.status,
-    stripe_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-    subscription_status: subscription.status === 'active' ? 'active' : 'inactive',
-    subscription_events_quota: planDetails.eventsQuota,
-    updated_at: new Date().toISOString(),
-  }
-  
-  // Add add-on specific updates
-  for (const addOn of addOns) {
-    if (addOn.addOnId === 'premium_profile_badge') {
-      updateData.has_premium_badge = true
-    } else if (addOn.addOnId === 'featured_demo') {
-      // This would typically be handled separately since it applies to a specific demo
-      // We'll log it for tracking
-      console.log(`User ${userId} purchased featured demo add-on`)
-    }
-  }
-
   // Update user subscription info
-  const { error: userUpdateError } = await supabaseClient
+  const { error } = await supabaseClient
     .from('users')
-    .update(updateData)
+    .update({
+      stripe_subscription_id: subscription.id,
+      stripe_subscription_status: subscription.status,
+      stripe_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      subscription_status: subscription.status === 'active' ? 'active' : 'inactive',
+      subscription_events_quota: planDetails.eventsQuota,
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', userId)
 
-  if (userUpdateError) {
-    console.error('Error updating user subscription:', userUpdateError)
+  if (error) {
+    console.error('Error updating subscription:', error)
   }
 }
 
@@ -438,34 +378,14 @@ async function handlePaymentMethodDetached(paymentMethod: Stripe.PaymentMethod) 
 function getPlanDetailsByPriceId(priceId: string): { planId: string; eventsQuota: number } {
   const planMapping: Record<string, { planId: string; eventsQuota: number }> = {
     'price_starter_monthly': { planId: 'starter', eventsQuota: 3 },
-    'price_starter_annual': { planId: 'starter_annual', eventsQuota: 3 },
+    'price_starter_monthly_annual': { planId: 'starter', eventsQuota: 3 },
     'price_professional_monthly': { planId: 'professional', eventsQuota: 8 },
-    'price_professional_annual': { planId: 'professional_annual', eventsQuota: 8 },
+    'price_professional_monthly_annual': { planId: 'professional', eventsQuota: 8 },
     'price_enterprise_monthly': { planId: 'enterprise', eventsQuota: 15 },
-    'price_enterprise_annual': { planId: 'enterprise_annual', eventsQuota: 15 },
+    'price_enterprise_monthly_annual': { planId: 'enterprise', eventsQuota: 15 },
     'price_team_monthly': { planId: 'team', eventsQuota: 10 },
-    'price_team_annual': { planId: 'team_annual', eventsQuota: 10 },
+    'price_team_monthly_annual': { planId: 'team', eventsQuota: 10 },
   }
 
-  // If the price ID is not found, log it for debugging
-  if (!planMapping[priceId]) {
-    console.warn(`Unknown price ID: ${priceId}, defaulting to starter plan`)
-  }
-  
   return planMapping[priceId] || { planId: 'starter', eventsQuota: 3 }
-}
-
-// Add a function to get add-on details by price ID
-function getAddOnDetailsByPriceId(priceId: string): { addOnId: string; feature: string } {
-  const addOnMapping: Record<string, { addOnId: string; feature: string }> = {
-    'price_premium_badge_monthly': { addOnId: 'premium_profile_badge', feature: 'premium_badge' },
-    'price_featured_demo_monthly': { addOnId: 'featured_demo', feature: 'featured_demo' },
-  }
-  
-  // If the price ID is not found, log it for debugging
-  if (!addOnMapping[priceId]) {
-    console.warn(`Unknown add-on price ID: ${priceId}`)
-  }
-  
-  return addOnMapping[priceId] || { addOnId: 'unknown', feature: 'unknown' }
 }

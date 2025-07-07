@@ -51,7 +51,6 @@ export function DemoCard({
   const isUpcoming = isAfter(demoStart, now);
   const isLive = !isBefore(now, demoStart) && isBefore(now, demoEnd);
   const isCompleted = isAfter(now, demoEnd);
-  const isFeaturedExpired = demo.featuredUntil && isAfter(now, new Date(demo.featuredUntil));
   const canJoin = isRegistered && (isLive || (isUpcoming && isBefore(now, addMinutes(demoStart, 15))));
   const isFull = demo.currentAttendees >= demo.maxAttendees;
 
@@ -118,9 +117,7 @@ export function DemoCard({
       whileHover={{ y: -5 }}
       transition={{ duration: 0.3 }}
       className={`relative rounded-xl border-2 p-4 md:p-6 transition-all duration-200 hover:shadow-xl ${
-        demo.isFeatured && !isFeaturedExpired 
-          ? 'border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50' 
-          : 'border-gray-200 bg-white'
+        demo.isFeatured ? 'border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50' : 'border-gray-200 bg-white'
       }`}
     >
       {/* Header */}
@@ -128,7 +125,7 @@ export function DemoCard({
         <div className="flex flex-wrap items-start justify-between gap-2 mb-4">
           <div className="flex flex-wrap items-center gap-2">
             {getStatusBadge()}
-            {demo.isFeatured && !isFeaturedExpired && (
+            {demo.isFeatured && (
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                 <Star className="w-3 h-3 mr-1" />
                 Featured
@@ -142,7 +139,7 @@ export function DemoCard({
           
           {canManage && (
             <div className="flex items-center">
-              {demo.isFeatured && !isFeaturedExpired ? (
+              {demo.isFeatured ? (
                 <button
                   onClick={onToggleFeatured}
                   className="p-1 rounded-full transition-colors text-yellow-500 hover:text-yellow-600"
@@ -166,7 +163,7 @@ export function DemoCard({
                 </button>
               )}
             </div>
-              {(!demo.isFeatured || isFeaturedExpired) && demo.hostId === demo.hostId && (
+          )}
         </div>
               <p className="text-xs text-gray-500">{demo.hostTitle} • {demo.hostCompany}</p>
         <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2 line-clamp-2">

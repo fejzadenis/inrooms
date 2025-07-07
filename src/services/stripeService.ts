@@ -258,8 +258,7 @@ export const stripeService = {
         },
         body: JSON.stringify({
           customerId,
-          customerId,
-          userId
+          returnUrl,
         }),
       });
 
@@ -391,11 +390,6 @@ export const stripeService = {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const userId = this.getCurrentUserId();
-      
-      if (!userId) {
-        throw new Error('User not authenticated');
-      }
       
       const response = await fetch(`${supabaseUrl}/functions/v1/create-payment-intent`, {
         method: 'POST',
@@ -427,20 +421,6 @@ export const stripeService = {
     } catch (error) {
       console.error('Error adding payment method:', error);
       throw error;
-    }
-  },
-  
-  // Helper method to get current user ID
-  getCurrentUserId(): string | null {
-    // This is a simple implementation - in a real app, you'd use your auth context
-    try {
-      const auth = window.localStorage.getItem('auth');
-      if (auth) {
-        return JSON.parse(auth).userId;
-      }
-      return null;
-    } catch (error) {
-      return null;
     }
   },
 
@@ -490,36 +470,6 @@ export const stripeService = {
       return await response.json();
     } catch (error) {
       console.error('Error deleting payment method:', error);
-      throw error;
-    }
-  },
-  
-  // Purchase a featured demo
-  async purchaseFeatureForDemo(userId: string, userEmail: string, demoId: string, priceId: string) {
-    try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
-      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          userEmail,
-          priceId,
-          successUrl: `${window.location.origin}/solutions?success=true&demoId=${demoId}&feature=true`,
-          cancelUrl: `${window.location.origin}/solutions?canceled=true`,
-          metadata: { demoId }
-        }),
-      });
-
-      const { sessionId } = await response.json();
-      window.location.href = `https://checkout.stripe.com/pay/${sessionId}`;
-    } catch (error) {
-      console.error('Error purchasing featured demo:', error);
       throw error;
     }
   }
