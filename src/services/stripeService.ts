@@ -221,8 +221,8 @@ export const stripeService = {
         throw new Error('Payment link not found');
       }
       
-      // Add query parameters to the payment link
-      const paymentLinkWithParams = `${paymentLink}?client_reference_id=${userId}&prefilled_email=${encodeURIComponent(userEmail)}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`;
+      // Add query parameters to the payment link including user_id in metadata
+      const paymentLinkWithParams = `${paymentLink}?client_reference_id=${userId}&prefilled_email=${encodeURIComponent(userEmail)}&metadata[user_id]=${userId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`;
       
       this.redirectToPaymentLink(paymentLinkWithParams);
     } catch (error) {

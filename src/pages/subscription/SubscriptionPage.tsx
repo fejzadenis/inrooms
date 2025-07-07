@@ -71,8 +71,11 @@ export function SubscriptionPage() {
         ? plan.paymentLink.replace('monthly', 'annual') // Assuming payment links follow a pattern
         : plan.paymentLink;
         
-      // Redirect to the Stripe payment link
-      stripeService.redirectToPaymentLink(paymentLink);
+      // Add user ID and email as parameters to the payment link
+      const finalPaymentLink = `${paymentLink}?client_reference_id=${user.id}&prefilled_email=${encodeURIComponent(user.email)}&metadata[user_id]=${user.id}`;
+      
+      // Redirect to the enhanced Stripe payment link
+      stripeService.redirectToPaymentLink(finalPaymentLink);
     } catch (error) {
       console.error('Error redirecting to payment page:', error);
       toast.error('Failed to redirect to payment page. Please try again.');
