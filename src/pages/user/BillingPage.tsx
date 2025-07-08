@@ -76,19 +76,19 @@ export function BillingPage() {
       let priceId;
       switch(plan.id) {
         case 'starter':
-          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
+          priceId = 'price_1RiexMGCopIxkzs6f8lx95gU';
           console.log('Using starter plan price ID');
           break;
         case 'professional':
-          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
+          priceId = 'price_1RiexMGCopIxkzs6f8lx95gU';
           console.log('Using professional plan price ID');
           break;
         case 'enterprise':
-          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
+          priceId = 'price_1RiexMGCopIxkzs6f8lx95gU';
           console.log('Using enterprise plan price ID');
           break;
         default:
-          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
+          priceId = 'price_1RiexMGCopIxkzs6f8lx95gU';
           console.log('Using default price ID');
       }
       console.log('Using price ID:', priceId);
