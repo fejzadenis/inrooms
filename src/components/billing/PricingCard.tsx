@@ -18,7 +18,6 @@ export function PricingCard({
   plan,
   isCurrentPlan,
   selectedPlan,
-  selectedPlan,
   onSelectPlan, 
   onRequestQuote,
   loading = false,
