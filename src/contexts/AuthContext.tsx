@@ -395,7 +395,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             connections: supabaseUser.connections || []
           };
         }
+      } catch (supabaseError) {
+        console.error("AUTH DEBUG: Error syncing with Supabase:", supabaseError);
+        // Continue with Firestore fallback
       }
+      
     if (shouldRateLimit(`getUserData-${firebaseUser.uid}`)) {
       throw new Error('Rate limited: Too many requests');
     }
