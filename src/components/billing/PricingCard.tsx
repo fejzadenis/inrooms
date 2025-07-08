@@ -237,7 +237,7 @@ export function PricingCard({
               : isCurrentPlan
               ? 'bg-green-100 text-green-800 cursor-not-allowed'
               : 'bg-gray-900 hover:bg-gray-800 text-white'
-        >
+          }`}>
           {isCurrentPlan ? 'Current Plan' : 
            plan.isCustom ? (
              <>
@@ -250,6 +250,7 @@ export function PricingCard({
              'Processing...'
            ) : (
              <>
+               Get Started
              </>
            )}
         </Button>
