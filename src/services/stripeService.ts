@@ -325,7 +325,7 @@ export const stripeService = {
       }
 
       const result = await response.json();
-      return { url: result.url || window.location.origin };
+      return { url: result.url || '' };
     } catch (error) {
       console.error('Error creating checkout session:', error);
       throw error;
