@@ -362,16 +362,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkSupabaseForUpdates = async (userId: string, firestoreData: any): Promise<boolean> => {
     try {
       // Get Supabase data
-      const { data: supabaseUser, error } = await supabase
+      const { data: supabaseUsers, error } = await supabase
         .from('users')
         .select('subscription_status, subscription_events_quota, stripe_subscription_id, updated_at')
-        .eq('id', userId)
-        .single();
+        .eq('id', userId);
       
-      if (error || !supabaseUser) {
+      if (error || !supabaseUsers || supabaseUsers.length === 0) {
         console.log("AUTH DEBUG: No Supabase data found or error:", error?.message);
         return false;
       }
+      
+      const supabaseUser = supabaseUsers[0];
       
       // Check if Supabase has different subscription data
       const hasNewerSubscriptionData = 
