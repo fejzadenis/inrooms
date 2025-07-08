@@ -58,7 +58,10 @@ export function SubscriptionPage() {
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
     console.log('Starting plan selection process for plan:', plan.id);
     
+    console.log('Starting plan selection process for plan:', plan.id);
+    
     if (!user) {
+      console.log('No user found, redirecting to login');
       console.log('No user found, redirecting to login');
       toast.error('Please log in to subscribe');
       navigate('/login', { state: { from: '/subscription' } });
@@ -68,9 +71,11 @@ export function SubscriptionPage() {
     setLoading(true);
     setSelectedPlan(plan);
     console.log('Selected plan:', plan);
+    console.log('Selected plan:', plan);
 
     try {      
       console.log('Determining price ID for plan');
+      // Get the price ID from the plan object
       // Hardcoded price IDs for testing
       let priceId;
       switch(plan.id) {
@@ -79,17 +84,6 @@ export function SubscriptionPage() {
           console.log('Using starter plan price ID');
           break;
         case 'professional':
-          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
-          console.log('Using professional plan price ID');
-          break;
-        case 'enterprise':
-          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
-          console.log('Using enterprise plan price ID');
-          break;
-        default:
-          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
-          console.log('Using default price ID');
-      }
       console.log('Using price ID:', priceId);
 
       console.log('Creating checkout session data object');
@@ -110,10 +104,24 @@ export function SubscriptionPage() {
       console.log('Calling createCheckoutSession function');
       const result = await stripeService.createCheckoutSession(checkoutData);
       console.log('Checkout session created:', result);
+      console.log('Checkout session data:', checkoutData);
+
+      // Create a checkout session using our edge function
+      console.log('Calling createCheckoutSession function');
+      const result = await stripeService.createCheckoutSession(checkoutData);
+      console.log('Checkout session created:', result);
       
       // Redirect to the checkout URL
       console.log(`Redirecting to Stripe Checkout URL: ${result?.url}`);
       if (result?.url) {
+        console.log('About to redirect to:', result.url);
+        window.location.href = result.url;
+      } else {
+        console.error('No checkout URL returned');
+        toast.error('Failed to create checkout session. No URL returned.');
+        setLoading(false);
+        setSelectedPlan(null);
+      }
         console.log('About to redirect to:', result.url);
         window.location.href = result.url;
       } else {
@@ -129,6 +137,10 @@ export function SubscriptionPage() {
         console.error('Error stack:', error.stack);
       }
       toast.error('Failed to create checkout session. Please try again.');
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+      toast.error('Failed to create checkout session. Please try again.');
       setLoading(false);
       setSelectedPlan(null);
     }
@@ -137,6 +149,26 @@ export function SubscriptionPage() {
   const handleRequestQuote = (plan: SubscriptionPlan) => {
     setIsQuoteModalOpen(true);
   };
+  
+  // Check for success/cancel parameters from Stripe redirect
+  React.useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled'); 
+    console.log('URL params - success:', success, 'canceled:', canceled);
+    
+    if (success === 'true') {
+      console.log('Subscription successful, redirecting to billing');
+      toast.success('Subscription activated successfully!');
+      
+      // Wait a moment to ensure the database has been updated
+      setTimeout(() => {
+        navigate('/billing', { replace: true });
+      }, 1500);
+    } else if (canceled === 'true') {
+      console.log('Subscription canceled');
+      toast.error('Subscription canceled. You can try again anytime.');
+    }
+  }, [searchParams, navigate]);
   
   // Check for success/cancel parameters from Stripe redirect
   React.useEffect(() => {

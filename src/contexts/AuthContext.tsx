@@ -57,6 +57,10 @@ interface User {
   stripe_customer_id?: string;
   isNewUser?: boolean;
   connections?: string[];
+  // Add Stripe-specific fields
+  stripe_subscription_id?: string;
+  stripe_subscription_status?: string;
+  stripe_current_period_end?: Date;
 }
 
 interface AuthContextType {
@@ -300,7 +304,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
           stripe_customer_id: userData.stripe_customer_id,
           isNewUser: userData.isNewUser || false,
-          connections: userData.connections || []
+          connections: userData.connections || [],
+          stripe_subscription_id: userData.stripe_subscription_id,
+          stripe_subscription_status: userData.stripe_subscription_status,
+          stripe_current_period_end: userData.stripe_current_period_end ? new Date(userData.stripe_current_period_end) : undefined
         };
       } else {
         // Create a new user document if it doesn't exist
