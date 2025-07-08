@@ -172,6 +172,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   console.log(`- Metadata:`, session.metadata);
   console.log(`- Customer: ${session.customer || 'Not set'}`);
   console.log(`- Customer Email: ${session.customer_details?.email || 'Not set'}`)
+  console.log(`- Subscription: ${session.subscription || 'Not set'}`)
   
   if (!userId) {
     console.error('No user_id in session client_reference_id or metadata, attempting to find from email');
@@ -265,13 +266,35 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         }
       }
       
+      // Get plan details from subscription if available
+      let planDetails = { planId: 'default', eventsQuota: 0 };
+      if (session.subscription) {
+        try {
+          const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+          const priceId = subscription.items.data[0]?.price.id;
+          planDetails = getPlanDetailsByPriceId(priceId || '');
+        } catch (error) {
+          console.error('Error retrieving subscription details:', error);
+        }
+      }
+      
       // Update user's subscription status
       const { error } = await supabaseClient
         .from('users')
-        .update({
+        .update(session.subscription ? {
+          // If we have a subscription ID, update all subscription-related fields
           stripe_customer_id: session.customer as string,
-          stripe_subscription_id: session.subscription as string,
-          subscription_status: 'active',
+          stripe_subscription_id: session.subscription,
+          stripe_subscription_status: 'active',
+          subscription_status: 'active', 
+          // Get plan details and update quota
+          subscription_events_quota: planDetails.eventsQuota,
+          subscription_events_used: 0,
+          // Reset events used count for new subscription
+          updated_at: new Date().toISOString(),
+        } : {
+          // If no subscription (one-time purchase), just update customer ID
+          stripe_customer_id: session.customer as string,
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId)
@@ -279,7 +302,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       if (error) {
         console.error('❌ Error updating user subscription:', error)
       } else {
-        console.log(`✅ Updated user ${userId} with customer ${session.customer} and subscription status`);
+        console.log(`✅ Updated user ${userId} with customer ${session.customer} and subscription details`);
+        if (session.subscription) {
+          console.log(`  - Subscription ID: ${session.subscription}`);
+          console.log(`  - Events Quota: ${planDetails.eventsQuota}`);
+          console.log(`  - Status: active`);
+        }
         
         // Also update the checkout session if it exists
         const { error: sessionUpdateError } = await supabaseClient
@@ -301,6 +329,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     // Check if this is a featured demo purchase
     if (session.metadata?.feature_type === 'featured_demo' && session.metadata?.demo_id) {
       const demoId = session.metadata.demo_id;
+      console.log(`Processing featured demo purchase for demo ${demoId}`);
       
       // Update the demo to be featured
       const { error: demoError } = await supabaseClient
@@ -424,7 +453,7 @@ async function handleCustomerCreated(customer: Stripe.Customer) {
 
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   let userId = subscription.metadata?.user_id
-  console.log(`Processing new subscription: ${subscription.id}`)
+  console.log(`Processing new subscription: ${subscription.id}`);
   
   console.log('Handling customer.subscription.created event')
   console.log(`- Subscription ID: ${subscription.id}`)
@@ -462,7 +491,8 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   // Get plan details from price ID
   const priceId = subscription.items.data[0]?.price.id
   console.log(`Subscription price ID: ${priceId}`)
-  const planDetails = getPlanDetailsByPriceId(priceId || '')
+  const planDetails = getPlanDetailsByPriceId(priceId || '');
+  console.log(`Plan details: ${planDetails.planId}, Events Quota: ${planDetails.eventsQuota}`);
 
   try {
     // Store subscription in stripe_subscriptions table
@@ -494,10 +524,11 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
       .from('users')
       .update({
         stripe_subscription_id: subscription.id,
-        stripe_subscription_status: subscription.status,
+        stripe_subscription_status: subscription.status, 
         stripe_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
         subscription_status: subscription.status === 'active' ? 'active' : 'inactive',
         subscription_events_quota: planDetails.eventsQuota,
+        subscription_events_used: 0,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId)
@@ -506,6 +537,9 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
       console.error('❌ Error updating user subscription info:', error)
     } else {
       console.log(`✅ Updated user ${userId} with subscription info`)
+      console.log(`  - Subscription ID: ${subscription.id}`);
+      console.log(`  - Events Quota: ${planDetails.eventsQuota}`);
+      console.log(`  - Status: ${subscription.status}`);
     }
   } catch (error) {
     console.error('❌ Error in handleSubscriptionCreated:', error)
@@ -561,7 +595,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   // Get plan details from price ID
   const priceId = subscription.items.data[0]?.price.id
-  const planDetails = getPlanDetailsByPriceId(priceId || '')
+  const planDetails = getPlanDetailsByPriceId(priceId || '');
+  console.log(`Plan details: ${planDetails.planId}, Events Quota: ${planDetails.eventsQuota}`);
 
   // Update subscription in stripe_subscriptions table
   const { error: updateError } = await supabaseClient
@@ -590,9 +625,10 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     .from('users')
     .update({
       stripe_subscription_status: subscription.status,
-      stripe_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      stripe_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(), 
       subscription_status: subscription.status === 'active' ? 'active' : 'inactive',
       subscription_events_quota: planDetails.eventsQuota,
+      // Don't reset events_used on update to avoid losing usage data
       updated_at: new Date().toISOString(),
     })
     .eq('id', userId)
@@ -601,6 +637,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     console.error('❌ Error updating user subscription info:', error)
   } else {
     console.log(`✅ Updated user ${userId} with subscription status ${subscription.status}`)
+    console.log(`  - Events Quota: ${planDetails.eventsQuota}`);
+    console.log(`  - Period End: ${new Date(subscription.current_period_end * 1000).toISOString()}`);
   }
 }
 
@@ -986,7 +1024,7 @@ async function handlePaymentMethodDetached(paymentMethod: Stripe.PaymentMethod) 
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
   try {
     // Try to get userId from client_reference_id first, then fallback to metadata
-    let userId = session.client_reference_id || session.metadata?.user_id
+    let userId = session.client_reference_id || session.metadata?.user_id;
     
     console.log('Handling checkout.session.completed event (detailed)')
     console.log(`- Session ID: ${session.id}`)
@@ -1023,7 +1061,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     // Check if this is a subscription purchase
     if (session.mode === 'subscription') {
       if (!userId) {
-        console.warn('No user_id found in session for subscription purchase, checking customer')
+        console.warn('No user_id found in session for subscription purchase, checking customer');
         
         // Try to get userId from customer if available
         if (session.customer) {
@@ -1075,10 +1113,12 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       
       // Get subscription details
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-      const priceId = subscription.items.data[0]?.price.id;
+      const priceId = subscription.items.data[0]?.price.id; 
+      console.log(`Retrieved subscription details - Price ID: ${priceId}`);
       
       // Get plan details from price ID
       const planDetails = getPlanDetailsByPriceId(priceId);
+      console.log(`Plan details: ${planDetails.planId}, Events Quota: ${planDetails.eventsQuota}`);
       
       // Store customer in stripe_customers table if it doesn't exist
       const { data: existingCustomer } = await supabaseClient
@@ -1137,8 +1177,10 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
           stripe_customer_id: customerId,
           stripe_subscription_id: subscriptionId,
           subscription_status: 'active',
-          subscription_events_quota: planDetails.eventsQuota,
+          subscription_events_quota: planDetails.eventsQuota, 
           subscription_events_used: 0,
+          stripe_subscription_status: subscription.status,
+          stripe_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           updated_at: new Date().toISOString()
         })
         .eq('id', userId);
@@ -1146,7 +1188,10 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       if (error) {
         console.error('❌ Error updating user subscription:', error);
       } else {
-        console.log(`✅ User ${userId} subscription activated with plan ${planDetails.planId}`);
+        console.log(`✅ User ${userId} subscription activated with plan ${planDetails.planId}`); 
+        console.log(`  - Subscription ID: ${subscriptionId}`);
+        console.log(`  - Events Quota: ${planDetails.eventsQuota}`);
+        console.log(`  - Period End: ${new Date(subscription.current_period_end * 1000).toISOString()}`);
       }
     }
   } catch (error) {

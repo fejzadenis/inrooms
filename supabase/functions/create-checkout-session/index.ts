@@ -143,7 +143,7 @@ serve(async (req) => {
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      payment_method_types: ['card'],
+      payment_method_types: ['card'], 
       line_items: lineItems,
       mode: 'subscription',
       success_url: successUrl,
@@ -158,8 +158,38 @@ serve(async (req) => {
       customer_update: {
         address: 'auto',
         name: 'auto',
-      },
+      }, 
+      expand: ['subscription'], // Expand subscription to get more details
     })
+
+    // Log session details for debugging
+    console.log(`Created checkout session ${session.id} with subscription ${session.subscription?.id || 'none'}`);
+    
+    // If we have a subscription, get its details
+    if (session.subscription && typeof session.subscription !== 'string') {
+      const subscriptionId = session.subscription.id;
+      const priceId = session.subscription.items.data[0]?.price.id;
+      
+      console.log(`Subscription created: ${subscriptionId} with price ${priceId}`);
+      
+      // Store subscription in database
+      await supabaseClient
+        .from('stripe_subscriptions')
+        .insert({
+          id: subscriptionId,
+          user_id: userId,
+          customer_id: customerId,
+          price_id: priceId,
+          status: session.subscription.status,
+          current_period_start: new Date(session.subscription.current_period_start * 1000).toISOString(),
+          current_period_end: new Date(session.subscription.current_period_end * 1000).toISOString(),
+          cancel_at_period_end: session.subscription.cancel_at_period_end,
+          metadata: sessionMetadata,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select();
+    }
 
     // Store checkout session in database
     await supabaseClient
@@ -176,7 +206,7 @@ serve(async (req) => {
         created_at: new Date().toISOString()
       })
 
-    console.log(`Created checkout session ${session.id} for user ${userId}`)
+    console.log(`Stored checkout session ${session.id} for user ${userId} in database`)
 
     return new Response(
       JSON.stringify({ 
