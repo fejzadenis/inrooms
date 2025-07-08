@@ -80,11 +80,8 @@ export function BillingPage() {
 
     try {      
       console.log('Determining price ID for plan');
-      // Hardcoded price IDs for testing
-      let priceId;
-      
-      // Use the price ID from the plan object
-      priceId = plan.stripePriceId;
+      // Get the price ID from the plan object
+      let priceId = plan.stripePriceId;
       console.log('Using price ID:', priceId);
 
       console.log('Creating checkout session data object');

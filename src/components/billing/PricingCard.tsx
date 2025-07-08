@@ -8,6 +8,7 @@ interface PricingCardProps {
   plan: SubscriptionPlan;
   isCurrentPlan?: boolean;
   selectedPlan?: SubscriptionPlan | null;
+  selectedPlan?: SubscriptionPlan | null;
   onSelectPlan: (plan: SubscriptionPlan) => void;
   onRequestQuote?: (plan: SubscriptionPlan) => void;
   loading?: boolean;
@@ -17,6 +18,7 @@ interface PricingCardProps {
 export function PricingCard({ 
   plan, 
   isCurrentPlan = false, 
+  selectedPlan,
   selectedPlan,
   onSelectPlan, 
   onRequestQuote,
@@ -226,6 +228,7 @@ export function PricingCard({
           onClick={handleAction}
           disabled={isCurrentPlan || loading}
           isLoading={loading && selectedPlan?.id === plan.id}
+          isLoading={loading && selectedPlan?.id === plan.id}
           className={`w-full ${
             plan.isCustom
               ? 'bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-gray-950 text-white shadow-lg'
@@ -234,7 +237,6 @@ export function PricingCard({
               : isCurrentPlan
               ? 'bg-green-100 text-green-800 cursor-not-allowed'
               : 'bg-gray-900 hover:bg-gray-800 text-white'
-          }`}
         >
           {isCurrentPlan ? 'Current Plan' : 
            plan.isCustom ? (
@@ -244,9 +246,10 @@ export function PricingCard({
              </>
            ) : loading && selectedPlan?.id === plan.id ? (
              'Processing...'
+           ) : loading && selectedPlan?.id === plan.id ? (
+             'Processing...'
            ) : (
              <>
-               Choose {plan.name}
              </>
            )}
         </Button>
