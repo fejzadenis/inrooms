@@ -8,7 +8,6 @@ interface PricingCardProps {
   plan: SubscriptionPlan;
   isCurrentPlan?: boolean;
   selectedPlan?: SubscriptionPlan | null;
-  selectedPlan?: SubscriptionPlan | null;
   onSelectPlan: (plan: SubscriptionPlan) => void;
   onRequestQuote?: (plan: SubscriptionPlan) => void;
   loading?: boolean;
@@ -18,7 +17,6 @@ interface PricingCardProps {
 export function PricingCard({ 
   plan, 
   isCurrentPlan = false, 
-  selectedPlan,
   selectedPlan,
   onSelectPlan, 
   onRequestQuote,
