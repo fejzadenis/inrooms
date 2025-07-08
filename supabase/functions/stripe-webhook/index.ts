@@ -1178,13 +1178,13 @@ function getPlanDetailsByPriceId(priceId: string): { planId: string; eventsQuota
     'price_1Rif3UGCopIxkzs6WPBgO8wt': { planId: 'starter_monthly', eventsQuota: 3 },
     'price_1Rif4MGCopIxkzs6EN1InWXN': { planId: 'professional_monthly', eventsQuota: 8 },
     'price_1Rif6HGCopIxkzs6rLt5gZQf': { planId: 'enterprise_monthly', eventsQuota: 15 },
-    'price_1RiPwBGCopIxkzs6ck9VGWH3': { planId: 'team_monthly', eventsQuota: 10 },
+    'price_1RiexMGCopIxkzs6f8lx95gU': { planId: 'team_monthly', eventsQuota: 10 },
   }
 
   const plan = planMapping[priceId];
   if (!plan) {
     console.warn(`Unknown price ID: ${priceId}, defaulting to starter plan`);
-    return { planId: 'starter', eventsQuota: 3 };
+    return { planId: 'starter_monthly', eventsQuota: 3 };
   }
   
   console.log(`Mapped price ID ${priceId} to plan ${plan.planId} with ${plan.eventsQuota} events quota`)

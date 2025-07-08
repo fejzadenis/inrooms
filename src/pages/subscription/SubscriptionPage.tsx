@@ -109,7 +109,7 @@ export function SubscriptionPage() {
       // Create a checkout session using our edge function
       console.log('Calling createCheckoutSession function');
       const result = await stripeService.createCheckoutSession(checkoutData);
-      console.log('Checkout session result:', result);
+      console.log('Checkout session created:', result);
       
       // Redirect to the checkout URL
       console.log(`Redirecting to Stripe Checkout URL: ${result?.url}`);
@@ -141,13 +141,17 @@ export function SubscriptionPage() {
   // Check for success/cancel parameters from Stripe redirect
   React.useEffect(() => {
     const success = searchParams.get('success');
-    const canceled = searchParams.get('canceled');
+    const canceled = searchParams.get('canceled'); 
     console.log('URL params - success:', success, 'canceled:', canceled);
     
     if (success === 'true') {
       console.log('Subscription successful, redirecting to billing');
       toast.success('Subscription activated successfully!');
-      navigate('/billing', { replace: true });
+      
+      // Wait a moment to ensure the database has been updated
+      setTimeout(() => {
+        navigate('/billing', { replace: true });
+      }, 1500);
     } else if (canceled === 'true') {
       console.log('Subscription canceled');
       toast.error('Subscription canceled. You can try again anytime.');
@@ -449,6 +453,13 @@ export function SubscriptionPage() {
                 The Premium Profile Badge is a $29/month add-on that gives you a verified badge, higher search visibility, 
                 and priority in connection recommendations.
                 <a href="mailto:support@inrooms.com" className="text-indigo-600 hover:text-indigo-500 ml-1">Contact our support team</a>
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">How does custom pricing work?</h3>
+              <p className="text-gray-600 text-sm">
+                For large enterprises (50+ users), we create custom solutions with tailored pricing based on your specific 
+                needs, integrations, and usage requirements. <a href="mailto:enterprise@inrooms.com" className="text-indigo-600 hover:text-indigo-500">Contact our enterprise team</a> to learn more.
               </p>
             </div>
           </div>

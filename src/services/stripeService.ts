@@ -301,7 +301,7 @@ export const stripeService = {
     cancelUrl: string;
     addOns?: string[];
     metadata?: Record<string, string>;
-  }): Promise<{ url: string }> {
+  }): Promise<{ sessionId: string; url: string }> {
     try {
       console.log('Creating checkout session with data:', data);
       console.log('User ID:', data.userId);
@@ -369,7 +369,10 @@ export const stripeService = {
         try {
           const result = JSON.parse(responseText);
           console.log('Checkout session created:', result);
-          return { url: result.url || '' };
+          return { 
+            sessionId: result.sessionId || '',
+            url: result.url || '' 
+          };
         } catch (parseError) {
           console.error('Error parsing JSON response:', parseError);
           throw new Error('Invalid response format');
@@ -609,7 +612,7 @@ export const stripeService = {
       const cancelUrl = `${window.location.origin}/solutions?canceled=true`;
       
       // Create a checkout session
-      const { url } = await this.createCheckoutSession({
+      const result = await this.createCheckoutSession({
         userId,
         userEmail,
         priceId: 'price_featured_demo', // This would be your actual price ID for featuring a demo
@@ -622,7 +625,11 @@ export const stripeService = {
       });
       
       // Redirect to checkout
-      window.location.href = url;
+      if (result?.url) {
+        window.location.href = result.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
     } catch (error) {
       console.error('Error purchasing feature:', error);
       throw error;

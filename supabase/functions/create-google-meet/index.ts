@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, x-client-info, apikey",
 };
 
 interface MeetingRequest {
@@ -65,7 +65,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: "Failed to create meeting",
-        details: error.message 
+        details: error instanceof Error ? error.message : String(error)
       }),
       {
         status: 500,

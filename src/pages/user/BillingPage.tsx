@@ -66,6 +66,11 @@ export function BillingPage() {
       return;
     }
     
+    if (currentPlan?.id === plan.id) {
+      toast.info('You are already subscribed to this plan');
+      return;
+    }
+
     setLoading(true);
     setSelectedPlan(plan);
     console.log('Selected plan:', plan);
@@ -110,7 +115,7 @@ export function BillingPage() {
       // Create a checkout session using our edge function
       console.log('Calling createCheckoutSession function');
       const result = await stripeService.createCheckoutSession(checkoutData);
-      console.log('Checkout session result:', result);
+      console.log('Checkout session created:', result);
       
       // Redirect to the checkout URL
       console.log(`Redirecting to Stripe Checkout URL: ${result?.url}`);
@@ -134,6 +139,19 @@ export function BillingPage() {
       setSelectedPlan(null);
     }
   };
+
+  // Check for success/cancel parameters from Stripe redirect
+  React.useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
+    
+    if (success === 'true') {
+      toast.success('Subscription updated successfully!');
+      loadBillingData();
+    } else if (canceled === 'true') {
+      toast.error('Subscription update canceled. You can try again anytime.');
+    }
+  }, [searchParams]);
 
   const handleRequestQuote = (plan: SubscriptionPlan) => {
     setIsQuoteModalOpen(true);
