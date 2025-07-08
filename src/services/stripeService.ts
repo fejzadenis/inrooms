@@ -69,7 +69,7 @@ export const stripeService = {
         targetAudience: 'For active networkers and sales professionals',
         valueProposition: 'Our most popular plan for serious networking',
         eventsQuota: 8,
-        stripePriceId: 'price_professional_monthly'
+        stripePriceId: 'price_1RiQ3YGCopIxkzs6b9c7Vryw'
       },
       {
         id: 'enterprise',
