@@ -17,7 +17,11 @@ import {
 import { 
   doc, 
   getDoc, 
-  setDoc, 
+  setDoc,
+  collection,
+  query,
+  where,
+  getDocs,
   updateDoc, 
   serverTimestamp 
 } from 'firebase/firestore';
@@ -51,16 +55,17 @@ interface User {
   subscription: {
     status: 'trial' | 'active' | 'inactive';
     eventsQuota: number;
-    eventsUsed: number;
+    eventsUsed: number; 
     trialEndsAt?: Date;
+    plan?: string;
   };
   stripe_customer_id?: string;
-  isNewUser?: boolean;
-  connections?: string[];
-  // Add Stripe-specific fields
   stripe_subscription_id?: string;
   stripe_subscription_status?: string;
   stripe_current_period_end?: Date;
+  isNewUser?: boolean;
+  connections?: string[];
+  // Add Stripe-specific fields
 }
 
 interface AuthContextType {
@@ -299,15 +304,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           subscription: {
             status: userData.subscription?.status || 'inactive',
             eventsQuota: userData.subscription?.eventsQuota || 0,
-            eventsUsed: userData.subscription?.eventsUsed || 0,
-            trialEndsAt: trialEndsAt || undefined
+            eventsUsed: userData.subscription?.eventsUsed || 0, 
+            trialEndsAt: trialEndsAt || undefined,
+            plan: userData.subscription?.plan || undefined
           },
           stripe_customer_id: userData.stripe_customer_id,
-          isNewUser: userData.isNewUser || false,
-          connections: userData.connections || [],
           stripe_subscription_id: userData.stripe_subscription_id,
           stripe_subscription_status: userData.stripe_subscription_status,
-          stripe_current_period_end: userData.stripe_current_period_end ? new Date(userData.stripe_current_period_end) : undefined
+          stripe_current_period_end: userData.stripe_current_period_end?.toDate?.(),
+          isNewUser: userData.isNewUser || false,
+          connections: userData.connections || []
         };
       } else {
         // Create a new user document if it doesn't exist
@@ -322,8 +328,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           profile: {},
           subscription: {
             status: 'inactive',
-            eventsQuota: 0,
-            eventsUsed: 0
+            eventsQuota: 0, 
+            eventsUsed: 0,
+            plan: undefined
           },
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
@@ -595,9 +602,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           subscription: {
             ...prev.subscription,
             status: 'trial',
-            eventsQuota: 2,
-            eventsUsed: 0,
-            trialEndsAt
+            eventsQuota: 2, 
+            eventsUsed: 0, 
+            trialEndsAt,
+            plan: 'trial'
           }
         };
         
@@ -722,7 +730,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const markEmailVerified = async (userId: string) => {
     try {
       // Rate limit email verification marking
-      if (shouldRateLimit(`markEmailVerified-${userId}`)) {
+      if (shouldRateLimit(`markEmailVerified-${userId}`)) { 
         console.warn('Rate limited: markEmailVerified');
         return;
       }
@@ -735,7 +743,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           'email_verified': true,
           'email_verified_at': serverTimestamp(),
           'updatedAt': serverTimestamp()
-        });
+        }); 
       } catch (firestoreError: any) {
         console.warn('Failed to update Firestore email verification:', firestoreError);
         // Continue with Supabase update even if Firestore fails
@@ -761,7 +769,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Update local state
       setUser(prev => {
-        if (!prev) return null;
+        if (!prev) return null; 
         console.log("Updating local user state with verified email");
         const updatedUser = {
           ...prev,
@@ -788,6 +796,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw error;
     }
   };
+  
+  // Sync user data between Firestore and Supabase
+  const syncUserData = async (userId: string) => {
+    try {
+      // Get user data from Firestore
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (!userDoc.exists()) {
+        console.warn(`User ${userId} not found in Firestore, cannot sync`);
+        return;
+      }
+      
+      const userData = userDoc.data();
+      
+      // Prepare data for Supabase
+      const supabaseData: any = {
+        id: userId,
+        email: userData.email,
+        name: userData.displayName || userData.name,
+        role: userData.role || 'user',
+        photo_url: userData.photoURL,
+        subscription_status: userData.subscription?.status || 'inactive',
+        subscription_events_quota: userData.subscription?.eventsQuota || 0,
+        subscription_events_used: userData.subscription?.eventsUsed || 0,
+        updated_at: new Date().toISOString()
+      };
+      
+      // Add Stripe data if available
+      if (userData.stripeCustomerId) {
+        supabaseData.stripe_customer_id = userData.stripeCustomerId;
+      }
+      
+      if (userData.stripeSubscriptionId) {
+        supabaseData.stripe_subscription_id = userData.stripeSubscriptionId;
+      }
+      
+      if (userData.stripeSubscriptionStatus) {
+        supabaseData.stripe_subscription_status = userData.stripeSubscriptionStatus;
+      }
+      
+      if (userData.stripeCurrentPeriodEnd) {
+        supabaseData.stripe_current_period_end = userData.stripeCurrentPeriodEnd.toDate().toISOString();
+      }
+      
+      // Sync to Supabase
+      const { error } = await supabase
+        .from('users')
+        .upsert(supabaseData, { onConflict: 'id' });
+        
+      if (error) {
+        console.error('Error syncing user data to Supabase:', error);
+      } else {
+        console.log(`Successfully synced user ${userId} data to Supabase`);
+      }
+    } catch (error) {
+      console.error('Error syncing user data:', error);
+    }
+  };
 
   return (
     <AuthContext.Provider
@@ -802,10 +869,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updateUserProfile,
         startFreeTrial,
         resetPassword,
-        markEmailVerified,
+        markEmailVerified, 
         confirmResetPassword,
         sendVerificationEmail,
-        verifyEmail
+        verifyEmail,
+        syncUserData
       }}
     >
       {children}

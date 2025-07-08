@@ -1,4 +1,5 @@
 import { loadStripe } from '@stripe/stripe-js';
+import { supabase } from '../config/supabase';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
@@ -7,14 +8,14 @@ export interface SubscriptionPlan {
   id: string;
   name: string;
   description: string;
+  targetAudience: string;
   price: number;
   interval: 'month' | 'year';
   features: string[];
   isPopular?: boolean;
   isCustom?: boolean;
-  targetAudience: string;
-  valueProposition: string;
   eventsQuota: number;
+  valueProposition: string;
   stripePriceId: string;
   paymentLink?: string;
 }
@@ -28,6 +29,247 @@ export interface AddOn {
   icon: string;
   paymentLink: string;
 }
+
+// Monthly plans
+const monthlyPlans: SubscriptionPlan[] = [
+  {
+    id: 'starter',
+    name: 'Starter',
+    description: 'For individuals getting started',
+    targetAudience: 'Solo founders and early-stage startups',
+    price: 39,
+    interval: 'month',
+    features: [
+      '3 events per month',
+      'Basic founder profile',
+      'Access to recordings',
+      'Email support',
+      'Mobile app access'
+    ],
+    isPopular: false,
+    eventsQuota: 3,
+    valueProposition: 'Perfect for founders just starting their journey',
+    stripePriceId: 'price_starter_monthly',
+    paymentLink: 'https://buy.stripe.com/test_starter'
+  },
+  {
+    id: 'professional',
+    name: 'Professional',
+    description: 'For active networkers',
+    targetAudience: 'Active founders and startup teams',
+    price: 79,
+    interval: 'month',
+    features: [
+      '8 events per month',
+      'Enhanced founder profile',
+      'Priority event registration',
+      'Advanced co-founder matching',
+      'Email & chat support'
+    ],
+    isPopular: true,
+    eventsQuota: 8,
+    valueProposition: 'Our most popular plan for serious founders',
+    stripePriceId: 'price_professional_monthly',
+    paymentLink: 'https://buy.stripe.com/test_professional'
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    description: 'For power users',
+    targetAudience: 'Scaling founders and venture-backed startups',
+    price: 149,
+    interval: 'month',
+    features: [
+      '15 events per month',
+      'Premium founder profile',
+      'Custom event scheduling',
+      'Dedicated account manager',
+      'Phone support',
+      'Startup analytics dashboard'
+    ],
+    isPopular: false,
+    eventsQuota: 15,
+    valueProposition: 'Everything you need to scale your startup',
+    stripePriceId: 'price_enterprise_monthly',
+    paymentLink: 'https://buy.stripe.com/test_enterprise'
+  },
+  {
+    id: 'team',
+    name: 'Team',
+    description: 'For startup teams',
+    targetAudience: 'Startup teams (min. 3 users)',
+    price: 99,
+    interval: 'month',
+    features: [
+      '10 events per user/month',
+      'Team management tools',
+      'Bulk event registration',
+      'Team analytics',
+      'Dedicated account manager'
+    ],
+    isPopular: false,
+    eventsQuota: 10,
+    valueProposition: 'Bring your whole team for better collaboration',
+    stripePriceId: 'price_team_monthly',
+    paymentLink: 'https://buy.stripe.com/test_team'
+  },
+  {
+    id: 'custom',
+    name: 'Custom',
+    description: 'For enterprises',
+    targetAudience: 'Large organizations with custom needs',
+    price: 0,
+    interval: 'month',
+    features: [
+      'Unlimited events',
+      'Custom integrations',
+      'Dedicated support team',
+      'Custom branding',
+      'Enterprise SSO',
+      'Advanced security features'
+    ],
+    isPopular: false,
+    isCustom: true,
+    eventsQuota: 999,
+    valueProposition: 'Tailored solutions for your organization',
+    stripePriceId: 'custom',
+    paymentLink: 'https://buy.stripe.com/test_custom'
+  }
+];
+
+// Annual plans (20% discount)
+const annualPlans: SubscriptionPlan[] = [
+  {
+    id: 'starter_annual',
+    name: 'Starter',
+    description: 'For individuals getting started',
+    targetAudience: 'Solo founders and early-stage startups',
+    price: 374, // 39 * 12 * 0.8 = 374.4
+    interval: 'year',
+    features: [
+      '3 events per month',
+      'Basic founder profile',
+      'Access to recordings',
+      'Email support',
+      'Mobile app access'
+    ],
+    isPopular: false,
+    eventsQuota: 3,
+    valueProposition: 'Perfect for founders just starting their journey',
+    stripePriceId: 'price_starter_annual',
+    paymentLink: 'https://buy.stripe.com/test_starter_annual'
+  },
+  {
+    id: 'professional_annual',
+    name: 'Professional',
+    description: 'For active networkers',
+    targetAudience: 'Active founders and startup teams',
+    price: 758, // 79 * 12 * 0.8 = 758.4
+    interval: 'year',
+    features: [
+      '8 events per month',
+      'Enhanced founder profile',
+      'Priority event registration',
+      'Advanced co-founder matching',
+      'Email & chat support'
+    ],
+    isPopular: true,
+    eventsQuota: 8,
+    valueProposition: 'Our most popular plan for serious founders',
+    stripePriceId: 'price_professional_annual',
+    paymentLink: 'https://buy.stripe.com/test_professional_annual'
+  },
+  {
+    id: 'enterprise_annual',
+    name: 'Enterprise',
+    description: 'For power users',
+    targetAudience: 'Scaling founders and venture-backed startups',
+    price: 1430, // 149 * 12 * 0.8 = 1430.4
+    interval: 'year',
+    features: [
+      '15 events per month',
+      'Premium founder profile',
+      'Custom event scheduling',
+      'Dedicated account manager',
+      'Phone support',
+      'Startup analytics dashboard'
+    ],
+    isPopular: false,
+    eventsQuota: 15,
+    valueProposition: 'Everything you need to scale your startup',
+    stripePriceId: 'price_enterprise_annual',
+    paymentLink: 'https://buy.stripe.com/test_enterprise_annual'
+  },
+  {
+    id: 'team_annual',
+    name: 'Team',
+    description: 'For startup teams',
+    targetAudience: 'Startup teams (min. 3 users)',
+    price: 950, // 99 * 12 * 0.8 = 950.4
+    interval: 'year',
+    features: [
+      '10 events per user/month',
+      'Team management tools',
+      'Bulk event registration',
+      'Team analytics',
+      'Dedicated account manager'
+    ],
+    isPopular: false,
+    eventsQuota: 10,
+    valueProposition: 'Bring your whole team for better collaboration',
+    stripePriceId: 'price_team_annual',
+    paymentLink: 'https://buy.stripe.com/test_team_annual'
+  }
+];
+
+// Add-ons
+const addOns: AddOn[] = [
+  {
+    id: 'premium_profile',
+    name: 'Premium Profile Badge',
+    description: 'Stand out with a verified badge and higher visibility',
+    price: 29,
+    icon: 'crown',
+    benefits: [
+      'Verified profile badge',
+      'Higher search visibility',
+      'Priority in connection recommendations',
+      'Extended profile customization',
+      'Featured in directory listings'
+    ],
+    paymentLink: 'https://buy.stripe.com/test_premium_profile'
+  },
+  {
+    id: 'extra_events',
+    name: 'Extra Event Pack',
+    description: 'Add 5 more events to your monthly quota',
+    price: 39,
+    icon: 'zap',
+    benefits: [
+      '5 additional events per month',
+      'Rollover unused events (up to 3)',
+      'Priority registration for popular events',
+      'Access to exclusive event recordings',
+      'Event reminder notifications'
+    ],
+    paymentLink: 'https://buy.stripe.com/test_extra_events'
+  },
+  {
+    id: 'advanced_analytics',
+    name: 'Advanced Analytics',
+    description: 'Get detailed insights into your networking activity',
+    price: 19,
+    icon: 'star',
+    benefits: [
+      'Detailed networking metrics',
+      'Connection quality scoring',
+      'Personalized networking recommendations',
+      'Activity reports and trends',
+      'Export data to CSV/PDF'
+    ],
+    paymentLink: 'https://buy.stripe.com/test_advanced_analytics'
+  }
+];
 
 export const stripeService = {
   // Get monthly plans

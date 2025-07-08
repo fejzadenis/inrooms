@@ -5,6 +5,8 @@ import { PricingCard } from '../../components/billing/PricingCard';
 import { PaymentMethodCard } from '../../components/billing/PaymentMethodCard';
 import { AddOnCard } from '../../components/billing/AddOnCard';
 import { CustomQuoteModal } from '../../components/billing/CustomQuoteModal';
+import { AddOnCard } from '../../components/billing/AddOnCard';
+import { CustomQuoteModal } from '../../components/billing/CustomQuoteModal';
 import { CreditCard, Download, Plus, ExternalLink, AlertCircle, CheckCircle, TrendingUp, Crown } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { useAuth } from '../../contexts/AuthContext';
@@ -17,20 +19,16 @@ export function BillingPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = React.useState(false);
   const [selectedPlan, setSelectedPlan] = React.useState<SubscriptionPlan | null>(null);
+  const [selectedPlan, setSelectedPlan] = React.useState<SubscriptionPlan | null>(null);
   const [paymentMethods, setPaymentMethods] = React.useState<any[]>([]);
   const [invoices, setInvoices] = React.useState<any[]>([]);
   const [loadingData, setLoadingData] = React.useState(true);
   const [billingInterval, setBillingInterval] = React.useState<'monthly' | 'yearly'>('monthly');
   const [isQuoteModalOpen, setIsQuoteModalOpen] = React.useState(false);
-  const [selectedAddOns, setSelectedAddOns] = React.useState<string[]>([]);
-
-  React.useEffect(() => {
-    if (user?.stripe_customer_id) {
-      loadBillingData();
-    } else {
-      setLoadingData(false);
-    }
-  }, [user]);
+    return stripeService.getMonthlyPlans().find(plan => 
+      plan.eventsQuota === user.subscription.eventsQuota
+    ) || stripeService.getMonthlyPlans()[0];
+  }, [user]); 
 
   const loadBillingData = async () => {
     if (!user?.stripe_customer_id) return;
@@ -62,7 +60,7 @@ export function BillingPage() {
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
     console.log('Starting plan selection process for plan:', plan.id);
     
-    if (!user) { 
+  const handleSelectPlan = async (plan: SubscriptionPlan) => {
       console.log('No user found, redirecting to login');
       toast.error('Please log in to subscribe');
       navigate('/login', { state: { from: '/subscription' } });
@@ -135,9 +133,20 @@ export function BillingPage() {
       toast.success('Subscription updated successfully!');
       loadBillingData();
     } else if (canceled === 'true') {
-      toast.error('Subscription update canceled. You can try again anytime.');
+    setLoading(true);
+    setSelectedPlan(plan);
+
+    try {
+      // Use the existing payment link redirection method
+      stripeService.redirectToPaymentLink(plan.paymentLink);
+    } catch (error) {
+      console.error('Error redirecting to payment:', error);
+      toast.error('Failed to start checkout process. Please try again.');
+    } finally {
+      setLoading(false);
+      setSelectedPlan(null);
     }
-  }, [searchParams]);
+  };
 
   const handleRequestQuote = (plan: SubscriptionPlan) => {
     setIsQuoteModalOpen(true);
@@ -222,26 +231,6 @@ export function BillingPage() {
         : [...prev, addOn.id]
     );
     
-    if (selectedAddOns.includes(addOn.id)) {
-      toast.success(`${addOn.name} removed from your plan`);
-    } else {
-      toast.success(`${addOn.name} added to your plan`);
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'pending':
-        return <AlertCircle className="w-4 h-4 text-yellow-500" />;
-      case 'failed':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
-      default:
-        return null;
-    }
-  };
-
   const plans = stripeService.getMonthlyPlans();
   const addOns = stripeService.getAddOns();
 
@@ -280,7 +269,7 @@ export function BillingPage() {
         {/* Current Subscription Status */}
         {user && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Current Subscription</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Current Subscription</h2> 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-gray-500">Plan</h3>
@@ -289,9 +278,6 @@ export function BillingPage() {
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
                   {currentPlan?.targetAudience || 'Trial user'}
-                </p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-gray-500">Status</h3>
                 <div className="flex items-center mt-1">
                   <div className={`w-2 h-2 rounded-full mr-2 ${
@@ -321,8 +307,6 @@ export function BillingPage() {
                 <h3 className="text-sm font-medium text-gray-500">Monthly Value</h3>
                 <p className="text-lg font-semibold text-green-600">
                   ${currentPlan?.price || 0}
-                </p>
-                <div className="flex items-center text-sm text-green-600 mt-1">
                   <TrendingUp className="w-4 h-4 mr-1" />
                   <span>ROI: {currentPlan ? Math.round(10000 / currentPlan.price) : 0}x</span>
                 </div>
@@ -330,6 +314,31 @@ export function BillingPage() {
             </div>
           </div>
         )}
+
+        {/* Billing Toggle */}
+        <div className="flex justify-center">
+          <div className="bg-gray-100 rounded-lg p-1 flex">
+            <button
+              onClick={() => setBillingInterval('monthly')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                billingInterval === 'monthly'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingInterval('yearly')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 relative ${
+                billingInterval === 'yearly'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  <span>ROI: {currentPlan ? Math.round(10000 / currentPlan.price) : 0}x</span>
+                Save 20%
+              </span>
+            </button>
+          </div>
+        </div>
 
         {/* Billing Toggle */}
         <div className="flex justify-center">
@@ -372,44 +381,8 @@ export function BillingPage() {
                 onSelectPlan={handleSelectPlan}
                 onRequestQuote={handleRequestQuote}
                 loading={loading && selectedPlan?.id === plan.id}
-                selectedPlan={selectedPlan}
                 billingInterval={billingInterval}
               />
-            ))}
-          </div>
-        </div>
-
-        {/* Add-ons Section */}
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Premium Add-ons</h2>
-              <p className="text-gray-600">Enhance your networking experience with premium features</p>
-            </div>
-            <div className="flex items-center text-sm text-gray-500">
-              <Crown className="w-4 h-4 mr-1" />
-              Available for all plans
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {addOns.map((addOn) => (
-              <AddOnCard
-                key={addOn.id}
-                addOn={addOn}
-                isActive={selectedAddOns.includes(addOn.id)}
-                onToggle={handleToggleAddOn}
-                loading={false}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Payment Methods */}
-        {user?.stripe_customer_id && (
-          <div>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Payment Methods</h2>
               <Button onClick={handleAddPaymentMethod} className="flex items-center">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Payment Method
@@ -567,6 +540,37 @@ export function BillingPage() {
           </div>
         </div>
       </div>
+
+      <CustomQuoteModal 
+        isOpen={isQuoteModalOpen} 
+        onClose={() => setIsQuoteModalOpen(false)} 
+      />
+        {/* Add-ons Section */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Premium Add-ons</h2>
+              <p className="text-gray-600">Enhance your networking experience with premium features</p>
+            </div>
+            <div className="flex items-center text-sm text-gray-500">
+              <Crown className="w-4 h-4 mr-1" />
+              Available for all plans
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {addOns.map((addOn) => (
+              <AddOnCard
+                key={addOn.id}
+                addOn={addOn}
+                isActive={selectedAddOns.includes(addOn.id)}
+                onToggle={handleToggleAddOn}
+                loading={false}
+              />
+            ))}
+          </div>
+        </div>
+
 
       <CustomQuoteModal 
         isOpen={isQuoteModalOpen} 

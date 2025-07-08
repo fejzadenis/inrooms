@@ -1,13 +1,12 @@
+// Import required dependencies
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { initializeApp, cert, getApps } from "npm:firebase-admin/app";
-import { getFirestore } from "npm:firebase-admin/firestore";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 // Define CORS headers
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, x-client-info, apikey",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
 // Define the expected request structure
@@ -35,22 +34,22 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize Firebase Admin SDK if not already initialized
-    if (getApps().length === 0) {
-      initializeApp({
-        credential: cert({
-          projectId: Deno.env.get("FIREBASE_PROJECT_ID"),
-          clientEmail: Deno.env.get("FIREBASE_CLIENT_EMAIL"),
-          privateKey: Deno.env.get("FIREBASE_PRIVATE_KEY")?.replace(/\\n/g, "\n"),
-        }),
-      });
+    // Initialize Firebase Admin SDK
+    const { initializeApp, cert } = await import("npm:firebase-admin/app");
+    const { getFirestore } = await import("npm:firebase-admin/firestore");
+    
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Supabase credentials not configured");
     }
-
-    // Get Firestore instance
-    const db = getFirestore();
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Parse request body
-    const { userId, subscription, ...otherData }: SyncRequest = await req.json();
+    const { userId, subscription, ...stripeData }: SyncRequest = await req.json();
 
     if (!userId) {
       return new Response(
@@ -62,52 +61,118 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Syncing user ${userId} to Firebase`);
-    console.log(`Subscription data:`, subscription);
-    console.log(`Other data:`, otherData);
+    console.log(`Processing sync request for user ${userId}`);
+    console.log("Subscription data:", subscription);
+    console.log("Stripe data:", stripeData);
 
-    // Prepare data for Firestore update
-    const updateData: Record<string, any> = {
-      updatedAt: new Date(),
-    };
+    // Get service account from environment variable
+    const serviceAccount = JSON.parse(Deno.env.get("FIREBASE_SERVICE_ACCOUNT") || "{}");
+    
+    if (!serviceAccount.project_id) {
+      throw new Error("Firebase service account not configured");
+    }
 
-    // Add subscription data if provided
-    if (subscription) {
-      updateData.subscription = {
-        status: subscription.status,
-        eventsQuota: subscription.eventsQuota,
-        eventsUsed: subscription.eventsUsed,
-      };
+    // Check if app is already initialized
+    let app;
+    try {
+      const admin = await import("npm:firebase-admin");
+      app = admin.apps.length ? admin.apps[0] : null;
+    } catch (e) {
+      console.log("Firebase admin not initialized yet");
+    }
 
-      if (subscription.trialEndsAt) {
-        updateData.subscription.trialEndsAt = new Date(subscription.trialEndsAt);
+    if (!app) {
+      app = initializeApp({
+        credential: cert(serviceAccount),
+      });
+    }
+
+    const db = getFirestore();
+    
+    // Get current user data from Firestore
+    const userDoc = await db.collection("users").doc(userId).get();
+    
+    if (!userDoc.exists) {
+      console.log(`User ${userId} not found in Firestore`);
+      
+      // Get user data from Supabase
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", userId)
+        .single();
+        
+      if (userError) {
+        throw new Error(`User not found in Supabase: ${userError.message}`);
       }
-    }
-
-    // Add other data fields
-    if (otherData.stripe_customer_id) {
-      updateData.stripe_customer_id = otherData.stripe_customer_id;
+      
+      // Create user in Firestore
+      await db.collection("users").doc(userId).set({
+        uid: userId,
+        email: userData.email,
+        displayName: userData.name,
+        photoURL: userData.photo_url,
+        emailVerified: userData.email_verified || false,
+        subscription: subscription || {
+          status: userData.subscription_status || "inactive",
+          eventsQuota: userData.subscription_events_quota || 0,
+          eventsUsed: userData.subscription_events_used || 0,
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      
+      console.log(`Created new user ${userId} in Firestore`);
+    } else {
+      // Update existing user in Firestore
+      const updateData: Record<string, any> = {
+        updatedAt: new Date(),
+      };
+      
+      if (subscription) {
+        updateData.subscription = subscription;
+      }
+      
+      if (stripeData.stripe_customer_id) {
+        updateData.stripeCustomerId = stripeData.stripe_customer_id;
+      }
+      
+      if (stripeData.stripe_subscription_id) {
+        updateData.stripeSubscriptionId = stripeData.stripe_subscription_id;
+      }
+      
+      if (stripeData.stripe_subscription_status) {
+        updateData.stripeSubscriptionStatus = stripeData.stripe_subscription_status;
+      }
+      
+      if (stripeData.stripe_current_period_end) {
+        updateData.stripeCurrentPeriodEnd = new Date(stripeData.stripe_current_period_end);
+      }
+      
+      await db.collection("users").doc(userId).update(updateData);
+      
+      console.log(`Updated user ${userId} in Firestore with:`, updateData);
     }
     
-    if (otherData.stripe_subscription_id) {
-      updateData.stripe_subscription_id = otherData.stripe_subscription_id;
+    // Mark user as synced in Supabase
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({
+        needs_firebase_sync: false,
+        firebase_sync_completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
+      
+    if (updateError) {
+      console.error("Error updating sync status in Supabase:", updateError);
     }
-    
-    if (otherData.stripe_subscription_status) {
-      updateData.stripe_subscription_status = otherData.stripe_subscription_status;
-    }
-    
-    if (otherData.stripe_current_period_end) {
-      updateData.stripe_current_period_end = new Date(otherData.stripe_current_period_end);
-    }
-
-    // Update Firestore document
-    await db.collection("users").doc(userId).update(updateData);
-
-    console.log(`Successfully updated Firestore document for user ${userId}`);
 
     return new Response(
-      JSON.stringify({ success: true, message: "User data synced to Firebase" }),
+      JSON.stringify({ 
+        success: true, 
+        message: `User ${userId} synced to Firebase successfully` 
+      }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -118,8 +183,8 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        error: "Failed to sync data to Firebase",
-        details: error instanceof Error ? error.message : "Unknown error"
+        error: "Failed to sync to Firebase", 
+        details: error.message 
       }),
       {
         status: 500,

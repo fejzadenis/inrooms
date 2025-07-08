@@ -18,9 +18,9 @@ interface PricingCardProps {
 export function PricingCard({ 
   plan, 
   isCurrentPlan = false, 
+  selectedPlan?: SubscriptionPlan | null;
   selectedPlan,
-  selectedPlan,
-  onSelectPlan, 
+  onSelectPlan,
   onRequestQuote,
   loading = false,
   billingInterval = 'monthly'
