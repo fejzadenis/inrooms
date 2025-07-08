@@ -1157,9 +1157,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 function getPlanDetailsByPriceId(priceId: string): { planId: string; eventsQuota: number } {
   const planMapping: Record<string, { planId: string; eventsQuota: number }> = {
     // Monthly plans
-    'price_starter_monthly': { planId: 'starter', eventsQuota: 3 },
-    'price_professional_monthly': { planId: 'professional', eventsQuota: 8 },
-    'price_enterprise_monthly': { planId: 'enterprise', eventsQuota: 15 },
+    'price_starter_monthly': { planId: 'starter_monthly', eventsQuota: 3 },
+    'price_professional_monthly': { planId: 'professional_monthly', eventsQuota: 8 },
+    'price_enterprise_monthly': { planId: 'enterprise_monthly', eventsQuota: 15 },
     'price_team_monthly': { planId: 'team', eventsQuota: 10 },
     
     // Annual plans
@@ -1175,10 +1175,10 @@ function getPlanDetailsByPriceId(priceId: string): { planId: string; eventsQuota
     'price_team_monthly_annual': { planId: 'team', eventsQuota: 10 },
     
     // Live mode price IDs (if different)
-    'price_1RiPwAGCopIxkzs6Ck9VGWH2': { planId: 'starter', eventsQuota: 3 },
-    'price_1RiPwAGCopIxkzs6ck9VGWH2': { planId: 'professional', eventsQuota: 8 },
-    'price_1RiPwBGCopIxkzs6Ck9VGWH3': { planId: 'enterprise', eventsQuota: 15 },
-    'price_1RiPwBGCopIxkzs6ck9VGWH3': { planId: 'team', eventsQuota: 10 },
+    'price_1Rif3UGCopIxkzs6WPBgO8wt': { planId: 'starter_monthly', eventsQuota: 3 },
+    'price_1Rif4MGCopIxkzs6EN1InWXN': { planId: 'professional_monthly', eventsQuota: 8 },
+    'price_1Rif6HGCopIxkzs6rLt5gZQf': { planId: 'enterprise_monthly', eventsQuota: 15 },
+    'price_1RiPwBGCopIxkzs6ck9VGWH3': { planId: 'team_monthly', eventsQuota: 10 },
   }
 
   const plan = planMapping[priceId];
