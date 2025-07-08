@@ -2,6 +2,13 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import Stripe from 'https://esm.sh/stripe@14.21.0'
 
+// Configure CORS headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
 // Initialize Stripe with the secret key
 // Initialize Stripe with the secret key
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
@@ -29,18 +36,24 @@ console.log(`- Supabase URL: ${Deno.env.get('SUPABASE_URL') ? 'Set' : 'Not set'}
 console.log(`- Stripe Secret Key: ${Deno.env.get('STRIPE_SECRET_KEY') ? 'Set' : 'Not set'}`)
 console.log(`- Webhook Secret: ${Deno.env.get('STRIPE_WEBHOOK_SECRET') ? 'Set' : 'Not set'}`)
 
-serve(async (request) => {
+serve(async (request: Request) => {
+  // Handle CORS preflight requests
+  if (request.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   const signature = request.headers.get('Stripe-Signature')
   const body = await request.text()
   
   if (!signature) {
-    console.error('No Stripe-Signature header found')
-    return new Response(JSON.stringify({ error: 'No Stripe-Signature header found' }), { 
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    console.log(`Attempting to verify webhook signature: ${signature.substring(0, 20)}...`);
-    
-    })
+    console.error('No Stripe signature found in request headers')
+    return new Response(
+      JSON.stringify({ error: 'No Stripe signature found' }),
+      { 
+        status: 400, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
   }
   
   const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')
@@ -54,6 +67,10 @@ serve(async (request) => {
 
   try {
     console.log(`Attempting to verify webhook signature: ${signature.substring(0, 20)}...`)
+    console.log('Webhook endpoint initialized with:')
+    console.log(`- Supabase URL: ${Deno.env.get('SUPABASE_URL') ? 'Set' : 'Not set'}`)
+    console.log(`- Stripe Secret Key: ${Deno.env.get('STRIPE_SECRET_KEY') ? 'Set' : 'Not set'}`)
+    console.log(`- Webhook Secret: ${Deno.env.get('STRIPE_WEBHOOK_SECRET') ? 'Set' : 'Not set'}`)
     
     const event = await stripe.webhooks.constructEventAsync(
       body,
@@ -107,19 +124,22 @@ serve(async (request) => {
         console.log(`Unhandled event type: ${event.type}`)
     }
 
-    return new Response(JSON.stringify({ received: true }), {
-      headers: { 'Content-Type': 'application/json' },
-      status: 200,
-    }) 
+    return new Response(
+      JSON.stringify({ received: true, event: event.type }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      }
+    )
   } catch (error) {
-    console.error('❌ Webhook error:', error)
-    return new Response(JSON.stringify({ 
-      error: 'Webhook error',
-      message: error.message
-    }), { 
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    console.error('Webhook error:', error.message)
+    return new Response(
+      JSON.stringify({ error: 'Webhook error', message: error.message }),
+      { 
+        status: 400, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
   }
 })
 
@@ -135,11 +155,16 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   console.log(`- Metadata:`, session.metadata)
   console.log(`- Customer: ${session.customer || 'Not set'}`)
   
+  console.log(`Processing checkout session: ${session.id}`)
+  console.log(`- Metadata: ${JSON.stringify(session.metadata || {})}`)
+  console.log(`- Customer: ${session.customer ? session.customer : 'Not set'}`)
+  
   if (!userId) {
     console.error('No user_id in session client_reference_id or metadata, attempting to find from customer');
     console.log(`- Client Reference ID: ${session.client_reference_id ? session.client_reference_id : 'Not set'}`);
     console.log(`- Metadata: ${JSON.stringify(session.metadata || {})}`);
     console.log(`- Customer: ${session.customer ? session.customer : 'Not set'}`);
+    console.log(`- Session ID: ${session.id}`)
     
     // Try to get userId from customer if available
     if (session.customer) {
@@ -159,6 +184,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       } catch (error) {
         console.error('Error retrieving user_id from customer:', error);
       }
+    }
+    
+    // If we still don't have a userId, try to create a placeholder from email
+    if (!userId && session.customer_details?.email) {
+      console.log(`Creating placeholder user ID from email: ${session.customer_details.email}`)
+      userId = `placeholder_${Date.now()}`
     }
     
     if (!userId) {
@@ -240,6 +271,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         console.error('❌ Error updating user subscription:', error)
       } else {
         console.log(`✅ Updated user ${userId} with customer ${session.customer}`);
+        console.log(`✅ Updated subscription for user ${userId}`)
       }
           metadata: {
             checkout_session_id: session.id,
@@ -257,6 +289,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
 async function handleCustomerCreated(customer: Stripe.Customer) {
   let userId = customer.metadata?.user_id
+  console.log(`Processing new customer: ${customer.id}`)
   
   console.log('Handling customer.created event')
   console.log(`- Customer ID: ${customer.id}`)
@@ -279,7 +312,9 @@ async function handleCustomerCreated(customer: Stripe.Customer) {
       
       if (sessions.data.length > 0) {
         userId = sessions.data[0].client_reference_id
-        console.log(`✅ Retrieved user_id ${userId} from checkout session`)
+        if (userId) {
+          console.log(`Retrieved user_id ${userId} from checkout session`)
+        }
       }
     } catch (error) {
       console.error('Error retrieving checkout sessions:', error)
@@ -301,6 +336,9 @@ async function handleCustomerCreated(customer: Stripe.Customer) {
           console.log(`✅ Found user ${userId} by email ${customer.email}`)
         } else {
           console.error(`❌ No user found with email ${customer.email}`)
+          console.error('Could not determine user_id for customer, creating placeholder')
+          userId = `placeholder_${Date.now()}`
+          console.log(`Generated placeholder ID: ${userId}`)
           return
         }
       } else {
@@ -351,6 +389,7 @@ async function handleCustomerCreated(customer: Stripe.Customer) {
 
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   let userId = subscription.metadata?.user_id
+  console.log(`Processing new subscription: ${subscription.id}`)
   
   console.log('Handling customer.subscription.created event')
   console.log(`- Subscription ID: ${subscription.id}`)
@@ -387,6 +426,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
 
   // Get plan details from price ID
   const priceId = subscription.items.data[0]?.price.id
+  console.log(`Subscription price ID: ${priceId}`)
   const planDetails = getPlanDetailsByPriceId(priceId)
 
   try {
@@ -1081,17 +1121,23 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
 function getPlanDetailsByPriceId(priceId: string): { planId: string; eventsQuota: number } {
   const planMapping: Record<string, { planId: string; eventsQuota: number }> = {
-    // Test mode price IDs
+    // Monthly plans
     'price_starter_monthly': { planId: 'starter', eventsQuota: 3 },
     'price_professional_monthly': { planId: 'professional', eventsQuota: 8 },
     'price_enterprise_monthly': { planId: 'enterprise', eventsQuota: 15 },
     'price_team_monthly': { planId: 'team', eventsQuota: 10 },
     
     // Annual plans
-    'price_starter_annual': { planId: 'starter_annual', eventsQuota: 3 },
-    'price_professional_annual': { planId: 'professional_annual', eventsQuota: 8 },
-    'price_enterprise_annual': { planId: 'enterprise_annual', eventsQuota: 15 },
-    'price_team_annual': { planId: 'team_annual', eventsQuota: 10 },
+    'price_starter_annual': { planId: 'starter', eventsQuota: 3 },
+    'price_professional_annual': { planId: 'professional', eventsQuota: 8 },
+    'price_enterprise_annual': { planId: 'enterprise', eventsQuota: 15 },
+    'price_team_annual': { planId: 'team', eventsQuota: 10 },
+    
+    // Legacy or alternative naming
+    'price_starter_monthly_annual': { planId: 'starter', eventsQuota: 3 },
+    'price_professional_monthly_annual': { planId: 'professional', eventsQuota: 8 },
+    'price_enterprise_monthly_annual': { planId: 'enterprise', eventsQuota: 15 },
+    'price_team_monthly_annual': { planId: 'team', eventsQuota: 10 },
     
     // Live mode price IDs (if different)
     'price_1RiPwAGCopIxkzs6Ck9VGWH2': { planId: 'starter', eventsQuota: 3 },
@@ -1100,7 +1146,12 @@ function getPlanDetailsByPriceId(priceId: string): { planId: string; eventsQuota
     'price_1RiPwBGCopIxkzs6ck9VGWH3': { planId: 'team', eventsQuota: 10 },
   }
 
-  const result = planMapping[priceId] || { planId: 'starter', eventsQuota: 3 }
-  console.log(`Mapped price ID ${priceId} to plan ${result.planId} with ${result.eventsQuota} events quota`)
-  return result
+  const plan = planMapping[priceId];
+  if (!plan) {
+    console.warn(`Unknown price ID: ${priceId}, defaulting to starter plan`);
+    return { planId: 'starter', eventsQuota: 3 };
+  }
+  
+  console.log(`Mapped price ID ${priceId} to plan ${plan.planId} with ${plan.eventsQuota} events quota`)
+  return plan;
 }

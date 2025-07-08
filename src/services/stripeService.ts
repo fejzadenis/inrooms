@@ -199,8 +199,25 @@ export const allPlans = [...subscriptionPlans, ...annualPlans];
 export const stripeService = {
   // Redirect to Stripe payment link
   redirectToPaymentLink(paymentLink: string): void {
-    console.log('Redirecting to payment link:', paymentLink);
-    window.location.href = paymentLink;
+  redirectToPaymentLink(paymentLink: string, params?: Record<string, string>): void {
+    const enhancedLink = this.enhancePaymentLink(paymentLink, params);
+    window.location.href = enhancedLink;
+  },
+  
+  // Add query parameters to payment link
+  enhancePaymentLink(paymentLink: string, params?: Record<string, string>): string {
+    if (!params) return paymentLink;
+    
+    const url = new URL(paymentLink);
+    
+    // Add each parameter to the URL
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        url.searchParams.append(key, value);
+      }
+    });
+    
+    return url.toString();
   },
 
   // Enhance payment link with user information
@@ -261,7 +278,7 @@ export const stripeService = {
       const cancelUrl = `${baseUrl}/solutions?canceled=true`;
       
       // Get the payment link for featured demo
-      let paymentLink = addOns.find(a => a.id === 'featured_demo')?.paymentLink || '';
+      const paymentLink = addOns.find(a => a.id === featureType)?.paymentLink || '';
       
       if (!paymentLink) {
         throw new Error('Payment link not found');
@@ -275,10 +292,16 @@ export const stripeService = {
         {
           'success_url': encodeURIComponent(successUrl),
           'cancel_url': encodeURIComponent(cancelUrl)
-        }
-      );
-      
-      this.redirectToPaymentLink(paymentLinkWithParams);
+      // Redirect with all necessary parameters
+      this.redirectToPaymentLink(paymentLink, {
+        'client_reference_id': userId,
+        'prefilled_email': userEmail,
+        'metadata[user_id]': userId,
+        'metadata[demo_id]': demoId,
+        'metadata[feature_type]': featureType,
+        'success_url': successUrl,
+        'cancel_url': cancelUrl
+      });
     } catch (error) {
       console.error('Error purchasing feature:', error);
       throw error;
@@ -298,28 +321,51 @@ export const stripeService = {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error('Supabase configuration is missing. Please check your environment variables.');
+      try {
+        if (!supabaseUrl || !supabaseAnonKey) {
+          throw new Error('Supabase configuration is missing. Please check your environment variables.');
+        }
+  
+        const response = await fetch(`${supabaseUrl}/functions/v1/custom-quote`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(companyInfo),
+        });
+  
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to submit quote request');
+        }
+  
+        return await response.json();
+      } catch (error) {
+        console.error('Error requesting custom quote:', error);
+        
+        // Fallback to direct database insert if edge function fails
+        try {
+          const { data, error } = await supabase
+            .from('custom_quotes')
+            .insert([{
+              company_name: companyInfo.companyName,
+              contact_name: companyInfo.contactName,
+              email: companyInfo.email,
+              phone: companyInfo.phone,
+              team_size: companyInfo.teamSize,
+              requirements: companyInfo.requirements,
+              timeline: companyInfo.timeline,
+              status: 'pending'
+            }]);
+            
+          if (error) throw error;
+          return { success: true, message: 'Quote request submitted successfully' };
+        } catch (dbError) {
+          console.error('Error saving quote to database:', dbError);
+          throw dbError;
+        }
       }
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/custom-quote`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(companyInfo),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to submit quote request');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error requesting custom quote:', error);
-      throw error;
     }
   },
 
@@ -328,61 +374,63 @@ export const stripeService = {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error('Supabase configuration is missing. Please check your environment variables.');
-      }
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-portal`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          customerId,
-          returnUrl,
-        }),
-      });
-
-      if (!response.ok) {
-        let errorMessage = 'Failed to create portal session';
-        
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch (jsonError) {
-          errorMessage = response.statusText || 'Received an invalid response from the server. Please try again.';
-        }
-        
-        throw new Error(errorMessage);
-      }
-
-      let portalData;
       try {
-        portalData = await response.json();
-      } catch (jsonError) {
-        console.error('Failed to parse JSON response:', jsonError);
-        throw new Error('Received an invalid response from the server. Please try again.');
-      }
-
-      const { url } = portalData;
-      
-      if (!url) {
-        throw new Error('No portal URL received from server');
-      }
-      
-      window.location.href = url;
-    } catch (error) {
-      console.error('Error creating portal session:', error);
-      
-      if (error instanceof Error) {
-        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-          throw new Error('Unable to connect to billing service. Please check your internet connection and try again.');
+        if (!supabaseUrl || !supabaseAnonKey) {
+          throw new Error('Supabase configuration is missing. Please check your environment variables.');
         }
-        throw error;
+  
+        const response = await fetch(`${supabaseUrl}/functions/v1/stripe-portal`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            customerId,
+            returnUrl,
+          }),
+        });
+  
+        if (!response.ok) {
+          let errorMessage = 'Failed to create portal session';
+          
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch (jsonError) {
+            errorMessage = response.statusText || 'Received an invalid response from the server. Please try again.';
+          }
+          
+          throw new Error(errorMessage);
+        }
+  
+        let portalData;
+        try {
+          portalData = await response.json();
+        } catch (jsonError) {
+          console.error('Failed to parse JSON response:', jsonError);
+          throw new Error('Received an invalid response from the server. Please try again.');
+        }
+  
+        const { url } = portalData;
+        
+        if (!url) {
+          throw new Error('No portal URL received from server');
+        }
+        
+        window.location.href = url;
+      } catch (error) {
+        console.error('Error creating portal session:', error);
+        
+        if (error instanceof Error) {
+          if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            throw new Error('Unable to connect to billing service. Please check your internet connection and try again.');
+          }
+          throw error;
+        }
+        
+        throw new Error('An unexpected error occurred. Please try again.');
       }
-      
-      throw new Error('An unexpected error occurred. Please try again.');
     }
   },
 
@@ -488,39 +536,58 @@ export const stripeService = {
   calculateAnnualPrice(monthlyPrice: number): number {
     return Math.round(monthlyPrice * 12 * 0.8); // 20% discount
   },
+  
+  // Get the appropriate price ID based on billing interval
+  getPriceIdForBillingInterval(plan: SubscriptionPlan, billingInterval: 'monthly' | 'yearly'): string {
+    if (billingInterval === 'yearly') {
+      // For yearly billing, use the annual price ID if available
+      const annualPlan = annualPlans.find(p => p.id === `${plan.id}_annual`);
+      if (annualPlan) {
+        return annualPlan.stripePriceId;
+      }
+    }
+    
+    // Default to the plan's price ID
+    return plan.stripePriceId;
+  },
 
   async addPaymentMethod(customerId: string) {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      const response = await fetch(`${supabaseUrl}/functions/v1/create-payment-intent`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ customerId }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create setup intent');
+      try {
+        const response = await fetch(`${supabaseUrl}/functions/v1/create-payment-intent`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ customerId }),
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to create setup intent');
+        }
+  
+        const { clientSecret } = await response.json();
+        
+        if (!clientSecret) {
+          throw new Error('No client secret received');
+        }
+        
+        const stripe = await stripePromise;
+        if (!stripe) {
+          throw new Error('Stripe failed to load');
+        }
+  
+        // This would typically open Stripe Elements UI for payment method entry
+        // For now, we'll just throw an error since we don't have the UI components set up
+        throw new Error('Payment method management requires Stripe Elements integration');
+      } catch (error) {
+        console.error('Error adding payment method:', error);
+        throw error;
       }
-
-      const { clientSecret } = await response.json();
-      
-      if (!clientSecret) {
-        throw new Error('No client secret received');
-      }
-      
-      const stripe = await stripePromise;
-      if (!stripe) {
-        throw new Error('Stripe failed to load');
-      }
-
-      // This would typically open Stripe Elements UI for payment method entry
-      // For now, we'll just throw an error since we don't have the UI components set up
-      throw new Error('Payment method management requires Stripe Elements integration');
     } catch (error) {
       console.error('Error adding payment method:', error);
       throw error;
@@ -532,20 +599,25 @@ export const stripeService = {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      const response = await fetch(`${supabaseUrl}/functions/v1/set-default-payment-method`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ customerId, paymentMethodId }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to set default payment method');
+      try {
+        const response = await fetch(`${supabaseUrl}/functions/v1/set-default-payment-method`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ customerId, paymentMethodId }),
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to set default payment method');
+        }
+  
+        return await response.json();
+      } catch (error) {
+        console.error('Error setting default payment method:', error);
+        throw error;
       }
-
-      return await response.json();
     } catch (error) {
       console.error('Error setting default payment method:', error);
       throw error;
@@ -557,20 +629,25 @@ export const stripeService = {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      const response = await fetch(`${supabaseUrl}/functions/v1/delete-payment-method`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ paymentMethodId }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete payment method');
+      try {
+        const response = await fetch(`${supabaseUrl}/functions/v1/delete-payment-method`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ paymentMethodId }),
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to delete payment method');
+        }
+  
+        return await response.json();
+      } catch (error) {
+        console.error('Error deleting payment method:', error);
+        throw error;
       }
-
-      return await response.json();
     } catch (error) {
       console.error('Error deleting payment method:', error);
       throw error;

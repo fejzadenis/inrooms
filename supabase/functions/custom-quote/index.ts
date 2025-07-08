@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// Configure CORS headers
 // Define CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,23 +22,47 @@ interface QuoteRequest {
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
     // Initialize Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing Supabase environment variables');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
         auth: {
           persistSession: false
         }
       }
     )
 
-    const quoteData: QuoteRequest = await req.json()
+    // Parse request body
+    let quoteData: QuoteRequest;
+    try {
+      quoteData = await req.json();
+    } catch (error) {
+      console.error('Error parsing request body:', error);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request body' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
     // Validate required fields
     if (!quoteData.companyName || !quoteData.contactName || !quoteData.email || 
@@ -52,7 +77,10 @@ serve(async (req) => {
     }
 
     // Store quote request in database
+    let quoteId: string | null = null;
+    
     try {
+      // First try to insert into custom_quotes table
       const { data, error } = await supabaseClient
         .from('custom_quotes')
         .insert([
@@ -64,10 +92,49 @@ serve(async (req) => {
             team_size: quoteData.teamSize,
             requirements: quoteData.requirements,
             timeline: quoteData.timeline,
-            status: 'pending',
-            created_at: new Date().toISOString(),
+            status: 'pending'
           }
         ])
+        .select();
+      
+      if (error) {
+        console.error('Error storing in custom_quotes:', error);
+        
+        // Fallback to quote_requests table if custom_quotes fails
+        const fallbackResult = await supabaseClient
+          .from('quote_requests')
+          .insert([
+            {
+              company_name: quoteData.companyName,
+              contact_name: quoteData.contactName,
+              email: quoteData.email,
+              phone: quoteData.phone,
+              team_size: quoteData.teamSize,
+              requirements: quoteData.requirements,
+              timeline: quoteData.timeline,
+              status: 'pending'
+            }
+          ])
+          .select();
+          
+        if (fallbackResult.error) {
+          throw fallbackResult.error;
+        }
+        
+        quoteId = fallbackResult.data?.[0]?.id;
+      } else {
+        quoteId = data?.[0]?.id;
+      }
+    } catch (dbError) {
+      console.error('Database error storing quote request:', dbError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to store quote request' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
         .select()
 
       if (error) {
@@ -97,24 +164,23 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )
-    } catch (dbError) {
-      console.error('Database error:', dbError);
-      return new Response(
-        JSON.stringify({ error: 'Database error', details: dbError.message }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+    // Send notification email to sales team
+    try {
+      await sendQuoteNotification(quoteData);
+    } catch (emailError) {
+      console.error('Error sending notification email:', emailError);
+      // Continue even if email fails
     }
 
-  } catch (error) {
-    console.error('Error processing quote request:', error)
-    
-    return new Response(
-      JSON.stringify({ 
+    // Send confirmation email to customer
+    try {
+      await sendCustomerConfirmation(quoteData);
+    } catch (emailError) {
+      console.error('Error sending confirmation email:', emailError);
+      // Continue even if email fails
+    }
         error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        requestId: quoteId
       }),
       { 
         status: 500, 
@@ -126,7 +192,7 @@ serve(async (req) => {
 
 async function sendQuoteNotification(quoteData: QuoteRequest) {
   // Integrate with your email service (SendGrid, Resend, etc.)
-  // For now, just log the notification
+  // For now, just log the notification to console
   console.log('New quote request received:', {
     company: quoteData.companyName,
     contact: quoteData.contactName,
@@ -138,5 +204,8 @@ async function sendQuoteNotification(quoteData: QuoteRequest) {
 
 async function sendCustomerConfirmation(quoteData: QuoteRequest) {
   // Send confirmation email to customer
-  console.log(`Sending confirmation email to ${quoteData.email}`)
+  console.log(`Sending confirmation email to ${quoteData.email}`);
+  
+  // In a real implementation, you would use an email service here
+  // For example with SendGrid, Resend, or another email provider
 }

@@ -38,7 +38,7 @@ export function SubscriptionPage() {
   const handleFreeTrial = async () => {
     if (!user) {
       toast.error('Please log in to start your free trial');
-      navigate('/login');
+      navigate('/login', { state: { from: '/subscription' } });
       return;
     }
 
@@ -58,6 +58,7 @@ export function SubscriptionPage() {
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
     if (!user) {
       toast.error('Please log in to subscribe');
+      navigate('/login');
       navigate('/login', { state: { from: '/subscription' } });
       return;
     }
@@ -66,13 +67,20 @@ export function SubscriptionPage() {
     setSelectedPlan(plan);
 
     try {
-      // Get the appropriate plan based on billing interval
-      const selectedPlan = billingInterval === 'yearly' && plan.interval === 'month'
-        ? stripeService.getPlanByIdAndInterval(plan.id, 'yearly')
-        : plan;
+      // Get the appropriate payment link based on billing interval
+      let paymentLink = plan.paymentLink;
       
-      if (!selectedPlan) {
-        throw new Error(`Plan not found for ${plan.id} with interval ${billingInterval}`);
+      // For yearly billing with monthly plans, modify the link
+      if (billingInterval === 'yearly' && plan.interval === 'month') {
+        // Try to find the annual version of this plan
+        const annualPlan = stripeService.getAnnualPlans().find(p => p.id === `${plan.id}_annual`);
+        if (annualPlan) {
+          paymentLink = annualPlan.paymentLink;
+        } else {
+          // Fallback to replacing 'monthly' with 'annual' in the URL if no annual plan found
+          paymentLink = plan.paymentLink.replace('monthly', 'annual');
+        }
+      }
       }
       
       // Get the base payment link
@@ -90,8 +98,14 @@ export function SubscriptionPage() {
         user.email
       );
       
-      // Redirect to the enhanced Stripe payment link
-      stripeService.redirectToPaymentLink(finalPaymentLink);
+      // Add user ID and email as parameters to the payment link
+      stripeService.redirectToPaymentLink(paymentLink, {
+        'client_reference_id': user.id,
+        'prefilled_email': user.email,
+        'metadata[user_id]': user.id,
+        'metadata[plan_id]': plan.id,
+        'metadata[billing_interval]': billingInterval
+      });
     } catch (error) {
       console.error('Error redirecting to payment page:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to process payment. Please try again.');
@@ -102,6 +116,12 @@ export function SubscriptionPage() {
 
   const handleRequestQuote = (plan: SubscriptionPlan) => {
     setIsQuoteModalOpen(true);
+  };
+  
+  const handleBillingIntervalChange = (interval: 'monthly' | 'yearly') => {
+    setBillingInterval(interval);
+    // Reset selected plan when changing billing interval
+    setSelectedPlan(null);
   };
 
   const handleToggleAddOn = (addOn: any) => {
@@ -209,7 +229,7 @@ export function SubscriptionPage() {
         <div className="flex justify-center mb-12">
           <div className="bg-gray-100 rounded-lg p-1 flex">
             <button
-              onClick={() => setBillingInterval('monthly')}
+              onClick={() => handleBillingIntervalChange('monthly')}
               className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                 billingInterval === 'monthly'
                   ? 'bg-white text-gray-900 shadow-sm'
@@ -219,7 +239,7 @@ export function SubscriptionPage() {
               Monthly
             </button>
             <button
-              onClick={() => setBillingInterval('yearly')}
+              onClick={() => handleBillingIntervalChange('yearly')}
               className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 relative ${
                 billingInterval === 'yearly'
                   ? 'bg-white text-gray-900 shadow-sm'
@@ -228,8 +248,8 @@ export function SubscriptionPage() {
             >
               Yearly
               <span className="absolute -top-3 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-  Save 20%
-</span>
+                Save 20%
+              </span>
 
             </button>
           </div>
@@ -245,7 +265,7 @@ export function SubscriptionPage() {
               <PricingCard
                 key={plan.id}
                 plan={plan}
-                onSelectPlan={handleSelectPlan}
+                onSelectPlan={(selectedPlan) => handleSelectPlan(selectedPlan)}
                 onRequestQuote={handleRequestQuote}
                 loading={loading && selectedPlan?.id === plan.id}
                 billingInterval={billingInterval}
@@ -409,7 +429,10 @@ export function SubscriptionPage() {
         <div className="text-center mt-12">
           <p className="text-gray-600">
             Have questions about our plans? 
-            <a href="mailto:support@inrooms.com" className="text-indigo-600 hover:text-indigo-500 ml-1">
+            <a 
+              href="mailto:support@inrooms.com" 
+              className="text-indigo-600 hover:text-indigo-500 ml-1"
+            >
               Contact our support team
             </a>
           </p>
@@ -417,8 +440,8 @@ export function SubscriptionPage() {
       </div>
 
       <CustomQuoteModal 
-        isOpen={isQuoteModalOpen} 
-        onClose={() => setIsQuoteModalOpen(false)} 
+        isOpen={isQuoteModalOpen}
+        onClose={() => setIsQuoteModalOpen(false)}
       />
     </MainLayout>
   );
