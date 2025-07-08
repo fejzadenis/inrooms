@@ -56,12 +56,7 @@ export function SubscriptionPage() {
   };
 
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
-    if (!user) {
-      toast.error('Please log in to subscribe');
-      console.log('User not logged in, redirecting to login');
-      navigate('/login');
-      return;
-    }
+    
 
     console.log('Starting plan selection process for plan:', plan.id);
     setLoading(true);
