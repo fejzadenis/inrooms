@@ -304,14 +304,32 @@ export const stripeService = {
   }): Promise<{ url: string }> {
     try {
       console.log('Creating checkout session with data:', data);
+      console.log('User ID:', data.userId);
+      console.log('User Email:', data.userEmail);
+      console.log('Price ID:', data.priceId);
+      console.log('Success URL:', data.successUrl);
+      console.log('Cancel URL:', data.cancelUrl);
+      
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
       if (!supabaseUrl || !supabaseAnonKey) {
+        console.error('Supabase configuration missing');
         throw new Error('Supabase configuration is missing');
       }
 
+      console.log('Supabase URL:', supabaseUrl);
+      console.log('Supabase Anon Key:', supabaseAnonKey ? 'Present (not shown)' : 'Missing');
       console.log('Making request to:', `${supabaseUrl}/functions/v1/create-checkout-session`);
+      
+      // Log the request details
+      console.log('Request method:', 'POST');
+      console.log('Request headers:', {
+        'Authorization': 'Bearer [REDACTED]',
+        'Content-Type': 'application/json',
+      });
+      console.log('Request body:', JSON.stringify(data));
+      
       const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {
         method: 'POST',
         headers: {
@@ -322,18 +340,48 @@ export const stripeService = {
       });
 
       console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries([...response.headers.entries()]));
+      
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create checkout session');
+        console.error('Response not OK');
+        try {
+          const errorText = await response.text();
+          console.error('Error response text:', errorText);
+          
+          try {
+            const errorData = JSON.parse(errorText);
+            console.error('Parsed error data:', errorData);
+            throw new Error(errorData.error || 'Failed to create checkout session');
+          } catch (parseError) {
+            console.error('Error parsing error response:', parseError);
+            throw new Error(`Failed to create checkout session: ${errorText}`);
+          }
+        } catch (textError) {
+          console.error('Error getting response text:', textError);
+          throw new Error(`Failed to create checkout session: ${response.status} ${response.statusText}`);
+        }
       }
 
-      const result = await response.json();
-      console.log('Checkout session created:', result);
-      return { url: result.url || '' };
+      try {
+        const responseText = await response.text();
+        console.log('Response text:', responseText);
+        
+        try {
+          const result = JSON.parse(responseText);
+          console.log('Checkout session created:', result);
+          return { url: result.url || '' };
+        } catch (parseError) {
+          console.error('Error parsing JSON response:', parseError);
+          throw new Error('Invalid response format');
+        }
+      } catch (textError) {
+        console.error('Error getting response text:', textError);
+        throw new Error('Failed to read response');
+      }
     } catch (error) {
       console.error('Error creating checkout session:', error);
+      console.error('Error details:', error instanceof Error ? error.message : String(error));
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       throw error;
     }
   },
