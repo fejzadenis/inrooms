@@ -84,6 +84,8 @@ export function SubscriptionPage() {
           console.log('Using starter plan price ID');
           break;
         case 'professional':
+          break;
+      }
       console.log('Using price ID:', priceId);
 
       console.log('Creating checkout session data object');
@@ -108,8 +110,8 @@ export function SubscriptionPage() {
 
       // Create a checkout session using our edge function
       console.log('Calling createCheckoutSession function');
-      const result = await stripeService.createCheckoutSession(checkoutData);
-      console.log('Checkout session created:', result);
+      const result2 = await stripeService.createCheckoutSession(checkoutData);
+      console.log('Checkout session created:', result2);
       
       // Redirect to the checkout URL
       console.log(`Redirecting to Stripe Checkout URL: ${result?.url}`);
@@ -122,21 +124,9 @@ export function SubscriptionPage() {
         setLoading(false);
         setSelectedPlan(null);
       }
-        console.log('About to redirect to:', result.url);
-        window.location.href = result.url;
-      } else {
-        console.error('No checkout URL returned');
-        toast.error('Failed to create checkout session. No URL returned.');
-        setLoading(false);
-        setSelectedPlan(null);
-      }
     } catch (error) {
       console.error('Error creating checkout session:', error);
       if (error instanceof Error) {
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
-      }
-      toast.error('Failed to create checkout session. Please try again.');
         console.error('Error message:', error.message);
         console.error('Error stack:', error.stack);
       }
