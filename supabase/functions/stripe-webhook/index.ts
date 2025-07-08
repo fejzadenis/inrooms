@@ -30,12 +30,6 @@ console.log(`- Supabase URL: ${Deno.env.get('SUPABASE_URL') ? 'Set' : 'Not set'}
 console.log(`- Stripe Secret Key: ${Deno.env.get('STRIPE_SECRET_KEY') ? 'Set' : 'Not set'}`);
 console.log(`- Webhook Secret: ${Deno.env.get('STRIPE_WEBHOOK_SECRET') ? 'Set' : 'Not set'}`);
 
-// Log configuration for debugging
-console.log('Webhook endpoint initialized with:')
-console.log(`- Supabase URL: ${Deno.env.get('SUPABASE_URL') ? 'Set' : 'Not set'}`)
-console.log(`- Stripe Secret Key: ${Deno.env.get('STRIPE_SECRET_KEY') ? 'Set' : 'Not set'}`)
-console.log(`- Webhook Secret: ${Deno.env.get('STRIPE_WEBHOOK_SECRET') ? 'Set' : 'Not set'}`)
-
 serve(async (request: Request) => {
   // Handle CORS preflight requests
   if (request.method === 'OPTIONS') {
@@ -82,6 +76,30 @@ serve(async (request: Request) => {
 
     console.log(`✅ Received valid event: ${event.type}`);
     console.log(`Handling ${event.type} event`);
+
+    // Update checkout session status if applicable
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      
+      try {
+        // Update the checkout session status in the database
+        const { error } = await supabaseClient
+          .from('stripe_checkout_sessions')
+          .update({
+            status: 'completed',
+            completed_at: new Date().toISOString()
+          })
+          .eq('id', session.id);
+          
+        if (error) {
+          console.error('Error updating checkout session status:', error);
+        } else {
+          console.log(`Updated checkout session ${session.id} status to completed`);
+        }
+      } catch (updateError) {
+        console.error('Error updating checkout session:', updateError);
+      }
+    }
 
     switch (event.type) {
       case 'checkout.session.completed':
@@ -145,21 +163,15 @@ serve(async (request: Request) => {
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // Try to get userId from client_reference_id first, then fallback to metadata
-  let userId = session.client_reference_id || session.metadata?.user_id;
+  const userId = session.client_reference_id || session.metadata?.user_id;
   
   console.log('Handling checkout.session.completed event');
   
-  console.log('Handling checkout.session.completed event')
-  console.log(`- Session ID: ${session.id}`)
-  console.log(`- Client Reference ID: ${session.client_reference_id || 'Not set'}`)
-  console.log(`- Metadata:`, session.metadata)
-  console.log(`- Customer: ${session.customer || 'Not set'}`)
+  console.log(`- Session ID: ${session.id}`);
+  console.log(`- Client Reference ID: ${session.client_reference_id || 'Not set'}`);
+  console.log(`- Metadata:`, session.metadata);
+  console.log(`- Customer: ${session.customer || 'Not set'}`);
   console.log(`- Customer Email: ${session.customer_details?.email || 'Not set'}`)
-  console.log(`- Client Reference ID: ${session.client_reference_id || 'Not set'}`)
-  
-  console.log(`Processing checkout session: ${session.id}`)
-  console.log(`- Metadata: ${JSON.stringify(session.metadata || {})}`)
-  console.log(`- Customer: ${session.customer ? session.customer : 'Not set'}`)
   
   if (!userId) {
     console.error('No user_id in session client_reference_id or metadata, attempting to find from email');
@@ -206,12 +218,18 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
     
     // If we still don't have a userId, try to create a placeholder from email
+    if (!userId && session.customer_details?.email) {
+      console.log(`Creating placeholder user ID from email: ${session.customer_details.email}`)
+      userId = `placeholder_${Date.now()}`;
+    }
+    
     if (!userId) {
-      console.error('❌ Could not determine user_id for checkout session, cannot proceed');
+      console.error('❌ Could not determine user_id for checkout session');
       console.log(`- Client Reference ID: ${session.client_reference_id ? session.client_reference_id : 'Not set'}`);
       console.log(`- Metadata: ${JSON.stringify(session.metadata || {})}`);
       console.log(`- Customer: ${session.customer ? session.customer : 'Not set'}`);
-      console.log(`- Email: ${session.customer_details?.email || 'Not set'}`);
+      console.log(`- Session ID: ${session.id}`);
+      
       return;
     }
   }
@@ -278,6 +296,26 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       }
     } else {
       console.log(`Customer ${session.customer} already exists, linked to user ${existingCustomer.user_id}`);
+    }
+    
+    // Check if this is a featured demo purchase
+    if (session.metadata?.feature_type === 'featured_demo' && session.metadata?.demo_id) {
+      const demoId = session.metadata.demo_id;
+      
+      // Update the demo to be featured
+      const { error: demoError } = await supabaseClient
+        .from('demos')
+        .update({
+          is_featured: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', demoId);
+        
+      if (demoError) {
+        console.error('❌ Error updating demo featured status:', demoError);
+      } else {
+        console.log(`✅ Demo ${demoId} marked as featured`);
+      }
     }
   } catch (error) {
     console.error('❌ Error in handleCheckoutCompleted:', error);
