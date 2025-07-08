@@ -401,12 +401,13 @@ export function SubscriptionPage() {
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">What happens to unused events?</h3>
               <p className="text-gray-600 text-sm">
+                Unused events don't roll over to the next billing cycle. 
                 <a
                   href="mailto:support@inrooms.com" 
                   className="text-indigo-600 hover:text-indigo-500 ml-1"
                 >
                   Contact our support team
-                </a>
+                </a> for questions about your event credits.
               </p>
             </div>
           </div>
