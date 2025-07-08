@@ -94,9 +94,20 @@ export function SubscriptionPage() {
           billing_interval: billingInterval
         }
       });
+        userId: user.id,
+        userEmail: user.email,
+        priceId: priceId,
+        successUrl: `${window.location.origin}/billing?success=true`,
+        cancelUrl: `${window.location.origin}/subscription?canceled=true`,
+        metadata: {
+          plan_id: plan.id,
+          billing_interval: billingInterval
+        }
+      });
       
       // Redirect to the checkout URL
       console.log(`Redirecting to Stripe Checkout: ${url}`);
+      window.location.href = url;
       window.location.href = url;
     } catch (error) {
       console.error('Error redirecting to payment page:', error);
