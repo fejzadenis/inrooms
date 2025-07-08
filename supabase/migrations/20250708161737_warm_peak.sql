@@ -1,14 +1,16 @@
 /*
   # Create Stripe Checkout Sessions Table
 
-  1. New Table
+  1. New Tables
     - `stripe_checkout_sessions` - Tracks checkout sessions with user information
-    - Stores metadata, status, and URLs for checkout flow
-
+  
   2. Security
     - Enable RLS on the table
-    - Add policies for admins and users
-    - Create indexes for efficient queries
+    - Add policies for proper access control
+    - Ensure cascade deletion for related records
+  
+  3. Changes
+    - Create indexes for performance
 */
 
 -- Create stripe_checkout_sessions table to track checkout sessions
@@ -27,6 +29,10 @@ CREATE TABLE IF NOT EXISTS stripe_checkout_sessions (
 
 -- Enable RLS on stripe_checkout_sessions
 ALTER TABLE stripe_checkout_sessions ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies to avoid conflicts
+DROP POLICY IF EXISTS "Admins can manage all checkout sessions" ON stripe_checkout_sessions;
+DROP POLICY IF EXISTS "Users can view their own checkout sessions" ON stripe_checkout_sessions;
 
 -- Create policies for stripe_checkout_sessions
 CREATE POLICY "Admins can manage all checkout sessions"
