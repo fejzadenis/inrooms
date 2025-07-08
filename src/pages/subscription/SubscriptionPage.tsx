@@ -68,7 +68,6 @@ export function SubscriptionPage() {
     console.log('Starting plan selection process for plan:', plan.id);
     
     if (!user) {
-  const handleSelectPlan = async (plan: SubscriptionPlan) => {
       console.log('No user found, redirecting to login');
       toast.error('Please log in to subscribe');
       navigate('/login', { state: { from: '/subscription' } });
@@ -134,116 +133,6 @@ export function SubscriptionPage() {
         ? prev.filter(id => id !== addOn.id)
         : [...prev, addOn.id]
     );
-      console.log('Determining price ID for plan');
-      // Get the price ID from the plan object
-      // Hardcoded price IDs for testing
-      let priceId;
-      switch(plan.id) {
-        case 'starter':
-          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
-          console.log('Using starter plan price ID');
-          break;
-        case 'professional':
-          break;
-      }
-      console.log('Using price ID:', priceId);
-
-      console.log('Creating checkout session data object');
-      const checkoutData = {
-        userId: user.id,
-        userEmail: user.email,
-        priceId: priceId,
-        successUrl: `${window.location.origin}/subscription?success=true`,
-        cancelUrl: `${window.location.origin}/subscription?canceled=true`,
-        metadata: {
-          plan_id: plan.id,
-          billing_interval: billingInterval
-        }
-      };
-      console.log('Checkout session data:', checkoutData);
-
-      // Create a checkout session using our edge function
-      console.log('Calling createCheckoutSession function');
-      const result = await stripeService.createCheckoutSession(checkoutData);
-      console.log('Checkout session created:', result);
-      console.log('Checkout session data:', checkoutData);
-
-      // Create a checkout session using our edge function
-      console.log('Calling createCheckoutSession function');
-      const result2 = await stripeService.createCheckoutSession(checkoutData);
-      console.log('Checkout session created:', result2);
-      
-      // Redirect to the checkout URL
-      console.log(`Redirecting to Stripe Checkout URL: ${result?.url}`);
-      if (result?.url) {
-        console.log('About to redirect to:', result.url);
-        window.location.href = result.url;
-      } else {
-        console.error('No checkout URL returned');
-        toast.error('Failed to create checkout session. No URL returned.');
-        setLoading(false);
-        setSelectedPlan(null);
-      }
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
-      if (error instanceof Error) {
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
-      }
-      toast.error('Failed to create checkout session. Please try again.');
-      setLoading(false);
-      setSelectedPlan(null);
-    }
-  };
-
-  const handleRequestQuote = (plan: SubscriptionPlan) => {
-    setIsQuoteModalOpen(true);
-  };
-  
-  // Check for success/cancel parameters from Stripe redirect
-  React.useEffect(() => {
-    const success = searchParams.get('success');
-    const canceled = searchParams.get('canceled'); 
-    console.log('URL params - success:', success, 'canceled:', canceled);
-    
-    if (success === 'true') {
-      console.log('Subscription successful, redirecting to billing');
-      toast.success('Subscription activated successfully!');
-      
-      // Wait a moment to ensure the database has been updated
-      setTimeout(() => {
-        navigate('/billing', { replace: true });
-      }, 1500);
-    } else if (canceled === 'true') {
-      console.log('Subscription canceled');
-      toast.error('Subscription canceled. You can try again anytime.');
-    }
-  }, [searchParams, navigate]);
-  
-  // Check for success/cancel parameters from Stripe redirect
-  React.useEffect(() => {
-    const success = searchParams.get('success');
-    const canceled = searchParams.get('canceled'); 
-    console.log('URL params - success:', success, 'canceled:', canceled);
-    
-    if (success === 'true') {
-      console.log('Subscription successful, redirecting to billing');
-      toast.success('Subscription activated successfully!');
-      
-      // Wait a moment to ensure the database has been updated
-      setTimeout(() => {
-        navigate('/billing', { replace: true });
-      }, 1500);
-    } else if (canceled === 'true') {
-      console.log('Subscription canceled');
-      toast.error('Subscription canceled. You can try again anytime.');
-    }
-  }, [searchParams, navigate]);
-  
-  const handleBillingIntervalChange = (interval: 'monthly' | 'yearly') => {
-    setBillingInterval(interval);
-    // Reset selected plan when changing billing interval
-    setSelectedPlan(null);
   };
 
   const plans = stripeService.getMonthlyPlans();
@@ -277,11 +166,6 @@ export function SubscriptionPage() {
     }
   ];
 
-  const totalAddOnCost = selectedAddOns.reduce((total, addOnId) => {
-    const addOn = addOns.find(a => a.id === addOnId);
-    return total + (addOn?.price || 0);
-  }, 0);
-
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -299,7 +183,7 @@ export function SubscriptionPage() {
           <div className="mt-8 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl p-8 max-w-2xl mx-auto border border-indigo-200">
             <div className="flex items-center justify-center mb-4">
               <CheckCircle className="w-8 h-8 text-green-500 mr-3" />
-            </p>
+            </div>
             <Button
               onClick={handleFreeTrial}
               isLoading={loading && !selectedPlan}
@@ -309,56 +193,6 @@ export function SubscriptionPage() {
               <ArrowRight className="ml-2 w-5 h-5" />
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
-          </div>
-        </div>
-
-        {/* Value Propositions */}
-        <div className="mb-16">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
-            Why inRooms Delivers Results
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {valueProps.map((prop, index) => {
-              const Icon = prop.icon;
-              return (
-                <div key={index} className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-                  <div className="bg-indigo-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                    <Icon className="w-8 h-8 text-indigo-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{prop.title}</h3>
-                  <p className="text-sm text-gray-600">{prop.description}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Billing Toggle */}
-        <div className="flex justify-center mb-12">
-          <div className="bg-gray-100 rounded-lg p-1 flex">
-            <button
-              onClick={() => handleBillingIntervalChange('monthly')}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                billingInterval === 'monthly'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => handleBillingIntervalChange('yearly')}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 relative ${
-                billingInterval === 'yearly'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Yearly
-              <span className="absolute -top-3 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                Save 20%
-              </span>
-            </button>
           </div>
         </div>
 
@@ -427,41 +261,6 @@ export function SubscriptionPage() {
                 loading={loading && selectedPlan?.id === plan.id}
                 billingInterval={billingInterval}
               />
-          </div>
-
-          {selectedAddOns.length > 0 && (
-            <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md mx-auto">
-              <h3 className="font-semibold text-gray-900 mb-2">Selected Add-ons</h3>
-              <div className="space-y-2">
-                {selectedAddOns.map(addOnId => {
-                  const addOn = addOns.find(a => a.id === addOnId);
-                  return addOn ? (
-                    <div key={addOnId} className="flex justify-between text-sm">
-                      <span>{addOn.name}</span>
-                      <span>${addOn.price}/month</span>
-                    </div>
-                  ) : null;
-                })}
-                <div className="border-t border-yellow-300 pt-2 flex justify-between font-semibold">
-                  <span>Total Add-ons:</span>
-                  <span>${totalAddOnCost}/month</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Features Overview */}
-        <div className="mb-16">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
-            What's Included in Every Plan
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-            {features.map((feature, index) => (
-              <div key={index} className="text-center">
-                <div className="bg-indigo-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3"> 
-                  <CheckCircle className="w-6 h-6 text-indigo-600" />
-              </div>
             ))}
           </div>
         </div>
@@ -487,51 +286,6 @@ export function SubscriptionPage() {
                 loading={false}
               />
             ))}
-          </div>
-
-          {selectedAddOns.length > 0 && (
-            <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md mx-auto">
-              <h3 className="font-semibold text-gray-900 mb-2">Selected Add-ons</h3>
-              <div className="space-y-2">
-                {selectedAddOns.map(addOnId => {
-                  const addOn = addOns.find(a => a.id === addOnId);
-                  return addOn ? (
-                    <div key={addOnId} className="flex justify-between text-sm">
-                      <span>{addOn.name}</span>
-                      <span>${addOn.price}/month</span>
-                    </div>
-                  ) : null;
-                })}
-                <div className="border-t border-yellow-300 pt-2 flex justify-between font-semibold">
-                  <span>Total Add-ons:</span>
-                  <span>${totalAddOnCost}/month</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* ROI Calculator */}
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-8 mb-16 border border-green-200">
-          <div className="text-center">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">Calculate Your ROI</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-600">$79</div>
-                <div className="text-sm text-gray-600">Monthly Investment</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-600">1</div>
-                <div className="text-sm text-gray-600">Quality Connection</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-600">$10K+</div>
-                <div className="text-sm text-gray-600">Potential Deal Value</div>
-              </div>
-            </div>
-            <p className="text-gray-600 mt-4">
-              Professional plan pays for itself with just one meaningful connection per year
-            </p>
           </div>
         </div>
 
@@ -593,35 +347,6 @@ export function SubscriptionPage() {
                 All plans include access to our full platform and features.
               </p>
             </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">What's included in the Team plan?</h3>
-              <p className="text-gray-600 text-sm">
-                Team plan includes everything in Professional plus team management tools, bulk registration, 
-                and dedicated account management. Minimum 3 users required.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">How does the annual discount work?</h3>
-              <p className="text-gray-600 text-sm">
-                Annual plans save you 20% compared to monthly billing. You'll be charged once per year 
-                and can still cancel anytime with a prorated refund.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">What's the Premium Profile Badge?</h3>
-              <p className="text-gray-600 text-sm">
-                The Premium Profile Badge is a $29/month add-on that gives you a verified badge, higher search visibility, 
-                and priority in connection recommendations.
-                <a href="mailto:support@inrooms.com" className="text-indigo-600 hover:text-indigo-500 ml-1">Contact our support team</a>
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">How does custom pricing work?</h3>
-              <p className="text-gray-600 text-sm">
-                For large enterprises (50+ users), we create custom solutions with tailored pricing based on your specific 
-                needs, integrations, and usage requirements. <a href="mailto:enterprise@inrooms.com" className="text-indigo-600 hover:text-indigo-500">Contact our enterprise team</a> to learn more.
-              </p>
-            </div>
           </div>
         </div>
 
@@ -638,11 +363,6 @@ export function SubscriptionPage() {
           </p>
         </div>
       </div>
-
-      <CustomQuoteModal 
-        isOpen={isQuoteModalOpen}
-        onClose={() => setIsQuoteModalOpen(false)}
-      />
 
       <CustomQuoteModal 
         isOpen={isQuoteModalOpen}
