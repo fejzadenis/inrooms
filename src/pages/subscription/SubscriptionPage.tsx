@@ -58,35 +58,38 @@ export function SubscriptionPage() {
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
     if (!user) {
       toast.error('Please log in to subscribe');
-      navigate('/login', { state: { from: '/subscription' } });
+      navigate('/login');
       return;
     }
 
     setLoading(true);
     setSelectedPlan(plan);
+    console.log('Selected plan:', plan);
 
     try {      
-      // Get the appropriate price ID based on billing interval
-      let priceId = plan.stripePriceId;
-      
-      // For yearly billing with monthly plans, use the annual price ID
-      if (billingInterval === 'yearly' && plan.interval === 'month') {
-        // Try to find the annual version of this plan
-        const annualPlan = stripeService.getAnnualPlans().find(p => p.id === `${plan.id}_annual`);
-        if (annualPlan) {
-          priceId = annualPlan.stripePriceId;
-        } else {
-          // Fallback to appending _annual to the price ID
-          priceId = `${plan.stripePriceId}_annual`;
-        }
+      // Hardcoded price IDs for testing
+      let priceId;
+      switch(plan.id) {
+        case 'starter':
+          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
+          break;
+        case 'professional':
+          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
+          break;
+        case 'enterprise':
+          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
+          break;
+        default:
+          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
       }
-      
+      console.log('Using price ID:', priceId);
+
       // Create a checkout session using our edge function
       const { url } = await stripeService.createCheckoutSession({
         userId: user.id,
         userEmail: user.email,
         priceId: priceId,
-        successUrl: `${window.location.origin}/billing?success=true`,
+        successUrl: `${window.location.origin}/subscription?success=true`,
         cancelUrl: `${window.location.origin}/subscription?canceled=true`,
         metadata: {
           plan_id: plan.id,
@@ -95,15 +98,16 @@ export function SubscriptionPage() {
       });
       
       // Redirect to the checkout URL
-      console.log(`Redirecting to Stripe Checkout: ${url}`);
+      console.log(`Redirecting to Stripe Checkout URL: ${url}`);
       if (url) {
         window.location.href = url;
       } else {
-        throw new Error('No checkout URL returned from Stripe');
+        console.error('No checkout URL returned');
+        toast.error('Failed to create checkout session. No URL returned.');
       }
     } catch (error) {
       console.error('Error redirecting to payment page:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to process payment. Please try again.');
+      toast.error('Failed to create checkout session. Please try again.');
       setLoading(false);
       setSelectedPlan(null);
     }
@@ -112,6 +116,19 @@ export function SubscriptionPage() {
   const handleRequestQuote = (plan: SubscriptionPlan) => {
     setIsQuoteModalOpen(true);
   };
+  
+  // Check for success/cancel parameters from Stripe redirect
+  React.useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
+    
+    if (success === 'true') {
+      toast.success('Subscription activated successfully!');
+      navigate('/billing', { replace: true });
+    } else if (canceled === 'true') {
+      toast.error('Subscription canceled. You can try again anytime.');
+    }
+  }, [searchParams, navigate]);
   
   const handleBillingIntervalChange = (interval: 'monthly' | 'yearly') => {
     setBillingInterval(interval);
@@ -408,12 +425,7 @@ export function SubscriptionPage() {
                 The Premium Profile Badge is a $29/month add-on that gives you a verified badge, higher search visibility, 
                 and priority in connection recommendations.
               </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">How does custom pricing work?</h3>
-              <p className="text-gray-600 text-sm">
-                For large enterprises (50+ users), we create custom solutions with tailored pricing based on your specific 
-                needs, integrations, and usage requirements.
+                <a href="mailto:support@inrooms.com" className="text-indigo-600 hover:text-indigo-500 ml-1">Contact our support team</a>
               </p>
             </div>
           </div>

@@ -303,6 +303,7 @@ export const stripeService = {
     metadata?: Record<string, string>;
   }): Promise<{ url: string }> {
     try {
+      console.log('Creating checkout session with data:', data);
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
@@ -310,6 +311,7 @@ export const stripeService = {
         throw new Error('Supabase configuration is missing');
       }
 
+      console.log('Making request to:', `${supabaseUrl}/functions/v1/create-checkout-session`);
       const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {
         method: 'POST',
         headers: {
@@ -319,12 +321,16 @@ export const stripeService = {
         body: JSON.stringify(data),
       });
 
+      console.log('Response status:', response.status);
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to create checkout session');
       }
 
       const result = await response.json();
+      console.log('Checkout session created:', result);
       return { url: result.url || '' };
     } catch (error) {
       console.error('Error creating checkout session:', error);
