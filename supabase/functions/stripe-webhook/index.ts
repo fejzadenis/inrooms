@@ -154,20 +154,41 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   console.log(`- Client Reference ID: ${session.client_reference_id || 'Not set'}`)
   console.log(`- Metadata:`, session.metadata)
   console.log(`- Customer: ${session.customer || 'Not set'}`)
+  console.log(`- Customer Email: ${session.customer_details?.email || 'Not set'}`)
   
   console.log(`Processing checkout session: ${session.id}`)
   console.log(`- Metadata: ${JSON.stringify(session.metadata || {})}`)
   console.log(`- Customer: ${session.customer ? session.customer : 'Not set'}`)
   
   if (!userId) {
-    console.error('No user_id in session client_reference_id or metadata, attempting to find from customer');
+    console.error('No user_id in session client_reference_id or metadata, attempting to find from email');
     console.log(`- Client Reference ID: ${session.client_reference_id ? session.client_reference_id : 'Not set'}`);
     console.log(`- Metadata: ${JSON.stringify(session.metadata || {})}`);
     console.log(`- Customer: ${session.customer ? session.customer : 'Not set'}`);
     console.log(`- Session ID: ${session.id}`)
     
+    // Try to find user by email first (most reliable method)
+    if (session.customer_details?.email) {
+      try {
+        const { data: userByEmail } = await supabaseClient
+          .from('users')
+          .select('id')
+          .eq('email', session.customer_details.email)
+          .single();
+          
+        if (userByEmail) {
+          userId = userByEmail.id;
+          console.log(`✅ Found user ${userId} by email ${session.customer_details.email}`);
+        } else {
+          console.warn(`No user found with email ${session.customer_details.email}, checking customer record`);
+        }
+      } catch (emailError) {
+        console.error('Error finding user by email:', emailError);
+      }
+    }
+    
     // Try to get userId from customer if available
-    if (session.customer) {
+    if (!userId && session.customer) {
       try {
         const { data: customerData } = await supabaseClient
           .from('stripe_customers')
@@ -187,50 +208,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
     
     // If we still don't have a userId, try to create a placeholder from email
-    if (!userId && session.customer_details?.email) {
-      console.log(`Creating placeholder user ID from email: ${session.customer_details.email}`)
-      userId = `placeholder_${Date.now()}`
-    }
-    
     if (!userId) {
-      console.error('❌ Could not determine user_id for checkout session');
-      
-      // Create a placeholder user ID based on email if available
-      if (session.customer_details?.email) {
-        const email = session.customer_details.email;
-        console.log(`Creating placeholder user ID from email: ${email}`);
-        userId = `placeholder_${Date.now()}`;
-        console.log(`Generated placeholder ID: ${userId}`);
-      } else {
-        console.error('No email available to create placeholder ID');
-        return;
-      }
-      
-      console.log('❌ Could not determine user_id for checkout session, creating placeholder');
-      // Create a placeholder user ID based on customer email if available
-      if (session.customer_details?.email) {
-        const email = session.customer_details.email
-        console.log(`Creating placeholder user ID from email: ${email}`)
-        
-        // Check if a user with this email already exists
-        const { data: existingUser } = await supabaseClient
-          .from('users')
-          .select('id')
-          .eq('email', email)
-          .single()
-          
-        if (existingUser) {
-          userId = existingUser.id
-          console.log(`Found existing user with email ${email}, ID: ${userId}`)
-        } else {
-          // Generate a placeholder ID
-          userId = `placeholder_${Date.now()}`
-          console.log(`Generated placeholder ID: ${userId}`)
-        }
-      } else {
-        console.error('No email available, cannot process checkout session')
-        return
-      }
+      console.error('❌ Could not determine user_id for checkout session, cannot proceed');
+      return;
     }
   }
 
@@ -244,7 +224,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         .single()
         
       if (!existingCustomer) {
-        console.log(`Creating new customer record for ${session.customer}`);
+        console.log(`Creating new customer record for ${session.customer} linked to user ${userId}`);
         await supabaseClient
           .from('stripe_customers')
           .insert({
@@ -252,6 +232,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
             user_id: userId,
             email: session.customer_details?.email || '',
             name: session.customer_details?.name || '',
+            metadata: {
+              checkout_session_id: session.id,
+              client_reference_id: session.client_reference_id,
+              user_id: userId
+            },
             created_at: new Date().toISOString()
           })
       }
@@ -270,20 +255,13 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       if (error) {
         console.error('❌ Error updating user subscription:', error)
       } else {
-        console.log(`✅ Updated user ${userId} with customer ${session.customer}`);
-        console.log(`✅ Updated subscription for user ${userId}`)
+        console.log(`✅ Updated user ${userId} with customer ${session.customer} and subscription status`);
       }
-          metadata: {
-            checkout_session_id: session.id,
-            client_reference_id: session.client_reference_id
-          }
-        })
     } else {
-      console.log(`Customer ${session.customer} already exists, linked to user ${existingCustomer.user_id}`)
+      console.log(`Customer ${session.customer} already exists, linked to user ${existingCustomer.user_id}`);
     }
-    }
-    console.error('❌ Error in handleCheckoutCompleted:', error)
-    console.error('❌ Error in handleCheckoutCompleted:', error)
+  } catch (error) {
+    console.error('❌ Error in handleCheckoutCompleted:', error);
   }
 }
 

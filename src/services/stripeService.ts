@@ -201,25 +201,6 @@ export const stripeService = {
   redirectToPaymentLink(paymentLink: string): void {
     window.location.href = paymentLink;
   },
-  
-  // Enhanced version that takes parameters as an object
-  redirectToPaymentLink(paymentLink: string, params?: Record<string, string>): void {
-    if (!params) {
-      window.location.href = paymentLink;
-      return;
-    }
-    
-    const url = new URL(paymentLink);
-    
-    // Add each parameter to the URL
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) {
-        url.searchParams.append(key, value);
-      }
-    });
-    
-    window.location.href = url.toString();
-  },
 
   enhancePaymentLink(paymentLink: string, userId: string, userEmail: string): string {
     const enhancedLink = new URL(paymentLink);
@@ -227,13 +208,14 @@ export const stripeService = {
     // Add user ID as client_reference_id
     enhancedLink.searchParams.append('client_reference_id', userId);
     
-    // Add user ID to metadata
-    enhancedLink.searchParams.append('metadata[user_id]', userId);
+    // Add user ID and email to metadata
+    enhancedLink.searchParams.append('prefilled_email', userEmail);
     
-    // Prefill email if available
-    if (userEmail) {
-      enhancedLink.searchParams.append('prefilled_email', userEmail);
-    }
+    // Add additional metadata to help identify the user
+    enhancedLink.searchParams.append('metadata[user_id]', userId);
+    enhancedLink.searchParams.append('metadata[user_email]', userEmail);
+    
+    console.log(`Enhanced payment link with user ID ${userId} and email ${userEmail}`);
     
     return enhancedLink.toString();
   },
@@ -242,7 +224,7 @@ export const stripeService = {
     userId: string,
     userEmail: string,
     demoId: string,
-    featureType: 'featured_demo'
+    featureType: 'featured_demo' 
   ) {
     try {
       // For featured demo, use the hardcoded payment link with query parameters
@@ -257,24 +239,19 @@ export const stripeService = {
         throw new Error('Payment link not found');
       }
       
-      // Enhance the payment link with user information and additional parameters
-      const enhancedLink = new URL(paymentLink);
+      // Start with basic enhancement for user identification
+      let enhancedLink = this.enhancePaymentLink(paymentLink, userId, userEmail);
       
-      // Add user ID as client_reference_id
-      enhancedLink.searchParams.append('client_reference_id', userId);
-      
-      // Add user ID to metadata
-      enhancedLink.searchParams.append('metadata[user_id]', userId);
-      
-      // Add email
-      enhancedLink.searchParams.append('prefilled_email', userEmail);
-      
-      // Add success and cancel URLs
-      enhancedLink.searchParams.append('success_url', successUrl);
-      enhancedLink.searchParams.append('cancel_url', cancelUrl);
+      // Add additional parameters specific to this purchase
+      const finalUrl = new URL(enhancedLink);
+      finalUrl.searchParams.append('success_url', successUrl);
+      finalUrl.searchParams.append('cancel_url', cancelUrl);
+      finalUrl.searchParams.append('metadata[demo_id]', demoId);
+      finalUrl.searchParams.append('metadata[feature_type]', featureType);
       
       // Redirect to the enhanced payment link
-      window.location.href = enhancedLink.toString();
+      console.log(`Redirecting to enhanced payment link for feature purchase: ${finalUrl.toString()}`);
+      window.location.href = finalUrl.toString();
     } catch (error) {
       console.error('Error purchasing feature:', error);
       throw error;

@@ -67,26 +67,28 @@ export function SubscriptionPage() {
     setSelectedPlan(plan);
 
     try {
-      // Get the appropriate payment link based on billing interval
-      let paymentLink = plan.paymentLink;
-      
-      // For yearly billing with monthly plans, modify the link
-      if (billingInterval === 'yearly' && plan.interval === 'month') {
-        // Try to find the annual version of this plan
-        const annualPlan = stripeService.getAnnualPlans().find(p => p.id === `${plan.id}_annual`);
-        if (annualPlan) {
-          paymentLink = annualPlan.paymentLink;
-        } else {
-          // Fallback to replacing 'monthly' with 'annual' in the URL if no annual plan found
-          paymentLink = plan.paymentLink.replace('monthly', 'annual');
+        // Get the appropriate payment link based on billing interval
+        let paymentLink = plan.paymentLink;
+        
+        // For yearly billing with monthly plans, modify the link
+        if (billingInterval === 'yearly' && plan.interval === 'month') {
+          // Try to find the annual version of this plan
+          const annualPlan = stripeService.getAnnualPlans().find(p => p.id === `${plan.id}_annual`);
+          if (annualPlan) {
+            paymentLink = annualPlan.paymentLink;
+          } else {
+            // Fallback to replacing 'monthly' with 'annual' in the URL if no annual plan found
+            paymentLink = plan.paymentLink.replace('monthly', 'annual');
+          }
         }
-      }
-      
-      // Add user ID, email, and metadata to the payment link
-      const enhancedLink = stripeService.enhancePaymentLink(paymentLink, user.id, user.email);
-      
-      // Redirect to the enhanced payment link
-      window.location.href = enhancedLink;
+        
+        // Add user ID, email, and metadata to the payment link
+        const enhancedLink = stripeService.enhancePaymentLink(paymentLink, user.id, user.email);
+        
+        console.log(`Redirecting to enhanced payment link: ${enhancedLink}`);
+        
+        // Redirect to the enhanced payment link
+        window.location.href = enhancedLink;
     } catch (error) {
       console.error('Error redirecting to payment page:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to process payment. Please try again.');
