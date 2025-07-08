@@ -81,17 +81,8 @@ export function SubscriptionPage() {
           paymentLink = plan.paymentLink.replace('monthly', 'annual');
         }
       }
-      }
-      
-      // Get the base payment link
-      const basePaymentLink = selectedPlan.paymentLink;
       
       // Add user ID, email, and metadata to the payment link
-      const finalPaymentLink = stripeService.enhancePaymentLink(
-        basePaymentLink,
-        user.id,
-        user.email
-      );
       const finalPaymentLink = stripeService.enhancePaymentLink(
         paymentLink,
         user.id,
@@ -250,7 +241,6 @@ export function SubscriptionPage() {
               <span className="absolute -top-3 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
                 Save 20%
               </span>
-
             </button>
           </div>
         </div>
