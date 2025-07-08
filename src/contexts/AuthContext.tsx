@@ -395,14 +395,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             connections: supabaseUser.connections || []
           };
         }
-      } else {
-        console.log("AUTH DEBUG: No user data found in Supabase (expected for new users), falling back to Firestore");
-      } catch (supabaseError) {
-        console.error("AUTH DEBUG: Error fetching user data from Supabase:", supabaseError);
-      }
-      
-      // If we couldn't get data from Supabase, fall back to Firestore
-      console.log("AUTH DEBUG: Falling back to Firestore for user data");
     if (shouldRateLimit(`getUserData-${firebaseUser.uid}`)) {
       throw new Error('Rate limited: Too many requests');
     }
