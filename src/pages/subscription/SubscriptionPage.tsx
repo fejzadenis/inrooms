@@ -66,13 +66,18 @@ export function SubscriptionPage() {
     setSelectedPlan(plan);
 
     try {
-      // For yearly billing, use the annual payment link
-      const paymentLink = billingInterval === 'yearly' && plan.interval === 'month' 
-        ? plan.paymentLink.replace('monthly', 'annual') // Assuming payment links follow a pattern
-        : plan.paymentLink;
-        
-      // Add user ID and email as parameters to the payment link
-      const finalPaymentLink = `${paymentLink}?client_reference_id=${user.id}&prefilled_email=${encodeURIComponent(user.email)}&metadata[user_id]=${user.id}`;
+      // Get the appropriate payment link based on billing interval
+      let paymentLink = plan.paymentLink;
+      if (billingInterval === 'yearly' && plan.interval === 'month') {
+        paymentLink = plan.paymentLink.replace('monthly', 'annual');
+      }
+      
+      // Enhance the payment link with user ID and email
+      const finalPaymentLink = stripeService.enhancePaymentLink(
+        paymentLink,
+        user.id,
+        user.email
+      );
       
       // Redirect to the enhanced Stripe payment link
       stripeService.redirectToPaymentLink(finalPaymentLink);
