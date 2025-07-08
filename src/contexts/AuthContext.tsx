@@ -277,7 +277,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .eq('id', firebaseUser.uid)
           .single();
         
-        if (supabaseUser && !error) {
+        if (error) {
+          // Handle the specific case where no user is found (expected scenario)
+          if (error.code === 'PGRST116' && error.details === 'The result contains 0 rows') {
+            console.log("AUTH DEBUG: No user data found in Supabase (expected for new users), falling back to Firestore");
+          } else {
+            console.error("AUTH DEBUG: Error fetching user data from Supabase:", error.message);
+          }
+        } else if (supabaseUser) {
           console.log("AUTH DEBUG: Found user data in Supabase, using as source of truth");
           
           // Update Firestore with the latest data from Supabase
@@ -392,8 +399,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             isNewUser: false,
             connections: supabaseUser.connections || []
           };
-        } else {
-          console.log("AUTH DEBUG: No user data found in Supabase or error occurred:", error?.message);
         }
       } catch (supabaseError) {
         console.error("AUTH DEBUG: Error fetching user data from Supabase:", supabaseError);
