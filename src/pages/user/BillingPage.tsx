@@ -315,6 +315,7 @@ export function BillingPage() {
                 onSelectPlan={handleSelectPlan}
                 onRequestQuote={handleRequestQuote}
                 loading={loading && selectedPlan?.id === plan.id}
+                selectedPlan={selectedPlan}
                 billingInterval={billingInterval}
               />
             ))}
