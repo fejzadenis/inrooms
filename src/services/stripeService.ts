@@ -199,7 +199,35 @@ export const allPlans = [...subscriptionPlans, ...annualPlans];
 export const stripeService = {
   // Redirect to Stripe payment link
   redirectToPaymentLink(paymentLink: string): void {
+    console.log('Redirecting to payment link:', paymentLink);
     window.location.href = paymentLink;
+  },
+
+  // Enhance payment link with user information
+  enhancePaymentLink(
+    paymentLink: string,
+    userId: string,
+    userEmail: string,
+    additionalParams: Record<string, string> = {}
+  ): string {
+    // Start with the base URL
+    const baseUrl = paymentLink;
+    
+    // Add required parameters
+    const params = new URLSearchParams();
+    params.append('client_reference_id', userId);
+    params.append('prefilled_email', encodeURIComponent(userEmail));
+    
+    // Add user_id to metadata
+    params.append('metadata[user_id]', userId);
+    
+    // Add any additional parameters
+    Object.entries(additionalParams).forEach(([key, value]) => {
+      params.append(key, value);
+    });
+    
+    // Combine URL and parameters
+    return `${baseUrl}?${params.toString()}`;
   },
 
   // Add client_reference_id and metadata to payment links
@@ -232,15 +260,23 @@ export const stripeService = {
       const successUrl = `${baseUrl}/solutions?success=true&demoId=${demoId}&feature=${featureType}`;
       const cancelUrl = `${baseUrl}/solutions?canceled=true`;
       
-      // Redirect to the payment link for featured demo
-      const paymentLink = addOns.find(a => a.id === 'featured_demo')?.paymentLink || '';
+      // Get the payment link for featured demo
+      let paymentLink = addOns.find(a => a.id === 'featured_demo')?.paymentLink || '';
       
       if (!paymentLink) {
         throw new Error('Payment link not found');
       }
       
-      // Add query parameters to the payment link including user_id in metadata
-      const paymentLinkWithParams = `${paymentLink}?client_reference_id=${userId}&prefilled_email=${encodeURIComponent(userEmail)}&metadata[user_id]=${userId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`;
+      // Enhance the payment link with user information and additional parameters
+      const paymentLinkWithParams = this.enhancePaymentLink(
+        paymentLink,
+        userId,
+        userEmail,
+        {
+          'success_url': encodeURIComponent(successUrl),
+          'cancel_url': encodeURIComponent(cancelUrl)
+        }
+      );
       
       this.redirectToPaymentLink(paymentLinkWithParams);
     } catch (error) {
@@ -406,6 +442,27 @@ export const stripeService = {
 
   getPlanById(planId: string): SubscriptionPlan | undefined {
     return allPlans.find(plan => plan.id === planId);
+  },
+
+  // Get plan by ID with interval consideration
+  getPlanByIdAndInterval(planId: string, interval: 'monthly' | 'yearly'): SubscriptionPlan | undefined {
+    if (interval === 'yearly') {
+      // First try to find an annual plan with this ID
+      const annualPlan = annualPlans.find(plan => plan.id === planId);
+      if (annualPlan) return annualPlan;
+      
+      // If not found, look for the monthly plan and get its annual equivalent
+      const monthlyPlan = subscriptionPlans.find(plan => plan.id === planId);
+      if (monthlyPlan) {
+        return annualPlans.find(plan => plan.id === `${planId}_annual`);
+      }
+    } else {
+      // For monthly, just find the plan directly
+      return subscriptionPlans.find(plan => plan.id === planId);
+    }
+    
+    // If nothing found, return undefined
+    return undefined;
   },
 
   getMonthlyPlans(): SubscriptionPlan[] {

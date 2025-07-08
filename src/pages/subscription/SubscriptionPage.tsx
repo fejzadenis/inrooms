@@ -58,7 +58,7 @@ export function SubscriptionPage() {
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
     if (!user) {
       toast.error('Please log in to subscribe');
-      navigate('/login');
+      navigate('/login', { state: { from: '/subscription' } });
       return;
     }
 
@@ -66,13 +66,24 @@ export function SubscriptionPage() {
     setSelectedPlan(plan);
 
     try {
-      // Get the appropriate payment link based on billing interval
-      let paymentLink = plan.paymentLink;
-      if (billingInterval === 'yearly' && plan.interval === 'month') {
-        paymentLink = plan.paymentLink.replace('monthly', 'annual');
+      // Get the appropriate plan based on billing interval
+      const selectedPlan = billingInterval === 'yearly' && plan.interval === 'month'
+        ? stripeService.getPlanByIdAndInterval(plan.id, 'yearly')
+        : plan;
+      
+      if (!selectedPlan) {
+        throw new Error(`Plan not found for ${plan.id} with interval ${billingInterval}`);
       }
       
-      // Enhance the payment link with user ID and email
+      // Get the base payment link
+      const basePaymentLink = selectedPlan.paymentLink;
+      
+      // Add user ID, email, and metadata to the payment link
+      const finalPaymentLink = stripeService.enhancePaymentLink(
+        basePaymentLink,
+        user.id,
+        user.email
+      );
       const finalPaymentLink = stripeService.enhancePaymentLink(
         paymentLink,
         user.id,
@@ -83,7 +94,7 @@ export function SubscriptionPage() {
       stripeService.redirectToPaymentLink(finalPaymentLink);
     } catch (error) {
       console.error('Error redirecting to payment page:', error);
-      toast.error('Failed to redirect to payment page. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'Failed to process payment. Please try again.');
       setLoading(false);
       setSelectedPlan(null);
     }

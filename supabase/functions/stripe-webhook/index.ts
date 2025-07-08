@@ -3,10 +3,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import Stripe from 'https://esm.sh/stripe@14.21.0'
 
 // Initialize Stripe with the secret key
+// Initialize Stripe with the secret key
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
   apiVersion: '2023-10-16',
 })
 
+// Initialize Supabase client
 // Initialize Supabase client
 const supabaseClient = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -14,6 +16,12 @@ const supabaseClient = createClient(
 )
 
 const cryptoProvider = Stripe.createSubtleCryptoProvider()
+
+// Log webhook initialization
+console.log('Webhook endpoint initialized with:');
+console.log(`- Supabase URL: ${Deno.env.get('SUPABASE_URL') ? 'Set' : 'Not set'}`);
+console.log(`- Stripe Secret Key: ${Deno.env.get('STRIPE_SECRET_KEY') ? 'Set' : 'Not set'}`);
+console.log(`- Webhook Secret: ${Deno.env.get('STRIPE_WEBHOOK_SECRET') ? 'Set' : 'Not set'}`);
 
 // Log configuration for debugging
 console.log('Webhook endpoint initialized with:')
@@ -30,6 +38,8 @@ serve(async (request) => {
     return new Response(JSON.stringify({ error: 'No Stripe-Signature header found' }), { 
       status: 400,
       headers: { 'Content-Type': 'application/json' }
+    console.log(`Attempting to verify webhook signature: ${signature.substring(0, 20)}...`);
+    
     })
   }
   
@@ -53,7 +63,8 @@ serve(async (request) => {
       cryptoProvider
     )
 
-    console.log(`✅ Received valid event: ${event.type}`)
+    console.log(`✅ Received valid event: ${event.type}`);
+    console.log(`Handling ${event.type} event`);
 
     switch (event.type) {
       case 'checkout.session.completed':
@@ -114,7 +125,9 @@ serve(async (request) => {
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // Try to get userId from client_reference_id first, then fallback to metadata
-  let userId = session.client_reference_id || session.metadata?.user_id
+  let userId = session.client_reference_id || session.metadata?.user_id;
+  
+  console.log('Handling checkout.session.completed event');
   
   console.log('Handling checkout.session.completed event')
   console.log(`- Session ID: ${session.id}`)
@@ -123,7 +136,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   console.log(`- Customer: ${session.customer || 'Not set'}`)
   
   if (!userId) {
-    console.warn('No user_id in session client_reference_id or metadata, attempting to find from customer')
+    console.error('No user_id in session client_reference_id or metadata, attempting to find from customer');
+    console.log(`- Client Reference ID: ${session.client_reference_id ? session.client_reference_id : 'Not set'}`);
+    console.log(`- Metadata: ${JSON.stringify(session.metadata || {})}`);
+    console.log(`- Customer: ${session.customer ? session.customer : 'Not set'}`);
     
     // Try to get userId from customer if available
     if (session.customer) {
@@ -136,18 +152,30 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           
         if (customerData?.user_id) {
           userId = customerData.user_id
-          console.log(`✅ Retrieved user_id ${userId} from customer ${session.customer}`)
+          console.log(`Retrieved user_id ${userId} from customer ${session.customer}`);
         } else {
           console.warn(`No user_id found for customer ${session.customer}`)
         }
       } catch (error) {
-        console.error('Error retrieving user_id from customer:', error)
+        console.error('Error retrieving user_id from customer:', error);
       }
     }
     
     if (!userId) {
-      console.error('❌ Could not determine user_id for checkout session, creating placeholder')
+      console.error('❌ Could not determine user_id for checkout session');
       
+      // Create a placeholder user ID based on email if available
+      if (session.customer_details?.email) {
+        const email = session.customer_details.email;
+        console.log(`Creating placeholder user ID from email: ${email}`);
+        userId = `placeholder_${Date.now()}`;
+        console.log(`Generated placeholder ID: ${userId}`);
+      } else {
+        console.error('No email available to create placeholder ID');
+        return;
+      }
+      
+      console.log('❌ Could not determine user_id for checkout session, creating placeholder');
       // Create a placeholder user ID based on customer email if available
       if (session.customer_details?.email) {
         const email = session.customer_details.email
@@ -177,22 +205,42 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   try {
     // Store customer in stripe_customers table if it doesn't exist
-    const { data: existingCustomer } = await supabaseClient
-      .from('stripe_customers')
-      .select('*')
-      .eq('id', session.customer as string)
-      .single()
-      
-    if (!existingCustomer) {
-      console.log(`Creating new customer record for ${session.customer}`)
-      await supabaseClient
+    if (session.customer) {
+      const { data: existingCustomer } = await supabaseClient
         .from('stripe_customers')
-        .insert({
-          id: session.customer as string,
-          user_id: userId,
-          email: session.customer_details?.email || 'unknown@example.com',
-          name: session.customer_details?.name || 'Unknown Customer',
-          created_at: new Date().toISOString(),
+        .select('id')
+        .eq('id', session.customer as string)
+        .single()
+        
+      if (!existingCustomer) {
+        console.log(`Creating new customer record for ${session.customer}`);
+        await supabaseClient
+          .from('stripe_customers')
+          .insert({
+            id: session.customer as string,
+            user_id: userId,
+            email: session.customer_details?.email || '',
+            name: session.customer_details?.name || '',
+            created_at: new Date().toISOString()
+          })
+      }
+      
+      // Update user's subscription status
+      const { error } = await supabaseClient
+        .from('users')
+        .update({
+          stripe_customer_id: session.customer as string,
+          stripe_subscription_id: session.subscription as string,
+          subscription_status: 'active',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId)
+  
+      if (error) {
+        console.error('❌ Error updating user subscription:', error)
+      } else {
+        console.log(`✅ Updated user ${userId} with customer ${session.customer}`);
+      }
           metadata: {
             checkout_session_id: session.id,
             client_reference_id: session.client_reference_id
@@ -201,23 +249,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     } else {
       console.log(`Customer ${session.customer} already exists, linked to user ${existingCustomer.user_id}`)
     }
-    
-    // Update user's subscription status
-    const { error } = await supabaseClient
-      .from('users')
-      .update({
-        stripe_customer_id: session.customer as string,
-        subscription_status: session.subscription ? 'active' : 'trial',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', userId)
-
-    if (error) {
-      console.error('❌ Error updating user subscription:', error)
-    } else {
-      console.log(`✅ Updated user ${userId} with customer ID ${session.customer}`)
     }
-  } catch (error) {
+    console.error('❌ Error in handleCheckoutCompleted:', error)
     console.error('❌ Error in handleCheckoutCompleted:', error)
   }
 }
