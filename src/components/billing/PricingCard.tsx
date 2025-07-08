@@ -223,7 +223,8 @@ export function PricingCard({
         <Button
           onClick={handleAction}
           disabled={isCurrentPlan || loading}
-          className={`w-full ${
+          isLoading={loading && selectedPlan?.id === plan.id}
+          className={`w-full flex items-center justify-center ${
             plan.isCustom
               ? 'bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-gray-950 text-white shadow-lg'
               : plan.isPopular 
@@ -232,7 +233,6 @@ export function PricingCard({
               ? 'bg-green-100 text-green-800 cursor-not-allowed'
               : 'bg-gray-900 hover:bg-gray-800 text-white'
           }`}
-          isLoading={loading}
         >
           {isCurrentPlan ? 'Current Plan' : 
            plan.isCustom ? (
@@ -240,10 +240,11 @@ export function PricingCard({
                Request Quote
                <ArrowRight className="w-4 h-4 ml-2" />
              </>
+           ) : loading && selectedPlan?.id === plan.id ? (
+             'Processing...'
            ) : (
              <>
                Choose {plan.name}
-               <ExternalLink className="w-4 h-4 ml-2" />
              </>
            )}
         </Button>

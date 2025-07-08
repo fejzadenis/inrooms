@@ -103,12 +103,47 @@ export function SubscriptionPage() {
       setLoading(false);
       setSelectedPlan(null);
     }
+
+    try {      
+      // Get the appropriate price ID based on billing interval
+      let priceId = plan.stripePriceId;
+      
+      // For yearly billing with monthly plans, use the annual price ID
+      if (billingInterval === 'yearly' && plan.interval === 'month') {
+        // Try to find the annual version of this plan
+        const annualPlan = stripeService.getAnnualPlans().find(p => p.id === `${plan.id}_annual`);
+        if (annualPlan) {
+          priceId = annualPlan.stripePriceId;
+        } else {
+          // Fallback to appending _annual to the price ID
+          priceId = `${plan.stripePriceId}_annual`;
+        }
+      }
+      
+      // Create a checkout session using our edge function
+      const { url } = await stripeService.createCheckoutSession({
+        userId: user.id,
+        userEmail: user.email,
+        priceId: priceId,
+        successUrl: `${window.location.origin}/billing?success=true`,
+        cancelUrl: `${window.location.origin}/subscription?canceled=true`,
+        metadata: {
+          plan_id: plan.id,
+          billing_interval: billingInterval
+        }
+      });
+      
+      // Redirect to the checkout URL
+      console.log(`Redirecting to Stripe Checkout: ${url}`);
+      window.location.href = url;
+    } catch (error) {
+      console.error('Error redirecting to payment page:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to process payment. Please try again.');
+      setLoading(false);
+      setSelectedPlan(null);
+    }
   };
 
-  const handleRequestQuote = (plan: SubscriptionPlan) => {
-    setIsQuoteModalOpen(true);
-  };
-  
   const handleBillingIntervalChange = (interval: 'monthly' | 'yearly') => {
     setBillingInterval(interval);
     // Reset selected plan when changing billing interval
@@ -366,60 +401,6 @@ export function SubscriptionPage() {
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">What happens to unused events?</h3>
               <p className="text-gray-600 text-sm">
-                Unused events do not roll over to the next billing period. We recommend choosing a plan that 
-                matches your typical monthly networking activity.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">Can I cancel anytime?</h3>
-              <p className="text-gray-600 text-sm">
-                Yes, you can cancel your subscription at any time. You'll continue to have access until the 
-                end of your current billing period.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">Is there a setup fee?</h3>
-              <p className="text-gray-600 text-sm">
-                No setup fees, no hidden costs. The price you see is exactly what you'll pay. 
-                All plans include access to our full platform and features.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">What's included in the Team plan?</h3>
-              <p className="text-gray-600 text-sm">
-                Team plan includes everything in Professional plus team management tools, bulk registration, 
-                and dedicated account management. Minimum 3 users required.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">How does the annual discount work?</h3>
-              <p className="text-gray-600 text-sm">
-                Annual plans save you 20% compared to monthly billing. You'll be charged once per year 
-                and can still cancel anytime with a prorated refund.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">What's the Premium Profile Badge?</h3>
-              <p className="text-gray-600 text-sm">
-                The Premium Profile Badge is a $29/month add-on that gives you a verified badge, higher search visibility, 
-                and priority in connection recommendations.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">How does custom pricing work?</h3>
-              <p className="text-gray-600 text-sm">
-                For large enterprises (50+ users), we create custom solutions with tailored pricing based on your specific 
-                needs, integrations, and usage requirements.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Contact Support */}
-        <div className="text-center mt-12">
-          <p className="text-gray-600">
-            Have questions about our plans? 
-            <a 
               href="mailto:support@inrooms.com" 
               className="text-indigo-600 hover:text-indigo-500 ml-1"
             >

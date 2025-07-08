@@ -10,8 +10,13 @@ export interface SubscriptionPlan {
   price: number;
   interval: 'month' | 'year';
   features: string[];
-  popular?: boolean;
+  isPopular?: boolean;
+  isCustom?: boolean;
+  targetAudience: string;
+  valueProposition: string;
+  eventsQuota: number;
   stripePriceId: string;
+  paymentLink?: string;
 }
 
 export interface AddOn {
@@ -19,55 +24,274 @@ export interface AddOn {
   name: string;
   description: string;
   price: number;
-  stripePriceId: string;
+  benefits: string[];
+  icon: string;
+  paymentLink: string;
 }
 
-// Mock customer and subscription data
-const mockCustomers = {
-  'cus_123456': {
-    id: 'cus_123456',
-    name: 'John Doe',
-    email: 'john@example.com',
-    paymentMethods: [
-      {
-        id: 'pm_123456',
-        type: 'card',
-        card: {
-          brand: 'visa',
-          last4: '4242',
-          expMonth: 12,
-          expYear: 2025
-        },
-        isDefault: true
-      }
-    ],
-    subscriptions: [
-      {
-        id: 'sub_123456',
-        status: 'active',
-        currentPeriodStart: new Date(),
-        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        plan: {
-          id: 'professional',
-          name: 'Professional',
-          amount: 7900
-        }
-      }
-    ],
-    invoices: [
-      {
-        id: 'in_123456',
-        date: new Date(),
-        description: 'Professional Plan - Monthly',
-        amount: 79,
-        status: 'paid',
-        downloadUrl: '#'
-      }
-    ]
-  }
-};
-
 export const stripeService = {
+  // Get monthly plans
+  getMonthlyPlans(): SubscriptionPlan[] {
+    return [
+      {
+        id: 'starter',
+        name: 'Starter',
+        description: 'For individuals just getting started',
+        price: 39,
+        interval: 'month',
+        features: [
+          '3 events per month',
+          'Basic profile features',
+          'Access to recordings',
+          'Email support',
+          'Mobile app access'
+        ],
+        isPopular: false,
+        targetAudience: 'For individuals just getting started',
+        valueProposition: 'Perfect for exploring the platform and making initial connections',
+        eventsQuota: 3,
+        stripePriceId: 'price_starter_monthly'
+      },
+      {
+        id: 'professional',
+        name: 'Professional',
+        description: 'For active networkers',
+        price: 79,
+        interval: 'month',
+        features: [
+          '8 events per month',
+          'Enhanced profile features',
+          'Priority event registration',
+          'Advanced networking tools',
+          'Priority email support'
+        ],
+        isPopular: true,
+        targetAudience: 'For active networkers and sales professionals',
+        valueProposition: 'Our most popular plan for serious networking',
+        eventsQuota: 8,
+        stripePriceId: 'price_professional_monthly'
+      },
+      {
+        id: 'enterprise',
+        name: 'Enterprise',
+        description: 'For power users and teams',
+        price: 149,
+        interval: 'month',
+        features: [
+          '15 events per month',
+          'Premium profile features',
+          'Custom event creation',
+          'Dedicated account manager',
+          'Phone support'
+        ],
+        isPopular: false,
+        targetAudience: 'For power users and team leaders',
+        valueProposition: 'Maximum networking potential with premium features',
+        eventsQuota: 15,
+        stripePriceId: 'price_enterprise_monthly'
+      },
+      {
+        id: 'team',
+        name: 'Team',
+        description: 'For sales teams',
+        price: 99,
+        interval: 'month',
+        features: [
+          '10 events per user per month',
+          'Team management tools',
+          'Bulk event registration',
+          'Team analytics dashboard',
+          'Dedicated account manager'
+        ],
+        isPopular: false,
+        targetAudience: 'For sales teams (min. 3 users)',
+        valueProposition: 'Coordinate networking efforts across your entire team',
+        eventsQuota: 10,
+        stripePriceId: 'price_team_monthly'
+      },
+      {
+        id: 'custom',
+        name: 'Enterprise+',
+        description: 'Custom solution for large teams',
+        price: 0,
+        interval: 'month',
+        features: [
+          'Unlimited events',
+          'Custom integrations',
+          'Dedicated success manager',
+          'Custom training sessions',
+          'SLA guarantees'
+        ],
+        isPopular: false,
+        isCustom: true,
+        targetAudience: 'For large organizations',
+        valueProposition: 'Tailored solution for your specific needs',
+        eventsQuota: 999,
+        stripePriceId: 'custom'
+      }
+    ];
+  },
+
+  // Get annual plans
+  getAnnualPlans(): SubscriptionPlan[] {
+    return [
+      {
+        id: 'starter_annual',
+        name: 'Starter',
+        description: 'For individuals just getting started',
+        price: 374,
+        interval: 'year',
+        features: [
+          '3 events per month',
+          'Basic profile features',
+          'Access to recordings',
+          'Email support',
+          'Mobile app access'
+        ],
+        isPopular: false,
+        targetAudience: 'For individuals just getting started',
+        valueProposition: 'Perfect for exploring the platform and making initial connections',
+        eventsQuota: 3,
+        stripePriceId: 'price_starter_annual'
+      },
+      {
+        id: 'professional_annual',
+        name: 'Professional',
+        description: 'For active networkers',
+        price: 758,
+        interval: 'year',
+        features: [
+          '8 events per month',
+          'Enhanced profile features',
+          'Priority event registration',
+          'Advanced networking tools',
+          'Priority email support'
+        ],
+        isPopular: true,
+        targetAudience: 'For active networkers and sales professionals',
+        valueProposition: 'Our most popular plan for serious networking',
+        eventsQuota: 8,
+        stripePriceId: 'price_professional_annual'
+      },
+      {
+        id: 'enterprise_annual',
+        name: 'Enterprise',
+        description: 'For power users and teams',
+        price: 1430,
+        interval: 'year',
+        features: [
+          '15 events per month',
+          'Premium profile features',
+          'Custom event creation',
+          'Dedicated account manager',
+          'Phone support'
+        ],
+        isPopular: false,
+        targetAudience: 'For power users and team leaders',
+        valueProposition: 'Maximum networking potential with premium features',
+        eventsQuota: 15,
+        stripePriceId: 'price_enterprise_annual'
+      },
+      {
+        id: 'team_annual',
+        name: 'Team',
+        description: 'For sales teams',
+        price: 950,
+        interval: 'year',
+        features: [
+          '10 events per user per month',
+          'Team management tools',
+          'Bulk event registration',
+          'Team analytics dashboard',
+          'Dedicated account manager'
+        ],
+        isPopular: false,
+        targetAudience: 'For sales teams (min. 3 users)',
+        valueProposition: 'Coordinate networking efforts across your entire team',
+        eventsQuota: 10,
+        stripePriceId: 'price_team_annual'
+      },
+      {
+        id: 'custom_annual',
+        name: 'Enterprise+',
+        description: 'Custom solution for large teams',
+        price: 0,
+        interval: 'year',
+        features: [
+          'Unlimited events',
+          'Custom integrations',
+          'Dedicated success manager',
+          'Custom training sessions',
+          'SLA guarantees'
+        ],
+        isPopular: false,
+        isCustom: true,
+        targetAudience: 'For large organizations',
+        valueProposition: 'Tailored solution for your specific needs',
+        eventsQuota: 999,
+        stripePriceId: 'custom'
+      }
+    ];
+  },
+
+  // Get add-ons
+  getAddOns(): AddOn[] {
+    return [
+      {
+        id: 'premium_profile',
+        name: 'Premium Profile',
+        description: 'Stand out with enhanced profile features',
+        price: 29,
+        benefits: [
+          'Verified badge',
+          'Higher search visibility',
+          'Priority in connection recommendations',
+          'Advanced analytics',
+          'Custom profile URL'
+        ],
+        icon: 'crown',
+        paymentLink: 'https://buy.stripe.com/test_premium_profile'
+      },
+      {
+        id: 'event_booster',
+        name: 'Event Booster',
+        description: 'Get more from your events',
+        price: 19,
+        benefits: [
+          'Early access to popular events',
+          'Extended recording access',
+          'Exclusive VIP events',
+          'Post-event networking groups',
+          'Event reminders and summaries'
+        ],
+        icon: 'star',
+        paymentLink: 'https://buy.stripe.com/test_event_booster'
+      },
+      {
+        id: 'connection_pro',
+        name: 'Connection Pro',
+        description: 'Supercharge your networking',
+        price: 24,
+        benefits: [
+          'Unlimited connection requests',
+          'Advanced search filters',
+          'Connection insights',
+          'Introduction requests',
+          'Export connections'
+        ],
+        icon: 'zap',
+        paymentLink: 'https://buy.stripe.com/test_connection_pro'
+      }
+    ];
+  },
+
+  // Calculate annual savings
+  calculateAnnualSavings(monthlyPrice: number): number {
+    const annualPrice = monthlyPrice * 12;
+    const annualPriceWithDiscount = annualPrice * 0.8; // 20% discount
+    return Math.round(annualPrice - annualPriceWithDiscount);
+  },
+
   // Create a checkout session
   async createCheckoutSession(data: {
     userId: string;
@@ -77,87 +301,128 @@ export const stripeService = {
     cancelUrl: string;
     addOns?: string[];
     metadata?: Record<string, string>;
-  }) {
-    // In a real application, this would make a request to your backend
-    // which would then create a Stripe checkout session
-    
-    console.log('Creating checkout session with:', data);
-    
+  }): Promise<{ url: string }> {
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // Simulate a successful response
-      return {
-        id: 'cs_test_' + Math.random().toString(36).substring(2, 15),
-      };
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create checkout session');
+      }
+
+      const result = await response.json();
+      return { url: result.url || window.location.origin };
     } catch (error) {
       console.error('Error creating checkout session:', error);
-      throw new Error('Failed to create checkout session');
+      throw error;
     }
   },
 
   // Create a customer portal session
-  async createPortalSession(data: {
-    customerId: string;
-    returnUrl: string;
-  }) {
-    // In a real application, this would make a request to your backend
-    // which would then create a Stripe customer portal session
-    
-    console.log('Creating portal session with:', data);
-    
+  async createCustomerPortalSession(customerId: string, returnUrl: string): Promise<void> {
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // Simulate a successful response
-      return {
-        url: `${window.location.origin}/billing?portal=true`,
-      };
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-portal`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ customerId, returnUrl }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create portal session');
+      }
+
+      const { url } = await response.json();
+      window.location.href = url;
     } catch (error) {
       console.error('Error creating portal session:', error);
-      throw new Error('Failed to create portal session');
+      throw error;
     }
   },
 
-  // Get payment methods for a customer
+  // Get payment methods
   async getPaymentMethods(customerId: string) {
-    // In a real application, this would make a request to your backend
-    // which would then fetch payment methods from Stripe
-    
-    console.log('Fetching payment methods for:', customerId);
-    
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // Return mock data or empty array
-      const customer = mockCustomers[customerId as keyof typeof mockCustomers];
-      return customer?.paymentMethods || [];
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-payment-methods`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ customerId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get payment methods');
+      }
+
+      return await response.json();
     } catch (error) {
-      console.error('Error fetching payment methods:', error);
-      throw new Error('Failed to fetch payment methods');
+      console.error('Error getting payment methods:', error);
+      return [];
     }
   },
 
-  // Get invoices for a customer
+  // Get invoices
   async getInvoices(customerId: string) {
-    // In a real application, this would make a request to your backend
-    // which would then fetch invoices from Stripe
-    
-    console.log('Fetching invoices for:', customerId);
-    
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // Return mock data or empty array
-      const customer = mockCustomers[customerId as keyof typeof mockCustomers];
-      return customer?.invoices || [];
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-invoices`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ customerId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get invoices');
+      }
+
+      return await response.json();
     } catch (error) {
-      console.error('Error fetching invoices:', error);
-      throw new Error('Failed to fetch invoices');
+      console.error('Error getting invoices:', error);
+      return [];
     }
   },
 
@@ -171,89 +436,148 @@ export const stripeService = {
     requirements: string;
     timeline: string;
   }) {
-    // In a real application, this would make a request to your backend
-    // which would then process the custom quote request
-    
-    console.log('Requesting custom quote with:', data);
-    
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // Simulate a successful response
-      return {
-        success: true,
-        message: 'Quote request submitted successfully'
-      };
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/custom-quote`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit quote request');
+      }
+
+      return await response.json();
     } catch (error) {
       console.error('Error requesting custom quote:', error);
-      throw new Error('Failed to submit quote request');
+      throw error;
     }
   },
 
-  // Create a setup intent for adding a payment method
-  async createSetupIntent(customerId: string) {
-    // In a real application, this would make a request to your backend
-    // which would then create a Stripe setup intent
-    
-    console.log('Creating setup intent for:', customerId);
-    
+  // Add a payment method
+  async addPaymentMethod(customerId: string) {
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate a successful response
-      return {
-        clientSecret: 'seti_' + Math.random().toString(36).substring(2, 15) + '_secret_' + Math.random().toString(36).substring(2, 15),
-      };
+      const stripe = await stripePromise;
+      if (!stripe) {
+        throw new Error('Stripe not initialized');
+      }
+
+      // Redirect to Stripe Customer Portal for payment method management
+      await this.createCustomerPortalSession(customerId, `${window.location.origin}/billing`);
     } catch (error) {
-      console.error('Error creating setup intent:', error);
-      throw new Error('Failed to create setup intent');
+      console.error('Error adding payment method:', error);
+      throw error;
     }
   },
 
   // Set default payment method
   async setDefaultPaymentMethod(customerId: string, paymentMethodId: string) {
-    // In a real application, this would make a request to your backend
-    // which would then update the customer's default payment method in Stripe
-    
-    console.log('Setting default payment method:', { customerId, paymentMethodId });
-    
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // Simulate a successful response
-      return {
-        success: true,
-        message: 'Default payment method updated successfully'
-      };
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/set-default-payment-method`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ customerId, paymentMethodId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to set default payment method');
+      }
+
+      return await response.json();
     } catch (error) {
       console.error('Error setting default payment method:', error);
-      throw new Error('Failed to set default payment method');
+      throw error;
     }
   },
 
   // Delete payment method
   async deletePaymentMethod(paymentMethodId: string) {
-    // In a real application, this would make a request to your backend
-    // which would then delete the payment method in Stripe
-    
-    console.log('Deleting payment method:', paymentMethodId);
-    
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // Simulate a successful response
-      return {
-        success: true,
-        message: 'Payment method deleted successfully'
-      };
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/delete-payment-method`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ paymentMethodId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete payment method');
+      }
+
+      return await response.json();
     } catch (error) {
       console.error('Error deleting payment method:', error);
-      throw new Error('Failed to delete payment method');
+      throw error;
     }
+  },
+
+  // Purchase feature for demo
+  async purchaseFeatureForDemo(
+    userId: string,
+    userEmail: string,
+    demoId: string,
+    featureType: 'featured_demo'
+  ) {
+    try {
+      const successUrl = `${window.location.origin}/solutions?success=true&demoId=${demoId}&feature=${featureType}`;
+      const cancelUrl = `${window.location.origin}/solutions?canceled=true`;
+      
+      // Create a checkout session
+      const { url } = await this.createCheckoutSession({
+        userId,
+        userEmail,
+        priceId: 'price_featured_demo', // This would be your actual price ID for featuring a demo
+        successUrl,
+        cancelUrl,
+        metadata: {
+          demoId,
+          feature_type: featureType
+        }
+      });
+      
+      // Redirect to checkout
+      window.location.href = url;
+    } catch (error) {
+      console.error('Error purchasing feature:', error);
+      throw error;
+    }
+  },
+
+  // Redirect to payment link
+  redirectToPaymentLink(url: string) {
+    window.location.href = url;
   }
 };
 
