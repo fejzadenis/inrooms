@@ -205,17 +205,21 @@ export const stripeService = {
   enhancePaymentLink(paymentLink: string, userId: string, userEmail: string): string {
     const enhancedLink = new URL(paymentLink);
     
-    // Add user ID as client_reference_id
-    enhancedLink.searchParams.append('client_reference_id', userId);
-    
-    // Add user ID and email to metadata
-    enhancedLink.searchParams.append('prefilled_email', userEmail);
-    
-    // Add additional metadata to help identify the user
-    enhancedLink.searchParams.append('metadata[user_id]', userId);
-    enhancedLink.searchParams.append('metadata[user_email]', userEmail);
-    
-    console.log(`Enhanced payment link with user ID ${userId} and email ${userEmail}`);
+    try {
+      // Add user ID as client_reference_id
+      enhancedLink.searchParams.append('client_reference_id', userId);
+      
+      // Add user ID and email to metadata
+      enhancedLink.searchParams.append('prefilled_email', userEmail);
+      
+      // Add additional metadata to help identify the user
+      enhancedLink.searchParams.append('metadata[user_id]', userId);
+      enhancedLink.searchParams.append('metadata[user_email]', userEmail);
+      
+      console.log(`Enhanced payment link with user ID ${userId} and email ${userEmail}`);
+    } catch (error) {
+      console.error('Error enhancing payment link:', error);
+    }
     
     return enhancedLink.toString();
   },
@@ -229,31 +233,96 @@ export const stripeService = {
     try {
       // For featured demo, use the hardcoded payment link with query parameters
       const baseUrl = window.location.origin;
-      const successUrl = `${baseUrl}/solutions?success=true&demoId=${demoId}&feature=${featureType}`;
-      const cancelUrl = `${baseUrl}/solutions?canceled=true`;
+      const successUrl = encodeURIComponent(`${baseUrl}/solutions?success=true&demoId=${demoId}&feature=${featureType}`);
+      const cancelUrl = encodeURIComponent(`${baseUrl}/solutions?canceled=true`);
       
-      // Get the payment link for featured demo
-      const paymentLink = addOns.find(a => a.id === featureType)?.paymentLink || '';
+      // Get the price ID for the featured demo add-on
+      const addOn = addOns.find(a => a.id === featureType);
+      if (!addOn) {
+        throw new Error('Add-on not found');
+      }
+
+      // Create a checkout session using our edge function
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      if (!paymentLink) {
-        throw new Error('Payment link not found');
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          userEmail,
+          priceId: addOn.stripePriceId,
+          successUrl: `${baseUrl}/solutions?success=true&demoId=${demoId}&feature=${featureType}`,
+          cancelUrl: `${baseUrl}/solutions?canceled=true`,
+          metadata: {
+            demo_id: demoId,
+            feature_type: featureType
+          }
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create checkout session');
+      }
+
+      const { url } = await response.json();
+      
+      if (!url) {
+        throw new Error('No checkout URL received from server');
       }
       
-      // Start with basic enhancement for user identification
-      let enhancedLink = this.enhancePaymentLink(paymentLink, userId, userEmail);
-      
-      // Add additional parameters specific to this purchase
-      const finalUrl = new URL(enhancedLink);
-      finalUrl.searchParams.append('success_url', successUrl);
-      finalUrl.searchParams.append('cancel_url', cancelUrl);
-      finalUrl.searchParams.append('metadata[demo_id]', demoId);
-      finalUrl.searchParams.append('metadata[feature_type]', featureType);
-      
-      // Redirect to the enhanced payment link
-      console.log(`Redirecting to enhanced payment link for feature purchase: ${finalUrl.toString()}`);
-      window.location.href = finalUrl.toString();
+      // Redirect to the checkout URL
+      console.log(`Redirecting to Stripe Checkout: ${url}`);
+      window.location.href = url;
     } catch (error) {
       console.error('Error purchasing feature:', error);
+      throw error;
+    }
+  },
+
+  async createCheckoutSession(data: {
+    userId: string;
+    userEmail: string;
+    priceId: string;
+    successUrl: string;
+    cancelUrl: string;
+    addOns?: string[];
+    metadata?: Record<string, string>;
+  }) {
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create checkout session');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
       throw error;
     }
   },

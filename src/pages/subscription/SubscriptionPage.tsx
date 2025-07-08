@@ -66,29 +66,38 @@ export function SubscriptionPage() {
     setLoading(true);
     setSelectedPlan(plan);
 
-    try {
-        // Get the appropriate payment link based on billing interval
-        let paymentLink = plan.paymentLink;
-        
-        // For yearly billing with monthly plans, modify the link
-        if (billingInterval === 'yearly' && plan.interval === 'month') {
-          // Try to find the annual version of this plan
-          const annualPlan = stripeService.getAnnualPlans().find(p => p.id === `${plan.id}_annual`);
-          if (annualPlan) {
-            paymentLink = annualPlan.paymentLink;
-          } else {
-            // Fallback to replacing 'monthly' with 'annual' in the URL if no annual plan found
-            paymentLink = plan.paymentLink.replace('monthly', 'annual');
-          }
+    try {      
+      // Get the appropriate price ID based on billing interval
+      let priceId = plan.stripePriceId;
+      
+      // For yearly billing with monthly plans, use the annual price ID
+      if (billingInterval === 'yearly' && plan.interval === 'month') {
+        // Try to find the annual version of this plan
+        const annualPlan = stripeService.getAnnualPlans().find(p => p.id === `${plan.id}_annual`);
+        if (annualPlan) {
+          priceId = annualPlan.stripePriceId;
+        } else {
+          // Fallback to appending _annual to the price ID
+          priceId = `${plan.stripePriceId}_annual`;
         }
-        
-        // Add user ID, email, and metadata to the payment link
-        const enhancedLink = stripeService.enhancePaymentLink(paymentLink, user.id, user.email);
-        
-        console.log(`Redirecting to enhanced payment link: ${enhancedLink}`);
-        
-        // Redirect to the enhanced payment link
-        window.location.href = enhancedLink;
+      }
+      
+      // Create a checkout session using our edge function
+      const { url } = await stripeService.createCheckoutSession({
+        userId: user.id,
+        userEmail: user.email,
+        priceId: priceId,
+        successUrl: `${window.location.origin}/billing?success=true`,
+        cancelUrl: `${window.location.origin}/subscription?canceled=true`,
+        metadata: {
+          plan_id: plan.id,
+          billing_interval: billingInterval
+        }
+      });
+      
+      // Redirect to the checkout URL
+      console.log(`Redirecting to Stripe Checkout: ${url}`);
+      window.location.href = url;
     } catch (error) {
       console.error('Error redirecting to payment page:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to process payment. Please try again.');
