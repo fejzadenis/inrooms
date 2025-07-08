@@ -395,6 +395,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             connections: supabaseUser.connections || []
           };
         }
+      }
     if (shouldRateLimit(`getUserData-${firebaseUser.uid}`)) {
       throw new Error('Rate limited: Too many requests');
     }
