@@ -424,7 +424,6 @@ export function SubscriptionPage() {
               <p className="text-gray-600 text-sm">
                 The Premium Profile Badge is a $29/month add-on that gives you a verified badge, higher search visibility, 
                 and priority in connection recommendations.
-              </p>
                 <a href="mailto:support@inrooms.com" className="text-indigo-600 hover:text-indigo-500 ml-1">Contact our support team</a>
               </p>
             </div>
