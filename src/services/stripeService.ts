@@ -50,7 +50,7 @@ export const stripeService = {
         targetAudience: 'For individuals just getting started',
         valueProposition: 'Perfect for exploring the platform and making initial connections',
         eventsQuota: 3,
-        stripePriceId: 'price_starter_monthly'
+        stripePriceId: 'price_1Rif3UGCopIxkzs6WPBgO8wt'
       },
       {
         id: 'professional',
@@ -69,7 +69,7 @@ export const stripeService = {
         targetAudience: 'For active networkers and sales professionals',
         valueProposition: 'Our most popular plan for serious networking',
         eventsQuota: 8,
-        stripePriceId: 'price_1RiQ3YGCopIxkzs6b9c7Vryw'
+        stripePriceId: 'price_1Rif4MGCopIxkzs6EN1InWXN'
       },
       {
         id: 'enterprise',
@@ -88,7 +88,7 @@ export const stripeService = {
         targetAudience: 'For power users and team leaders',
         valueProposition: 'Maximum networking potential with premium features',
         eventsQuota: 15,
-        stripePriceId: 'price_enterprise_monthly'
+        stripePriceId: 'price_1Rif6HGCopIxkzs6rLt5gZQf'
       },
       {
         id: 'team',
