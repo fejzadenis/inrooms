@@ -133,6 +133,11 @@ const syncUserToSupabase = async (userData: User): Promise<void> => {
       return;
     }
 
+    // Validate that the environment variables are not placeholder values
+    if (supabaseUrl === 'your_supabase_url' || supabaseAnonKey === 'your_supabase_anon_key') {
+      console.warn('Supabase environment variables contain placeholder values, skipping user sync');
+      return;
+    }
     console.log('Syncing user to Supabase:', userData.id);
     
     const syncData = {
@@ -167,21 +172,26 @@ const syncUserToSupabase = async (userData: User): Promise<void> => {
       interests: userData.profile?.interests || []
     };
 
-    const response = await fetch(`${supabaseUrl}/functions/v1/sync-user`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(syncData),
-    });
+    try {
+      const response = await fetch(`${supabaseUrl}/functions/v1/sync-user`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(syncData),
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Failed to sync user to Supabase:', errorText);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to sync user to Supabase:', errorText);
+        // Don't throw error to avoid breaking the auth flow
+      } else {
+        console.log('User synced to Supabase successfully');
+      }
+    } catch (fetchError) {
+      console.error('Network error syncing user to Supabase:', fetchError);
       // Don't throw error to avoid breaking the auth flow
-    } else {
-      console.log('User synced to Supabase successfully');
     }
   } catch (error) {
     console.error('Error syncing user to Supabase:', error);
@@ -798,7 +808,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
