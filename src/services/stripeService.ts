@@ -202,6 +202,24 @@ export const stripeService = {
     window.location.href = paymentLink;
   },
 
+  // Add client_reference_id and metadata to payment links
+  enhancePaymentLink(paymentLink: string, userId: string, userEmail: string): string {
+    const enhancedLink = new URL(paymentLink);
+    
+    // Add user ID as client_reference_id
+    enhancedLink.searchParams.append('client_reference_id', userId);
+    
+    // Add user ID to metadata
+    enhancedLink.searchParams.append('metadata[user_id]', userId);
+    
+    // Prefill email if available
+    if (userEmail) {
+      enhancedLink.searchParams.append('prefilled_email', userEmail);
+    }
+    
+    return enhancedLink.toString();
+  },
+
   async purchaseFeatureForDemo(
     userId: string,
     userEmail: string,
