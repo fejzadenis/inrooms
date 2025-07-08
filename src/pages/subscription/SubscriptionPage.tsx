@@ -96,7 +96,11 @@ export function SubscriptionPage() {
       
       // Redirect to the checkout URL
       console.log(`Redirecting to Stripe Checkout: ${url}`);
-      window.location.href = url;
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('No checkout URL returned from Stripe');
+      }
     } catch (error) {
       console.error('Error redirecting to payment page:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to process payment. Please try again.');

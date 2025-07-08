@@ -180,7 +180,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ 
-        sessionId: session.id,
+        sessionId: session.id, 
         url: session.url
       }),
       { 
