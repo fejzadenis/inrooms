@@ -5,6 +5,8 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 // Types for Stripe integration
 
 // Types for Stripe integration
+
+// Types for Stripe integration
 export interface SubscriptionPlan {
   id: string;
   name: string;
@@ -245,29 +247,29 @@ const mockCustomers = {
 
 export const stripeService = {
   // Get monthly plans
-  getMonthlyPlans(): SubscriptionPlan[] {
+  getMonthlyPlans: function(): SubscriptionPlan[] {
     return monthlyPlans;
   },
 
   // Get annual plans
-  getAnnualPlans(): SubscriptionPlan[] {
+  getAnnualPlans: function(): SubscriptionPlan[] {
     return annualPlans;
   },
 
   // Get add-ons
-  getAddOns(): AddOn[] {
+  getAddOns: function(): AddOn[] {
     return addOns;
   },
 
   // Calculate annual savings
-  calculateAnnualSavings(monthlyPrice: number): number {
+  calculateAnnualSavings: function(monthlyPrice: number): number {
     const annualPrice = monthlyPrice * 12;
     const discountedAnnualPrice = annualPrice * 0.8; // 20% discount
     return Math.round(annualPrice - discountedAnnualPrice);
   },
 
   // Redirect to payment link
-  redirectToPaymentLink(paymentLink: string): void {
+  redirectToPaymentLink: function(paymentLink: string): void {
     if (paymentLink) {
       window.location.href = paymentLink;
     } else {
@@ -276,7 +278,7 @@ export const stripeService = {
   },
 
   // Create a checkout session
-  async createCheckoutSession(data: {
+  createCheckoutSession: async function(data: {
     userId: string;
     userEmail: string; 
     priceId: string;
@@ -325,7 +327,7 @@ export const stripeService = {
   },
 
   // Create a customer portal session
-  async createCustomerPortalSession(customerId: string, returnUrl: string) {
+  createCustomerPortalSession: async function(customerId: string, returnUrl: string) {
     // In a real application, this would make a request to your backend
     // which would then create a Stripe customer portal session
     
@@ -367,7 +369,7 @@ export const stripeService = {
   },
 
   // Get payment methods for a customer
-  async getPaymentMethods(customerId: string) {
+  getPaymentMethods: async function(customerId: string) {
     // In a real application, this would make a request to your backend
     // which would then fetch payment methods from Stripe
     
@@ -403,7 +405,7 @@ export const stripeService = {
   },
 
   // Get invoices for a customer
-  async getInvoices(customerId: string) {
+  getInvoices: async function(customerId: string) {
     // In a real application, this would make a request to your backend
     // which would then fetch invoices from Stripe
     
@@ -439,7 +441,7 @@ export const stripeService = {
   },
 
   // Request a custom quote
-  async requestCustomQuote(data: {
+  requestCustomQuote: async function(data: {
     companyName: string;
     contactName: string;
     email: string;
@@ -486,7 +488,7 @@ export const stripeService = {
   },
 
   // Add payment method
-  async addPaymentMethod(customerId: string) {
+  addPaymentMethod: async function(customerId: string) {
     // In a real application, this would create a setup intent and redirect to Stripe
     console.log('Adding payment method for:', customerId);
     
@@ -524,7 +526,7 @@ export const stripeService = {
   },
 
   // Create a setup intent for adding a payment method
-  async createSetupIntent(customerId: string) {
+  createSetupIntent: async function(customerId: string) {
     // In a real application, this would make a request to your backend
     // which would then create a Stripe setup intent
     
@@ -560,7 +562,7 @@ export const stripeService = {
   },
 
   // Set default payment method
-  async setDefaultPaymentMethod(customerId: string, paymentMethodId: string) {
+  setDefaultPaymentMethod: async function(customerId: string, paymentMethodId: string) {
     // In a real application, this would make a request to your backend
     // which would then update the customer's default payment method in Stripe
     
@@ -596,7 +598,7 @@ export const stripeService = {
   },
 
   // Delete payment method
-  async deletePaymentMethod(paymentMethodId: string) {
+  deletePaymentMethod: async function(paymentMethodId: string) {
     // In a real application, this would make a request to your backend
     // which would then delete the payment method in Stripe
     
@@ -632,7 +634,7 @@ export const stripeService = {
   },
   
   // Purchase a feature for a demo
-  async purchaseFeatureForDemo(
+  purchaseFeatureForDemo: async function(
     userId: string,
     userEmail: string,
     demoId: string,
@@ -673,7 +675,7 @@ export const stripeService = {
   },
   
   // Enhance payment link with user information
-  enhancePaymentLink(paymentLink: string, userId: string, userEmail: string): string {
+  enhancePaymentLink: function(paymentLink: string, userId: string, userEmail: string): string {
     const enhancedLink = new URL(paymentLink);
     
     // Add user ID as client_reference_id

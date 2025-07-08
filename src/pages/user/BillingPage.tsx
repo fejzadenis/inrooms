@@ -67,12 +67,30 @@ export function BillingPage() {
       return;
     }
 
+    if (currentPlan?.id === plan.id) {
+      toast.info('You are already subscribed to this plan');
+      return;
+    }
+
     setLoading(true);
     setSelectedPlan(plan);
 
     try {
-      // Use the existing payment link redirection method
-      stripeService.redirectToPaymentLink(plan.paymentLink);
+      // Create a checkout session
+      const { url } = await stripeService.createCheckoutSession({
+        userId: user.id,
+        userEmail: user.email,
+        priceId: plan.stripePriceId,
+        successUrl: `${window.location.origin}/billing?success=true`,
+        cancelUrl: `${window.location.origin}/billing?canceled=true`,
+        metadata: {
+          plan_id: plan.id,
+          billing_interval: billingInterval
+        }
+      });
+      
+      // Redirect to the checkout URL
+      window.location.href = url;
     } catch (error) {
       console.error('Error redirecting to payment:', error);
       toast.error('Failed to start checkout process. Please try again.');

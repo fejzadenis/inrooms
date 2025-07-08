@@ -61,12 +61,30 @@ export function SubscriptionPage() {
       return;
     }
 
+    if (currentPlan?.id === plan.id) {
+      toast.info('You are already subscribed to this plan');
+      return;
+    }
+
     setLoading(true);
     setSelectedPlan(plan);
 
     try {      
-      // Get the appropriate price ID based on billing interval
-      let priceId = plan.stripePriceId;
+      // Create a checkout session
+      const { url } = await stripeService.createCheckoutSession({
+        userId: user.id,
+        userEmail: user.email,
+        priceId: plan.stripePriceId,
+        successUrl: `${window.location.origin}/billing?success=true`,
+        cancelUrl: `${window.location.origin}/subscription?canceled=true`,
+        metadata: {
+          plan_id: plan.id,
+          billing_interval: billingInterval
+        }
+      });
+      
+      // Redirect to the checkout URL
+      window.location.href = url;
       
       // For yearly billing with monthly plans, use the annual price ID
       if (billingInterval === 'yearly' && plan.interval === 'month') {

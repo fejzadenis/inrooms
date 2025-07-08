@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import Stripe from 'https://esm.sh/stripe@14.21.0'
+import Stripe from 'npm:stripe@14.21.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,21 +20,44 @@ interface RequestBody {
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
     // Initialize Stripe with the secret key
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+    if (!stripeSecretKey) {
+      console.error('STRIPE_SECRET_KEY environment variable is not set');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
+    const stripe = new Stripe(stripeSecretKey, {
       apiVersion: '2023-10-16',
     })
 
     // Initialize Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase environment variables are not set');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
     // Parse request body
     const { 
@@ -143,7 +166,7 @@ serve(async (req) => {
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      payment_method_types: ['card'],
+      payment_method_types: ['card'], 
       line_items: lineItems,
       mode: 'subscription',
       success_url: successUrl,
@@ -162,19 +185,29 @@ serve(async (req) => {
     })
 
     // Store checkout session in database
-    await supabaseClient
-      .from('stripe_checkout_sessions')
-      .insert({
-        id: session.id,
-        user_id: userId,
-        customer_id: customerId,
-        price_id: priceId,
-        status: 'created',
-        metadata: sessionMetadata,
-        success_url: successUrl,
-        cancel_url: cancelUrl,
-        created_at: new Date().toISOString()
-      })
+    try {
+      const { error: insertError } = await supabaseClient
+        .from('stripe_checkout_sessions')
+        .insert({
+          id: session.id,
+          user_id: userId,
+          customer_id: customerId,
+          price_id: priceId,
+          status: 'created',
+          metadata: sessionMetadata,
+          success_url: successUrl,
+          cancel_url: cancelUrl,
+          created_at: new Date().toISOString()
+        });
+        
+      if (insertError) {
+        console.error('Error storing checkout session:', insertError);
+        // Continue even if storage fails - don't block the checkout process
+      }
+    } catch (dbError) {
+      console.error('Database error storing checkout session:', dbError);
+      // Continue even if storage fails - don't block the checkout process
+    }
 
     console.log(`Created checkout session ${session.id} for user ${userId}`)
 
@@ -194,7 +227,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: 'Failed to create checkout session',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : String(error)
       }),
       { 
         status: 500, 
