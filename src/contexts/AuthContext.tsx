@@ -267,6 +267,140 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const getUserData = async (firebaseUser: FirebaseUser): Promise<User> => {
     // Rate limit getUserData calls
+      console.log("AUTH DEBUG: Getting user data for", firebaseUser.uid);
+      
+      // First try to get user data from Supabase as the source of truth
+      try {
+        const { data: supabaseUser, error } = await supabase
+          .from('users')
+          .select('*, subscription_trial_ends_at')
+          .eq('id', firebaseUser.uid)
+          .single();
+        
+        if (supabaseUser && !error) {
+          console.log("AUTH DEBUG: Found user data in Supabase, using as source of truth");
+          
+          // Update Firestore with the latest data from Supabase
+          const userRef = doc(db, 'users', firebaseUser.uid);
+          
+          // Check if Firestore document exists
+          const firestoreDoc = await getDoc(userRef);
+          
+          if (firestoreDoc.exists()) {
+            // Update existing document
+            await updateDoc(userRef, {
+              name: supabaseUser.name,
+              email: supabaseUser.email,
+              role: supabaseUser.role || 'user',
+              photoURL: supabaseUser.photo_url || null,
+              email_verified: supabaseUser.email_verified || false,
+              subscription: {
+                status: supabaseUser.subscription_status || 'inactive',
+                eventsQuota: supabaseUser.subscription_events_quota || 0,
+                eventsUsed: supabaseUser.subscription_events_used || 0,
+                trialEndsAt: supabaseUser.subscription_trial_ends_at ? new Date(supabaseUser.subscription_trial_ends_at) : null
+              },
+              profile: {
+                title: supabaseUser.profile_title || '',
+                company: supabaseUser.profile_company || '',
+                location: supabaseUser.profile_location || '',
+                about: supabaseUser.profile_about || '',
+                phone: supabaseUser.profile_phone || '',
+                website: supabaseUser.profile_website || '',
+                linkedin: supabaseUser.profile_linkedin || '',
+                skills: supabaseUser.profile_skills || [],
+                points: supabaseUser.profile_points || 0,
+                onboardingCompleted: true
+              },
+              stripe_customer_id: supabaseUser.stripe_customer_id || null,
+              stripe_subscription_id: supabaseUser.stripe_subscription_id || null,
+              stripe_subscription_status: supabaseUser.stripe_subscription_status || null,
+              stripe_current_period_end: supabaseUser.stripe_current_period_end || null,
+              connections: supabaseUser.connections || [],
+              updatedAt: serverTimestamp()
+            });
+            
+            console.log("AUTH DEBUG: Updated Firestore with Supabase data");
+          } else {
+            // Create new document
+            await setDoc(userRef, {
+              name: supabaseUser.name,
+              email: supabaseUser.email,
+              role: supabaseUser.role || 'user',
+              photoURL: supabaseUser.photo_url || null,
+              email_verified: supabaseUser.email_verified || false,
+              subscription: {
+                status: supabaseUser.subscription_status || 'inactive',
+                eventsQuota: supabaseUser.subscription_events_quota || 0,
+                eventsUsed: supabaseUser.subscription_events_used || 0,
+                trialEndsAt: supabaseUser.subscription_trial_ends_at ? new Date(supabaseUser.subscription_trial_ends_at) : null
+              },
+              profile: {
+                title: supabaseUser.profile_title || '',
+                company: supabaseUser.profile_company || '',
+                location: supabaseUser.profile_location || '',
+                about: supabaseUser.profile_about || '',
+                phone: supabaseUser.profile_phone || '',
+                website: supabaseUser.profile_website || '',
+                linkedin: supabaseUser.profile_linkedin || '',
+                skills: supabaseUser.profile_skills || [],
+                points: supabaseUser.profile_points || 0,
+                onboardingCompleted: true
+              },
+              stripe_customer_id: supabaseUser.stripe_customer_id || null,
+              stripe_subscription_id: supabaseUser.stripe_subscription_id || null,
+              stripe_subscription_status: supabaseUser.stripe_subscription_status || null,
+              stripe_current_period_end: supabaseUser.stripe_current_period_end || null,
+              connections: supabaseUser.connections || [],
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            });
+            
+            console.log("AUTH DEBUG: Created new Firestore document with Supabase data");
+          }
+          
+          // Return user data from Supabase
+          const trialEndsAt = supabaseUser.subscription_trial_ends_at ? new Date(supabaseUser.subscription_trial_ends_at) : undefined;
+          
+          return {
+            id: firebaseUser.uid,
+            name: supabaseUser.name || '',
+            email: supabaseUser.email || '',
+            role: supabaseUser.role || 'user',
+            photoURL: supabaseUser.photo_url || undefined,
+            emailVerified: firebaseUser.emailVerified,
+            dbEmailVerified: supabaseUser.email_verified || false,
+            profile: {
+              title: supabaseUser.profile_title || '',
+              company: supabaseUser.profile_company || '',
+              location: supabaseUser.profile_location || '',
+              about: supabaseUser.profile_about || '',
+              phone: supabaseUser.profile_phone || '',
+              website: supabaseUser.profile_website || '',
+              linkedin: supabaseUser.profile_linkedin || '',
+              skills: supabaseUser.profile_skills || [],
+              points: supabaseUser.profile_points || 0,
+              onboardingCompleted: true
+            },
+            subscription: {
+              status: supabaseUser.subscription_status || 'inactive',
+              eventsQuota: supabaseUser.subscription_events_quota || 0,
+              eventsUsed: supabaseUser.subscription_events_used || 0,
+              trialEndsAt
+            },
+            stripe_customer_id: supabaseUser.stripe_customer_id || undefined,
+            isNewUser: false,
+            connections: supabaseUser.connections || []
+          };
+        } else {
+          console.log("AUTH DEBUG: No user data found in Supabase or error occurred:", error?.message);
+        }
+      } catch (supabaseError) {
+        console.error("AUTH DEBUG: Error fetching user data from Supabase:", supabaseError);
+      }
+      
+      // If we couldn't get data from Supabase, fall back to Firestore
+      console.log("AUTH DEBUG: Falling back to Firestore for user data");
     if (shouldRateLimit(`getUserData-${firebaseUser.uid}`)) {
       throw new Error('Rate limited: Too many requests');
     }

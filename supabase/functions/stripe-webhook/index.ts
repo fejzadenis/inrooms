@@ -485,6 +485,8 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
     if (!userId) {
       console.error('❌ Could not determine user_id for subscription, creating placeholder')
       userId = `placeholder_${Date.now()}`
+      console.log(`Generated placeholder ID: ${userId}`)
+      return
     }
   }
 
