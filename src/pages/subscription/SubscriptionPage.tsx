@@ -4,11 +4,14 @@ import { MainLayout } from '../../layouts/MainLayout';
 import { PricingCard } from '../../components/billing/PricingCard';
 import { CustomQuoteModal } from '../../components/billing/CustomQuoteModal';
 import { AddOnCard } from '../../components/billing/AddOnCard';
+import { CustomQuoteModal } from '../../components/billing/CustomQuoteModal';
+import { AddOnCard } from '../../components/billing/AddOnCard';
 import { Button } from '../../components/common/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { stripeService, type SubscriptionPlan } from '../../services/stripeService';
 import { toast } from 'react-hot-toast';
 import { useEffect } from 'react';
+import { CheckCircle, ArrowRight, Star, Zap, Users, Crown, DollarSign, Plus } from 'lucide-react';
 import { CheckCircle, ArrowRight, Star, Zap, Users, Crown, DollarSign, Plus } from 'lucide-react';
 
 export function SubscriptionPage() {
@@ -16,6 +19,10 @@ export function SubscriptionPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = React.useState(false);
+  const [selectedPlan, setSelectedPlan] = React.useState<SubscriptionPlan | null>(null);
+  const [billingInterval, setBillingInterval] = React.useState<'monthly' | 'yearly'>('monthly');
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = React.useState(false);
+  const [selectedAddOns, setSelectedAddOns] = React.useState<string[]>([]);
   const [selectedPlan, setSelectedPlan] = React.useState<SubscriptionPlan | null>(null);
   const [billingInterval, setBillingInterval] = React.useState<'monthly' | 'yearly'>('monthly');
   const [isQuoteModalOpen, setIsQuoteModalOpen] = React.useState(false);
@@ -57,6 +64,9 @@ export function SubscriptionPage() {
 
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
     console.log('Starting plan selection process for plan:', plan.id);
+    
+    console.log('Starting plan selection process for plan:', plan.id);
+    
     if (!user) {
       console.log('No user found, redirecting to login');
       toast.error('Please log in to subscribe');
@@ -180,6 +190,7 @@ export function SubscriptionPage() {
               className="text-lg px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
             >
               Start 7-Day Free Trial 
+              <ArrowRight className="ml-2 w-5 h-5" />
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </div>
