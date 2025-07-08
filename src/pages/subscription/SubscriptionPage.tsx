@@ -58,11 +58,7 @@ export function SubscriptionPage() {
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
     if (!user) {
       toast.error('Please log in to subscribe');
-      return;
-    }
-
-    if (currentPlan?.id === plan.id) {
-      toast.info('You are already subscribed to this plan');
+      navigate('/login', { state: { from: '/subscription' } });
       return;
     }
 
@@ -70,21 +66,8 @@ export function SubscriptionPage() {
     setSelectedPlan(plan);
 
     try {      
-      // Create a checkout session
-      const { url } = await stripeService.createCheckoutSession({
-        userId: user.id,
-        userEmail: user.email,
-        priceId: plan.stripePriceId,
-        successUrl: `${window.location.origin}/billing?success=true`,
-        cancelUrl: `${window.location.origin}/subscription?canceled=true`,
-        metadata: {
-          plan_id: plan.id,
-          billing_interval: billingInterval
-        }
-      });
-      
-      // Redirect to the checkout URL
-      window.location.href = url;
+      // Get the appropriate price ID based on billing interval
+      let priceId = plan.stripePriceId;
       
       // For yearly billing with monthly plans, use the annual price ID
       if (billingInterval === 'yearly' && plan.interval === 'month') {
@@ -98,7 +81,7 @@ export function SubscriptionPage() {
         }
       }
       
-      // Create a checkout session
+      // Create a checkout session using our edge function
       const { url } = await stripeService.createCheckoutSession({
         userId: user.id,
         userEmail: user.email,
@@ -112,6 +95,7 @@ export function SubscriptionPage() {
       });
       
       // Redirect to the checkout URL
+      console.log(`Redirecting to Stripe Checkout: ${url}`);
       window.location.href = url;
     } catch (error) {
       console.error('Error redirecting to payment page:', error);
