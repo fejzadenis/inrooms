@@ -5,7 +5,6 @@ import { Button } from '../common/Button';
 import { stripeService, type SubscriptionPlan } from '../../services/stripeService';
 
 interface PricingCardProps {
-  plan: SubscriptionPlan;
   isCurrentPlan?: boolean;
   selectedPlan?: SubscriptionPlan | null;
   onSelectPlan: (plan: SubscriptionPlan) => void;
@@ -16,7 +15,6 @@ interface PricingCardProps {
 
 export function PricingCard({ 
   plan, 
-  isCurrentPlan = false, 
   selectedPlan,
   onSelectPlan, 
   onRequestQuote,

@@ -154,7 +154,6 @@ serve(async (req) => {
         metadata: sessionMetadata,
       }, 
       expand: ['subscription'], // Expand subscription to get more details
-      expand: ['subscription'], // Expand subscription to get more details
       allow_promotion_codes: true,
       billing_address_collection: 'required',
       customer_update: {

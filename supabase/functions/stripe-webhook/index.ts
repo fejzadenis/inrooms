@@ -20,7 +20,7 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
 const supabaseClient = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-)
+);
 
 const cryptoProvider = Stripe.createSubtleCryptoProvider()
 
@@ -852,54 +852,6 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
       }
     } else {
       // For non-subscription invoices, just reset the events count
-    // If this is a subscription payment, get the subscription details
-    if (invoice.subscription) {
-      try {
-        const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
-        const priceId = subscription.items.data[0]?.price.id;
-        const planDetails = getPlanDetailsByPriceId(priceId || '');
-        
-        console.log(`Subscription payment for ${invoice.subscription} with price ${priceId}`);
-        console.log(`- Events Quota: ${planDetails.eventsQuota}`);
-        
-        // Reset events used count for new billing period and update subscription details
-        const { error } = await supabaseClient
-          .from('users')
-          .update({
-            subscription_events_used: 0,
-            subscription_events_quota: planDetails.eventsQuota,
-            subscription_status: 'active',
-            stripe_subscription_status: subscription.status,
-            stripe_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', userId);
-      if (error) {
-        if (error) {
-          console.error('❌ Error updating user subscription details:', error);
-        } else {
-          console.log(`✅ Updated user ${userId} with subscription details and reset events count`);
-        }
-      } catch (subError) {
-        console.error('❌ Error retrieving subscription details:', subError);
-        
-        // Still reset events used count even if we can't get subscription details
-        const { error } = await supabaseClient
-          .from('users')
-          .update({
-            subscription_events_used: 0,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', userId);
-          
-        if (error) {
-          console.error('❌ Error resetting events count:', error);
-        } else {
-          console.log(`✅ Reset events used count for user ${userId}`);
-        }
-      }
-        console.log(`✅ Reset events used count for user ${userId}`);
-      // For non-subscription invoices, just reset the events count
       const { error } = await supabaseClient
         .from('users')
         .update({
@@ -1073,7 +1025,7 @@ async function handlePaymentMethodAttached(paymentMethod: Stripe.PaymentMethod) 
     if (paymentMethodError) {
       console.error('❌ Error storing payment method:', paymentMethodError)
     } else {
-      console.log(`✅ Stored invoice ${invoice.id} for user ${userId}`)
+      console.log(`✅ Stored payment method ${paymentMethod.id} for user ${userId}`)
     }
     
     // If this is the first payment method, set it as default
