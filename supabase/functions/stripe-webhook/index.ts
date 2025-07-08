@@ -155,6 +155,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   console.log(`- Metadata:`, session.metadata)
   console.log(`- Customer: ${session.customer || 'Not set'}`)
   console.log(`- Customer Email: ${session.customer_details?.email || 'Not set'}`)
+  console.log(`- Client Reference ID: ${session.client_reference_id || 'Not set'}`)
   
   console.log(`Processing checkout session: ${session.id}`)
   console.log(`- Metadata: ${JSON.stringify(session.metadata || {})}`)
@@ -162,14 +163,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   
   if (!userId) {
     console.error('No user_id in session client_reference_id or metadata, attempting to find from email');
-    console.log(`- Client Reference ID: ${session.client_reference_id ? session.client_reference_id : 'Not set'}`);
-    console.log(`- Metadata: ${JSON.stringify(session.metadata || {})}`);
-    console.log(`- Customer: ${session.customer ? session.customer : 'Not set'}`);
-    console.log(`- Session ID: ${session.id}`)
     
     // Try to find user by email first (most reliable method)
     if (session.customer_details?.email) {
       try {
+        console.log(`Looking up user by email: ${session.customer_details.email}`);
         const { data: userByEmail } = await supabaseClient
           .from('users')
           .select('id')
@@ -178,7 +176,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           
         if (userByEmail) {
           userId = userByEmail.id;
-          console.log(`✅ Found user ${userId} by email ${session.customer_details.email}`);
+          console.log(`✅ Found user ${userId} by email lookup`);
         } else {
           console.warn(`No user found with email ${session.customer_details.email}, checking customer record`);
         }
@@ -210,6 +208,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     // If we still don't have a userId, try to create a placeholder from email
     if (!userId) {
       console.error('❌ Could not determine user_id for checkout session, cannot proceed');
+      console.log(`- Client Reference ID: ${session.client_reference_id ? session.client_reference_id : 'Not set'}`);
+      console.log(`- Metadata: ${JSON.stringify(session.metadata || {})}`);
+      console.log(`- Customer: ${session.customer ? session.customer : 'Not set'}`);
+      console.log(`- Email: ${session.customer_details?.email || 'Not set'}`);
       return;
     }
   }
@@ -225,7 +227,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         
       if (!existingCustomer) {
         console.log(`Creating new customer record for ${session.customer} linked to user ${userId}`);
-        await supabaseClient
+        const { error: customerInsertError } = await supabaseClient
           .from('stripe_customers')
           .insert({
             id: session.customer as string,
@@ -239,6 +241,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
             },
             created_at: new Date().toISOString()
           })
+          
+        if (customerInsertError) {
+          console.error('❌ Error creating customer record:', customerInsertError);
+        }
       }
       
       // Update user's subscription status
@@ -256,6 +262,19 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         console.error('❌ Error updating user subscription:', error)
       } else {
         console.log(`✅ Updated user ${userId} with customer ${session.customer} and subscription status`);
+        
+        // Also update the checkout session if it exists
+        const { error: sessionUpdateError } = await supabaseClient
+          .from('stripe_checkout_sessions')
+          .update({ 
+            status: 'completed',
+            completed_at: new Date().toISOString()
+          })
+          .eq('id', session.id);
+          
+        if (sessionUpdateError) {
+          console.warn('Warning: Could not update checkout session status:', sessionUpdateError);
+        }
       }
     } else {
       console.log(`Customer ${session.customer} already exists, linked to user ${existingCustomer.user_id}`);
@@ -405,7 +424,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   // Get plan details from price ID
   const priceId = subscription.items.data[0]?.price.id
   console.log(`Subscription price ID: ${priceId}`)
-  const planDetails = getPlanDetailsByPriceId(priceId)
+  const planDetails = getPlanDetailsByPriceId(priceId || '')
 
   try {
     // Store subscription in stripe_subscriptions table
@@ -504,7 +523,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   // Get plan details from price ID
   const priceId = subscription.items.data[0]?.price.id
-  const planDetails = getPlanDetailsByPriceId(priceId)
+  const planDetails = getPlanDetailsByPriceId(priceId || '')
 
   // Update subscription in stripe_subscriptions table
   const { error: updateError } = await supabaseClient
@@ -1034,7 +1053,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         console.log(`Creating new customer record for ${customerId}`)
         await supabaseClient
           .from('stripe_customers')
-          .upsert({
+          .insert({
             id: customerId,
             user_id: userId,
             email: session.customer_details?.email || '',

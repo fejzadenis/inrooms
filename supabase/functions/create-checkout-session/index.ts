@@ -51,6 +51,24 @@ serve(async (req: Request) => {
 
     console.log(`Creating checkout session for user ${userId} (${userEmail}) with price ${priceId}`);
 
+    // Verify user exists
+    const { data: userData, error: userError } = await supabaseClient
+      .from("users")
+      .select("id, email, stripe_customer_id")
+      .eq("id", userId)
+      .single();
+      
+    if (userError) {
+      console.error("Error fetching user:", userError);
+      return new Response(
+        JSON.stringify({ error: "User not found" }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // Prepare line items for checkout
     const lineItems = [
       {
@@ -70,28 +88,18 @@ serve(async (req: Request) => {
     // Create or retrieve customer
     let customerId: string;
     
-    // Check if user already has a customer ID
-    const { data: userData, error: userError } = await supabaseClient
-      .from("users")
-      .select("stripe_customer_id")
-      .eq("id", userId)
-      .single();
-      
-    if (userError && userError.code !== "PGRST116") {
-      console.error("Error fetching user:", userError);
-      return new Response(
-        JSON.stringify({ error: "Failed to fetch user data" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // If user has a customer ID, use it, otherwise create a new customer
+    // If user already has a customer ID, use it
     if (userData?.stripe_customer_id) {
       customerId = userData.stripe_customer_id;
       console.log(`Using existing customer ID: ${customerId}`);
+      
+      // Update customer email if it has changed
+      if (userEmail !== userData.email) {
+        await stripe.customers.update(customerId, {
+          email: userEmail,
+        });
+        console.log(`Updated customer email to ${userEmail}`);
+      }
     } else {
       // Create a new customer
       const customer = await stripe.customers.create({
@@ -106,11 +114,33 @@ serve(async (req: Request) => {
       // Store customer ID in database
       const { error: updateError } = await supabaseClient
         .from("users")
-        .update({ stripe_customer_id: customerId })
+        .update({ 
+          stripe_customer_id: customerId,
+          updated_at: new Date().toISOString()
+        })
         .eq("id", userId);
         
       if (updateError) {
         console.error("Error updating user with customer ID:", updateError);
+      }
+      
+      // Also store in stripe_customers table
+      const { error: customerError } = await supabaseClient
+        .from("stripe_customers")
+        .insert({
+          id: customerId,
+          user_id: userId,
+          email: userEmail,
+          name: "", // Will be updated by Stripe after checkout
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          metadata: {
+            source: "create-checkout-session"
+          }
+        });
+        
+      if (customerError) {
+        console.error("Error storing customer record:", customerError);
       }
     }
 
@@ -141,6 +171,25 @@ serve(async (req: Request) => {
         name: "auto",
       },
     });
+
+    // Store checkout session in database
+    const { error: sessionError } = await supabaseClient
+      .from("stripe_checkout_sessions")
+      .insert({
+        id: session.id,
+        user_id: userId,
+        customer_id: customerId,
+        price_id: priceId,
+        status: "created",
+        metadata: sessionMetadata,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        created_at: new Date().toISOString()
+      });
+      
+    if (sessionError) {
+      console.error("Error storing checkout session:", sessionError);
+    }
 
     return new Response(
       JSON.stringify({ 

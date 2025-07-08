@@ -371,6 +371,10 @@ export const stripeService = {
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
       if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
         throw new Error('Supabase configuration is missing. Please check your environment variables.');
       }
 
@@ -433,6 +437,10 @@ export const stripeService = {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+      
       const response = await fetch(`${supabaseUrl}/functions/v1/stripe-payment-methods`, {
         method: 'POST',
         headers: {
@@ -457,6 +465,10 @@ export const stripeService = {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
       
       const response = await fetch(`${supabaseUrl}/functions/v1/stripe-invoices`, {
         method: 'POST',

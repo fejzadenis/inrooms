@@ -115,6 +115,12 @@ export function SubscriptionPage() {
     // Reset selected plan when changing billing interval
     setSelectedPlan(null);
   };
+  
+  const handleBillingIntervalChange = (interval: 'monthly' | 'yearly') => {
+    setBillingInterval(interval);
+    // Reset selected plan when changing billing interval
+    setSelectedPlan(null);
+  };
 
   const handleToggleAddOn = (addOn: any) => {
     setSelectedAddOns(prev => 
