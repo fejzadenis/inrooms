@@ -42,12 +42,12 @@ serve(async (req) => {
       );
     }
     
-    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
         auth: {
           persistSession: false
         }
       }
-    )
+    );
 
     // Parse request body
     let quoteData: QuoteRequest;
@@ -73,7 +73,7 @@ serve(async (req) => {
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
-      )
+      );
     }
 
     // Store quote request in database
@@ -125,68 +125,56 @@ serve(async (req) => {
       } else {
         quoteId = data?.[0]?.id;
       }
+
+      // Send notification email to sales team
+      try {
+        await sendQuoteNotification(quoteData);
+      } catch (emailError) {
+        console.error('Error sending notification email:', emailError);
+        // Continue even if email fails
+      }
+
+      // Send confirmation email to customer
+      try {
+        await sendCustomerConfirmation(quoteData);
+      } catch (emailError) {
+        console.error('Error sending confirmation email:', emailError);
+        // Continue even if email fails
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          message: 'Quote request submitted successfully',
+          requestId: quoteId
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+
     } catch (dbError) {
       console.error('Database error storing quote request:', dbError);
       return new Response(
-        JSON.stringify({ error: 'Failed to store quote request' }),
+        JSON.stringify({ 
+          error: 'Internal server error',
+          requestId: quoteId
+        }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
-        .select()
-
-      if (error) {
-        console.error('Error storing quote request:', error)
-        return new Response(
-          JSON.stringify({ error: 'Failed to store quote request', details: error.message }),
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        )
-      }
-      
-      // Send notification email to sales team (you can integrate with your email service)
-      await sendQuoteNotification(quoteData)
-  
-      // Send confirmation email to customer
-      await sendCustomerConfirmation(quoteData)
-  
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Quote request submitted successfully',
-          requestId: data?.[0]?.id 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    // Send notification email to sales team
-    try {
-      await sendQuoteNotification(quoteData);
-    } catch (emailError) {
-      console.error('Error sending notification email:', emailError);
-      // Continue even if email fails
-    }
-
-    // Send confirmation email to customer
-    try {
-      await sendCustomerConfirmation(quoteData);
-    } catch (emailError) {
-      console.error('Error sending confirmation email:', emailError);
-      // Continue even if email fails
-    }
-        error: 'Internal server error',
-        requestId: quoteId
-      }),
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return new Response(
+      JSON.stringify({ error: 'Internal server error' }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
-    )
+    );
   }
 })
 
