@@ -10,8 +10,13 @@ export interface SubscriptionPlan {
   price: number;
   interval: 'month' | 'year';
   features: string[];
-  popular?: boolean;
+  isPopular?: boolean;
+  isCustom?: boolean;
   stripePriceId: string;
+  targetAudience: string;
+  valueProposition: string;
+  eventsQuota: number;
+  paymentLink: string;
 }
 
 export interface AddOn {
@@ -20,7 +25,182 @@ export interface AddOn {
   description: string;
   price: number;
   stripePriceId: string;
+  icon: string;
+  benefits: string[];
+  paymentLink: string;
 }
+
+// Mock subscription plans data
+const monthlyPlans: SubscriptionPlan[] = [
+  {
+    id: 'starter',
+    name: 'Starter',
+    description: 'Perfect for new networkers',
+    price: 29,
+    interval: 'month',
+    stripePriceId: 'price_starter_monthly',
+    targetAudience: 'New to networking',
+    valueProposition: 'Get started with essential networking tools',
+    eventsQuota: 3,
+    paymentLink: 'https://buy.stripe.com/test_starter_monthly',
+    features: [
+      '3 events per month',
+      'Basic profile features',
+      'Event recordings access',
+      'Community support',
+      'Mobile app access'
+    ]
+  },
+  {
+    id: 'professional',
+    name: 'Professional',
+    description: 'For active networkers',
+    price: 79,
+    interval: 'month',
+    stripePriceId: 'price_professional_monthly',
+    targetAudience: 'Active professionals',
+    valueProposition: 'Accelerate your networking with advanced features',
+    eventsQuota: 10,
+    isPopular: true,
+    paymentLink: 'https://buy.stripe.com/test_professional_monthly',
+    features: [
+      '10 events per month',
+      'Advanced profile features',
+      'Priority event access',
+      'Direct messaging',
+      'Event recordings',
+      'Analytics dashboard',
+      'Priority support'
+    ]
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    description: 'For power networkers',
+    price: 149,
+    interval: 'month',
+    stripePriceId: 'price_enterprise_monthly',
+    targetAudience: 'Enterprise professionals',
+    valueProposition: 'Maximum networking potential with premium features',
+    eventsQuota: 25,
+    paymentLink: 'https://buy.stripe.com/test_enterprise_monthly',
+    features: [
+      '25 events per month',
+      'Premium profile features',
+      'VIP event access',
+      'Advanced analytics',
+      'Custom integrations',
+      'Dedicated account manager',
+      '24/7 priority support',
+      'White-label options'
+    ]
+  },
+  {
+    id: 'team',
+    name: 'Team',
+    description: 'For growing teams',
+    price: 199,
+    interval: 'month',
+    stripePriceId: 'price_team_monthly',
+    targetAudience: 'Teams & organizations',
+    valueProposition: 'Collaborative networking for your entire team',
+    eventsQuota: 50,
+    paymentLink: 'https://buy.stripe.com/test_team_monthly',
+    features: [
+      '50 events per month (shared)',
+      'Team management tools',
+      'Bulk event registration',
+      'Team analytics dashboard',
+      'Shared contact database',
+      'Admin controls',
+      'Team training sessions',
+      'Dedicated support'
+    ]
+  },
+  {
+    id: 'custom',
+    name: 'Enterprise Custom',
+    description: 'Tailored for large organizations',
+    price: 0,
+    interval: 'month',
+    stripePriceId: 'price_custom',
+    targetAudience: 'Large enterprises',
+    valueProposition: 'Custom solution designed for your specific needs',
+    eventsQuota: 999999,
+    isCustom: true,
+    paymentLink: '',
+    features: [
+      'Unlimited events',
+      'Custom integrations',
+      'Dedicated infrastructure',
+      'Custom branding',
+      'Advanced security',
+      'SLA guarantees',
+      'Custom training',
+      'Dedicated success manager'
+    ]
+  }
+];
+
+// Mock annual plans (with 20% discount)
+const annualPlans: SubscriptionPlan[] = monthlyPlans.map(plan => ({
+  ...plan,
+  id: `${plan.id}_annual`,
+  interval: 'year' as const,
+  price: Math.round(plan.price * 12 * 0.8), // 20% discount
+  stripePriceId: `${plan.stripePriceId}_annual`,
+  paymentLink: plan.paymentLink.replace('monthly', 'annual')
+}));
+
+// Mock add-ons data
+const addOns: AddOn[] = [
+  {
+    id: 'premium_badge',
+    name: 'Premium Profile Badge',
+    description: 'Stand out with a verified premium badge',
+    price: 29,
+    stripePriceId: 'price_premium_badge',
+    icon: 'crown',
+    paymentLink: 'https://buy.stripe.com/test_premium_badge',
+    benefits: [
+      'Verified premium badge on profile',
+      'Higher visibility in search results',
+      'Priority in connection recommendations',
+      'Exclusive premium member events'
+    ]
+  },
+  {
+    id: 'priority_support',
+    name: 'Priority Support',
+    description: 'Get help when you need it most',
+    price: 19,
+    stripePriceId: 'price_priority_support',
+    icon: 'star',
+    paymentLink: 'https://buy.stripe.com/test_priority_support',
+    benefits: [
+      '24/7 priority support access',
+      'Dedicated support representative',
+      'Phone support availability',
+      'Faster response times (< 2 hours)'
+    ]
+  },
+  {
+    id: 'advanced_analytics',
+    name: 'Advanced Analytics',
+    description: 'Deep insights into your networking',
+    price: 39,
+    stripePriceId: 'price_advanced_analytics',
+    icon: 'zap',
+    paymentLink: 'https://buy.stripe.com/test_advanced_analytics',
+    benefits: [
+      'Detailed networking analytics',
+      'ROI tracking and reporting',
+      'Connection quality metrics',
+      'Custom dashboard views',
+      'Export capabilities'
+    ]
+  }
+];
 
 // Mock customer and subscription data
 const mockCustomers = {
@@ -68,6 +248,37 @@ const mockCustomers = {
 };
 
 export const stripeService = {
+  // Get monthly plans
+  getMonthlyPlans(): SubscriptionPlan[] {
+    return monthlyPlans;
+  },
+
+  // Get annual plans
+  getAnnualPlans(): SubscriptionPlan[] {
+    return annualPlans;
+  },
+
+  // Get add-ons
+  getAddOns(): AddOn[] {
+    return addOns;
+  },
+
+  // Calculate annual savings
+  calculateAnnualSavings(monthlyPrice: number): number {
+    const annualPrice = monthlyPrice * 12;
+    const discountedAnnualPrice = annualPrice * 0.8; // 20% discount
+    return Math.round(annualPrice - discountedAnnualPrice);
+  },
+
+  // Redirect to payment link
+  redirectToPaymentLink(paymentLink: string): void {
+    if (paymentLink) {
+      window.location.href = paymentLink;
+    } else {
+      throw new Error('Payment link not available');
+    }
+  },
+
   // Create a checkout session
   async createCheckoutSession(data: {
     userId: string;
@@ -87,9 +298,12 @@ export const stripeService = {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Simulate a successful response
+      // Simulate a successful response with a checkout URL
+      const checkoutUrl = `https://checkout.stripe.com/pay/cs_test_${Math.random().toString(36).substring(2, 15)}`;
+      
       return {
         id: 'cs_test_' + Math.random().toString(36).substring(2, 15),
+        url: checkoutUrl
       };
     } catch (error) {
       console.error('Error creating checkout session:', error);
@@ -98,22 +312,22 @@ export const stripeService = {
   },
 
   // Create a customer portal session
-  async createPortalSession(data: {
-    customerId: string;
-    returnUrl: string;
-  }) {
+  async createCustomerPortalSession(customerId: string, returnUrl: string) {
     // In a real application, this would make a request to your backend
     // which would then create a Stripe customer portal session
     
-    console.log('Creating portal session with:', data);
+    console.log('Creating portal session with:', { customerId, returnUrl });
     
     try {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Simulate a successful response
+      // Simulate a successful response and redirect
+      const portalUrl = `https://billing.stripe.com/p/session/test_${Math.random().toString(36).substring(2, 15)}`;
+      window.location.href = portalUrl;
+      
       return {
-        url: `${window.location.origin}/billing?portal=true`,
+        url: portalUrl,
       };
     } catch (error) {
       console.error('Error creating portal session:', error);
@@ -188,6 +402,23 @@ export const stripeService = {
     } catch (error) {
       console.error('Error requesting custom quote:', error);
       throw new Error('Failed to submit quote request');
+    }
+  },
+
+  // Add payment method
+  async addPaymentMethod(customerId: string) {
+    // In a real application, this would create a setup intent and redirect to Stripe
+    console.log('Adding payment method for:', customerId);
+    
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // For now, just show a message
+      throw new Error('Payment method management coming soon');
+    } catch (error) {
+      console.error('Error adding payment method:', error);
+      throw error;
     }
   },
 
