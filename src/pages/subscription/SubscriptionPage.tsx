@@ -291,7 +291,7 @@ export function SubscriptionPage() {
                 key={plan.id}
                 plan={plan}
                 onSelectPlan={(selectedPlan) => handleSelectPlan(selectedPlan)}
-                onRequestQuote={handleRequestQuote}
+                onRequestQuote={() => setIsQuoteModalOpen(true)}
                 loading={loading && selectedPlan?.id === plan.id}
                 billingInterval={billingInterval}
               />
@@ -401,12 +401,15 @@ export function SubscriptionPage() {
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">What happens to unused events?</h3>
               <p className="text-gray-600 text-sm">
-              href="mailto:support@inrooms.com" 
-              className="text-indigo-600 hover:text-indigo-500 ml-1"
-            >
-              Contact our support team
-            </a>
-          </p>
+                <a
+                  href="mailto:support@inrooms.com" 
+                  className="text-indigo-600 hover:text-indigo-500 ml-1"
+                >
+                  Contact our support team
+                </a>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
