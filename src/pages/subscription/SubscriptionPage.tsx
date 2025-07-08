@@ -58,7 +58,6 @@ export function SubscriptionPage() {
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
     if (!user) {
       toast.error('Please log in to subscribe');
-      navigate('/login', { state: { from: '/subscription' } });
       return;
     }
 
@@ -81,8 +80,18 @@ export function SubscriptionPage() {
         }
       }
       
-      // Create a checkout session using our edge function
+      // Create a checkout session
       const { url } = await stripeService.createCheckoutSession({
+        userId: user.id,
+        userEmail: user.email,
+        priceId: priceId,
+        successUrl: `${window.location.origin}/billing?success=true`,
+        cancelUrl: `${window.location.origin}/subscription?canceled=true`,
+        metadata: {
+          plan_id: plan.id,
+          billing_interval: billingInterval
+        }
+      });
         userId: user.id,
         userEmail: user.email,
         priceId: priceId,
@@ -95,7 +104,7 @@ export function SubscriptionPage() {
       });
       
       // Redirect to the checkout URL
-      console.log(`Redirecting to Stripe Checkout: ${url}`);
+      window.location.href = url;
       window.location.href = url;
     } catch (error) {
       console.error('Error redirecting to payment page:', error);

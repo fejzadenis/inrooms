@@ -3,10 +3,11 @@ import { loadStripe } from '@stripe/stripe-js';
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 // Types for Stripe integration
+
+// Types for Stripe integration
 export interface SubscriptionPlan {
   id: string;
   name: string;
-  description: string;
   price: number;
   interval: 'month' | 'year';
   features: string[];
@@ -30,12 +31,11 @@ export interface AddOn {
   paymentLink: string;
 }
 
-// Mock subscription plans data
+// Subscription plans data
 const monthlyPlans: SubscriptionPlan[] = [
   {
     id: 'starter',
     name: 'Starter',
-    description: 'Perfect for new networkers',
     price: 29,
     interval: 'month',
     stripePriceId: 'price_starter_monthly',
@@ -54,7 +54,6 @@ const monthlyPlans: SubscriptionPlan[] = [
   {
     id: 'professional',
     name: 'Professional',
-    description: 'For active networkers',
     price: 79,
     interval: 'month',
     stripePriceId: 'price_professional_monthly',
@@ -76,7 +75,6 @@ const monthlyPlans: SubscriptionPlan[] = [
   {
     id: 'enterprise',
     name: 'Enterprise',
-    description: 'For power networkers',
     price: 149,
     interval: 'month',
     stripePriceId: 'price_enterprise_monthly',
@@ -98,7 +96,6 @@ const monthlyPlans: SubscriptionPlan[] = [
   {
     id: 'team',
     name: 'Team',
-    description: 'For growing teams',
     price: 199,
     interval: 'month',
     stripePriceId: 'price_team_monthly',
@@ -120,7 +117,6 @@ const monthlyPlans: SubscriptionPlan[] = [
   {
     id: 'custom',
     name: 'Enterprise Custom',
-    description: 'Tailored for large organizations',
     price: 0,
     interval: 'month',
     stripePriceId: 'price_custom',
@@ -142,7 +138,7 @@ const monthlyPlans: SubscriptionPlan[] = [
   }
 ];
 
-// Mock annual plans (with 20% discount)
+// Annual plans (with 20% discount)
 const annualPlans: SubscriptionPlan[] = monthlyPlans.map(plan => ({
   ...plan,
   id: `${plan.id}_annual`,
@@ -152,7 +148,7 @@ const annualPlans: SubscriptionPlan[] = monthlyPlans.map(plan => ({
   paymentLink: plan.paymentLink.replace('monthly', 'annual')
 }));
 
-// Mock add-ons data
+// Add-ons data
 const addOns: AddOn[] = [
   {
     id: 'premium_badge',
@@ -202,7 +198,7 @@ const addOns: AddOn[] = [
   }
 ];
 
-// Mock customer and subscription data
+// Customer and subscription data for testing
 const mockCustomers = {
   'cus_123456': {
     id: 'cus_123456',
@@ -282,7 +278,7 @@ export const stripeService = {
   // Create a checkout session
   async createCheckoutSession(data: {
     userId: string;
-    userEmail: string;
+    userEmail: string; 
     priceId: string;
     successUrl: string;
     cancelUrl: string;
@@ -290,20 +286,37 @@ export const stripeService = {
     metadata?: Record<string, string>;
   }) {
     // In a real application, this would make a request to your backend
-    // which would then create a Stripe checkout session
-    
-    console.log('Creating checkout session with:', data);
+    // which would then create a Stripe checkout session    
+    console.log('Creating checkout session with:', data);    
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // Simulate a successful response with a checkout URL
-      const checkoutUrl = `https://checkout.stripe.com/pay/cs_test_${Math.random().toString(36).substring(2, 15)}`;
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+      
+      // Call our Supabase Edge Function to create a checkout session
+      const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create checkout session');
+      }
+      
+      const result = await response.json();
       
       return {
         id: 'cs_test_' + Math.random().toString(36).substring(2, 15),
-        url: checkoutUrl
+        url: result.url || result.sessionId
       };
     } catch (error) {
       console.error('Error creating checkout session:', error);
@@ -317,17 +330,35 @@ export const stripeService = {
     // which would then create a Stripe customer portal session
     
     console.log('Creating portal session with:', { customerId, returnUrl });
-    
+
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // Simulate a successful response and redirect
-      const portalUrl = `https://billing.stripe.com/p/session/test_${Math.random().toString(36).substring(2, 15)}`;
-      window.location.href = portalUrl;
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+      
+      // Call our Supabase Edge Function to create a portal session
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-portal`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ customerId, returnUrl }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create portal session');
+      }
+      
+      const { url } = await response.json();
+      window.location.href = url;
       
       return {
-        url: portalUrl,
+        url,
       };
     } catch (error) {
       console.error('Error creating portal session:', error);
@@ -341,14 +372,30 @@ export const stripeService = {
     // which would then fetch payment methods from Stripe
     
     console.log('Fetching payment methods for:', customerId);
-    
+
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // Return mock data or empty array
-      const customer = mockCustomers[customerId as keyof typeof mockCustomers];
-      return customer?.paymentMethods || [];
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+      
+      // Call our Supabase Edge Function to get payment methods
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-payment-methods`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ customerId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch payment methods');
+      }
+      
+      return await response.json();
     } catch (error) {
       console.error('Error fetching payment methods:', error);
       throw new Error('Failed to fetch payment methods');
@@ -361,14 +408,30 @@ export const stripeService = {
     // which would then fetch invoices from Stripe
     
     console.log('Fetching invoices for:', customerId);
-    
+
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // Return mock data or empty array
-      const customer = mockCustomers[customerId as keyof typeof mockCustomers];
-      return customer?.invoices || [];
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+      
+      // Call our Supabase Edge Function to get invoices
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-invoices`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ customerId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch invoices');
+      }
+      
+      return await response.json();
     } catch (error) {
       console.error('Error fetching invoices:', error);
       throw new Error('Failed to fetch invoices');
@@ -386,15 +449,32 @@ export const stripeService = {
     timeline: string;
   }) {
     // In a real application, this would make a request to your backend
-    // which would then process the custom quote request
-    
+    // which would then process the custom quote request    
     console.log('Requesting custom quote with:', data);
-    
+
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // Simulate a successful response
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+      
+      // Call our Supabase Edge Function to submit a custom quote request
+      const response = await fetch(`${supabaseUrl}/functions/v1/custom-quote`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit quote request');
+      }
+      
       return {
         success: true,
         message: 'Quote request submitted successfully'
@@ -411,11 +491,32 @@ export const stripeService = {
     console.log('Adding payment method for:', customerId);
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // For now, just show a message
-      throw new Error('Payment method management coming soon');
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+      
+      // Call our Supabase Edge Function to create a setup intent
+      const response = await fetch(`${supabaseUrl}/functions/v1/create-payment-intent`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ customerId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create setup intent');
+      }
+      
+      const { clientSecret } = await response.json();
+      
+      // Here we would typically open a Stripe Elements UI for payment method entry
+      // For now, we'll just throw an error since we don't have the UI components set up
+      throw new Error('Payment method management requires Stripe Elements integration');
     } catch (error) {
       console.error('Error adding payment method:', error);
       throw error;
@@ -428,15 +529,30 @@ export const stripeService = {
     // which would then create a Stripe setup intent
     
     console.log('Creating setup intent for:', customerId);
-    
+
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // Simulate a successful response
-      return {
-        clientSecret: 'seti_' + Math.random().toString(36).substring(2, 15) + '_secret_' + Math.random().toString(36).substring(2, 15),
-      };
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+      
+      // Call our Supabase Edge Function to create a setup intent
+      const response = await fetch(`${supabaseUrl}/functions/v1/create-payment-intent`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ customerId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create setup intent');
+      }
+      
+      return await response.json();
     } catch (error) {
       console.error('Error creating setup intent:', error);
       throw new Error('Failed to create setup intent');
@@ -449,16 +565,30 @@ export const stripeService = {
     // which would then update the customer's default payment method in Stripe
     
     console.log('Setting default payment method:', { customerId, paymentMethodId });
-    
+
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // Simulate a successful response
-      return {
-        success: true,
-        message: 'Default payment method updated successfully'
-      };
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+      
+      // Call our Supabase Edge Function to set default payment method
+      const response = await fetch(`${supabaseUrl}/functions/v1/set-default-payment-method`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ customerId, paymentMethodId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to set default payment method');
+      }
+      
+      return await response.json();
     } catch (error) {
       console.error('Error setting default payment method:', error);
       throw new Error('Failed to set default payment method');
@@ -471,20 +601,93 @@ export const stripeService = {
     // which would then delete the payment method in Stripe
     
     console.log('Deleting payment method:', paymentMethodId);
-    
+
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // Simulate a successful response
-      return {
-        success: true,
-        message: 'Payment method deleted successfully'
-      };
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+      
+      // Call our Supabase Edge Function to delete payment method
+      const response = await fetch(`${supabaseUrl}/functions/v1/delete-payment-method`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ paymentMethodId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete payment method');
+      }
+      
+      return await response.json();
     } catch (error) {
       console.error('Error deleting payment method:', error);
       throw new Error('Failed to delete payment method');
     }
+  },
+  
+  // Purchase a feature for a demo
+  async purchaseFeatureForDemo(
+    userId: string,
+    userEmail: string,
+    demoId: string,
+    featureType: 'featured_demo'
+  ) {
+    try {
+      // For featured demo, use the checkout session with metadata
+      const baseUrl = window.location.origin;
+      const successUrl = `${baseUrl}/solutions?success=true&demoId=${demoId}&feature=${featureType}`;
+      const cancelUrl = `${baseUrl}/solutions?canceled=true`;
+      
+      // Get the add-on for featured demo
+      const featuredDemoAddOn = addOns.find(a => a.id === 'premium_badge');
+      
+      if (!featuredDemoAddOn) {
+        throw new Error('Featured demo add-on not found');
+      }
+      
+      // Create a checkout session
+      const { url } = await this.createCheckoutSession({
+        userId,
+        userEmail,
+        priceId: featuredDemoAddOn.stripePriceId,
+        successUrl,
+        cancelUrl,
+        metadata: {
+          feature_type: featureType,
+          demo_id: demoId
+        }
+      });
+      
+      // Redirect to the checkout URL
+      window.location.href = url;
+    } catch (error) {
+      console.error('Error purchasing feature:', error);
+      throw error;
+    }
+  },
+  
+  // Enhance payment link with user information
+  enhancePaymentLink(paymentLink: string, userId: string, userEmail: string): string {
+    const enhancedLink = new URL(paymentLink);
+    
+    // Add user ID as client_reference_id
+    enhancedLink.searchParams.append('client_reference_id', userId);
+    
+    // Add user ID to metadata
+    enhancedLink.searchParams.append('metadata[user_id]', userId);
+    
+    // Prefill email if available
+    if (userEmail) {
+      enhancedLink.searchParams.append('prefilled_email', userEmail);
+    }
+    
+    return enhancedLink.toString();
   }
 };
 
