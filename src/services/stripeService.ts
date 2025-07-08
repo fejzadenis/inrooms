@@ -600,6 +600,55 @@ export const stripeService = {
     }
   },
 
+  // Start a free trial
+  async startFreeTrial(userId: string): Promise<void> {
+    try {
+      console.log('Starting free trial for user:', userId);
+      
+      // First update in Firestore
+      const userRef = doc(db, 'users', userId);
+      
+      // Set trial end date (7 days from now)
+      const trialEndsAt = new Date();
+      trialEndsAt.setDate(trialEndsAt.getDate() + 7);
+      
+      // Update subscription in Firestore
+      await updateDoc(userRef, {
+        'subscription.status': 'trial',
+        'subscription.eventsQuota': 2,
+        'subscription.eventsUsed': 0,
+        'subscription.trialEndsAt': trialEndsAt,
+        'updatedAt': serverTimestamp()
+      });
+      
+      console.log('Updated Firestore with trial subscription data');
+
+      // Then update in Supabase
+      const { error } = await supabase
+        .from('users')
+        .update({
+          subscription_status: 'trial',
+          subscription_events_quota: 2,
+          subscription_events_used: 0,
+          subscription_trial_ends_at: trialEndsAt.toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error updating Supabase with trial data:', error);
+        throw new Error('Failed to update subscription in database');
+      }
+      
+      console.log('Updated Supabase with trial subscription data');
+
+      return;
+    } catch (error) {
+      console.error('Error starting free trial:', error);
+      throw error;
+    }
+  },
+
   // Purchase feature for demo
   async purchaseFeatureForDemo(
     userId: string,

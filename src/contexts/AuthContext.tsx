@@ -831,6 +831,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const trialEndsAt = new Date();
       trialEndsAt.setDate(trialEndsAt.getDate() + 7);
       
+      // Update subscription in Firestore
       await updateDoc(userRef, {
         'subscription.status': 'trial',
         'subscription.eventsQuota': 2,
@@ -861,6 +862,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setCachedUserData(prev.id, updatedUser);
         return updatedUser;
       });
+      
+      // Update subscription in Supabase
+      const { error } = await supabase
+        .from('users')
+        .update({
+          subscription_status: 'trial',
+          subscription_events_quota: 2,
+          subscription_events_used: 0,
+          subscription_trial_ends_at: trialEndsAt.toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error updating Supabase with trial data:', error);
+        // Continue even if Supabase update fails
+      }
       
       // Sync updated user data to Supabase
       const updatedUserForSync = {
