@@ -56,6 +56,7 @@ interface User {
   };
   stripe_customer_id?: string;
   isNewUser?: boolean;
+  connections?: string[];
 }
 
 interface AuthContextType {
@@ -115,6 +116,79 @@ const setCachedUserData = (userId: string, userData: User): void => {
   });
 };
 
+// Helper function to sync user data to Supabase
+const syncUserToSupabase = async (userData: User): Promise<void> => {
+  try {
+    // Rate limit sync operations
+    if (shouldRateLimit(`syncUser-${userData.id}`)) {
+      console.warn('Rate limited: syncUserToSupabase');
+      return;
+    }
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.warn('Supabase configuration missing, skipping user sync');
+      return;
+    }
+
+    console.log('Syncing user to Supabase:', userData.id);
+    
+    const syncData = {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      role: userData.role,
+      photo_url: userData.photoURL || null,
+      avatar_url: userData.photoURL || null,
+      email_verified: userData.emailVerified,
+      subscription_status: userData.subscription.status,
+      subscription_events_quota: userData.subscription.eventsQuota,
+      subscription_events_used: userData.subscription.eventsUsed,
+      subscription_trial_ends_at: userData.subscription.trialEndsAt?.toISOString() || null,
+      stripe_customer_id: userData.stripe_customer_id || null,
+      profile_title: userData.profile?.title || null,
+      profile_company: userData.profile?.company || null,
+      profile_location: userData.profile?.location || null,
+      profile_about: userData.profile?.about || null,
+      profile_phone: userData.profile?.phone || null,
+      profile_website: userData.profile?.website || null,
+      profile_linkedin: userData.profile?.linkedin || null,
+      profile_skills: userData.profile?.skills || [],
+      profile_points: userData.profile?.points || 0,
+      connections: userData.connections || [],
+      is_founder: userData.profile?.isFounder || false,
+      founder_status: userData.profile?.founderStatus || null,
+      company_stage: userData.profile?.companyStage || null,
+      looking_for: userData.profile?.lookingFor || [],
+      social_links: userData.profile?.socialLinks || {},
+      bio: userData.profile?.bio || null,
+      interests: userData.profile?.interests || []
+    };
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/sync-user`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(syncData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Failed to sync user to Supabase:', errorText);
+      // Don't throw error to avoid breaking the auth flow
+    } else {
+      console.log('User synced to Supabase successfully');
+    }
+  } catch (error) {
+    console.error('Error syncing user to Supabase:', error);
+    // Don't throw error to avoid breaking the auth flow
+  }
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -157,6 +231,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const userData = await getUserData(refreshedUser);
           setCachedUserData(refreshedUser.uid, userData);
           setUser(userData);
+          
+          // Sync user data to Supabase
+          await syncUserToSupabase(userData);
         } catch (err) {
           console.error('Error getting user data:', err);
           // If we have cached data, use it as fallback
@@ -212,7 +289,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             trialEndsAt: trialEndsAt || undefined
           },
           stripe_customer_id: userData.stripe_customer_id,
-          isNewUser: userData.isNewUser || false
+          isNewUser: userData.isNewUser || false,
+          connections: userData.connections || []
         };
       } else {
         // Create a new user document if it doesn't exist
@@ -232,7 +310,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
-          isNewUser: true
+          isNewUser: true,
+          connections: []
         };
         
         await setDoc(userRef, {
@@ -244,7 +323,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           subscription: newUser.subscription,
           createdAt: newUser.createdAt,
           updatedAt: newUser.updatedAt,
-          isNewUser: true
+          isNewUser: true,
+          connections: []
         });
 
         return newUser;
@@ -282,6 +362,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       toast.success('Account created successfully! Please check your email to verify your account.');
+      
+      // Get the created user data and sync to Supabase
+      const createdUserData = await getUserData(userCredential.user);
+      await syncUserToSupabase(createdUserData);
+      
       return userCredential;
     } catch (err: any) {
       console.error('Signup error:', err);
@@ -342,6 +427,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         toast.success('Logged in successfully!');
       }
+      
+      // Get user data and sync to Supabase
+      const userData = await getUserData(result.user);
+      await syncUserToSupabase(userData);
       
       return result;
     } catch (err: any) {
@@ -423,6 +512,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
       
+      // Sync updated user data to Supabase
+      if (user && user.id === userId) {
+        const updatedUserForSync = {
+          ...user,
+          name: profileData.name || user.name,
+          photoURL: profileData.photoURL !== undefined ? profileData.photoURL : user.photoURL,
+          profile: {
+            ...user.profile,
+            ...Object.fromEntries(
+              Object.entries(profileData).filter(([key]) => 
+                key !== 'name' && key !== 'photoURL'
+              )
+            )
+          }
+        };
+        await syncUserToSupabase(updatedUserForSync);
+      }
+      
       toast.success('Profile updated successfully!');
     } catch (err: any) {
       console.error('Profile update error:', err);
@@ -481,6 +588,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setCachedUserData(prev.id, updatedUser);
         return updatedUser;
       });
+      
+      // Sync updated user data to Supabase
+      const updatedUserForSync = {
+        ...user,
+        subscription: {
+          ...user.subscription,
+          status: 'trial',
+          eventsQuota: 2,
+          eventsUsed: 0,
+          trialEndsAt
+        }
+      };
+      await syncUserToSupabase(updatedUserForSync);
       
       toast.success('Free trial activated successfully!');
     } catch (err: any) {
@@ -635,6 +755,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setCachedUserData(userId, updatedUser);
         return updatedUser;
       });
+      
+      // Sync updated user data to Supabase
+      if (user && user.id === userId) {
+        const updatedUserForSync = {
+          ...user,
+          dbEmailVerified: true
+        };
+        await syncUserToSupabase(updatedUserForSync);
+      }
       
       console.log("AUTH DEBUG: Email verification status updated in database for user", userId);
     } catch (error) {
