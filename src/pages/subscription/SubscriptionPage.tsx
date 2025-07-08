@@ -4,14 +4,11 @@ import { MainLayout } from '../../layouts/MainLayout';
 import { PricingCard } from '../../components/billing/PricingCard';
 import { CustomQuoteModal } from '../../components/billing/CustomQuoteModal';
 import { AddOnCard } from '../../components/billing/AddOnCard';
-import { CustomQuoteModal } from '../../components/billing/CustomQuoteModal';
-import { AddOnCard } from '../../components/billing/AddOnCard';
 import { Button } from '../../components/common/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { stripeService, type SubscriptionPlan } from '../../services/stripeService';
 import { toast } from 'react-hot-toast';
 import { useEffect } from 'react';
-import { CheckCircle, ArrowRight, Star, Zap, Users, Crown, DollarSign, Plus } from 'lucide-react';
 import { CheckCircle, ArrowRight, Star, Zap, Users, Crown, DollarSign, Plus } from 'lucide-react';
 
 export function SubscriptionPage() {
@@ -19,10 +16,6 @@ export function SubscriptionPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = React.useState(false);
-  const [selectedPlan, setSelectedPlan] = React.useState<SubscriptionPlan | null>(null);
-  const [billingInterval, setBillingInterval] = React.useState<'monthly' | 'yearly'>('monthly');
-  const [isQuoteModalOpen, setIsQuoteModalOpen] = React.useState(false);
-  const [selectedAddOns, setSelectedAddOns] = React.useState<string[]>([]);
   const [selectedPlan, setSelectedPlan] = React.useState<SubscriptionPlan | null>(null);
   const [billingInterval, setBillingInterval] = React.useState<'monthly' | 'yearly'>('monthly');
   const [isQuoteModalOpen, setIsQuoteModalOpen] = React.useState(false);
@@ -65,8 +58,6 @@ export function SubscriptionPage() {
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
     console.log('Starting plan selection process for plan:', plan.id);
     
-    console.log('Starting plan selection process for plan:', plan.id);
-    
     if (!user) {
       console.log('No user found, redirecting to login');
       toast.error('Please log in to subscribe');
@@ -76,42 +67,68 @@ export function SubscriptionPage() {
     
     setLoading(true);
     setSelectedPlan(plan);
+    console.log('Selected plan:', plan);
 
     try {      
-      // Get the appropriate price ID based on billing interval
-      let priceId = plan.stripePriceId;
-      
-      // For yearly billing with monthly plans, use the annual price ID
-      if (billingInterval === 'yearly' && plan.interval === 'month') {
-        // Try to find the annual version of this plan
-        const annualPlan = stripeService.getAnnualPlans().find(p => p.id === `${plan.id}_annual`);
-        if (annualPlan) {
-          priceId = annualPlan.stripePriceId;
-        } else {
-          // Fallback to appending _annual to the price ID
-          priceId = `${plan.stripePriceId}_annual`;
-        }
+      console.log('Determining price ID for plan');
+      // Hardcoded price IDs for testing
+      let priceId;
+      switch(plan.id) {
+        case 'starter':
+          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
+          console.log('Using starter plan price ID');
+          break;
+        case 'professional':
+          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
+          console.log('Using professional plan price ID');
+          break;
+        case 'enterprise':
+          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
+          console.log('Using enterprise plan price ID');
+          break;
+        default:
+          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
+          console.log('Using default price ID');
       }
-      
-      // Create a checkout session using our edge function
-      const { url } = await stripeService.createCheckoutSession({
+      console.log('Using price ID:', priceId);
+
+      console.log('Creating checkout session data object');
+      const checkoutData = {
         userId: user.id,
         userEmail: user.email,
         priceId: priceId,
-        successUrl: `${window.location.origin}/billing?success=true`,
+        successUrl: `${window.location.origin}/subscription?success=true`,
         cancelUrl: `${window.location.origin}/subscription?canceled=true`,
         metadata: {
           plan_id: plan.id,
           billing_interval: billingInterval
         }
-      });
+      };
+      console.log('Checkout session data:', checkoutData);
+
+      // Create a checkout session using our edge function
+      console.log('Calling createCheckoutSession function');
+      const result = await stripeService.createCheckoutSession(checkoutData);
+      console.log('Checkout session created:', result);
       
       // Redirect to the checkout URL
-      console.log(`Redirecting to Stripe Checkout: ${url}`);
-      window.location.href = url;
+      console.log(`Redirecting to Stripe Checkout URL: ${result?.url}`);
+      if (result?.url) {
+        console.log('About to redirect to:', result.url);
+        window.location.href = result.url;
+      } else {
+        console.error('No checkout URL returned');
+        toast.error('Failed to create checkout session. No URL returned.');
+        setLoading(false);
+        setSelectedPlan(null);
+      }
     } catch (error) {
-      console.error('Error redirecting to payment page:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to process payment. Please try again.');
+      console.error('Error creating checkout session:', error);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+      toast.error('Failed to create checkout session. Please try again.');
       setLoading(false);
       setSelectedPlan(null);
     }
@@ -120,6 +137,26 @@ export function SubscriptionPage() {
   const handleRequestQuote = (plan: SubscriptionPlan) => {
     setIsQuoteModalOpen(true);
   };
+  
+  // Check for success/cancel parameters from Stripe redirect
+  React.useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled'); 
+    console.log('URL params - success:', success, 'canceled:', canceled);
+    
+    if (success === 'true') {
+      console.log('Subscription successful, redirecting to billing');
+      toast.success('Subscription activated successfully!');
+      
+      // Wait a moment to ensure the database has been updated
+      setTimeout(() => {
+        navigate('/billing', { replace: true });
+      }, 1500);
+    } else if (canceled === 'true') {
+      console.log('Subscription canceled');
+      toast.error('Subscription canceled. You can try again anytime.');
+    }
+  }, [searchParams, navigate]);
   
   const handleBillingIntervalChange = (interval: 'monthly' | 'yearly') => {
     setBillingInterval(interval);
@@ -138,10 +175,13 @@ export function SubscriptionPage() {
   const plans = stripeService.getMonthlyPlans();
   const addOns = stripeService.getAddOns();
 
-  const totalAddOnCost = selectedAddOns.reduce((total, addOnId) => {
-    const addOn = addOns.find(a => a.id === addOnId);
-    return total + (addOn?.price || 0);
-  }, 0);
+  const features = [
+    'Access to exclusive networking events',
+    'Connect with verified tech sales professionals',
+    'Event recordings and resources',
+    'Advanced profile features',
+    'Priority customer support'
+  ];
 
   const valueProps = [
     {
@@ -166,6 +206,11 @@ export function SubscriptionPage() {
     }
   ];
 
+  const totalAddOnCost = selectedAddOns.reduce((total, addOnId) => {
+    const addOn = addOns.find(a => a.id === addOnId);
+    return total + (addOn?.price || 0);
+  }, 0);
+
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -183,14 +228,17 @@ export function SubscriptionPage() {
           <div className="mt-8 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl p-8 max-w-2xl mx-auto border border-indigo-200">
             <div className="flex items-center justify-center mb-4">
               <CheckCircle className="w-8 h-8 text-green-500 mr-3" />
+              <h3 className="text-2xl font-bold text-gray-900">Start Your Free Trial</h3>
             </div>
+            <p className="text-gray-600 mb-6">
+              Get full access to all features for 7 days with 2 event credits. No credit card required.
+            </p>
             <Button
               onClick={handleFreeTrial}
               isLoading={loading && !selectedPlan}
               className="text-lg px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
             >
-              Start 7-Day Free Trial 
-              <ArrowRight className="ml-2 w-5 h-5" />
+              Start 7-Day Free Trial
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </div>
@@ -287,6 +335,44 @@ export function SubscriptionPage() {
               />
             ))}
           </div>
+
+          {selectedAddOns.length > 0 && (
+            <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md mx-auto">
+              <h3 className="font-semibold text-gray-900 mb-2">Selected Add-ons</h3>
+              <div className="space-y-2">
+                {selectedAddOns.map(addOnId => {
+                  const addOn = addOns.find(a => a.id === addOnId);
+                  return addOn ? (
+                    <div key={addOnId} className="flex justify-between text-sm">
+                      <span>{addOn.name}</span>
+                      <span>${addOn.price}/month</span>
+                    </div>
+                  ) : null;
+                })}
+                <div className="border-t border-yellow-300 pt-2 flex justify-between font-semibold">
+                  <span>Total Add-ons:</span>
+                  <span>${totalAddOnCost}/month</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Features Overview */}
+        <div className="mb-16">
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
+            What's Included in Every Plan
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            {features.map((feature, index) => (
+              <div key={index} className="text-center">
+                <div className="bg-indigo-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="w-6 h-6 text-indigo-600" />
+                </div>
+                <p className="text-sm text-gray-700">{feature}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* ROI Calculator */}
@@ -345,6 +431,35 @@ export function SubscriptionPage() {
               <p className="text-gray-600 text-sm">
                 No setup fees, no hidden costs. The price you see is exactly what you'll pay. 
                 All plans include access to our full platform and features.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">What's included in the Team plan?</h3>
+              <p className="text-gray-600 text-sm">
+                Team plan includes everything in Professional plus team management tools, bulk registration, 
+                and dedicated account management. Minimum 3 users required.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">How does the annual discount work?</h3>
+              <p className="text-gray-600 text-sm">
+                Annual plans save you 20% compared to monthly billing. You'll be charged once per year 
+                and can still cancel anytime with a prorated refund.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">What's the Premium Profile Badge?</h3>
+              <p className="text-gray-600 text-sm">
+                The Premium Profile Badge is a $29/month add-on that gives you a verified badge, higher search visibility, 
+                and priority in connection recommendations.
+                <a href="mailto:support@inrooms.com" className="text-indigo-600 hover:text-indigo-500 ml-1">Contact our support team</a>
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">How does custom pricing work?</h3>
+              <p className="text-gray-600 text-sm">
+                For large enterprises (50+ users), we create custom solutions with tailored pricing based on your specific 
+                needs, integrations, and usage requirements. <a href="mailto:enterprise@inrooms.com" className="text-indigo-600 hover:text-indigo-500">Contact our enterprise team</a> to learn more.
               </p>
             </div>
           </div>

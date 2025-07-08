@@ -536,90 +536,10 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
     if (error) {
       console.error('❌ Error updating user subscription info:', error)
     } else {
-      console.log(`✅ Updated user ${userId} with subscription info:`)
-      console.log(`- Status: ${subscription.status}`)
-      console.log(`- Subscription ID: ${subscription.id}`)
-      console.log(`- Plan Details:`, planDetails)
-      
-      // Also update Firestore directly
-      try {
-        // Initialize Firebase Admin SDK
-        const { initializeApp, cert } = await import('npm:firebase-admin/app');
-        const { getFirestore } = await import('npm:firebase-admin/firestore');
-        
-        // Check if app is already initialized
-        let app;
-        try {
-          const admin = await import('npm:firebase-admin');
-          app = admin.apps.length ? admin.apps[0] : null;
-        } catch (e) {
-          console.log('Firebase admin not initialized yet');
-        }
-        
-        if (!app) {
-          // Get service account from environment variable
-          const serviceAccount = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT') || '{}');
-          
-          if (!serviceAccount.project_id) {
-            throw new Error('Firebase service account not configured');
-          }
-          
-          app = initializeApp({
-            credential: cert(serviceAccount)
-          });
-        }
-        
-        const db = getFirestore();
-        
-        // Update Firestore user document
-        await db.collection('users').doc(userId).update({
-          subscription: {
-            status: subscription.status === 'active' ? 'active' : 'inactive',
-            eventsQuota: planDetails.eventsQuota,
-            eventsUsed: 0,
-            plan: planDetails.planId
-          },
-          updatedAt: new Date()
-        });
-        
-        console.log(`✅ Updated Firestore user ${userId} with subscription info`);
-      } catch (firebaseError) {
-        console.error('❌ Error updating Firestore:', firebaseError);
-        console.log('Continuing webhook processing despite Firestore error');
-      }
-      
-      // Update Firestore user document with subscription info
-      try {
-        // Get Firestore admin from Firebase Admin SDK
-        const admin = await import('npm:firebase-admin@11.11.1');
-        
-        // Initialize Firebase Admin if not already initialized
-        if (!admin.apps.length) {
-          admin.initializeApp({
-            credential: admin.credential.cert({
-              projectId: Deno.env.get('FIREBASE_PROJECT_ID'),
-              clientEmail: Deno.env.get('FIREBASE_CLIENT_EMAIL'),
-              privateKey: Deno.env.get('FIREBASE_PRIVATE_KEY')?.replace(/\\n/g, '\n')
-            })
-          });
-        }
-        
-        // Update Firestore user document
-        const db = admin.firestore();
-        await db.collection('users').doc(userId).update({
-          'subscription.status': subscription.status === 'active' ? 'active' : 'inactive',
-          'subscription.eventsQuota': planDetails.eventsQuota,
-          'subscription.eventsUsed': 0,
-          'stripe_subscription_id': subscription.id,
-          'stripe_subscription_status': subscription.status,
-          'updatedAt': admin.firestore.FieldValue.serverTimestamp()
-        });
-        
-        console.log(`✅ Updated Firestore user ${userId} with subscription info`);
-      } catch (firestoreError) {
-        console.error('❌ Error updating Firestore user:', firestoreError);
-        // Continue execution even if Firestore update fails
-      }
+      console.log(`✅ Updated user ${userId} with subscription info`)
+      console.log(`  - Subscription ID: ${subscription.id}`);
+      console.log(`  - Events Quota: ${planDetails.eventsQuota}`);
+      console.log(`  - Status: ${subscription.status}`);
     }
   } catch (error) {
     console.error('❌ Error in handleSubscriptionCreated:', error)
@@ -784,53 +704,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   if (error) {
     console.error('❌ Error updating user subscription status:', error)
   } else {
-    console.log(`✅ Updated user ${userId} subscription status to inactive`);
-    
-    // Also update Firestore directly
-    try {
-      // Initialize Firebase Admin SDK
-      const { initializeApp, cert } = await import('npm:firebase-admin/app');
-      const { getFirestore } = await import('npm:firebase-admin/firestore');
-      
-      // Check if app is already initialized
-      let app;
-      try {
-        const admin = await import('npm:firebase-admin');
-        app = admin.apps.length ? admin.apps[0] : null;
-      } catch (e) {
-        console.log('Firebase admin not initialized yet');
-      }
-      
-      if (!app) {
-        // Get service account from environment variable
-        const serviceAccount = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT') || '{}');
-        
-        if (!serviceAccount.project_id) {
-          throw new Error('Firebase service account not configured');
-        }
-        
-        app = initializeApp({
-          credential: cert(serviceAccount)
-        });
-      }
-      
-      const db = getFirestore();
-      
-      // Update Firestore user document
-      await db.collection('users').doc(userId).update({
-        subscription: {
-          status: 'inactive',
-          eventsQuota: 0,
-          eventsUsed: 0
-        },
-        updatedAt: new Date()
-      });
-      
-      console.log(`✅ Updated Firestore user ${userId} subscription status to inactive`);
-    } catch (firebaseError) {
-      console.error('❌ Error updating Firestore:', firebaseError);
-      console.log('Continuing webhook processing despite Firestore error');
-    }
+    console.log(`✅ Updated user ${userId} subscription status to inactive`)
   }
 }
 
@@ -957,39 +831,6 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
           console.error('❌ Error updating user subscription details:', error);
         } else {
           console.log(`✅ Updated user ${userId} with subscription details and reset events count`);
-          
-          // Update Firestore user document with subscription info
-          try {
-            // Get Firestore admin from Firebase Admin SDK
-            const admin = await import('npm:firebase-admin@11.11.1');
-            
-            // Initialize Firebase Admin if not already initialized
-            if (!admin.apps.length) {
-              admin.initializeApp({
-                credential: admin.credential.cert({
-                  projectId: Deno.env.get('FIREBASE_PROJECT_ID'),
-                  clientEmail: Deno.env.get('FIREBASE_CLIENT_EMAIL'),
-                  privateKey: Deno.env.get('FIREBASE_PRIVATE_KEY')?.replace(/\\n/g, '\n')
-                })
-              });
-            }
-            
-            // Update Firestore user document
-            const db = admin.firestore();
-            await db.collection('users').doc(userId).update({
-              'subscription.status': 'active',
-              'subscription.eventsQuota': planDetails.eventsQuota,
-              'subscription.eventsUsed': 0,
-              'stripe_subscription_id': subscription.id,
-              'stripe_subscription_status': subscription.status,
-              'updatedAt': admin.firestore.FieldValue.serverTimestamp()
-            });
-            
-            console.log(`✅ Updated Firestore user ${userId} with subscription info`);
-          } catch (firestoreError) {
-            console.error('❌ Error updating Firestore user:', firestoreError);
-            // Continue execution even if Firestore update fails
-          }
         }
       } catch (subError) {
         console.error('❌ Error retrieving subscription details:', subError);
@@ -1007,35 +848,6 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
           console.error('❌ Error resetting events count:', error);
         } else {
           console.log(`✅ Reset events used count for user ${userId}`);
-          
-          // Update Firestore user document with reset events count
-          try {
-            // Get Firestore admin from Firebase Admin SDK
-            const admin = await import('npm:firebase-admin@11.11.1');
-            
-            // Initialize Firebase Admin if not already initialized
-            if (!admin.apps.length) {
-              admin.initializeApp({
-                credential: admin.credential.cert({
-                  projectId: Deno.env.get('FIREBASE_PROJECT_ID'),
-                  clientEmail: Deno.env.get('FIREBASE_CLIENT_EMAIL'),
-                  privateKey: Deno.env.get('FIREBASE_PRIVATE_KEY')?.replace(/\\n/g, '\n')
-                })
-              });
-            }
-            
-            // Update Firestore user document
-            const db = admin.firestore();
-            await db.collection('users').doc(userId).update({
-              'subscription.eventsUsed': 0,
-              'updatedAt': admin.firestore.FieldValue.serverTimestamp()
-            });
-            
-            console.log(`✅ Reset events count in Firestore for user ${userId}`);
-          } catch (firestoreError) {
-            console.error('❌ Error updating Firestore user:', firestoreError);
-            // Continue execution even if Firestore update fails
-          }
         }
       }
     } else {
@@ -1052,77 +864,6 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
         console.error('❌ Error resetting events count:', error);
       } else {
         console.log(`✅ Reset events used count for user ${userId}`);
-        
-        // Also update Firestore directly
-        try {
-          // Initialize Firebase Admin SDK
-          const { initializeApp, cert } = await import('npm:firebase-admin/app');
-          const { getFirestore } = await import('npm:firebase-admin/firestore');
-          
-          // Check if app is already initialized
-          let app;
-          try {
-            const admin = await import('npm:firebase-admin');
-            app = admin.apps.length ? admin.apps[0] : null;
-          } catch (e) {
-            console.log('Firebase admin not initialized yet');
-          }
-          
-          if (!app) {
-            // Get service account from environment variable
-            const serviceAccount = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT') || '{}');
-            
-            if (!serviceAccount.project_id) {
-              throw new Error('Firebase service account not configured');
-            }
-            
-            app = initializeApp({
-              credential: cert(serviceAccount)
-            });
-          }
-          
-          const db = getFirestore();
-          
-          // Update Firestore user document
-          await db.collection('users').doc(userId).update({
-            'subscription.eventsUsed': 0,
-            updatedAt: new Date()
-          });
-          
-          console.log(`✅ Reset Firestore events used count for user ${userId}`);
-        } catch (firebaseError) {
-          console.error('❌ Error updating Firestore:', firebaseError);
-          console.log('Continuing webhook processing despite Firestore error');
-        }
-        
-        // Update Firestore user document with reset events count
-        try {
-          // Get Firestore admin from Firebase Admin SDK
-          const admin = await import('npm:firebase-admin@11.11.1');
-          
-          // Initialize Firebase Admin if not already initialized
-          if (!admin.apps.length) {
-            admin.initializeApp({
-              credential: admin.credential.cert({
-                projectId: Deno.env.get('FIREBASE_PROJECT_ID'),
-                clientEmail: Deno.env.get('FIREBASE_CLIENT_EMAIL'),
-                privateKey: Deno.env.get('FIREBASE_PRIVATE_KEY')?.replace(/\\n/g, '\n')
-              })
-            });
-          }
-          
-          // Update Firestore user document
-          const db = admin.firestore();
-          await db.collection('users').doc(userId).update({
-            'subscription.eventsUsed': 0,
-            'updatedAt': admin.firestore.FieldValue.serverTimestamp()
-          });
-          
-          console.log(`✅ Reset events count in Firestore for user ${userId}`);
-        } catch (firestoreError) {
-          console.error('❌ Error updating Firestore user:', firestoreError);
-          // Continue execution even if Firestore update fails
-        }
       }
     }
   } catch (error) {
@@ -1131,7 +872,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
-  const customerId = invoice.customer as string;
+  const customerId = invoice.customer as string
   
   console.log('Handling invoice.payment_failed event')
   console.log(`- Invoice ID: ${invoice.id}`)
@@ -1209,10 +950,7 @@ async function handlePaymentMethodAttached(paymentMethod: Stripe.PaymentMethod) 
       .eq('id', customerId)
       .single()
 
-    // Initialize userId variable
-    let userId: string | null = null;
-
-    if (!customer || customerError) {
+    if (customerError || !customer) {
       console.error('❌ Customer not found for payment method:', customerError)
       
       // Try to find customer in Stripe
@@ -1227,21 +965,21 @@ async function handlePaymentMethodAttached(paymentMethod: Stripe.PaymentMethod) 
             .single()
             
           if (userByEmail) {
-            userId = userByEmail.id;
-            console.log(`✅ Found user ${userId} by email lookup`);
-            
             // Create customer record
             await supabaseClient
               .from('stripe_customers')
               .insert({
                 id: customerId,
-                user_id: userId,
+                user_id: userByEmail.id,
                 email: stripeCustomer.email,
                 name: stripeCustomer.name || '',
                 created_at: new Date().toISOString()
               })
               
             console.log(`✅ Created missing customer record for ${customerId}`)
+            
+            // Continue with this user ID
+            customer = { user_id: userByEmail.id }
           } else {
             console.error(`❌ No user found with email ${stripeCustomer.email}`)
             return
@@ -1254,15 +992,6 @@ async function handlePaymentMethodAttached(paymentMethod: Stripe.PaymentMethod) 
         console.error('❌ Error retrieving customer from Stripe:', stripeError)
         return
       }
-    } else {
-      userId = customer.user_id;
-      console.log(`✅ Found user ${userId} from customer record`);
-    }
-
-    // If we still don't have a userId, we can't continue
-    if (!userId) {
-      console.error('❌ Could not determine user_id for invoice');
-      return;
     }
 
     // Store payment method
@@ -1271,7 +1000,7 @@ async function handlePaymentMethodAttached(paymentMethod: Stripe.PaymentMethod) 
       .upsert({
         id: paymentMethod.id,
         customer_id: customerId,
-        user_id: userId,
+        user_id: customer.user_id,
         type: paymentMethod.type,
         card_brand: paymentMethod.card?.brand,
         card_last4: paymentMethod.card?.last4,
@@ -1284,7 +1013,7 @@ async function handlePaymentMethodAttached(paymentMethod: Stripe.PaymentMethod) 
     if (paymentMethodError) {
       console.error('❌ Error storing payment method:', paymentMethodError)
     } else {
-      console.log(`✅ Stored payment method ${paymentMethod.id} for user ${userId}`)
+      console.log(`✅ Stored payment method ${paymentMethod.id} for user ${customer.user_id}`)
     }
     
     // If this is the first payment method, set it as default
