@@ -5,8 +5,6 @@ import { PricingCard } from '../../components/billing/PricingCard';
 import { PaymentMethodCard } from '../../components/billing/PaymentMethodCard';
 import { AddOnCard } from '../../components/billing/AddOnCard';
 import { CustomQuoteModal } from '../../components/billing/CustomQuoteModal';
-import { AddOnCard } from '../../components/billing/AddOnCard';
-import { CustomQuoteModal } from '../../components/billing/CustomQuoteModal';
 import { CreditCard, Download, Plus, ExternalLink, AlertCircle, CheckCircle, TrendingUp, Crown } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { useAuth } from '../../contexts/AuthContext';
@@ -18,7 +16,6 @@ export function BillingPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [loading, setLoading] = React.useState(false);
-  const [selectedPlan, setSelectedPlan] = React.useState<SubscriptionPlan | null>(null);
   const [selectedPlan, setSelectedPlan] = React.useState<SubscriptionPlan | null>(null);
   const [paymentMethods, setPaymentMethods] = React.useState<any[]>([]);
   const [invoices, setInvoices] = React.useState<any[]>([]);
@@ -32,7 +29,7 @@ export function BillingPage() {
     return stripeService.getMonthlyPlans().find(plan => 
       plan.eventsQuota === user.subscription.eventsQuota
     ) || stripeService.getMonthlyPlans()[0];
-  }, [user]); 
+  }, [user]);
 
   const loadBillingData = async () => {
     if (!user?.stripe_customer_id) return;
@@ -53,13 +50,6 @@ export function BillingPage() {
       setLoadingData(false);
     }
   };
-
-  const currentPlan = React.useMemo(() => {
-    if (!user?.subscription) return null;
-    return stripeService.getMonthlyPlans().find(plan => 
-      plan.eventsQuota === user.subscription.eventsQuota
-    ) || stripeService.getMonthlyPlans()[0];
-  }, [user]);
 
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
     console.log('Starting plan selection process for plan:', plan.id);
