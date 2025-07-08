@@ -7,6 +7,7 @@ import { stripeService, type SubscriptionPlan } from '../../services/stripeServi
 interface PricingCardProps {
   plan: SubscriptionPlan;
   isCurrentPlan?: boolean;
+  selectedPlan?: SubscriptionPlan | null;
   onSelectPlan: (plan: SubscriptionPlan) => void;
   onRequestQuote?: (plan: SubscriptionPlan) => void;
   loading?: boolean;
@@ -16,6 +17,7 @@ interface PricingCardProps {
 export function PricingCard({ 
   plan, 
   isCurrentPlan = false, 
+  selectedPlan,
   onSelectPlan, 
   onRequestQuote,
   loading = false,
@@ -224,7 +226,7 @@ export function PricingCard({
           onClick={handleAction}
           disabled={isCurrentPlan || loading}
           isLoading={loading && selectedPlan?.id === plan.id}
-          className={`w-full flex items-center justify-center ${
+          className={`w-full ${
             plan.isCustom
               ? 'bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-gray-950 text-white shadow-lg'
               : plan.isPopular 
