@@ -272,11 +272,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
+      console.log("AUTH DEBUG: Getting user data for", firebaseUser.uid);
       const userRef = doc(db, 'users', firebaseUser.uid);
       const userSnap = await getDoc(userRef);
 
       if (userSnap.exists()) {
         const userData = userSnap.data();
+        
+        // Check if we need to sync from Supabase
+        const shouldSyncFromSupabase = await checkSupabaseForUpdates(firebaseUser.uid, userData);
+        
+        if (shouldSyncFromSupabase) {
+          console.log("AUTH DEBUG: Syncing from Supabase to Firestore for user", firebaseUser.uid);
+          const updatedUserData = await syncFromSupabaseToFirestore(firebaseUser.uid);
+          if (updatedUserData) {
+            // Return the updated data from Supabase
+            return updatedUserData;
+          }
+        }
         
         // Get email verification status from database
         const dbEmailVerified = userData.email_verified || false;
@@ -342,6 +355,122 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error('Error in getUserData:', err);
       throw err;
+    }
+  };
+
+  // Check if Supabase has newer subscription data than Firestore
+  const checkSupabaseForUpdates = async (userId: string, firestoreData: any): Promise<boolean> => {
+    try {
+      // Get Supabase data
+      const { data: supabaseUser, error } = await supabase
+        .from('users')
+        .select('subscription_status, subscription_events_quota, stripe_subscription_id, updated_at')
+        .eq('id', userId)
+        .single();
+      
+      if (error || !supabaseUser) {
+        console.log("AUTH DEBUG: No Supabase data found or error:", error?.message);
+        return false;
+      }
+      
+      // Check if Supabase has different subscription data
+      const hasNewerSubscriptionData = 
+        supabaseUser.subscription_status !== firestoreData.subscription?.status ||
+        supabaseUser.subscription_events_quota !== firestoreData.subscription?.eventsQuota ||
+        supabaseUser.stripe_subscription_id !== firestoreData.stripe_subscription_id;
+      
+      if (hasNewerSubscriptionData) {
+        console.log("AUTH DEBUG: Supabase has newer subscription data for user", userId);
+        console.log("Supabase:", {
+          status: supabaseUser.subscription_status,
+          quota: supabaseUser.subscription_events_quota,
+          subId: supabaseUser.stripe_subscription_id
+        });
+        console.log("Firestore:", {
+          status: firestoreData.subscription?.status,
+          quota: firestoreData.subscription?.eventsQuota,
+          subId: firestoreData.stripe_subscription_id
+        });
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error("Error checking Supabase for updates:", error);
+      return false;
+    }
+  };
+  
+  // Sync data from Supabase to Firestore
+  const syncFromSupabaseToFirestore = async (userId: string): Promise<User | null> => {
+    try {
+      // Get full user data from Supabase
+      const { data: supabaseUser, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error || !supabaseUser) {
+        console.error("Error getting Supabase user data:", error);
+        return null;
+      }
+      
+      // Update Firestore with Supabase data
+      const userRef = doc(db, 'users', userId);
+      
+      // Prepare subscription data
+      const subscriptionData = {
+        status: supabaseUser.subscription_status || 'inactive',
+        eventsQuota: supabaseUser.subscription_events_quota || 0,
+        eventsUsed: supabaseUser.subscription_events_used || 0,
+        trialEndsAt: supabaseUser.subscription_trial_ends_at ? new Date(supabaseUser.subscription_trial_ends_at) : undefined
+      };
+      
+      // Update Firestore document
+      await updateDoc(userRef, {
+        subscription: subscriptionData,
+        stripe_customer_id: supabaseUser.stripe_customer_id,
+        stripe_subscription_id: supabaseUser.stripe_subscription_id,
+        stripe_subscription_status: supabaseUser.stripe_subscription_status,
+        updatedAt: serverTimestamp()
+      });
+      
+      console.log("AUTH DEBUG: Updated Firestore from Supabase for user", userId);
+      
+      // Get the updated user data
+      const updatedUserSnap = await getDoc(userRef);
+      if (!updatedUserSnap.exists()) {
+        return null;
+      }
+      
+      const updatedUserData = updatedUserSnap.data();
+      
+      // Construct and return the user object
+      const trialEndsAt = updatedUserData.subscription?.trialEndsAt?.toDate?.();
+      
+      return {
+        id: userId,
+        name: updatedUserData.name || '',
+        email: updatedUserData.email || '',
+        role: updatedUserData.role || 'user',
+        photoURL: updatedUserData.photoURL || undefined,
+        emailVerified: auth.currentUser?.emailVerified || false,
+        dbEmailVerified: updatedUserData.email_verified || false,
+        profile: updatedUserData.profile || {},
+        subscription: {
+          status: updatedUserData.subscription?.status || 'inactive',
+          eventsQuota: updatedUserData.subscription?.eventsQuota || 0,
+          eventsUsed: updatedUserData.subscription?.eventsUsed || 0,
+          trialEndsAt: trialEndsAt || undefined
+        },
+        stripe_customer_id: updatedUserData.stripe_customer_id,
+        isNewUser: updatedUserData.isNewUser || false,
+        connections: updatedUserData.connections || []
+      };
+    } catch (error) {
+      console.error("Error syncing from Supabase to Firestore:", error);
+      return null;
     }
   };
 
