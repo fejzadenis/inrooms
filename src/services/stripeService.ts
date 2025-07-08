@@ -201,10 +201,13 @@ export const stripeService = {
   redirectToPaymentLink(paymentLink: string): void {
     window.location.href = paymentLink;
   },
-
-  // Add query parameters to payment link
-  enhancePaymentLink(paymentLink: string, params?: Record<string, string>): string {
-    if (!params) return paymentLink;
+  
+  // Enhanced version that takes parameters as an object
+  redirectToPaymentLink(paymentLink: string, params?: Record<string, string>): void {
+    if (!params) {
+      window.location.href = paymentLink;
+      return;
+    }
     
     const url = new URL(paymentLink);
     
@@ -215,37 +218,9 @@ export const stripeService = {
       }
     });
     
-    return url.toString();
+    window.location.href = url.toString();
   },
 
-  // Enhance payment link with user information
-  enhancePaymentLink(
-    paymentLink: string,
-    userId: string,
-    userEmail: string,
-    additionalParams: Record<string, string> = {}
-  ): string {
-    // Start with the base URL
-    const baseUrl = paymentLink;
-    
-    // Add required parameters
-    const params = new URLSearchParams();
-    params.append('client_reference_id', userId);
-    params.append('prefilled_email', encodeURIComponent(userEmail));
-    
-    // Add user_id to metadata
-    params.append('metadata[user_id]', userId);
-    
-    // Add any additional parameters
-    Object.entries(additionalParams).forEach(([key, value]) => {
-      params.append(key, value);
-    });
-    
-    // Combine URL and parameters
-    return `${baseUrl}?${params.toString()}`;
-  },
-
-  // Add client_reference_id and metadata to payment links
   enhancePaymentLink(paymentLink: string, userId: string, userEmail: string): string {
     const enhancedLink = new URL(paymentLink);
     
@@ -283,18 +258,23 @@ export const stripeService = {
       }
       
       // Enhance the payment link with user information and additional parameters
-      const paymentLinkWithParams = this.enhancePaymentLink(
-        paymentLink,
-        userId,
-        userEmail,
-        {
-          'success_url': encodeURIComponent(successUrl),
-          'cancel_url': encodeURIComponent(cancelUrl)
-        }
-      );
+      const enhancedLink = new URL(paymentLink);
+      
+      // Add user ID as client_reference_id
+      enhancedLink.searchParams.append('client_reference_id', userId);
+      
+      // Add user ID to metadata
+      enhancedLink.searchParams.append('metadata[user_id]', userId);
+      
+      // Add email
+      enhancedLink.searchParams.append('prefilled_email', userEmail);
+      
+      // Add success and cancel URLs
+      enhancedLink.searchParams.append('success_url', successUrl);
+      enhancedLink.searchParams.append('cancel_url', cancelUrl);
       
       // Redirect to the enhanced payment link
-      window.location.href = paymentLinkWithParams;
+      window.location.href = enhancedLink.toString();
     } catch (error) {
       console.error('Error purchasing feature:', error);
       throw error;

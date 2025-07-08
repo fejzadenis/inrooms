@@ -83,20 +83,10 @@ export function SubscriptionPage() {
       }
       
       // Add user ID, email, and metadata to the payment link
-      const finalPaymentLink = stripeService.enhancePaymentLink(
-        paymentLink,
-        user.id,
-        user.email
-      );
+      const enhancedLink = stripeService.enhancePaymentLink(paymentLink, user.id, user.email);
       
-      // Add user ID and email as parameters to the payment link
-      stripeService.redirectToPaymentLink(paymentLink, {
-        'client_reference_id': user.id,
-        'prefilled_email': user.email,
-        'metadata[user_id]': user.id,
-        'metadata[plan_id]': plan.id,
-        'metadata[billing_interval]': billingInterval
-      });
+      // Redirect to the enhanced payment link
+      window.location.href = enhancedLink;
     } catch (error) {
       console.error('Error redirecting to payment page:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to process payment. Please try again.');
