@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../../layouts/MainLayout';
 import { PricingCard } from '../../components/billing/PricingCard';
 import { PaymentMethodCard } from '../../components/billing/PaymentMethodCard';
@@ -12,6 +13,8 @@ import { toast } from 'react-hot-toast';
 
 export function BillingPage() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = React.useState(false);
   const [selectedPlan, setSelectedPlan] = React.useState<SubscriptionPlan | null>(null);
   const [paymentMethods, setPaymentMethods] = React.useState<any[]>([]);
