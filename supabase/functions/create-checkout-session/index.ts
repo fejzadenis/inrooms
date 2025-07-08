@@ -194,7 +194,7 @@ serve(async (req) => {
     // Store checkout session in database
     await supabaseClient
       .from('stripe_checkout_sessions')
-      .insert({
+      .upsert({
         id: session.id,
         user_id: userId,
         customer_id: customerId,
@@ -204,9 +204,20 @@ serve(async (req) => {
         success_url: successUrl,
         cancel_url: cancelUrl,
         created_at: new Date().toISOString()
-      })
+      }, { onConflict: 'id' })
 
     console.log(`Stored checkout session ${session.id} for user ${userId} in database`)
+
+    // Update user record with customer ID immediately
+    await supabaseClient
+      .from('users')
+      .update({
+        stripe_customer_id: customerId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+
+    console.log(`Updated user ${userId} with customer ID ${customerId}`)
 
     return new Response(
       JSON.stringify({ 
@@ -223,7 +234,7 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({
-        error: 'Failed to create checkout session',
+        error: 'Failed to create checkout session', 
         details: error instanceof Error ? error.message : 'Unknown error'
       }),
       { 

@@ -62,7 +62,7 @@ export function BillingPage() {
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
     console.log('Starting plan selection process for plan:', plan.id);
     
-    if (!user) {
+    if (!user) { 
       console.log('No user found, redirecting to login');
       toast.error('Please log in to subscribe');
       navigate('/login', { state: { from: '/subscription' } });
@@ -82,23 +82,9 @@ export function BillingPage() {
       console.log('Determining price ID for plan');
       // Hardcoded price IDs for testing
       let priceId;
-      switch(plan.id) {
-        case 'starter':
-          priceId = 'price_1Rif3UGCopIxkzs6WPBgO8wt';
-          console.log('Using starter plan price ID');
-          break;
-        case 'professional':
-          priceId = 'price_1Rif4MGCopIxkzs6EN1InWXN';
-          console.log('Using professional plan price ID');
-          break;
-        case 'enterprise':
-          priceId = 'price_1Rif6HGCopIxkzs6rLt5gZQf';
-          console.log('Using enterprise plan price ID');
-          break;
-        default:
-          priceId = 'price_1RiexMGCopIxkzs6f8lx95gU';
-          console.log('Using default price ID');
-      }
+      
+      // Use the price ID from the plan object
+      priceId = plan.stripePriceId;
       console.log('Using price ID:', priceId);
 
       console.log('Creating checkout session data object');
@@ -106,8 +92,8 @@ export function BillingPage() {
         userId: user.id,
         userEmail: user.email,
         priceId: priceId,
-        successUrl: `${window.location.origin}/subscription?success=true`,
-        cancelUrl: `${window.location.origin}/subscription?canceled=true`,
+        successUrl: `${window.location.origin}/billing?success=true`,
+        cancelUrl: `${window.location.origin}/billing?canceled=true`,
         metadata: {
           plan_id: plan.id,
           billing_interval: billingInterval

@@ -709,7 +709,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
-  const customerId = invoice.customer as string
+  const customerId = invoice.customer as string;
   
   console.log('Handling invoice.payment_succeeded event')
   console.log(`- Invoice ID: ${invoice.id}`)
@@ -717,14 +717,17 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   console.log(`- Subscription: ${invoice.subscription || 'None'}`)
   
   try {
-    // Get user ID from customer
-    const { data: customer, error: customerError } = await supabaseClient 
+    // Get user ID from customer - declare as a variable that can be reassigned
+    let { data: customer, error: customerError } = await supabaseClient 
       .from('stripe_customers')
       .select('user_id')
       .eq('id', customerId)
       .single()
 
-    if (customerError || !customer) {
+    // Initialize userId variable
+    let userId: string | null = null;
+
+    if (!customer || customerError) {
       console.error('❌ Customer not found for invoice:', customerError)
       
       // Try to find customer in Stripe
@@ -739,21 +742,21 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
             .single()
             
           if (userByEmail) {
+            userId = userByEmail.id;
+            console.log(`✅ Found user ${userId} by email lookup`);
+            
             // Create customer record
             await supabaseClient
               .from('stripe_customers')
               .insert({
                 id: customerId,
-                user_id: userByEmail.id,
+                user_id: userId,
                 email: stripeCustomer.email,
                 name: stripeCustomer.name || '',
                 created_at: new Date().toISOString()
               })
               
             console.log(`✅ Created missing customer record for ${customerId} linked to user ${userByEmail.id}`)
-            
-            // Continue with this user ID
-            customer = { user_id: userByEmail.id }
           } else {
             console.error(`❌ No user found with email ${stripeCustomer.email}`)
             return
@@ -766,6 +769,15 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
         console.error('❌ Error retrieving customer from Stripe:', stripeError)
         return
       }
+    } else {
+      userId = customer.user_id;
+      console.log(`✅ Found user ${userId} from customer record`);
+    }
+
+    // If we still don't have a userId, we can't continue
+    if (!userId) {
+      console.error('❌ Could not determine user_id for invoice');
+      return;
     }
 
     // Store invoice
@@ -775,7 +787,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
         id: invoice.id,
         customer_id: customerId,
         subscription_id: invoice.subscription as string || null,
-        user_id: customer.user_id,
+        user_id: userId,
         amount_paid: invoice.amount_paid,
         amount_due: invoice.amount_due,
         currency: invoice.currency,
@@ -789,22 +801,70 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     if (invoiceError) {
       console.error('❌ Error storing invoice:', invoiceError)
     } else {
-      console.log(`✅ Stored invoice ${invoice.id} for user ${customer.user_id}`)
+      console.log(`✅ Stored invoice ${invoice.id} for user ${userId}`)
     }
 
-    // Reset events used count for new billing period
-    const { error } = await supabaseClient
-      .from('users')
-      .update({
-        subscription_events_used: 0,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', customer.user_id)
+    // If this is a subscription payment, get the subscription details
+    if (invoice.subscription) {
+      try {
+        const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+        const priceId = subscription.items.data[0]?.price.id;
+        const planDetails = getPlanDetailsByPriceId(priceId || '');
+        
+        console.log(`Subscription payment for ${invoice.subscription} with price ${priceId}`);
+        console.log(`- Events Quota: ${planDetails.eventsQuota}`);
+        
+        // Reset events used count for new billing period and update subscription details
+        const { error } = await supabaseClient
+          .from('users')
+          .update({
+            subscription_events_used: 0,
+            subscription_events_quota: planDetails.eventsQuota,
+            subscription_status: 'active',
+            stripe_subscription_status: subscription.status,
+            stripe_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', userId);
 
-    if (error) {
-      console.error('❌ Error resetting events count:', error)
+        if (error) {
+          console.error('❌ Error updating user subscription details:', error);
+        } else {
+          console.log(`✅ Updated user ${userId} with subscription details and reset events count`);
+        }
+      } catch (subError) {
+        console.error('❌ Error retrieving subscription details:', subError);
+        
+        // Still reset events used count even if we can't get subscription details
+        const { error } = await supabaseClient
+          .from('users')
+          .update({
+            subscription_events_used: 0,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', userId);
+          
+        if (error) {
+          console.error('❌ Error resetting events count:', error);
+        } else {
+          console.log(`✅ Reset events used count for user ${userId}`);
+        }
+      }
     } else {
-      console.log(`✅ Reset events used count for user ${customer.user_id}`)
+      // For non-subscription invoices, just reset the events count
+      const { error } = await supabaseClient
+        .from('users')
+        .update({
+          subscription_events_used: 0,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+        
+      if (error) {
+        console.error('❌ Error resetting events count:', error);
+      } else {
+        console.log(`✅ Reset events used count for user ${userId}`);
+      }
     }
   } catch (error) {
     console.error('❌ Error in handlePaymentSucceeded:', error)
@@ -1202,9 +1262,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 function getPlanDetailsByPriceId(priceId: string): { planId: string; eventsQuota: number } {
   const planMapping: Record<string, { planId: string; eventsQuota: number }> = {
     // Monthly plans
-    'price_starter_monthly': { planId: 'starter_monthly', eventsQuota: 3 },
-    'price_professional_monthly': { planId: 'professional_monthly', eventsQuota: 8 },
-    'price_enterprise_monthly': { planId: 'enterprise_monthly', eventsQuota: 15 },
+    'price_starter_monthly': { planId: 'starter', eventsQuota: 3 },
+    'price_professional_monthly': { planId: 'professional', eventsQuota: 8 },
+    'price_enterprise_monthly': { planId: 'enterprise', eventsQuota: 15 },
     'price_team_monthly': { planId: 'team', eventsQuota: 10 },
     
     // Annual plans
@@ -1220,16 +1280,16 @@ function getPlanDetailsByPriceId(priceId: string): { planId: string; eventsQuota
     'price_team_monthly_annual': { planId: 'team', eventsQuota: 10 },
     
     // Live mode price IDs (if different)
-    'price_1Rif3UGCopIxkzs6WPBgO8wt': { planId: 'starter_monthly', eventsQuota: 3 },
-    'price_1Rif4MGCopIxkzs6EN1InWXN': { planId: 'professional_monthly', eventsQuota: 8 },
-    'price_1Rif6HGCopIxkzs6rLt5gZQf': { planId: 'enterprise_monthly', eventsQuota: 15 },
-    'price_1RiexMGCopIxkzs6f8lx95gU': { planId: 'team_monthly', eventsQuota: 10 },
+    'price_1Rif3UGCopIxkzs6WPBgO8wt': { planId: 'starter', eventsQuota: 3 },
+    'price_1Rif4MGCopIxkzs6EN1InWXN': { planId: 'professional', eventsQuota: 8 },
+    'price_1Rif6HGCopIxkzs6rLt5gZQf': { planId: 'enterprise', eventsQuota: 15 },
+    'price_1RiexMGCopIxkzs6f8lx95gU': { planId: 'team', eventsQuota: 10 },
   }
 
   const plan = planMapping[priceId];
   if (!plan) {
     console.warn(`Unknown price ID: ${priceId}, defaulting to starter plan`);
-    return { planId: 'starter_monthly', eventsQuota: 3 };
+    return { planId: 'starter', eventsQuota: 3 };
   }
   
   console.log(`Mapped price ID ${priceId} to plan ${plan.planId} with ${plan.eventsQuota} events quota`)
