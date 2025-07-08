@@ -25,6 +25,10 @@ export function BillingPage() {
   const [loadingData, setLoadingData] = React.useState(true);
   const [billingInterval, setBillingInterval] = React.useState<'monthly' | 'yearly'>('monthly');
   const [isQuoteModalOpen, setIsQuoteModalOpen] = React.useState(false);
+  const [selectedAddOns, setSelectedAddOns] = React.useState<string[]>([]);
+
+  const currentPlan = React.useMemo(() => {
+    if (!user?.subscription) return null;
     return stripeService.getMonthlyPlans().find(plan => 
       plan.eventsQuota === user.subscription.eventsQuota
     ) || stripeService.getMonthlyPlans()[0];
@@ -60,7 +64,7 @@ export function BillingPage() {
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
     console.log('Starting plan selection process for plan:', plan.id);
     
-  const handleSelectPlan = async (plan: SubscriptionPlan) => {
+    if (!user) {
       console.log('No user found, redirecting to login');
       toast.error('Please log in to subscribe');
       navigate('/login', { state: { from: '/subscription' } });
@@ -133,20 +137,9 @@ export function BillingPage() {
       toast.success('Subscription updated successfully!');
       loadBillingData();
     } else if (canceled === 'true') {
-    setLoading(true);
-    setSelectedPlan(plan);
-
-    try {
-      // Use the existing payment link redirection method
-      stripeService.redirectToPaymentLink(plan.paymentLink);
-    } catch (error) {
-      console.error('Error redirecting to payment:', error);
-      toast.error('Failed to start checkout process. Please try again.');
-    } finally {
-      setLoading(false);
-      setSelectedPlan(null);
+      toast.error('Subscription update canceled');
     }
-  };
+  }, [searchParams]);
 
   const handleRequestQuote = (plan: SubscriptionPlan) => {
     setIsQuoteModalOpen(true);
@@ -230,6 +223,7 @@ export function BillingPage() {
         ? prev.filter(id => id !== addOn.id)
         : [...prev, addOn.id]
     );
+  };
     
   const plans = stripeService.getMonthlyPlans();
   const addOns = stripeService.getAddOns();
@@ -278,6 +272,9 @@ export function BillingPage() {
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
                   {currentPlan?.targetAudience || 'Trial user'}
+                </p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-gray-500">Status</h3>
                 <div className="flex items-center mt-1">
                   <div className={`w-2 h-2 rounded-full mr-2 ${
@@ -307,6 +304,8 @@ export function BillingPage() {
                 <h3 className="text-sm font-medium text-gray-500">Monthly Value</h3>
                 <p className="text-lg font-semibold text-green-600">
                   ${currentPlan?.price || 0}
+                </p>
+                <div className="flex items-center text-sm text-gray-600 mt-1">
                   <TrendingUp className="w-4 h-4 mr-1" />
                   <span>ROI: {currentPlan ? Math.round(10000 / currentPlan.price) : 0}x</span>
                 </div>
@@ -314,31 +313,6 @@ export function BillingPage() {
             </div>
           </div>
         )}
-
-        {/* Billing Toggle */}
-        <div className="flex justify-center">
-          <div className="bg-gray-100 rounded-lg p-1 flex">
-            <button
-              onClick={() => setBillingInterval('monthly')}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                billingInterval === 'monthly'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBillingInterval('yearly')}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 relative ${
-                billingInterval === 'yearly'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  <span>ROI: {currentPlan ? Math.round(10000 / currentPlan.price) : 0}x</span>
-                Save 20%
-              </span>
-            </button>
-          </div>
-        </div>
 
         {/* Billing Toggle */}
         <div className="flex justify-center">
@@ -383,37 +357,44 @@ export function BillingPage() {
                 loading={loading && selectedPlan?.id === plan.id}
                 billingInterval={billingInterval}
               />
-              <Button onClick={handleAddPaymentMethod} className="flex items-center">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Payment Method
-              </Button>
-            </div>
-            
-            <div className="space-y-4">
-              {paymentMethods.length === 0 ? (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-                  <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900">No payment methods</h3>
-                  <p className="text-gray-500 mt-2">Add a payment method to manage your subscription</p>
-                  <Button className="mt-4" onClick={handleAddPaymentMethod}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Payment Method
-                  </Button>
-                </div>
-              ) : (
-                paymentMethods.map((paymentMethod) => (
-                  <PaymentMethodCard
-                    key={paymentMethod.id}
-                    paymentMethod={paymentMethod}
-                    onSetDefault={handleSetDefaultPaymentMethod}
-                    onDelete={handleDeletePaymentMethod}
-                    onUpdate={handleUpdatePaymentMethod}
-                  />
-                ))
-              )}
-            </div>
+            ))}
           </div>
-        )}
+        </div>
+
+        {/* Payment Methods */}
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Payment Methods</h2>
+            <Button onClick={handleAddPaymentMethod} className="flex items-center">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Payment Method
+            </Button>
+          </div>
+            
+          <div className="space-y-4">
+            {paymentMethods.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+                <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900">No payment methods</h3>
+                <p className="text-gray-500 mt-2">Add a payment method to manage your subscription</p>
+                <Button className="mt-4" onClick={handleAddPaymentMethod}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Payment Method
+                </Button>
+              </div>
+            ) : (
+              paymentMethods.map((paymentMethod) => (
+                <PaymentMethodCard
+                  key={paymentMethod.id}
+                  paymentMethod={paymentMethod}
+                  onSetDefault={handleSetDefaultPaymentMethod}
+                  onDelete={handleDeletePaymentMethod}
+                  onUpdate={handleUpdatePaymentMethod}
+                />
+              ))
+            )}
+          </div>
+        </div>
 
         {/* Billing History */}
         {user?.stripe_customer_id && (
@@ -539,12 +520,7 @@ export function BillingPage() {
             </div>
           </div>
         </div>
-      </div>
 
-      <CustomQuoteModal 
-        isOpen={isQuoteModalOpen} 
-        onClose={() => setIsQuoteModalOpen(false)} 
-      />
         {/* Add-ons Section */}
         <div>
           <div className="flex items-center justify-between mb-6">
@@ -571,11 +547,11 @@ export function BillingPage() {
           </div>
         </div>
 
-
-      <CustomQuoteModal 
-        isOpen={isQuoteModalOpen} 
-        onClose={() => setIsQuoteModalOpen(false)} 
-      />
+        <CustomQuoteModal 
+          isOpen={isQuoteModalOpen} 
+          onClose={() => setIsQuoteModalOpen(false)} 
+        />
+      </div>
     </MainLayout>
   );
 }
