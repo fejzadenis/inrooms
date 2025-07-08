@@ -238,6 +238,7 @@ export function PricingCard({
               ? 'bg-green-100 text-green-800 cursor-not-allowed'
               : 'bg-gray-900 hover:bg-gray-800 text-white'
           }`}>
+          {plan.isCustom ? (
              <>
                Request Quote
                <ArrowRight className="w-4 h-4 ml-2" />
@@ -249,6 +250,8 @@ export function PricingCard({
            ) : (
              <>
                Get Started
+               <ArrowRight className="w-4 h-4 ml-2" />
+             </>
            )}
         </Button>
 
