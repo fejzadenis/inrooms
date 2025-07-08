@@ -71,19 +71,9 @@ export function SubscriptionPage() {
 
     try {      
       console.log('Determining price ID for plan');
-      // Hardcoded price IDs for testing
-      let priceId;
-      switch(plan.id) {
-        case 'starter':
-          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
-          console.log('Using starter plan price ID');
-          break;
-        case 'professional':
-          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
-          console.log('Using professional plan price ID');
-          break;
-        case 'enterprise':
-          priceId = 'price_1RiQ3YGCopIxkzs6b9c7Vryw';
+      // Get the price ID from the plan object
+      let priceId = plan.stripePriceId;
+      console.log('Using price ID:', priceId);
           console.log('Using enterprise plan price ID');
           break;
         default:
@@ -103,6 +93,12 @@ export function SubscriptionPage() {
           plan_id: plan.id,
           billing_interval: billingInterval
         }
+        successUrl: `${window.location.origin}/subscription?success=true`,
+      console.log('Checkout session data:', checkoutData);
+
+      console.log('Creating checkout session data object');
+      const checkoutData = {
+      const result = await stripeService.createCheckoutSession(checkoutData);
       };
       console.log('Checkout session data:', checkoutData);
 
@@ -120,9 +116,21 @@ export function SubscriptionPage() {
         console.error('No checkout URL returned');
         toast.error('Failed to create checkout session. No URL returned.');
         setLoading(false);
+      console.log(`Redirecting to Stripe Checkout URL: ${result?.url}`);
+      if (result?.url) {
+        console.log('About to redirect to:', result.url);
+        window.location.href = result.url;
+      } else {
+        console.error('No checkout URL returned');
+        toast.error('Failed to create checkout session. No URL returned.');
+        setLoading(false);
         setSelectedPlan(null);
       }
     } catch (error) {
+      console.error('Error creating checkout session:', error);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
       console.error('Error creating checkout session:', error);
       if (error instanceof Error) {
         console.error('Error message:', error.message);
@@ -137,6 +145,26 @@ export function SubscriptionPage() {
   const handleRequestQuote = (plan: SubscriptionPlan) => {
     setIsQuoteModalOpen(true);
   };
+  
+  // Check for success/cancel parameters from Stripe redirect
+  React.useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled'); 
+    console.log('URL params - success:', success, 'canceled:', canceled);
+    
+    if (success === 'true') {
+      console.log('Subscription successful, redirecting to billing');
+      toast.success('Subscription activated successfully!');
+      
+      // Wait a moment to ensure the database has been updated
+      setTimeout(() => {
+        navigate('/billing', { replace: true });
+      }, 1500);
+    } else if (canceled === 'true') {
+      console.log('Subscription canceled');
+      toast.error('Subscription canceled. You can try again anytime.');
+    }
+  }, [searchParams, navigate]);
   
   // Check for success/cancel parameters from Stripe redirect
   React.useEffect(() => {
