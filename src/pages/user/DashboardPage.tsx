@@ -125,18 +125,10 @@ export function DashboardPage() {
   const handleRegister = async (eventId: string) => {
     if (!user) return;
 
-    console.log("DASHBOARD DEBUG: Registering for event", eventId, "User ID:", user.id);
-    
-    // Get latest subscription data from Supabase
-    const userIdString = user.id.toString();
-    console.log("DASHBOARD DEBUG: Using user ID string:", userIdString);
-    
-    // Try using the RPC function first
-    const { data: rpcData, error: rpcError } = await supabase
-      .rpc('get_user_subscription', { user_id: userIdString });
-    
-    let userData = null;
-    let userError = null;
+    // Check if user can register
+    const canRegister = await eventService.canRegisterForEvent(user.id, eventId);
+    if (!canRegister.success) {
+      toast.error(canRegister.message || 'You cannot register for this event');
     
     if (!rpcError && rpcData && rpcData.length > 0) {
       console.log("DASHBOARD DEBUG: RPC returned subscription data:", rpcData[0]);
@@ -178,6 +170,11 @@ export function DashboardPage() {
       
       if (!event) {
         throw new Error('Event not found');
+      const result = await eventService.registerForEvent(user.id, eventId);
+      
+      if (!result.success) {
+        toast.error(result.message || 'Failed to register for event');
+        return;
       }
       
       // Generate calendar event

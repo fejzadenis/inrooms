@@ -119,20 +119,17 @@ export function EventsPage() {
       if (!event) {
         toast.error('Event not found');
         return;
-      }
-
-      console.log("EVENTS DEBUG: Registering for event:", event.title, "ID:", eventId);
-      
-      // Register for the event
-      // First check if user can register
-      const eligibilityCheck = await eventService.canRegisterForEvent(user.id, eventId);
-      
-      if (!eligibilityCheck.success) {
-        toast.error(eligibilityCheck.message || 'Unable to register for this event');
-        return;
-      }
+    // Check if user can register
+    const canRegister = await eventService.canRegisterForEvent(user.id, eventId);
+    if (!canRegister.success) {
+      toast.error(canRegister.message || 'You cannot register for this event');
       
       // If eligible, proceed with registration
+      const result = await eventService.registerForEvent(user.id, eventId);
+      
+      if (!result.success) {
+        toast.error(result.message || 'Failed to register for event');
+        return;
       const result = await eventService.registerForEvent(user.id, eventId);
       
       if (!result.success) {

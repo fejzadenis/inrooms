@@ -21,11 +21,6 @@ interface RegistrationResult {
   message?: string;
 }
 
-interface RegistrationResult {
-  success: boolean;
-  message?: string;
-}
-
 export interface Event {
   id?: string;
   title: string;
@@ -114,7 +109,7 @@ export const eventService = {
 
   async canRegisterForEvent(userId: string, eventId: string): Promise<RegistrationResult> {
     try {
-      // Check if user can register using the RPC function
+      // Call the Supabase function to check if user can register
       const { data, error } = await supabase.rpc('can_register_for_event', {
         user_id: userId,
         event_id: eventId
@@ -129,48 +124,38 @@ export const eventService = {
       }
       
       if (!data) {
-        // Get user's subscription data to determine the reason
-        const { data: userData, error: userError } = await supabase
+        // Get more detailed error message
+        const { data: user } = await supabase
           .from('users')
-          .select('subscription_status, subscription_events_quota, subscription_events_used')
+          .select('subscription_events_quota, subscription_events_used')
           .eq('id', userId)
           .single();
           
-        if (userError) {
-          console.error('Error getting user data:', userError);
-          return { success: false, message: 'Failed to check user subscription' };
-        }
-        
-        // Get event data to check if it's full
-        const { data: eventData, error: eventError } = await supabase
+        const { data: eventData } = await supabase
           .from('events')
           .select('current_participants, max_participants')
           .eq('id', eventId)
           .single();
           
-        if (eventError) {
-          console.error('Error getting event data:', eventError);
-          return { success: false, message: 'Failed to check event availability' };
-        }
-        
-        // Determine the reason for failure
-        if (userData.subscription_events_used >= userData.subscription_events_quota) {
-          return { 
-            success: false, 
-            message: 'You have reached your event quota. Please upgrade your subscription.' 
-          };
-        }
-        
-        if (eventData.current_participants >= eventData.max_participants) {
-          return { 
-            success: false, 
-            message: 'This event is full. Please try another event.' 
-          };
+        if (user && eventData) {
+          if (user.subscription_events_used >= user.subscription_events_quota) {
+            return { 
+              success: false, 
+              message: 'You have reached your event quota. Please upgrade your subscription.' 
+            };
+          }
+          
+          if (eventData.current_participants >= eventData.max_participants) {
+            return { 
+              success: false, 
+              message: 'This event is full.' 
+            };
+          }
         }
         
         return { 
           success: false, 
-          message: 'Unable to register for this event.' 
+          message: 'You are not eligible to register for this event.' 
         };
       }
       
@@ -179,46 +164,72 @@ export const eventService = {
       console.error('Error checking registration eligibility:', error);
       return { 
         success: false, 
-        message: 'An unexpected error occurred. Please try again.' 
-      };
+        message: 'Failed to check registration eligibility' 
+      }
     }
   },
 
   async registerForEvent(userId: string, eventId: string): Promise<RegistrationResult> {
     try {
-      // Use the RPC function to increment user event usage and event participants
+      // Call the Supabase function to register for the event
       const { data, error } = await supabase.rpc('increment_user_event_usage', {
         user_id: userId,
         event_id: eventId
       });
-
+      
       if (error) {
-        console.error('Error registering for event in Supabase:', error);
+        console.error('Error registering for event:', error);
         return { 
           success: false, 
-          message: 'Failed to register for event. Please try again.' 
+          message: 'Failed to register for event' 
         };
       }
-
+      
       if (!data) {
         return { 
           success: false, 
-          message: 'Registration failed. You may have reached your event quota or the event is full.' 
+          message: 'Failed to register for event. You may have reached your quota or the event may be full.' 
         };
       }
-
+      
+      // Also register in Firebase for redundancy
+      try {
+        await addDoc(collection(db, 'registrations'), {
+          userId,
+          eventId,
+          registeredAt: serverTimestamp(),
+        });
+      } catch (firebaseError) {
+        console.error('Error registering in Firebase:', firebaseError);
+        // Continue even if Firebase fails - Supabase is now primary
+      }
+      
       return { success: true };
     } catch (error) {
       console.error('Error registering for event:', error);
       return { 
         success: false, 
-        message: 'An unexpected error occurred. Please try again.' 
+        message: 'Failed to register for event' 
       };
     }
   },
 
   async getUserRegistrations(userId: string): Promise<EventRegistration[]> {
     try {
+      // Try to get registrations from Supabase first
+      const { data: supabaseRegistrations, error } = await supabase
+        .rpc('get_user_registrations', { user_id: userId });
+        
+      if (!error && supabaseRegistrations && supabaseRegistrations.length > 0) {
+        // Use Supabase data if available
+        return supabaseRegistrations.map(reg => ({
+          id: reg.id || '',
+          userId: reg.user_id || userId,
+          eventId: reg.event_id || '',
+          registeredAt: reg.registered_at ? new Date(reg.registered_at) : new Date()
+        })) as EventRegistration[];
+      }
+      
       // Get registrations from Firebase
       console.log(`[Event Service] Found ${firebaseRegistrations.length} registrations in Firebase`);
       return firebaseRegistrations;
@@ -230,6 +241,20 @@ export const eventService = {
 
   async getEventRegistrations(eventId: string): Promise<EventRegistration[]> {
     try {
+      // Try to get registrations from Supabase first
+      const { data: supabaseRegistrations, error } = await supabase
+        .rpc('get_event_registrations', { event_id: eventId });
+        
+      if (!error && supabaseRegistrations && supabaseRegistrations.length > 0) {
+        // Use Supabase data if available
+        return supabaseRegistrations.map(reg => ({
+          id: reg.id || '',
+          userId: reg.user_id || '',
+          eventId: reg.event_id || eventId,
+          registeredAt: reg.registered_at ? new Date(reg.registered_at) : new Date()
+        })) as EventRegistration[];
+      }
+      
       // Get registrations from Firebase
       console.log(`[Event Service] Found ${firebaseRegistrations.length} registrations in Firebase`);
       return firebaseRegistrations;
