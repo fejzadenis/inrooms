@@ -129,6 +129,8 @@ export function DashboardPage() {
     const canRegister = await eventService.canRegisterForEvent(user.id, eventId);
     if (!canRegister.success) {
       toast.error(canRegister.message || 'You cannot register for this event');
+      return;
+    }
     
     if (!rpcError && rpcData && rpcData.length > 0) {
       console.log("DASHBOARD DEBUG: RPC returned subscription data:", rpcData[0]);
@@ -170,6 +172,8 @@ export function DashboardPage() {
       
       if (!event) {
         throw new Error('Event not found');
+      }
+      
       const result = await eventService.registerForEvent(user.id, eventId);
       
       if (!result.success) {
