@@ -17,6 +17,11 @@ export function EventsPage() {
   const [loading, setLoading] = React.useState(true);
   const [registeredEvents, setRegisteredEvents] = React.useState<string[]>([]);
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [subscriptionData, setSubscriptionData] = React.useState<{
+    status: string;
+    eventsQuota: number;
+    eventsUsed: number;
+  } | null>(null);
 
   React.useEffect(() => {
     loadEvents();
@@ -45,6 +50,24 @@ export function EventsPage() {
   const loadEvents = async () => {
     try {
       setLoading(true);
+      
+      // If user is logged in, fetch latest subscription data
+      if (user) {
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('subscription_status, subscription_events_quota, subscription_events_used')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (!userError && userData) {
+          setSubscriptionData({
+            status: userData.subscription_status || 'inactive',
+            eventsQuota: userData.subscription_events_quota || 0,
+            eventsUsed: userData.subscription_events_used || 0
+          });
+        }
+      }
+      
       const eventsData = await eventService.getEvents();
       // Filter to show only upcoming events
       const upcomingEvents = eventsData.filter(event => {
@@ -82,12 +105,21 @@ export function EventsPage() {
     // Get latest subscription data from Supabase
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at')
+      .select('subscription_status, subscription_events_quota, subscription_events_used')
       .eq('id', user.id)
       .maybeSingle();
       
-    const eventsUsed = userData?.subscription_events_used || user.subscription.eventsUsed;
-    const eventsQuota = userData?.subscription_events_quota || user.subscription.eventsQuota;
+    // Update subscription data state
+    if (!userError && userData) {
+      setSubscriptionData({
+        status: userData.subscription_status || 'inactive',
+        eventsQuota: userData.subscription_events_quota || 0,
+        eventsUsed: userData.subscription_events_used || 0
+      });
+    }
+    
+    const eventsUsed = subscriptionData?.eventsUsed || userData?.subscription_events_used || user.subscription.eventsUsed;
+    const eventsQuota = subscriptionData?.eventsQuota || userData?.subscription_events_quota || user.subscription.eventsQuota;
     
     if (eventsUsed >= eventsQuota) {
       toast.error('You have reached your event quota. Please upgrade your subscription.');
@@ -182,14 +214,20 @@ export function EventsPage() {
           <div className="bg-indigo-50 rounded-lg p-4" data-tour="events-quota">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-medium text-indigo-900">Your Event Quota</h3>
+                <h3 className="text-sm font-medium text-indigo-900">Your Event Quota (from Supabase)</h3>
                 <p className="text-sm text-indigo-700">
-                  {(user?.subscription.eventsQuota || 0) - (user?.subscription.eventsUsed || 0)} events remaining this month
+                  {subscriptionData 
+                    ? `${subscriptionData.eventsQuota - subscriptionData.eventsUsed} events remaining this month`
+                    : `${(user?.subscription.eventsQuota || 0) - (user?.subscription.eventsUsed || 0)} events remaining this month`
+                  }
                 </p>
               </div>
               <div className="text-right">
                 <div className="text-lg font-semibold text-indigo-900">
-                  {user?.subscription.eventsUsed || 0} / {user?.subscription.eventsQuota || 0}
+                  {subscriptionData 
+                    ? `${subscriptionData.eventsUsed} / ${subscriptionData.eventsQuota}`
+                    : `${user?.subscription.eventsUsed || 0} / ${user?.subscription.eventsQuota || 0}`
+                  }
                 </div>
                 <div className="text-sm text-indigo-600">Events Used</div>
               </div>

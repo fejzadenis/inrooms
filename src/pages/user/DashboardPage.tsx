@@ -12,6 +12,12 @@ export function DashboardPage() {
   const [upcomingEvents, setUpcomingEvents] = React.useState<Event[]>([]);
   const [registeredEvents, setRegisteredEvents] = React.useState<string[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [subscriptionData, setSubscriptionData] = React.useState<{
+    status: string;
+    eventsQuota: number;
+    eventsUsed: number;
+    trialEndsAt?: Date;
+  } | null>(null);
 
   React.useEffect(() => {
     if (user) {
@@ -26,27 +32,21 @@ export function DashboardPage() {
     try {
       setLoading(true);
       
-      // Get latest subscription data from Supabase
+      // Fetch latest subscription data from Supabase
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('subscription_status, subscription_events_quota, subscription_events_used')
+        .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at')
         .eq('id', user.id)
         .maybeSingle();
         
       if (!userError && userData) {
-        // Create a temporary updated user object with the latest subscription data
-        const updatedUser = {
-          ...user,
-          subscription: {
-            ...user.subscription,
-            status: userData.subscription_status || user.subscription.status,
-            eventsQuota: userData.subscription_events_quota || user.subscription.eventsQuota,
-            eventsUsed: userData.subscription_events_used || user.subscription.eventsUsed
-          }
-        };
-        
-        // Use the updated user object for the rest of the function
-        user.subscription = updatedUser.subscription;
+        // Store the subscription data
+        setSubscriptionData({
+          status: userData.subscription_status || 'inactive',
+          eventsQuota: userData.subscription_events_quota || 0,
+          eventsUsed: userData.subscription_events_used || 0,
+          trialEndsAt: userData.subscription_trial_ends_at ? new Date(userData.subscription_trial_ends_at) : undefined
+        });
       }
       
       // Load user's registered events
@@ -72,7 +72,7 @@ export function DashboardPage() {
     // Get latest subscription data from Supabase
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at')
+      .select('subscription_status, subscription_events_quota, subscription_events_used')
       .eq('id', user.id)
       .maybeSingle();
       
@@ -150,19 +150,34 @@ export function DashboardPage() {
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Events Remaining</span>
               <span className="text-lg font-medium text-gray-900">
-                {(user?.subscription.eventsQuota || 0) - (user?.subscription.eventsUsed || 0)} / {user?.subscription.eventsQuota || 0}
+                {subscriptionData 
+                  ? `${subscriptionData.eventsQuota - subscriptionData.eventsUsed} / ${subscriptionData.eventsQuota}`
+                  : `${user?.subscription.eventsQuota - user?.subscription.eventsUsed} / ${user?.subscription.eventsQuota}`
+                }
               </span>
             </div>
             <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
               <div
                 className="bg-indigo-600 h-2 rounded-full"
                 style={{
-                  width: `${((user?.subscription.eventsUsed || 0) / (user?.subscription.eventsQuota || 1)) * 100}%`,
+                  width: `${subscriptionData 
+                    ? (subscriptionData.eventsQuota > 0 
+                        ? (subscriptionData.eventsUsed / subscriptionData.eventsQuota) * 100 
+                        : 0)
+                    : (user?.subscription.eventsQuota > 0 
+                        ? (user?.subscription.eventsUsed / user?.subscription.eventsQuota) * 100 
+                        : 0)
+                  }%`,
                 }}
               />
             </div>
             <div className="mt-2 text-sm text-gray-500">
-              Subscription Status: <span className="capitalize font-medium">{user?.subscription.status}</span>
+              Subscription Status: <span className="capitalize font-medium">{subscriptionData?.status || user?.subscription.status}</span>
+              {subscriptionData?.trialEndsAt && subscriptionData.status === 'trial' && (
+                <span className="ml-2 text-blue-600">
+                  (Ends {subscriptionData.trialEndsAt.toLocaleDateString()})
+                </span>
+              )}
             </div>
           </div>
         </div>

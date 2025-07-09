@@ -29,6 +29,9 @@ export function BillingPage() {
     status: string;
     eventsQuota: number;
     eventsUsed: number;
+    trialEndsAt?: Date;
+    stripeSubscriptionStatus?: string;
+    stripeCurrentPeriodEnd?: Date;
   } | null>(null);
   const [refreshingData, setRefreshingData] = React.useState(false);
 
@@ -48,16 +51,20 @@ export function BillingPage() {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('subscription_status, subscription_events_quota, subscription_events_used, stripe_subscription_status, stripe_current_period_end')
+        .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at, stripe_subscription_status, stripe_current_period_end')
         .eq('id', user.id)
         .maybeSingle();
         
       if (!error && data) {
+        console.log("Supabase subscription data:", data);
         // Set subscription data from Supabase
         setSubscriptionData({
           status: data.subscription_status || 'inactive',
           eventsQuota: data.subscription_events_quota || 0,
-          eventsUsed: data.subscription_events_used || 0
+          eventsUsed: data.subscription_events_used || 0,
+          trialEndsAt: data.subscription_trial_ends_at ? new Date(data.subscription_trial_ends_at) : undefined,
+          stripeSubscriptionStatus: data.stripe_subscription_status,
+          stripeCurrentPeriodEnd: data.stripe_current_period_end ? new Date(data.stripe_current_period_end) : undefined
         });
       } else {
         console.log('No subscription data found in Supabase');
@@ -372,6 +379,16 @@ export function BillingPage() {
                     {subscriptionData?.status || user.subscription.status}
                   </p>
                 </div>
+                {subscriptionData?.trialEndsAt && subscriptionData.status === 'trial' && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    Trial ends: {subscriptionData.trialEndsAt.toLocaleDateString()}
+                  </p>
+                )}
+                {subscriptionData?.stripeCurrentPeriodEnd && subscriptionData.status === 'active' && (
+                  <p className="text-xs text-green-600 mt-1">
+                    Renews: {subscriptionData.stripeCurrentPeriodEnd.toLocaleDateString()}
+                  </p>
+                )}
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-gray-500">Events Remaining</h3>
