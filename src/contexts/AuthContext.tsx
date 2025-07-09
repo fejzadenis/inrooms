@@ -138,7 +138,7 @@ const syncUserToSupabase = async (userData: User): Promise<void> => {
       console.warn('Supabase environment variables contain placeholder values, skipping user sync');
       return;
     }
-    console.log('Syncing user to Supabase:', userData.id, 'with email:', userData.email);
+    console.log('Syncing user to Supabase:', userData.id);
     
     const syncData = {
       id: userData.id,
@@ -150,7 +150,7 @@ const syncUserToSupabase = async (userData: User): Promise<void> => {
       email_verified: userData.emailVerified,
       subscription_status: userData.subscription.status,
       subscription_events_quota: userData.subscription.eventsQuota,
-      subscription_events_used: userData.subscription.eventsUsed || 0,
+      subscription_events_used: userData.subscription.eventsUsed,
       subscription_trial_ends_at: userData.subscription.trialEndsAt?.toISOString() || null,
       stripe_customer_id: userData.stripe_customer_id || null,
       profile_title: userData.profile?.title || null,
@@ -497,7 +497,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Get Supabase data
       const { data: supabaseUsers, error } = await supabase
         .from('users')
-        .select('subscription_status, subscription_events_quota, subscription_events_used, stripe_subscription_id, updated_at, email')
+        .select('subscription_status, subscription_events_quota, stripe_subscription_id, updated_at')
         .eq('id', userId);
       
       if (error || !supabaseUsers || supabaseUsers.length === 0) {
@@ -511,7 +511,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const hasNewerSubscriptionData = 
         supabaseUser.subscription_status !== firestoreData.subscription?.status ||
         supabaseUser.subscription_events_quota !== firestoreData.subscription?.eventsQuota ||
-        supabaseUser.subscription_events_used !== firestoreData.subscription?.eventsUsed ||
         supabaseUser.stripe_subscription_id !== firestoreData.stripe_subscription_id;
       
       if (hasNewerSubscriptionData) {
@@ -519,13 +518,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("Supabase:", {
           status: supabaseUser.subscription_status,
           quota: supabaseUser.subscription_events_quota,
-          used: supabaseUser.subscription_events_used,
           subId: supabaseUser.stripe_subscription_id
         });
         console.log("Firestore:", {
           status: firestoreData.subscription?.status,
           quota: firestoreData.subscription?.eventsQuota,
-          used: firestoreData.subscription?.eventsUsed,
           subId: firestoreData.stripe_subscription_id
         });
         return true;
@@ -560,14 +557,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const subscriptionData = {
         status: supabaseUser.subscription_status || 'inactive',
         eventsQuota: supabaseUser.subscription_events_quota || 0,
-        eventsUsed: supabaseUser.subscription_events_used || 0, 
+        eventsUsed: supabaseUser.subscription_events_used || 0,
         trialEndsAt: supabaseUser.subscription_trial_ends_at ? new Date(supabaseUser.subscription_trial_ends_at) : undefined
       };
       
       // Update Firestore document
       await updateDoc(userRef, {
         subscription: subscriptionData,
-        email: supabaseUser.email,
         stripe_customer_id: supabaseUser.stripe_customer_id,
         stripe_subscription_id: supabaseUser.stripe_subscription_id,
         stripe_subscription_status: supabaseUser.stripe_subscription_status,
