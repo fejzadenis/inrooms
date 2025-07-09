@@ -44,47 +44,82 @@ export function BillingPage() {
   }, [user]);
 
   // Fetch latest subscription data from Supabase
-  const fetchLatestSubscriptionData = async () => {
-    if (!user) return;
-    
-    setRefreshingData(true);
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at, stripe_subscription_status, stripe_current_period_end')
-        .eq('id', user.id)
-        .maybeSingle();
-        
-      if (!error && data) {
-        console.log("Supabase subscription data:", data);
-        console.log("Supabase subscription data:", data);
-        // Set subscription data from Supabase
+ const fetchLatestSubscriptionData = async () => {
+  if (!user) {
+    console.warn('[Subscription] No user found — aborting fetch.');
+    return;
+  }
+
+  setRefreshingData(true);
+  console.debug('[Subscription] Fetching subscription data for user:', user.id);
+
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select(`
+        subscription_status,
+        subscription_events_quota,
+        subscription_events_used,
+        subscription_trial_ends_at,
+        stripe_subscription_status,
+        stripe_current_period_end
+      `)
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error('[Subscription] Supabase error:', error);
+    }
+
+    if (data) {
+      console.info('[Subscription] Raw Supabase data:', data);
+
+      const {
+        subscription_status,
+        subscription_events_quota,
+        subscription_events_used,
+        subscription_trial_ends_at,
+        stripe_subscription_status,
+        stripe_current_period_end
+      } = data;
+
+      console.debug('[Subscription] Processed fields:');
+      console.debug(' - subscription_status:', subscription_status);
+      console.debug(' - subscription_events_quota:', subscription_events_quota);
+      console.debug(' - subscription_events_used:', subscription_events_used);
+      console.debug(' - subscription_trial_ends_at:', subscription_trial_ends_at);
+      console.debug(' - stripe_subscription_status:', stripe_subscription_status);
+      console.debug(' - stripe_current_period_end:', stripe_current_period_end);
+
+      setSubscriptionData({
+        status: subscription_status || 'inactive',
+        eventsQuota: subscription_events_quota ?? 0,
+        eventsUsed: subscription_events_used ?? 0,
+        trialEndsAt: subscription_trial_ends_at ? new Date(subscription_trial_ends_at) : undefined,
+        stripeSubscriptionStatus: stripe_subscription_status,
+        stripeCurrentPeriodEnd: stripe_current_period_end ? new Date(stripe_current_period_end) : undefined
+      });
+    } else {
+      console.warn('[Subscription] No data returned for user in Supabase (null or empty).');
+
+      if (user.subscription) {
+        console.info('[Subscription] Falling back to user.subscription object:', user.subscription);
         setSubscriptionData({
-          status: data.subscription_status || 'inactive',
-          eventsQuota: data.subscription_events_quota || 0,
-          eventsUsed: data.subscription_events_used || 0,
-          trialEndsAt: data.subscription_trial_ends_at ? new Date(data.subscription_trial_ends_at) : undefined,
-          stripeSubscriptionStatus: data.stripe_subscription_status,
-          stripeCurrentPeriodEnd: data.stripe_current_period_end ? new Date(data.stripe_current_period_end) : undefined
+          status: user.subscription.status,
+          eventsQuota: user.subscription.eventsQuota,
+          eventsUsed: user.subscription.eventsUsed
         });
       } else {
-        console.log('No subscription data found in Supabase:', error);
-        console.log('No subscription data found in Supabase');
-        // Use data from user object as fallback
-        if (user.subscription) {
-          setSubscriptionData({
-            status: user.subscription.status,
-            eventsQuota: user.subscription.eventsQuota,
-            eventsUsed: user.subscription.eventsUsed
-          });
-        }
+        console.warn('[Subscription] No fallback subscription data available on user object.');
       }
-    } catch (error) {
-      console.error('Error fetching latest subscription data:', error);
-    } finally {
-      setRefreshingData(false);
     }
-  };
+  } catch (err) {
+    console.error('[Subscription] Exception occurred while fetching subscription data:', err);
+  } finally {
+    setRefreshingData(false);
+  }
+};
+
   
   React.useEffect(() => {
     fetchLatestSubscriptionData();
