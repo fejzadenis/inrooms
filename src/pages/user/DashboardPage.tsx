@@ -63,46 +63,46 @@ export function DashboardPage() {
         // Fallback to direct query if RPC fails
         console.log("DASHBOARD DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
         
-        console.log("DASHBOARD DEBUG: Fetching subscription data from Supabase for user", user.id);
+      console.log("DASHBOARD DEBUG: Fetching subscription data from Supabase for user", user.id);
+      
+      // Try using the RPC function first
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_user_subscription', { user_id: userIdString });
+      
+      if (!rpcError && rpcData && rpcData.length > 0) {
+        console.log("DASHBOARD DEBUG: RPC returned subscription data:", rpcData[0]);
+        const subscriptionData = rpcData[0];
         
-        // Try using the RPC function first
-        const { data: rpcData, error: rpcError } = await supabase
-          .rpc('get_user_subscription', { user_id: userIdString });
+        setSubscriptionData({
+          status: subscriptionData.subscription_status || 'inactive',
+          eventsQuota: subscriptionData.subscription_events_quota || 0,
+          eventsUsed: subscriptionData.subscription_events_used || 0,
+          trialEndsAt: subscriptionData.subscription_trial_ends_at ? new Date(subscriptionData.subscription_trial_ends_at) : undefined
+        });
+      } else {
+        // Fallback to direct query if RPC fails
+        console.log("DASHBOARD DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
         
-        if (!rpcError && rpcData && rpcData.length > 0) {
-          console.log("DASHBOARD DEBUG: RPC returned subscription data:", rpcData[0]);
-          const subscriptionData = rpcData[0];
-          
-          setSubscriptionData({
-            status: subscriptionData.subscription_status || 'inactive',
-            eventsQuota: subscriptionData.subscription_events_quota || 0,
-            eventsUsed: subscriptionData.subscription_events_used || 0,
-            trialEndsAt: subscriptionData.subscription_trial_ends_at ? new Date(subscriptionData.subscription_trial_ends_at) : undefined
-          });
-        } else {
-          // Fallback to direct query if RPC fails
-          console.log("DASHBOARD DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
-          
-          const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at')
-            .eq('id', userIdString)
-            .maybeSingle();
-            
-          if (!userError && userData) {
-            console.log("DASHBOARD DEBUG: Supabase subscription data:", userData);
-            console.log("DASHBOARD DEBUG: Supabase subscription data:", userData);
-            // Store the subscription data
-            setSubscriptionData({
-              status: userData.subscription_status || 'inactive',
-              eventsQuota: userData.subscription_events_quota || 0,
-              eventsUsed: userData.subscription_events_used || 0,
-              trialEndsAt: userData.subscription_trial_ends_at ? new Date(userData.subscription_trial_ends_at) : undefined
-            });
-          } else {
-            console.log("DASHBOARD DEBUG: Error or no data from Supabase:", userError);
-          }
-        }
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at')
+        .eq('id', userIdString)
+        .maybeSingle();
+        
+      if (!userError && userData) {
+        console.log("DASHBOARD DEBUG: Supabase subscription data:", userData);
+        console.log("DASHBOARD DEBUG: Supabase subscription data:", userData);
+        // Store the subscription data
+        setSubscriptionData({
+          status: userData.subscription_status || 'inactive',
+          eventsQuota: userData.subscription_events_quota || 0,
+          eventsUsed: userData.subscription_events_used || 0,
+          trialEndsAt: userData.subscription_trial_ends_at ? new Date(userData.subscription_trial_ends_at) : undefined
+        });
+      } else {
+        console.log("DASHBOARD DEBUG: Error or no data from Supabase:", userError);
+      }
+      }
       }
       
       // Load user's registered events
@@ -115,9 +115,8 @@ export function DashboardPage() {
       const upcoming = allEvents.filter(event => event.date > new Date());
       setUpcomingEvents(upcoming);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to register for event. Please try again.';
-      console.error('Failed to register for event:', errorMessage);
-      toast.error(errorMessage);
+      console.error('Failed to load dashboard data:', error);
+      toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
@@ -126,43 +125,57 @@ export function DashboardPage() {
   const handleRegister = async (eventId: string) => {
     if (!user) return;
 
+    console.log("DASHBOARD DEBUG: Registering for event", eventId, "User ID:", user.id, "Type:", typeof user.id);
+    
+    // Get latest subscription data from Supabase
+    const userIdString = user.id.toString();
+    console.log("DASHBOARD DEBUG: Using user ID string:", userIdString);
+    
+    // Try using the RPC function first
+    const { data: rpcData, error: rpcError } = await supabase
+      .rpc('get_user_subscription', { user_id: userIdString });
+    
+    let userData = null;
+    let userError = null;
+    
+    if (!rpcError && rpcData && rpcData.length > 0) {
+      console.log("DASHBOARD DEBUG: RPC returned subscription data:", rpcData[0]);
+      userData = rpcData[0];
+    } else {
+      // Fallback to direct query if RPC fails
+      console.log("DASHBOARD DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
+      
+      const result = await supabase
+        .from('users')
+        .select('subscription_status, subscription_events_quota, subscription_events_used')
+        .eq('id', userIdString)
+        .maybeSingle();
+        
+      userData = result.data;
+      userError = result.error;
+      
+      console.log("DASHBOARD DEBUG: Direct query result:", userData, userError);
+    }
+      
+    const eventsUsed = userData?.subscription_events_used || user.subscription.eventsUsed;
+    const eventsQuota = userData?.subscription_events_quota || user.subscription.eventsQuota;
+    
+    console.log("DASHBOARD DEBUG: Current usage:", eventsUsed, "/", eventsQuota);
+    
+    console.log("DASHBOARD DEBUG: Current usage:", eventsUsed, "/", eventsQuota);
+    
+    if (eventsUsed >= eventsQuota) {
+      toast.error('You have reached your event quota. Please upgrade your subscription.');
+      return;
+    }
+
+    const event = upcomingEvents.find(e => e.id === eventId);
+    if (!event) return;
+
+    console.log("DASHBOARD DEBUG: Found event:", event.title, "ID:", eventId);
+
     try {
-      // Register for the event
-      // Register for the event - this will update the user's subscription_events_used count
-      // First check if user can register
-      // Check if user can register first
-      const canRegister = await eventService.canRegisterForEvent(user.id, eventId);
-      if (!canRegister) {
-        // The actual error will be thrown by registerForEvent
-      }
-      
-      const eligibilityCheck = await eventService.canRegisterForEvent(user.id, eventId);
-      
-      if (!eligibilityCheck.success) {
-        toast.error(eligibilityCheck.message || 'Unable to register for this event');
-        return;
-      }
-      
-      // If eligible, proceed with registration
-      const result = await eventService.registerForEvent(user.id, eventId);
-      
-      if (!result.success) {
-        toast.error(result.message || 'Failed to register for event');
-        return;
-      }
-      
-      const event = upcomingEvents.find(e => e.id === eventId);
-      
-      if (!event) {
-        throw new Error('Event not found');
-      }
-      
-      const result = await eventService.registerForEvent(user.id, eventId);
-      
-      if (!result.success) {
-        toast.error(result.message || 'Failed to register for event');
-        return;
-      }
+      await eventService.registerForEvent(user.id, eventId);
       
       // Generate calendar event
       try {
@@ -189,15 +202,11 @@ export function DashboardPage() {
       }
 
       setRegisteredEvents(prev => [...prev, eventId]);
-      
-      // Reload to update counts and subscription data
-      await loadDashboardData();
-      
+      await loadDashboardData(); // Reload to update counts
       toast.success('Successfully registered! Calendar invite downloaded.');
     } catch (error: any) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Failed to register for event:', errorMessage);
-      toast.error(`Failed to register for event: ${errorMessage}`);
+      console.error('Failed to register for event:', error, error.stack);
+      toast.error(`Failed to register for event: ${error.message || 'Please try again.'}`);
     }
   };
 

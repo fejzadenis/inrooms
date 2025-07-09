@@ -166,12 +166,16 @@ service cloud.firestore {
     // === Registrations ===
     match /registrations/{registrationId} {
       allow read: if request.auth != null && (
-        resource.data.userId == request.auth.uid ||
+        ('userId' in resource.data && resource.data.userId == request.auth.uid) ||
         request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
         request.auth.token.email == 'admin@inrooms.com'
       );
 
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow create: if request.auth != null && (
+        ('userId' in request.resource.data && request.resource.data.userId == request.auth.uid) ||
+        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
 
       allow update, delete: if request.auth != null && (
         ('userId' in resource.data && resource.data.userId == request.auth.uid) ||

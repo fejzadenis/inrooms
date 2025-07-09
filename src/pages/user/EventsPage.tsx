@@ -73,22 +73,22 @@ export function EventsPage() {
           // Fallback to direct query if RPC fails
           console.log("EVENTS DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
           
-          const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('subscription_status, subscription_events_quota, subscription_events_used')
-            .eq('id', userIdString)
-            .maybeSingle();
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('subscription_status, subscription_events_quota, subscription_events_used')
+          .eq('id', userIdString)
+          .maybeSingle();
           
-          if (!userError && userData) {
-            console.log("EVENTS DEBUG: Supabase subscription data:", userData);
-            setSubscriptionData({
-              status: userData.subscription_status || 'inactive',
-              eventsQuota: userData.subscription_events_quota || 0,
-              eventsUsed: userData.subscription_events_used || 0
-            });
-          } else {
-            console.log("EVENTS DEBUG: Error or no data from Supabase:", userError);
-          }
+        if (!userError && userData) {
+          console.log("EVENTS DEBUG: Supabase subscription data:", userData);
+          setSubscriptionData({
+            status: userData.subscription_status || 'inactive',
+            eventsQuota: userData.subscription_events_quota || 0,
+            eventsUsed: userData.subscription_events_used || 0
+          });
+        } else {
+          console.log("EVENTS DEBUG: Error or no data from Supabase:", userError);
+        }
         }
       }
       
@@ -102,9 +102,8 @@ export function EventsPage() {
       });
       setEvents(upcomingEvents);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to register for event. Please try again.';
-      console.error('Failed to register for event:', errorMessage);
-      toast.error(errorMessage);
+      console.error('Failed to load events:', error);
+      toast.error('Failed to load events');
     } finally {
       setLoading(false);
     }
@@ -112,43 +111,108 @@ export function EventsPage() {
 
   const loadUserRegistrations = async () => {
     if (!user) return;
+    
+    try {
+      const registrations = await eventService.getUserRegistrations(user.id);
+      setRegisteredEvents(registrations.map(reg => reg.eventId));
+    } catch (error) {
+      console.error('Failed to load user registrations:', error);
+    }
   };
 
   const handleRegister = async (eventId: string) => {
+    if (!user) {
+      toast.error('Please log in to register for events');
+      return;
+    }
+
+    console.log("EVENTS DEBUG: Starting registration process for event", eventId);
+    console.log("EVENTS DEBUG: User ID:", user.id, "Type:", typeof user.id);
+
+    // Get latest subscription data from Supabase
+    console.log("EVENTS DEBUG: Checking subscription data before registration for user", user.id);
+    const userIdString = user.id.toString();
+    
+    // Try using the RPC function first
+    const { data: rpcData, error: rpcError } = await supabase
+      .rpc('get_user_subscription', { user_id: userIdString });
+    
+    let userData = null;
+    let userError = null;
+    
+    if (!rpcError && rpcData && rpcData.length > 0) {
+      console.log("EVENTS DEBUG: RPC returned subscription data:", rpcData[0]);
+      userData = rpcData[0];
+    } else {
+      // Fallback to direct query if RPC fails
+      console.log("EVENTS DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
+      
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('subscription_status, subscription_events_quota, subscription_events_used')
+      .eq('id', userIdString)
+      .maybeSingle();
+    }
+      
+    // Update subscription data state
+    if (!userError && userData) {
+      console.log("EVENTS DEBUG: Updated subscription data from Supabase:", userData);
+      setSubscriptionData({
+        status: userData.subscription_status || 'inactive',
+        eventsQuota: userData.subscription_events_quota || 0,
+        eventsUsed: userData.subscription_events_used || 0
+      });
+    } else {
+      console.log("EVENTS DEBUG: Error fetching updated subscription data:", userError);
+    }
+    
+    const eventsUsed = subscriptionData?.eventsUsed || userData?.subscription_events_used || user.subscription.eventsUsed;
+    const eventsQuota = subscriptionData?.eventsQuota || userData?.subscription_events_quota || user.subscription.eventsQuota;
+    
+    console.log("EVENTS DEBUG: Current usage:", eventsUsed, "/", eventsQuota);
+    if (eventsUsed >= eventsQuota) {
+      toast.error('You have reached your event quota. Please upgrade your subscription.');
+      return;
+    }
+
+    const event = events.find(e => e.id === eventId);
+    if (!event) return;
+
+    console.log("EVENTS DEBUG: Registering for event:", event.title, "ID:", eventId);
+    
     try {
-      const event = events.find(e => e.id === eventId);
-      if (!event) {
-        toast.error('Event not found');
-        return;
-      }
+      await eventService.registerForEvent(user.id, eventId);
+      
+      // Generate calendar event
+      try {
+        const icsFile = await generateCalendarEvent({
+          title: event.title,
+          description: event.description,
+          startTime: event.date,
+          duration: { hours: Math.floor(event.duration / 60), minutes: event.duration % 60 },
+          location: event.meetLink || 'Online Event',
+        });
 
-      // Check if user can register first
-      const canRegister = await eventService.canRegisterForEvent(user.id, eventId);
-      if (!canRegister) {
-        // The actual error will be thrown by registerForEvent
+        // Create calendar download link
+        const blob = new Blob([icsFile], { type: 'text/calendar' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `${event.title.toLowerCase().replace(/\s+/g, '-')}.ics`);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode?.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } catch (calendarError) {
+        console.warn('Failed to generate calendar event:', calendarError);
       }
-
-      // Create calendar download link
-      const blob = new Blob([generateCalendarEvent(event)], { type: 'text/calendar' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `${event.title.toLowerCase().replace(/\s+/g, '-')}.ics`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode?.removeChild(link);
-      window.URL.revokeObjectURL(url);
 
       setRegisteredEvents(prev => [...prev, eventId]);
-      
-      // Reload to update counts and subscription data
-      await loadEvents();
-      
+      await loadEvents(); // Reload to update counts
       toast.success('Successfully registered! Calendar invite downloaded.');
     } catch (error: any) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Failed to register for event:', errorMessage);
-      toast.error(`Failed to register for event: ${errorMessage}`);
+      console.error('Failed to register for event:', error, error.stack);
+      toast.error(`Failed to register for event: ${error.message || 'Please try again.'}`);
     }
   };
 
@@ -161,8 +225,8 @@ export function EventsPage() {
   };
 
   const filteredEvents = events.filter(event =>
-    (event.title ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (event.description ?? '').toLowerCase().includes(searchTerm.toLowerCase())
+    event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    event.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
