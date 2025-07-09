@@ -212,17 +212,6 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ 
-        sessionId: session.id, 
-        url: session.url || ''
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
-
-  } catch (error) {
-    console.error('Error creating checkout session:', error)
-    
     return new Response(
       JSON.stringify({
         error: 'Failed to create checkout session', 

@@ -140,6 +140,7 @@ serve(async (request)=>{
 async function handleCheckoutCompleted(session) {
   // Try to get userId from client_reference_id first, then fallback to metadata
   let userId = session.client_reference_id || session.metadata?.user_id;
+  
   console.log('Handling checkout.session.completed event');
   console.log(`- Session ID: ${session.id}`);
   console.log(`- Client Reference ID: ${session.client_reference_id || 'Not set'}`);
@@ -231,8 +232,12 @@ async function handleCheckoutCompleted(session) {
       // Initialize Firebase Admin SDK if not already initialized
       try {
         // Import Firebase Admin SDK
-        const { initializeApp, cert, getApps } = await import('npm:firebase-admin/app');
-        const { getFirestore } = await import('npm:firebase-admin/firestore');
+        const firebaseAdmin = await import('npm:firebase-admin/app');
+        const firestoreModule = await import('npm:firebase-admin/firestore');
+        
+        const { initializeApp, cert, getApps } = firebaseAdmin;
+        const { getFirestore } = firestoreModule;
+        
         // Check if Firebase Admin SDK is already initialized
         if (getApps().length === 0) {
           // Get Firebase service account from environment variables
@@ -240,7 +245,25 @@ async function handleCheckoutCompleted(session) {
           if (!serviceAccountStr) {
             throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is not set");
           }
-          const serviceAccount = JSON.parse(atob(serviceAccountStr));
+          
+          let serviceAccount;
+          try {
+            // Try to parse the service account JSON
+            serviceAccount = JSON.parse(serviceAccountStr);
+            console.log("Successfully parsed service account JSON");
+          } catch (parseError) {
+            // If parsing fails, try to decode from base64
+            try {
+              const decoded = atob(serviceAccountStr);
+              serviceAccount = JSON.parse(decoded);
+              console.log("Successfully parsed base64-encoded service account JSON");
+            } catch (decodeError) {
+              console.error("Failed to parse service account JSON:", parseError);
+              console.error("Failed to decode base64 service account:", decodeError);
+              throw new Error("Invalid FIREBASE_SERVICE_ACCOUNT format");
+            }
+          }
+          
           initializeApp({
             credential: cert(serviceAccount)
           });
@@ -252,6 +275,7 @@ async function handleCheckoutCompleted(session) {
         // Update Firestore document with subscription data
         if (session.subscription) {
           console.log("Writing user data to Firestore:", {
+            id: userId,
             subscription: {
               status: 'active',
               eventsQuota: planDetails.eventsQuota,
@@ -265,48 +289,66 @@ async function handleCheckoutCompleted(session) {
           
           // Create a reference to the user document in Firestore
           const userRef = firestore.collection('users').doc(userId);
+          console.log(`Created Firestore reference for user ${userId}`);
           
           // Update the user document with subscription data
-          await userRef.set({
-            subscription: {
-              status: 'active',
-              eventsQuota: planDetails.eventsQuota,
-              eventsUsed: 0
-            },
-            stripe_customer_id: session.customer,
-            stripe_subscription_id: session.subscription,
-            stripe_subscription_status: 'active',
-            updatedAt: new Date()
-          }, {
-            merge: true
-          });
-          console.log(`✅ Updated Firestore for user ${userId} with subscription data`);
-          console.log(`  - Subscription ID: ${session.subscription}`);
-          console.log(`  - Events Quota: ${planDetails.eventsQuota}`);
-          console.log(`  - Status: active`);
+          try {
+            await userRef.set({
+              subscription: {
+                status: 'active',
+                eventsQuota: planDetails.eventsQuota,
+                eventsUsed: 0
+              },
+              stripe_customer_id: session.customer,
+              stripe_subscription_id: session.subscription,
+              stripe_subscription_status: 'active',
+              updatedAt: new Date()
+            }, {
+              merge: true
+            });
+            
+            console.log(`✅ Updated Firestore for user ${userId} with subscription data`);
+            console.log(`  - Subscription ID: ${session.subscription}`);
+            console.log(`  - Events Quota: ${planDetails.eventsQuota}`);
+            console.log(`  - Status: active`);
+          } catch (writeError) {
+            console.error(`❌ Error writing to Firestore for user ${userId}:`, writeError);
+            throw writeError;
+          }
+        } else {
+          console.log(`No subscription data to write to Firestore for user ${userId}`);
         }
       } catch (firebaseError) {
         console.error('❌ Error updating Firestore:', firebaseError);
       }
-      // Update user's subscription status
-      const { error } = await supabaseClient.from('users').update({
-        // If we have a subscription ID, update all subscription-related fields
-        "stripe_customer_id": session.customer,
-        ...session.subscription ? {
-          "stripe_subscription_id": session.subscription,
-          "stripe_subscription_status": 'active',
-          "subscription_status": 'active',
-          // Get plan details and update quota
-          "subscription_events_quota": planDetails.eventsQuota,
-          "subscription_events_used": 0
-        } : {},
-        "updated_at": new Date().toISOString()
-      }).eq('id', userId);
-      if (error) {
-        console.error('❌ Error updating user subscription:', error);
-      } else {
-        console.log(`✅ Updated user ${userId} with customer ${session.customer} and subscription details`);
+      
+      // Update user's subscription status in Supabase
+      try {
+        const updateData = {
+          stripe_customer_id: session.customer,
+          updated_at: new Date().toISOString()
+        };
+        
+        // Only add subscription fields if we have a subscription
         if (session.subscription) {
+          Object.assign(updateData, {
+            stripe_subscription_id: session.subscription,
+            stripe_subscription_status: 'active',
+            subscription_status: 'active',
+            subscription_events_quota: planDetails.eventsQuota,
+            subscription_events_used: 0
+          });
+        }
+        
+        const { error } = await supabaseClient
+          .from('users')
+          .update(updateData)
+          .eq('id', userId);
+          
+        if (error) {
+          console.error('❌ Error updating user subscription:', error);
+        } else {
+          console.log(`✅ Updated Firestore for user ${userId} with subscription data`);
           console.log(`  - Subscription ID: ${session.subscription}`);
           console.log(`  - Events Quota: ${planDetails.eventsQuota}`);
           console.log(`  - Status: active`);
@@ -424,6 +466,7 @@ async function handleCustomerCreated(customer) {
 async function handleSubscriptionCreated(subscription) {
   let userId = subscription.metadata?.user_id;
   console.log(`Processing new subscription: ${subscription.id}`);
+  
   console.log('Handling customer.subscription.created event');
   console.log(`- Subscription ID: ${subscription.id}`);
   console.log(`- Customer: ${subscription.customer}`);
@@ -500,6 +543,7 @@ async function handleSubscriptionCreated(subscription) {
 }
 async function handleSubscriptionUpdated(subscription) {
   let userId = subscription.metadata?.user_id;
+  
   console.log('Handling customer.subscription.updated event');
   console.log(`- Subscription ID: ${subscription.id}`);
   console.log(`- Customer: ${subscription.customer}`);
@@ -534,6 +578,76 @@ async function handleSubscriptionUpdated(subscription) {
   const priceId = subscription.items.data[0]?.price.id;
   const planDetails = getPlanDetailsByPriceId(priceId || '');
   console.log(`Plan details: ${planDetails.planId}, Events Quota: ${planDetails.eventsQuota}`);
+  // Update Firestore with subscription data
+  try {
+    // Import Firebase Admin SDK
+    const firebaseAdmin = await import('npm:firebase-admin/app');
+    const firestoreModule = await import('npm:firebase-admin/firestore');
+    
+    const { initializeApp, cert, getApps } = firebaseAdmin;
+    const { getFirestore } = firestoreModule;
+    
+    // Check if Firebase Admin SDK is already initialized
+    if (getApps().length === 0) {
+      // Get Firebase service account from environment variables
+      const serviceAccountStr = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
+      if (!serviceAccountStr) {
+        throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is not set");
+      }
+      
+      let serviceAccount;
+      try {
+        // Try to parse the service account JSON
+        serviceAccount = JSON.parse(serviceAccountStr);
+      } catch (parseError) {
+        // If parsing fails, try to decode from base64
+        try {
+          const decoded = atob(serviceAccountStr);
+          serviceAccount = JSON.parse(decoded);
+        } catch (decodeError) {
+          console.error("Failed to parse service account JSON:", parseError);
+          console.error("Failed to decode base64 service account:", decodeError);
+          throw new Error("Invalid FIREBASE_SERVICE_ACCOUNT format");
+        }
+      }
+      
+      initializeApp({
+        credential: cert(serviceAccount)
+      });
+      console.log("Firebase Admin SDK initialized successfully");
+    }
+    
+    // Get Firestore instance
+    const firestore = getFirestore();
+    
+    console.log(`Updating Firestore for user ${userId} with subscription data`);
+    
+    // Create a reference to the user document in Firestore
+    const userRef = firestore.collection('users').doc(userId);
+    
+    // Update the user document with subscription data
+    await userRef.set({
+      subscription: {
+        status: subscription.status === 'active' ? 'active' : 'inactive',
+        eventsQuota: planDetails.eventsQuota,
+        // Don't reset events_used on update to avoid losing usage data
+      },
+      stripe_customer_id: subscription.customer,
+      stripe_subscription_id: subscription.id,
+      stripe_subscription_status: subscription.status,
+      updatedAt: new Date()
+    }, {
+      merge: true
+    });
+    
+    console.log(`✅ Updated Firestore for user ${userId} with subscription data`);
+    console.log(`  - Subscription ID: ${subscription.id}`);
+    console.log(`  - Events Quota: ${planDetails.eventsQuota}`);
+    console.log(`  - Status: ${subscription.status}`);
+  } catch (firebaseError) {
+    console.error('❌ Error updating Firestore:', firebaseError);
+  }
+
   // Update subscription in stripe_subscriptions table
   const { error: updateError } = await supabaseClient.from('stripe_subscriptions').update({
     status: subscription.status,
@@ -570,6 +684,7 @@ async function handleSubscriptionUpdated(subscription) {
 }
 async function handleSubscriptionDeleted(subscription) {
   let userId = subscription.metadata?.user_id;
+  
   console.log('Handling customer.subscription.deleted event');
   console.log(`- Subscription ID: ${subscription.id}`);
   console.log(`- Customer: ${subscription.customer}`);
@@ -591,6 +706,70 @@ async function handleSubscriptionDeleted(subscription) {
       return;
     }
   }
+  // Update Firestore with subscription data
+  try {
+    // Import Firebase Admin SDK
+    const firebaseAdmin = await import('npm:firebase-admin/app');
+    const firestoreModule = await import('npm:firebase-admin/firestore');
+    
+    const { initializeApp, cert, getApps } = firebaseAdmin;
+    const { getFirestore } = firestoreModule;
+    
+    // Check if Firebase Admin SDK is already initialized
+    if (getApps().length === 0) {
+      // Get Firebase service account from environment variables
+      const serviceAccountStr = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
+      if (!serviceAccountStr) {
+        throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is not set");
+      }
+      
+      let serviceAccount;
+      try {
+        // Try to parse the service account JSON
+        serviceAccount = JSON.parse(serviceAccountStr);
+      } catch (parseError) {
+        // If parsing fails, try to decode from base64
+        try {
+          const decoded = atob(serviceAccountStr);
+          serviceAccount = JSON.parse(decoded);
+        } catch (decodeError) {
+          console.error("Failed to parse service account JSON:", parseError);
+          console.error("Failed to decode base64 service account:", decodeError);
+          throw new Error("Invalid FIREBASE_SERVICE_ACCOUNT format");
+        }
+      }
+      
+      initializeApp({
+        credential: cert(serviceAccount)
+      });
+      console.log("Firebase Admin SDK initialized successfully");
+    }
+    
+    // Get Firestore instance
+    const firestore = getFirestore();
+    
+    console.log(`Updating Firestore for user ${userId} with canceled subscription data`);
+    
+    // Create a reference to the user document in Firestore
+    const userRef = firestore.collection('users').doc(userId);
+    
+    // Update the user document with subscription data
+    await userRef.set({
+      subscription: {
+        status: 'inactive',
+        eventsQuota: 0,
+      },
+      stripe_subscription_status: 'canceled',
+      updatedAt: new Date()
+    }, {
+      merge: true
+    });
+    
+    console.log(`✅ Updated Firestore for user ${userId} with canceled subscription data`);
+  } catch (firebaseError) {
+    console.error('❌ Error updating Firestore:', firebaseError);
+  }
+
   // Update subscription status
   const { error: updateError } = await supabaseClient.from('stripe_subscriptions').update({
     status: 'canceled',
@@ -617,6 +796,7 @@ async function handleSubscriptionDeleted(subscription) {
 }
 async function handlePaymentSucceeded(invoice) {
   const customerId = invoice.customer;
+  
   console.log('Handling invoice.payment_succeeded event');
   console.log(`- Invoice ID: ${invoice.id}`);
   console.log(`- Customer: ${customerId}`);
@@ -693,9 +873,77 @@ async function handlePaymentSucceeded(invoice) {
         const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
         const priceId = subscription.items.data[0]?.price.id;
         const planDetails = getPlanDetailsByPriceId(priceId || '');
+        
         console.log(`Subscription payment for ${invoice.subscription} with price ${priceId}`);
         console.log(`- Events Quota: ${planDetails.eventsQuota}`);
         // Reset events used count for new billing period and update subscription details
+        // Update Firestore with subscription data
+        try {
+          // Import Firebase Admin SDK
+          const firebaseAdmin = await import('npm:firebase-admin/app');
+          const firestoreModule = await import('npm:firebase-admin/firestore');
+          
+          const { initializeApp, cert, getApps } = firebaseAdmin;
+          const { getFirestore } = firestoreModule;
+          
+          // Check if Firebase Admin SDK is already initialized
+          if (getApps().length === 0) {
+            // Get Firebase service account from environment variables
+            const serviceAccountStr = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
+            if (!serviceAccountStr) {
+              throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is not set");
+            }
+            
+            let serviceAccount;
+            try {
+              // Try to parse the service account JSON
+              serviceAccount = JSON.parse(serviceAccountStr);
+            } catch (parseError) {
+              // If parsing fails, try to decode from base64
+              try {
+                const decoded = atob(serviceAccountStr);
+                serviceAccount = JSON.parse(decoded);
+              } catch (decodeError) {
+                console.error("Failed to parse service account JSON:", parseError);
+                console.error("Failed to decode base64 service account:", decodeError);
+                throw new Error("Invalid FIREBASE_SERVICE_ACCOUNT format");
+              }
+            }
+            
+            initializeApp({
+              credential: cert(serviceAccount)
+            });
+            console.log("Firebase Admin SDK initialized successfully");
+          }
+          
+          // Get Firestore instance
+          const firestore = getFirestore();
+          
+          console.log(`Updating Firestore for user ${userId} with subscription data`);
+          
+          // Create a reference to the user document in Firestore
+          const userRef = firestore.collection('users').doc(userId);
+          
+          // Update the user document with subscription data
+          await userRef.set({
+            subscription: {
+              status: 'active',
+              eventsQuota: planDetails.eventsQuota,
+              eventsUsed: 0
+            },
+            stripe_subscription_status: subscription.status,
+            updatedAt: new Date()
+          }, {
+            merge: true
+          });
+          
+          console.log(`✅ Updated Firestore for user ${userId} with subscription data`);
+          console.log(`  - Events Quota: ${planDetails.eventsQuota}`);
+          console.log(`  - Status: active`);
+        } catch (firebaseError) {
+          console.error('❌ Error updating Firestore:', firebaseError);
+        }
+        
         const { error } = await supabaseClient.from('users').update({
           "subscription_events_used": 0,
           "subscription_events_quota": planDetails.eventsQuota,
@@ -1116,3 +1364,73 @@ function getPlanDetailsByPriceId(priceId) {
   console.log(`Mapped price ID ${priceId} to plan ${plan.planId} with ${plan.eventsQuota} events quota`);
   return plan;
 }
+
+  // Update Firestore with subscription data
+  try {
+    // Import Firebase Admin SDK
+    const firebaseAdmin = await import('npm:firebase-admin/app');
+    const firestoreModule = await import('npm:firebase-admin/firestore');
+    
+    const { initializeApp, cert, getApps } = firebaseAdmin;
+    const { getFirestore } = firestoreModule;
+    
+    // Check if Firebase Admin SDK is already initialized
+    if (getApps().length === 0) {
+      // Get Firebase service account from environment variables
+      const serviceAccountStr = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
+      if (!serviceAccountStr) {
+        throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is not set");
+      }
+      
+      let serviceAccount;
+      try {
+        // Try to parse the service account JSON
+        serviceAccount = JSON.parse(serviceAccountStr);
+      } catch (parseError) {
+        // If parsing fails, try to decode from base64
+        try {
+          const decoded = atob(serviceAccountStr);
+          serviceAccount = JSON.parse(decoded);
+        } catch (decodeError) {
+          console.error("Failed to parse service account JSON:", parseError);
+          console.error("Failed to decode base64 service account:", decodeError);
+          throw new Error("Invalid FIREBASE_SERVICE_ACCOUNT format");
+        }
+      }
+      
+      initializeApp({
+        credential: cert(serviceAccount)
+      });
+      console.log("Firebase Admin SDK initialized successfully");
+    }
+    
+    // Get Firestore instance
+    const firestore = getFirestore();
+    
+    console.log(`Updating Firestore for user ${userId} with subscription data`);
+    
+    // Create a reference to the user document in Firestore
+    const userRef = firestore.collection('users').doc(userId);
+    
+    // Update the user document with subscription data
+    await userRef.set({
+      subscription: {
+        status: subscription.status === 'active' ? 'active' : 'inactive',
+        eventsQuota: planDetails.eventsQuota,
+        eventsUsed: 0
+      },
+      stripe_customer_id: subscription.customer,
+      stripe_subscription_id: subscription.id,
+      stripe_subscription_status: subscription.status,
+      updatedAt: new Date()
+    }, {
+      merge: true
+    });
+    
+    console.log(`✅ Updated Firestore for user ${userId} with subscription data`);
+    console.log(`  - Subscription ID: ${subscription.id}`);
+    console.log(`  - Events Quota: ${planDetails.eventsQuota}`);
+    console.log(`  - Status: ${subscription.status}`);
+  } catch (firebaseError) {
+    console.error('❌ Error updating Firestore:', firebaseError);
+  }

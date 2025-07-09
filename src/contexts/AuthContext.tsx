@@ -819,6 +819,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const startFreeTrial = async () => {
     if (!user) throw new Error('User not authenticated');
 
+    console.log('Starting free trial for user:', user.id);
+
     try {
       // Rate limit trial activation
       if (shouldRateLimit(`startTrial-${user.id}`)) {
@@ -832,6 +834,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       trialEndsAt.setDate(trialEndsAt.getDate() + 7);
 
       console.log(`Setting trial data for user ${user.id} in Firestore`);
+
+      console.log(`Setting trial data for user ${user.id} in Firestore`);
       
       // Update subscription in Firestore
       await updateDoc(userRef, {
@@ -842,6 +846,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         'updatedAt': serverTimestamp()
       });
       
+      console.log('Updated Firestore with trial subscription data');
+
       // Clear cache to force refresh
       userDataCache.delete(user.id);
       
@@ -853,19 +859,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ...prev,
           subscription: {
             ...prev.subscription,
-            status: 'trial',
-            eventsQuota: 2,
-            eventsUsed: 0,
-            trialEndsAt
-          }
-        };
-        
-        // Update cache with new data
-        setCachedUserData(prev.id, updatedUser);
-        return updatedUser;
-      });
-      
-      
       toast.success('Free trial activated successfully!');
     } catch (err: any) {
       console.error('Free trial activation error:', err);
