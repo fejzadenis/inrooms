@@ -118,8 +118,9 @@ export const eventService = {
       const { data, error } = await supabase
         .rpc('increment_user_event_usage', {
           user_id: userIdString,
+        });
       // Call the RPC function to increment user event usage and event participants
-      const { data, error } = await supabase
+      const { data: data2, error: error2 } = await supabase
         .rpc('increment_user_event_usage', {
           user_id: userId,
           event_id: eventId
@@ -128,7 +129,8 @@ export const eventService = {
       if (error || !data) {
         console.error('Error updating event usage:', error);
         throw new Error(`Error updating event usage: ${error?.message || 'Unknown error'}`);
-        currentParticipants: increment(1),
+      }
+      currentParticipants: increment(1);
     } catch (error) {
       console.error('Error registering for event:', error);
       throw error;
@@ -155,7 +157,7 @@ export const eventService = {
       console.error('Error getting event registrations:', error);
       throw error;
     }
-  }
+  },
 
   // Check if user can register for an event
   async canRegisterForEvent(userId: string, eventId: string): Promise<RegistrationResult> {
