@@ -11,6 +11,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { stripeService, type SubscriptionPlan } from '../../services/stripeService';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../../config/supabase';
+import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 
 export function BillingPage() {
   const { user } = useAuth();
@@ -24,6 +25,12 @@ export function BillingPage() {
   const [billingInterval, setBillingInterval] = React.useState<'monthly' | 'yearly'>('monthly');
   const [isQuoteModalOpen, setIsQuoteModalOpen] = React.useState(false);
   const [selectedAddOns, setSelectedAddOns] = React.useState<string[]>([]);
+  const [subscriptionData, setSubscriptionData] = React.useState<{
+    status: string;
+    eventsQuota: number;
+    eventsUsed: number;
+  } | null>(null);
+  const [refreshingData, setRefreshingData] = React.useState(false);
 
   React.useEffect(() => {
     if (user?.stripe_customer_id) {
@@ -34,30 +41,43 @@ export function BillingPage() {
   }, [user]);
 
   // Fetch latest subscription data from Supabase
-  React.useEffect(() => {
-    const fetchLatestSubscriptionData = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('users')
-          .select('subscription_status, subscription_events_quota, subscription_events_used, stripe_subscription_status, stripe_current_period_end')
-          .eq('id', user.id)
-          .maybeSingle();
-          
-        if (!error && data) {
-          // Update local user state with latest subscription data
-          if (user.subscription) {
-            user.subscription.status = data.subscription_status || user.subscription.status;
-            user.subscription.eventsQuota = data.subscription_events_quota || user.subscription.eventsQuota;
-            user.subscription.eventsUsed = data.subscription_events_used || user.subscription.eventsUsed;
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching latest subscription data:', error);
-      }
-    };
+  const fetchLatestSubscriptionData = async () => {
+    if (!user) return;
     
+    setRefreshingData(true);
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('subscription_status, subscription_events_quota, subscription_events_used, stripe_subscription_status, stripe_current_period_end')
+        .eq('id', user.id)
+        .maybeSingle();
+        
+      if (!error && data) {
+        // Set subscription data from Supabase
+        setSubscriptionData({
+          status: data.subscription_status || 'inactive',
+          eventsQuota: data.subscription_events_quota || 0,
+          eventsUsed: data.subscription_events_used || 0
+        });
+      } else {
+        console.log('No subscription data found in Supabase');
+        // Use data from user object as fallback
+        if (user.subscription) {
+          setSubscriptionData({
+            status: user.subscription.status,
+            eventsQuota: user.subscription.eventsQuota,
+            eventsUsed: user.subscription.eventsUsed
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching latest subscription data:', error);
+    } finally {
+      setRefreshingData(false);
+    }
+  };
+  
+  React.useEffect(() => {
     fetchLatestSubscriptionData();
   }, [user]);
 
@@ -84,9 +104,9 @@ export function BillingPage() {
   const currentPlan = React.useMemo(() => {
     if (!user?.subscription) return null;
     return stripeService.getMonthlyPlans().find(plan => 
-      plan.eventsQuota === user.subscription.eventsQuota
+      plan.eventsQuota === (subscriptionData?.eventsQuota || user.subscription.eventsQuota)
     ) || stripeService.getMonthlyPlans()[0];
-  }, [user]);
+  }, [user, subscriptionData]);
 
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
     console.log('Starting plan selection process for plan:', plan.id);
@@ -311,43 +331,31 @@ export function BillingPage() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Current Subscription</h2>
             
-            {/* Fetch latest subscription data from Supabase */}
-            <button 
-              onClick={async () => {
-                if (!user) return;
-                try {
-                  const { data, error } = await supabase
-                    .from('users')
-                    .select('subscription_status, subscription_events_quota, subscription_events_used')
-                    .eq('id', user.id)
-                    .maybeSingle();
-                    
-                  if (!error && data) {
-                    // Update local user state with latest subscription data
-                    if (user.subscription) {
-                      user.subscription.status = data.subscription_status || user.subscription.status;
-                      user.subscription.eventsQuota = data.subscription_events_quota || user.subscription.eventsQuota;
-                      user.subscription.eventsUsed = data.subscription_events_used || user.subscription.eventsUsed;
-                    }
-                    toast.success('Subscription data refreshed');
-                  } else if (!data) {
-                    toast.info('No subscription data found for this user');
-                  }
-                } catch (error) {
-                  console.error('Error refreshing subscription data:', error);
-                  toast.error('Failed to refresh subscription data');
-                }
-              }}
-              className="text-xs text-indigo-600 hover:text-indigo-800 mb-4 underline"
-            >
-              Refresh subscription data
-            </button>
+            <div className="flex justify-between items-center mb-4">
+              <div className="text-sm text-gray-500">
+                {refreshingData ? 'Refreshing data...' : 'Last updated: just now'}
+              </div>
+              <button 
+                onClick={fetchLatestSubscriptionData}
+                disabled={refreshingData}
+                className="text-xs text-indigo-600 hover:text-indigo-800 underline flex items-center"
+              >
+                {refreshingData ? (
+                  <>
+                    <LoadingSpinner className="w-3 h-3 mr-1" />
+                    Refreshing...
+                  </>
+                ) : (
+                  'Refresh subscription data'
+                )}
+              </button>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-gray-500">Plan</h3>
                 <p className="text-lg font-semibold text-gray-900 capitalize">
-                  {currentPlan?.name || 'Free Trial'}
+                  {currentPlan?.name || 'No Plan'}
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
                   {currentPlan?.targetAudience || 'Trial user'}
@@ -357,24 +365,34 @@ export function BillingPage() {
                 <h3 className="text-sm font-medium text-gray-500">Status</h3>
                 <div className="flex items-center mt-1">
                   <div className={`w-2 h-2 rounded-full mr-2 ${
-                    user.subscription.status === 'active' ? 'bg-green-500' :
-                    user.subscription.status === 'trial' ? 'bg-blue-500' : 'bg-gray-500'
+                    (subscriptionData?.status || user.subscription.status) === 'active' ? 'bg-green-500' :
+                    (subscriptionData?.status || user.subscription.status) === 'trial' ? 'bg-blue-500' : 'bg-gray-500'
                   }`} />
                   <p className="text-lg font-semibold text-gray-900 capitalize">
-                    {user.subscription.status}
+                    {subscriptionData?.status || user.subscription.status}
                   </p>
                 </div>
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-gray-500">Events Remaining</h3>
                 <p className="text-lg font-semibold text-gray-900">
-                  {user.subscription.eventsQuota - user.subscription.eventsUsed} / {user.subscription.eventsQuota}
+                  {subscriptionData 
+                    ? `${subscriptionData.eventsQuota - subscriptionData.eventsUsed} / ${subscriptionData.eventsQuota}`
+                    : `${user.subscription.eventsQuota - user.subscription.eventsUsed} / ${user.subscription.eventsQuota}`
+                  }
                 </p>
                 <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                   <div
                     className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
                     style={{
-                      width: `${(user.subscription.eventsUsed / user.subscription.eventsQuota) * 100}%`,
+                      width: `${subscriptionData 
+                        ? (subscriptionData.eventsQuota > 0 
+                            ? (subscriptionData.eventsUsed / subscriptionData.eventsQuota) * 100 
+                            : 0)
+                        : (user.subscription.eventsQuota > 0 
+                            ? (user.subscription.eventsUsed / user.subscription.eventsQuota) * 100 
+                            : 0)
+                      }%`,
                     }}
                   />
                 </div>

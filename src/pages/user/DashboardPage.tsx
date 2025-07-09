@@ -22,24 +22,31 @@ export function DashboardPage() {
   const loadDashboardData = async () => {
     if (!user) return;
 
+    // Get latest subscription data from Supabase
     try {
       setLoading(true);
       
-      // Get user's subscription data from Supabase for most up-to-date info
+      // Get latest subscription data from Supabase
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('subscription_status, subscription_events_quota, subscription_events_used')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
         
       if (!userError && userData) {
-        // Update local user state with latest subscription data from Supabase
-        user.subscription = {
-          ...user.subscription,
-          status: userData.subscription_status || user.subscription.status,
-          eventsQuota: userData.subscription_events_quota || user.subscription.eventsQuota,
-          eventsUsed: userData.subscription_events_used || user.subscription.eventsUsed
+        // Create a temporary updated user object with the latest subscription data
+        const updatedUser = {
+          ...user,
+          subscription: {
+            ...user.subscription,
+            status: userData.subscription_status || user.subscription.status,
+            eventsQuota: userData.subscription_events_quota || user.subscription.eventsQuota,
+            eventsUsed: userData.subscription_events_used || user.subscription.eventsUsed
+          }
         };
+        
+        // Use the updated user object for the rest of the function
+        user.subscription = updatedUser.subscription;
       }
       
       // Load user's registered events
@@ -65,9 +72,9 @@ export function DashboardPage() {
     // Get latest subscription data from Supabase
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('subscription_status, subscription_events_quota, subscription_events_used')
+      .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
       
     const eventsUsed = userData?.subscription_events_used || user.subscription.eventsUsed;
     const eventsQuota = userData?.subscription_events_quota || user.subscription.eventsQuota;

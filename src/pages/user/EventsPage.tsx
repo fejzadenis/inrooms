@@ -82,9 +82,9 @@ export function EventsPage() {
     // Get latest subscription data from Supabase
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('subscription_status, subscription_events_quota, subscription_events_used')
+      .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
       
     const eventsUsed = userData?.subscription_events_used || user.subscription.eventsUsed;
     const eventsQuota = userData?.subscription_events_quota || user.subscription.eventsQuota;
