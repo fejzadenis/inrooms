@@ -654,7 +654,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
-      if (!userCredential.user.emailVerified) {
+      // Skip email verification for admin@inrooms.com
+      if (!userCredential.user.emailVerified && email !== 'admin@inrooms.com') {
         toast.error('Please verify your email before logging in.');
         await signOut(auth);
         throw new Error('Email not verified');
