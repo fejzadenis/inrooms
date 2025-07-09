@@ -163,7 +163,7 @@ serve(async (request: Request) => {
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // Try to get userId from client_reference_id first, then fallback to metadata
-  const userId = session.client_reference_id || session.metadata?.user_id;
+  let userId = session.client_reference_id || session.metadata?.user_id;
   
   console.log('Handling checkout.session.completed event');
   
@@ -362,9 +362,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         // Also update the checkout session if it exists
         const { error: sessionUpdateError } = await supabaseClient
           .from('stripe_checkout_sessions')
-          .update({ 
+          .update({
             status: 'completed',
-            completed_at: new Date().toISOString()
+            completed_at: new Date().toISOString(),
+            subscription_id: session.subscription || null
           })
           .eq('id', session.id);
           
