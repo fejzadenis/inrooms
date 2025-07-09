@@ -209,12 +209,22 @@ serve(async (req) => {
 
     console.log(`Stored checkout session ${session.id} for user ${userId} in database`)
 
+    // We no longer update the user record here - the webhook will handle it
+    // This prevents race conditions and ensures consistent updates
 
     return new Response(
       JSON.stringify({ 
+        sessionId: session.id, 
+        url: session.url || ''
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
-      )
     )
+
+  } catch (error) {
+    console.error('Error creating checkout session:', error)
+    
     return new Response(
       JSON.stringify({
         error: 'Failed to create checkout session', 

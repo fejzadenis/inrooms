@@ -840,9 +840,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Update subscription in Firestore
       await updateDoc(userRef, {
         'subscription.status': 'trial',
-        'subscription.eventsQuota': 2,
-        'subscription.eventsUsed': 0,
-        'subscription.trialEndsAt': trialEndsAt,
+        'subscription.eventsQuota': 2, 
+        'subscription.eventsUsed': 0, 
+        'subscription.trialEndsAt': trialEndsAt, 
         'updatedAt': serverTimestamp()
       });
       
@@ -854,15 +854,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Update local user state
       setUser(prev => {
         if (!prev) return null;
-        
+
         const updatedUser = {
           ...prev,
           subscription: {
             ...prev.subscription,
+            status: 'trial',
+            eventsQuota: 2,
+            eventsUsed: 0,
+            trialEndsAt
           }
         }
-      }
-      )
+        };
+        
+        // Update cache with new data
+        setCachedUserData(prev.id, updatedUser);
+        return updatedUser;
+      });
+      
       toast.success('Free trial activated successfully!');
     } catch (err: any) {
       console.error('Free trial activation error:', err);
