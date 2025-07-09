@@ -67,6 +67,8 @@ export function BillingPage() {
       .eq('id', user.id)
       .maybeSingle();
 
+    console.debug('[Subscription] Supabase query result:', { data, error });
+
     if (error) {
       console.error('[Subscription] Supabase error:', error);
     }
