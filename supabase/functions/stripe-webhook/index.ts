@@ -86,8 +86,9 @@ serve(async (request: Request) => {
         const { error } = await supabaseClient
           .from('stripe_checkout_sessions')
           .update({
-            status: 'completed',
-            completed_at: new Date().toISOString()
+            "status": 'completed',
+            "completed_at": new Date().toISOString(),
+            "subscription_id": session.subscription || null
           })
           .eq('id', session.id);
           
@@ -336,17 +337,17 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         .from('users')
         .update({
           // If we have a subscription ID, update all subscription-related fields
-          stripe_customer_id: session.customer as string,
+          "stripe_customer_id": session.customer as string,
           ...(session.subscription ? {
-            stripe_subscription_id: session.subscription,
-            stripe_subscription_status: 'active',
-            subscription_status: 'active',
-            // Get plan details and update quota
-            subscription_events_quota: planDetails.eventsQuota,
-            subscription_events_used: 0,
-          } : {}),
+          "stripe_subscription_id": session.subscription,
+          "stripe_subscription_status": 'active',
+          "subscription_status": 'active', 
+          // Get plan details and update quota
+          "subscription_events_quota": planDetails.eventsQuota,
+          "subscription_events_used": 0,
           // Reset events used count for new subscription
-          updated_at: new Date().toISOString(),
+          } : {}),
+          "updated_at": new Date().toISOString()
         })
         .eq('id', userId)
   
@@ -364,9 +365,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         const { error: sessionUpdateError } = await supabaseClient
           .from('stripe_checkout_sessions')
           .update({
-            status: 'completed',
-            completed_at: new Date().toISOString(),
-            subscription_id: session.subscription || null
+            "status": 'completed',
+            "completed_at": new Date().toISOString(),
+            "subscription_id": session.subscription || null
           })
           .eq('id', session.id);
           
