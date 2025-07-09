@@ -120,27 +120,24 @@ export function EventsPage() {
       if (!event) {
         toast.error('Event not found');
         return;
-        });
+      }
 
-        // Create calendar download link
-        const blob = new Blob([icsFile], { type: 'text/calendar' });
       // Check if user can register first
       const canRegister = await eventService.canRegisterForEvent(user.id, eventId);
       if (!canRegister) {
         // The actual error will be thrown by registerForEvent
       }
-      
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `${event.title.toLowerCase().replace(/\s+/g, '-')}.ics`);
-        document.body.appendChild(link);
-        link.click();
-        link.parentNode?.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      } catch (calendarError) {
-        console.warn('Failed to generate calendar event:', calendarError);
-      }
+
+      // Create calendar download link
+      const blob = new Blob([generateCalendarEvent(event)], { type: 'text/calendar' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${event.title.toLowerCase().replace(/\s+/g, '-')}.ics`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
       setRegisteredEvents(prev => [...prev, eventId]);
       
