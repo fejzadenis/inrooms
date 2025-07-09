@@ -103,8 +103,6 @@ export const eventService = {
 
   async registerForEvent(userId: string, eventId: string): Promise<void> {
     try {
-      // Add registration
-      await addDoc(collection(db, 'registrations'), {
       const userIdString = userId.toString();
       console.log(`[Event Service] Converted userId to string: ${userIdString}`);
       
@@ -177,6 +175,7 @@ export const eventService = {
           console.error('Error updating Firebase after Supabase success:', firebaseError);
           // Continue even if Firebase update fails - Supabase is now primary
         }
+      }
       const { error: updateError } = await supabase
         .from('users')
         .update({ 
