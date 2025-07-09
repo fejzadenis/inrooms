@@ -55,6 +55,16 @@ export function BillingPage() {
 
     try {
       // Ensure user.id is a string
+
+      const { data: allUsers, error: allUsersError } = await supabase
+        .from('users')
+        .select('*');
+  
+      if (allUsersError) {
+        console.error('[Debug] Error fetching full users table:', allUsersError.message);
+      } else {
+        console.log('[Debug] Full users table:', allUsers);
+      }
       const userIdString = user.id.toString();
       console.log('[Subscription] Using user ID:', userIdString);
       
