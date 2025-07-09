@@ -111,7 +111,15 @@ export function EventsPage() {
 
   const loadUserRegistrations = async () => {
     if (!user) return;
-    
+  };
+
+  const handleRegister = async (eventId: string) => {
+    try {
+      const event = events.find(e => e.id === eventId);
+      if (!event) {
+        toast.error('Event not found');
+        return;
+      }
 
       console.log("EVENTS DEBUG: Registering for event:", event.title, "ID:", eventId);
       
