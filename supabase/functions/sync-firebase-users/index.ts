@@ -18,6 +18,18 @@ serve(async (req) => {
     });
   }
 
+  // This function is now deprecated as we're updating Firebase directly from the webhook
+  return new Response(
+    JSON.stringify({ 
+      message: "This function is deprecated. Firebase is now updated directly from the Stripe webhook.",
+      status: "deprecated"
+    }),
+    {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    }
+  );
+
   try {
     // Initialize Supabase client with service role key for admin access
     const supabaseClient = createClient(

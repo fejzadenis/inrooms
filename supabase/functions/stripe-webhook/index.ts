@@ -316,26 +316,38 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       
       // Initialize Firebase Admin SDK if not already initialized
       try {
-        // Import Firebase Admin SDK
-        const { initializeApp, cert, getApps } = await import('npm:firebase-admin/app');
-        const { getFirestore } = await import('npm:firebase-admin/firestore');
-        
-        // Check if Firebase Admin SDK is already initialized
-        if (getApps().length === 0) {
-          // Get Firebase service account from environment variables
-          const serviceAccountStr = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
-          if (!serviceAccountStr) {
-            throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is not set");
-          }
-          
-          const serviceAccount = JSON.parse(atob(serviceAccountStr));
-
-          
-          initializeApp({
-            credential: cert(serviceAccount)
-          });
-          
+        if (!firestoreDb) {
+          console.error("Firebase Firestore not initialized");
+          throw new Error("Firebase Firestore not initialized");
         }
+        
+        // Get plan details from subscription if available
+        let planDetails = { planId: 'default', eventsQuota: 0 };
+        if (session.subscription) {
+          const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+          const priceId = subscription.items.data[0]?.price.id;
+          planDetails = getPlanDetailsByPriceId(priceId || '');
+          
+          console.log(`Updating Firestore for user ${userId} with subscription data`);
+          const userRef = firestoreDb.collection('users').doc(userId);
+          await userRef.update({
+            subscription: {
+              status: 'active',
+              eventsQuota: planDetails.eventsQuota,
+              eventsUsed: 0
+            },
+            stripe_customer_id: session.customer,
+            stripe_subscription_id: session.subscription,
+            stripe_subscription_status: 'active',
+            updatedAt: new Date()
+          });
+          console.log(`✅ Updated Firestore for user ${userId} with subscription data`);
+          console.log(`  - Subscription ID: ${session.subscription}`);
+          console.log(`  - Events Quota: ${planDetails.eventsQuota}`);
+          console.log(`  - Status: active`);
+        }
+      } catch (firebaseError) {
+        console.error('❌ Error updating Firestore:', firebaseError);
       }
     }
   }
@@ -361,58 +373,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
   
   // Update Firebase user data
-  if (userId && firestoreDb) {
-    try {
-      // Get plan details from subscription if available
-      let planDetails = { planId: 'default', eventsQuota: 0 };
-      let subscriptionStatus = 'inactive';
-      let subscriptionId = null;
-      let currentPeriodEnd = null;
-      
-      if (session.subscription) {
-        try {
-          const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
-          const priceId = subscription.items.data[0]?.price.id;
-          planDetails = getPlanDetailsByPriceId(priceId || '');
-          subscriptionStatus = subscription.status === 'active' ? 'active' : 'inactive';
-          subscriptionId = subscription.id;
-          currentPeriodEnd = subscription.current_period_end;
-          
-          console.log(`[Firebase] Subscription details - Price ID: ${priceId}`);
-          console.log(`[Firebase] Plan details: ${planDetails.planId}, Events Quota: ${planDetails.eventsQuota}`);
-        } catch (error) {
-          console.error('Error retrieving subscription details:', error);
-        }
-      }
-      
-      // Update Firestore document
-      const userRef = firestoreDb.collection('users').doc(userId);
-      
-      await userRef.update({
-        subscription: {
-          status: subscriptionStatus,
-          eventsQuota: planDetails.eventsQuota,
-          eventsUsed: 0, // Reset events used for new subscription
-        },
-        stripe_customer_id: session.customer,
-        stripe_subscription_id: subscriptionId,
-        stripe_subscription_status: subscriptionStatus,
-        stripe_current_period_end: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : null,
-        updatedAt: new Date()
-      });
-      
-      console.log(`[Firebase] ✅ Updated user ${userId} with subscription details`);
-      if (subscriptionId) {
-        console.log(`[Firebase]   - Subscription ID: ${subscriptionId}`);
-        console.log(`[Firebase]   - Events Quota: ${planDetails.eventsQuota}`);
-        console.log(`[Firebase]   - Status: ${subscriptionStatus}`);
-      }
-    } catch (error) {
-      console.error(`[Firebase] ❌ Error updating user ${userId} in Firestore:`, error);
-    }
-  } else {
-    console.error(`[Firebase] ❌ Cannot update user: ${!userId ? 'No user ID' : 'Firestore not initialized'}`);
-  }
 }
 
 async function handleCustomerCreated(customer: Stripe.Customer) {

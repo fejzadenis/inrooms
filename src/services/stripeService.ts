@@ -610,6 +610,8 @@ export const stripeService = {
       // Set trial end date (7 days from now)
       const trialEndsAt = new Date();
       trialEndsAt.setDate(trialEndsAt.getDate() + 7);
+
+      console.log(`Setting trial data for user ${userId} in Firestore`);
       
       // Update subscription in Firestore
       await updateDoc(userRef, {
