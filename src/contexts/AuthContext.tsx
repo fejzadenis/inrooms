@@ -267,20 +267,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const getUserData = async (firebaseUser: FirebaseUser): Promise<User> => {
     // Rate limit getUserData calls
-      console.log("AUTH DEBUG: Getting user data for", firebaseUser.uid);
+      console.log("AUTH DEBUG: Getting user data for", firebaseUser.uid, "type:", typeof firebaseUser.uid);
       
       // First try to get user data from Supabase as the source of truth
       try {
+        const userIdString = firebaseUser.uid.toString();
+        console.log("AUTH DEBUG: Using user ID string:", userIdString);
+        
         const { data: supabaseUser, error } = await supabase
           .from('users')
           .select('*, subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at')
-          .eq('id', firebaseUser.uid)
+          .eq('id', userIdString)
           .maybeSingle();
         
         if (error) {
-          console.error("AUTH DEBUG: Error fetching user data from Supabase:", error.message);
+          console.error("AUTH DEBUG: Error fetching user data from Supabase:", error.message, error);
+          console.log("AUTH DEBUG: Full error object:", JSON.stringify(error));
         } else if (supabaseUser) {
-          console.log("AUTH DEBUG: Found user data in Supabase, using as source of truth");
+          console.log("AUTH DEBUG: Found user data in Supabase, using as source of truth", supabaseUser);
           
           // Update Firestore with the latest data from Supabase
           const userRef = doc(db, 'users', firebaseUser.uid);
@@ -409,8 +413,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userRef = doc(db, 'users', firebaseUser.uid);
       const userSnap = await getDoc(userRef);
 
+      console.log("AUTH DEBUG: Checking if user exists in Firestore");
       if (userSnap.exists()) {
         const userData = userSnap.data();
+        console.log("AUTH DEBUG: User exists in Firestore, data:", userData);
         
         // Check if we need to sync from Supabase
         const shouldSyncFromSupabase = await checkSupabaseForUpdates(firebaseUser.uid, userData);
@@ -426,6 +432,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Get email verification status from database
         const dbEmailVerified = userData.email_verified || false;
+        
+        console.log("AUTH DEBUG: Email verification status - Firebase:", firebaseUser.emailVerified, "DB:", dbEmailVerified);
         
         const trialEndsAt = userData.subscription?.trialEndsAt?.toDate?.();
 
@@ -450,6 +458,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       } else {
         // Create a new user document if it doesn't exist
+        console.log("AUTH DEBUG: User doesn't exist in Firestore, creating new document");
         const newUser = {
           id: firebaseUser.uid,
           name: firebaseUser.displayName || '',
@@ -494,14 +503,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Check if Supabase has newer subscription data than Firestore
   const checkSupabaseForUpdates = async (userId: string, firestoreData: any): Promise<boolean> => {
     try {
+      const userIdString = userId.toString();
+      console.log("AUTH DEBUG: Checking Supabase for updates for user", userIdString);
+      
       // Get Supabase data
       const { data: supabaseUsers, error } = await supabase
         .from('users')
         .select('subscription_status, subscription_events_quota, stripe_subscription_id, updated_at')
-        .eq('id', userId);
+        .eq('id', userIdString);
       
       if (error || !supabaseUsers || supabaseUsers.length === 0) {
-        console.log("AUTH DEBUG: No Supabase data found or error:", error?.message);
+        console.log("AUTH DEBUG: No Supabase data found or error:", error?.message, error);
         return false;
       }
       
@@ -538,15 +550,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sync data from Supabase to Firestore
   const syncFromSupabaseToFirestore = async (userId: string): Promise<User | null> => {
     try {
+      const userIdString = userId.toString();
+      console.log("AUTH DEBUG: Syncing from Supabase to Firestore for user", userIdString);
+      
       // Get full user data from Supabase
       const { data: supabaseUser, error } = await supabase
         .from('users')
         .select('*')
-        .eq('id', userId)
+        .eq('id', userIdString)
         .single();
       
       if (error || !supabaseUser) {
-        console.error("Error getting Supabase user data:", error);
+        console.error("Error getting Supabase user data:", error, "User ID:", userIdString);
         return null;
       }
       
@@ -781,7 +796,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           };
           
           // Update cache with new data
-          setCachedUserData(userId, updatedUser);
+          setCachedUserData(userIdString, updatedUser);
           return updatedUser;
         });
       }
@@ -975,13 +990,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const markEmailVerified = async (userId: string) => {
     try {
       // Rate limit email verification marking
-      if (shouldRateLimit(`markEmailVerified-${userId}`)) {
+      const userIdString = userId.toString();
+      if (shouldRateLimit(`markEmailVerified-${userIdString}`)) {
         console.warn('Rate limited: markEmailVerified');
         return;
       }
       
       // Update Firestore
-      console.log("Updating Firestore email verification for user", userId);
+      console.log("Updating Firestore email verification for user", userIdString);
       const userRef = doc(db, 'users', userId);
       try {
         await updateDoc(userRef, {
@@ -995,7 +1011,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       // Update Supabase
-      console.log("Updating Supabase email verification for user", userId);
+      console.log("Updating Supabase email verification for user", userIdString);
       const { error } = await supabase
         .from('users')
         .update({ 
@@ -1003,14 +1019,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email_verified_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .eq('id', userId);
+        .eq('id', userIdString);
         
       if (error) {
-        console.error('Error updating Supabase email verification:', error);
+        console.error('Error updating Supabase email verification:', error, "User ID:", userIdString);
       }
       
       // Clear cache to force refresh
-      userDataCache.delete(userId);
+      userDataCache.delete(userIdString);
       
       // Update local state
       setUser(prev => {
@@ -1027,7 +1043,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       
       // Sync updated user data to Supabase
-      if (user && user.id === userId) {
+      if (user && user.id === userIdString) {
         const updatedUserForSync = {
           ...user,
           dbEmailVerified: true
@@ -1036,8 +1052,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       console.log("AUTH DEBUG: Email verification status updated in database for user", userId);
+      console.log("AUTH DEBUG: Email verification status updated in database for user", userIdString);
     } catch (error) {
-      console.error('Error marking email as verified in database:', error);
+      console.error('Error marking email as verified in database:', error, "User ID:", userIdString);
       throw error;
     }
   };
