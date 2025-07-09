@@ -124,7 +124,7 @@ export const eventService = {
         // If Supabase fails, try Firebase as fallback
         console.log(`[Event Service] Falling back to Firebase registration`);
         const firebaseRegistration = await addDoc(collection(db, 'registrations'), {
-          userId,
+          userId: userIdString,
           eventId,
           registeredAt: serverTimestamp(),
         });
@@ -139,6 +139,21 @@ export const eventService = {
       } else {
         console.log(`[Event Service] Supabase registration created successfully`);
         
+        // Increment user's subscription_events_used count in Supabase
+        console.log(`[Event Service] Incrementing user's subscription_events_used count`);
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({ 
+            subscription_events_used: supabase.sql`subscription_events_used + 1`
+          })
+          .eq('id', userIdString);
+          
+        if (updateError) {
+          console.error('Error updating subscription_events_used:', updateError);
+        } else {
+          console.log(`[Event Service] Successfully incremented subscription_events_used for user ${userIdString}`);
+        }
+        
         // Even if Supabase succeeds, we still need to update Firebase for consistency
         // This ensures the UI updates correctly when using Firebase data
         console.log(`[Event Service] Updating Firebase to match Supabase`);
@@ -146,7 +161,7 @@ export const eventService = {
         try {
           // Add registration to Firebase
           const firebaseRegistration = await addDoc(collection(db, 'registrations'), {
-            userId,
+            userId: userIdString,
             eventId,
             registeredAt: serverTimestamp(),
           });
@@ -163,13 +178,6 @@ export const eventService = {
           // Continue even if Firebase update fails - Supabase is now primary
         }
       }
-      
-      // Update user's events used count in Supabase
-      console.log(`[Event Service] Updating user's events_used count in Supabase`);
-      
-      // Note: We don't need to manually update the events_used count anymore
-      // The update_event_registration trigger in Supabase will handle this automatically
-      console.log(`[Event Service] The update_event_registration trigger will handle updating events_used count`);
     } catch (error) {
       console.error('Error registering for event:', error);
       throw error;
