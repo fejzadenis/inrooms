@@ -4,6 +4,7 @@ import { MainLayout } from '../../layouts/MainLayout';
 import { EventCard } from '../../components/common/EventCard';
 import { useAuth } from '../../contexts/AuthContext';
 import { eventService, type Event } from '../../services/eventService';
+import { supabase } from '../../config/supabase';
 import { generateCalendarEvent } from '../../utils/calendar';
 
 export function DashboardPage() {
@@ -23,6 +24,23 @@ export function DashboardPage() {
 
     try {
       setLoading(true);
+      
+      // Get user's subscription data from Supabase for most up-to-date info
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('subscription_status, subscription_events_quota, subscription_events_used')
+        .eq('id', user.id)
+        .single();
+        
+      if (!userError && userData) {
+        // Update local user state with latest subscription data from Supabase
+        user.subscription = {
+          ...user.subscription,
+          status: userData.subscription_status || user.subscription.status,
+          eventsQuota: userData.subscription_events_quota || user.subscription.eventsQuota,
+          eventsUsed: userData.subscription_events_used || user.subscription.eventsUsed
+        };
+      }
       
       // Load user's registered events
       const registrations = await eventService.getUserRegistrations(user.id);
@@ -44,7 +62,17 @@ export function DashboardPage() {
   const handleRegister = async (eventId: string) => {
     if (!user) return;
 
-    if (user.subscription.eventsUsed >= user.subscription.eventsQuota) {
+    // Get latest subscription data from Supabase
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('subscription_status, subscription_events_quota, subscription_events_used')
+      .eq('id', user.id)
+      .single();
+      
+    const eventsUsed = userData?.subscription_events_used || user.subscription.eventsUsed;
+    const eventsQuota = userData?.subscription_events_quota || user.subscription.eventsQuota;
+    
+    if (eventsUsed >= eventsQuota) {
       toast.error('You have reached your event quota. Please upgrade your subscription.');
       return;
     }

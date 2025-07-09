@@ -10,6 +10,7 @@ import { Button } from '../../components/common/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { stripeService, type SubscriptionPlan } from '../../services/stripeService';
 import { toast } from 'react-hot-toast';
+import { supabase } from '../../config/supabase';
 
 export function BillingPage() {
   const { user } = useAuth();
@@ -30,6 +31,34 @@ export function BillingPage() {
     } else {
       setLoadingData(false);
     }
+  }, [user]);
+
+  // Fetch latest subscription data from Supabase
+  React.useEffect(() => {
+    const fetchLatestSubscriptionData = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('subscription_status, subscription_events_quota, subscription_events_used, stripe_subscription_status, stripe_current_period_end')
+          .eq('id', user.id)
+          .single();
+          
+        if (!error && data) {
+          // Update local user state with latest subscription data
+          if (user.subscription) {
+            user.subscription.status = data.subscription_status || user.subscription.status;
+            user.subscription.eventsQuota = data.subscription_events_quota || user.subscription.eventsQuota;
+            user.subscription.eventsUsed = data.subscription_events_used || user.subscription.eventsUsed;
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching latest subscription data:', error);
+      }
+    };
+    
+    fetchLatestSubscriptionData();
   }, [user]);
 
   const loadBillingData = async () => {
@@ -281,6 +310,37 @@ export function BillingPage() {
         {user && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Current Subscription</h2>
+            
+            {/* Fetch latest subscription data from Supabase */}
+            <button 
+              onClick={async () => {
+                if (!user) return;
+                try {
+                  const { data, error } = await supabase
+                    .from('users')
+                    .select('subscription_status, subscription_events_quota, subscription_events_used')
+                    .eq('id', user.id)
+                    .single();
+                    
+                  if (!error && data) {
+                    // Update local user state with latest subscription data
+                    if (user.subscription) {
+                      user.subscription.status = data.subscription_status || user.subscription.status;
+                      user.subscription.eventsQuota = data.subscription_events_quota || user.subscription.eventsQuota;
+                      user.subscription.eventsUsed = data.subscription_events_used || user.subscription.eventsUsed;
+                    }
+                    toast.success('Subscription data refreshed');
+                  }
+                } catch (error) {
+                  console.error('Error refreshing subscription data:', error);
+                  toast.error('Failed to refresh subscription data');
+                }
+              }}
+              className="text-xs text-indigo-600 hover:text-indigo-800 mb-4 underline"
+            >
+              Refresh subscription data
+            </button>
+            
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-gray-500">Plan</h3>

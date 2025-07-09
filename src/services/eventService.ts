@@ -14,6 +14,7 @@ import {
   Timestamp
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { supabase } from '../config/supabase';
 
 export interface Event {
   id?: string;
@@ -103,7 +104,7 @@ export const eventService = {
   async registerForEvent(userId: string, eventId: string): Promise<void> {
     try {
       // Add registration
-      await addDoc(collection(db, 'registrations'), {
+      const firebaseRegistration = await addDoc(collection(db, 'registrations'), {
         userId,
         eventId,
         registeredAt: serverTimestamp(),
@@ -115,11 +116,22 @@ export const eventService = {
         currentParticipants: increment(1),
       });
 
-      // Update user's events used count
-      const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
-        'subscription.eventsUsed': increment(1),
-      });
+      // Also register in Supabase for redundancy
+      const { error } = await supabase
+        .from('registrations')
+        .insert({
+          user_id: userId,
+          event_id: eventId,
+          registered_at: new Date().toISOString(),
+        });
+        
+      if (error) {
+        console.error('Error registering in Supabase:', error);
+        // Continue even if Supabase fails - Firebase is primary
+      }
+      
+      // Update user's events used count in Supabase
+      // The trigger in Supabase will handle this automatically
     } catch (error) {
       console.error('Error registering for event:', error);
       throw error;
@@ -128,6 +140,23 @@ export const eventService = {
 
   async getUserRegistrations(userId: string): Promise<EventRegistration[]> {
     try {
+      // Try to get registrations from Supabase first
+      const { data: supabaseRegistrations, error } = await supabase
+        .from('registrations')
+        .select('*')
+        .eq('user_id', userId);
+        
+      if (!error && supabaseRegistrations && supabaseRegistrations.length > 0) {
+        // Use Supabase data if available
+        return supabaseRegistrations.map(reg => ({
+          id: reg.id,
+          userId: reg.user_id,
+          eventId: reg.event_id,
+          registeredAt: new Date(reg.registered_at)
+        })) as EventRegistration[];
+      }
+      
+      // Fall back to Firebase if Supabase fails or returns no data
       const q = query(
         collection(db, 'registrations'), 
         where('userId', '==', userId)
@@ -149,6 +178,23 @@ export const eventService = {
 
   async getEventRegistrations(eventId: string): Promise<EventRegistration[]> {
     try {
+      // Try to get registrations from Supabase first
+      const { data: supabaseRegistrations, error } = await supabase
+        .from('registrations')
+        .select('*')
+        .eq('event_id', eventId);
+        
+      if (!error && supabaseRegistrations && supabaseRegistrations.length > 0) {
+        // Use Supabase data if available
+        return supabaseRegistrations.map(reg => ({
+          id: reg.id,
+          userId: reg.user_id,
+          eventId: reg.event_id,
+          registeredAt: new Date(reg.registered_at)
+        })) as EventRegistration[];
+      }
+      
+      // Fall back to Firebase if Supabase fails or returns no data
       const q = query(
         collection(db, 'registrations'), 
         where('eventId', '==', eventId)

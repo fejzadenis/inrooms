@@ -7,6 +7,7 @@ import { eventService, type Event } from '../../services/eventService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTour } from '../../contexts/TourContext';
 import { toast } from 'react-hot-toast';
+import { supabase } from '../../config/supabase';
 import { generateCalendarEvent } from '../../utils/calendar';
 
 export function EventsPage() {
@@ -78,7 +79,17 @@ export function EventsPage() {
       return;
     }
 
-    if (user.subscription.eventsUsed >= user.subscription.eventsQuota) {
+    // Get latest subscription data from Supabase
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('subscription_status, subscription_events_quota, subscription_events_used')
+      .eq('id', user.id)
+      .single();
+      
+    const eventsUsed = userData?.subscription_events_used || user.subscription.eventsUsed;
+    const eventsQuota = userData?.subscription_events_quota || user.subscription.eventsQuota;
+    
+    if (eventsUsed >= eventsQuota) {
       toast.error('You have reached your event quota. Please upgrade your subscription.');
       return;
     }
