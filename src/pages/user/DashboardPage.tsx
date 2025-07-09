@@ -125,9 +125,7 @@ export function DashboardPage() {
   const handleRegister = async (eventId: string) => {
     if (!user) return;
 
-    console.log("DASHBOARD DEBUG: Registering for event", eventId);
-    
-    console.log("DASHBOARD DEBUG: Registering for event", eventId);
+    console.log("DASHBOARD DEBUG: Registering for event", eventId, "User ID:", user.id, "Type:", typeof user.id);
     
     // Get latest subscription data from Supabase
     const userIdString = user.id.toString();
@@ -174,6 +172,8 @@ export function DashboardPage() {
     const event = upcomingEvents.find(e => e.id === eventId);
     if (!event) return;
 
+    console.log("DASHBOARD DEBUG: Found event:", event.title, "ID:", eventId);
+
     try {
       await eventService.registerForEvent(user.id, eventId);
       
@@ -204,9 +204,9 @@ export function DashboardPage() {
       setRegisteredEvents(prev => [...prev, eventId]);
       await loadDashboardData(); // Reload to update counts
       toast.success('Successfully registered! Calendar invite downloaded.');
-    } catch (error) {
-      console.error('Failed to register for event:', error);
-      toast.error('Failed to register for event. Please try again.');
+    } catch (error: any) {
+      console.error('Failed to register for event:', error, error.stack);
+      toast.error(`Failed to register for event: ${error.message || 'Please try again.'}`);
     }
   };
 

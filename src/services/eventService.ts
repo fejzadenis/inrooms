@@ -104,23 +104,10 @@ export const eventService = {
   async registerForEvent(userId: string, eventId: string): Promise<void> {
     try {
       // Add registration
-      console.log(`[Event Service] Registering user ${userId} for event ${eventId}`);
+      console.log(`[Event Service] Registering user ${userId} (type: ${typeof userId}) for event ${eventId}`);
       const userIdString = userId.toString();
+      console.log(`[Event Service] Converted userId to string: ${userIdString}`);
       
-      const firebaseRegistration = await addDoc(collection(db, 'registrations'), {
-        userId,
-        eventId,
-        registeredAt: serverTimestamp(),
-      });
-      console.log(`[Event Service] Firebase registration created with ID: ${firebaseRegistration.id}`);
-
-      // Update event participant count
-      const eventRef = doc(db, 'events', eventId);
-      await updateDoc(eventRef, {
-        currentParticipants: increment(1),
-      });
-      console.log(`[Event Service] Updated event participant count in Firebase`);
-
       // Also register in Supabase for redundancy
       console.log(`[Event Service] Creating registration in Supabase`);
       const { error } = await supabase
@@ -134,9 +121,47 @@ export const eventService = {
       if (error) {
         console.error('Error registering in Supabase:', error);
         console.log(`[Event Service] Failed to create registration in Supabase: ${error.message}`);
-        // Continue even if Supabase fails - Firebase is primary
+        // If Supabase fails, try Firebase as fallback
+        console.log(`[Event Service] Falling back to Firebase registration`);
+        const firebaseRegistration = await addDoc(collection(db, 'registrations'), {
+          userId,
+          eventId,
+          registeredAt: serverTimestamp(),
+        });
+        console.log(`[Event Service] Firebase registration created with ID: ${firebaseRegistration.id}`);
+
+        // Update event participant count in Firebase
+        const eventRef = doc(db, 'events', eventId);
+        await updateDoc(eventRef, {
+          currentParticipants: increment(1),
+        });
+        console.log(`[Event Service] Updated event participant count in Firebase`);
       } else {
         console.log(`[Event Service] Supabase registration created successfully`);
+        
+        // Even if Supabase succeeds, we still need to update Firebase for consistency
+        // This ensures the UI updates correctly when using Firebase data
+        console.log(`[Event Service] Updating Firebase to match Supabase`);
+        
+        try {
+          // Add registration to Firebase
+          const firebaseRegistration = await addDoc(collection(db, 'registrations'), {
+            userId,
+            eventId,
+            registeredAt: serverTimestamp(),
+          });
+          console.log(`[Event Service] Firebase registration created with ID: ${firebaseRegistration.id}`);
+          
+          // Update event participant count in Firebase
+          const eventRef = doc(db, 'events', eventId);
+          await updateDoc(eventRef, {
+            currentParticipants: increment(1),
+          });
+          console.log(`[Event Service] Updated event participant count in Firebase`);
+        } catch (firebaseError) {
+          console.error('Error updating Firebase after Supabase success:', firebaseError);
+          // Continue even if Firebase update fails - Supabase is now primary
+        }
       }
       
       // Update user's events used count in Supabase
