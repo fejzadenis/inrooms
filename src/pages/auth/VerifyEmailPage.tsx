@@ -67,6 +67,19 @@ export function VerifyEmailPage() {
   const handleResendVerification = async () => {
     if (!auth.currentUser || resendDisabled) return;
     
+    // Skip verification for admin@inrooms.com
+    if (auth.currentUser.email === 'admin@inrooms.com') {
+      toast.success('Admin account automatically verified!');
+      await markEmailVerified(auth.currentUser.uid);
+      navigate('/onboarding');
+      return;
+    }
+    
+    // Check if user is admin@inrooms.com and auto-verify
+    if (user?.email === 'admin@inrooms.com' && !user.emailVerified && !user.dbEmailVerified) {
+      await markEmailVerified(user.id);
+    }
+
     try {
       await sendEmailVerification(auth.currentUser);
       toast.success('Verification email sent! Please check your inbox.');
