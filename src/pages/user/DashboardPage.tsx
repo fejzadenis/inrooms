@@ -148,26 +148,25 @@ export function DashboardPage() {
       const result = await supabase
         .from('users')
         .select('subscription_status, subscription_events_quota, subscription_events_used')
-        .eq('id', userIdString)
-        .maybeSingle();
-        
-      userData = result.data;
-      userError = result.error;
-    }
-
-    console.log("DASHBOARD DEBUG: Registering for event:", event.title, "ID:", eventId);
-
-    try {
-      // Check if user can register
-      const eligibility = await eventService.canRegisterForEvent(user.id, eventId);
-      if (!eligibility.success) {
-        toast.error(eligibility.message || 'You cannot register for this event');
-        return;
       }
       
       // Register for the event
       // Register for the event - this will update the user's subscription_events_used count
-      await eventService.registerForEvent(user.id, eventId);
+      // First check if user can register
+      const eligibilityCheck = await eventService.canRegisterForEvent(user.id, eventId);
+      
+      if (!eligibilityCheck.success) {
+        toast.error(eligibilityCheck.message || 'Unable to register for this event');
+        return;
+      }
+      
+      // If eligible, proceed with registration
+      const result = await eventService.registerForEvent(user.id, eventId);
+      
+      if (!result.success) {
+        toast.error(result.message || 'Failed to register for event');
+        return;
+      }
       
       // Generate calendar event
       try {
@@ -194,7 +193,10 @@ export function DashboardPage() {
       }
 
       setRegisteredEvents(prev => [...prev, eventId]);
-      await loadDashboardData(); // Reload to update counts
+      
+      // Reload to update counts and subscription data
+      await loadDashboardData();
+      
       toast.success('Successfully registered! Calendar invite downloaded.');
     } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

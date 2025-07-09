@@ -21,6 +21,11 @@ interface RegistrationResult {
   message?: string;
 }
 
+interface RegistrationResult {
+  success: boolean;
+  message?: string;
+}
+
 export interface Event {
   id?: string;
   title: string;
@@ -107,33 +112,108 @@ export const eventService = {
     }
   },
 
-  async registerForEvent(userId: string, eventId: string): Promise<void> {
+  async canRegisterForEvent(userId: string, eventId: string): Promise<RegistrationResult> {
     try {
-      console.log("Registering user for event:", { userId, eventId });
-      const userIdString = userId.toString();
-      const eventIdString = eventId.toString();
-
-      // Instead of creating a registration record, directly increment the user's event usage
-      console.log("Incrementing user event usage in Supabase");
-      const { data, error } = await supabase
-        .rpc('increment_user_event_usage', {
-          user_id: userIdString,
-        });
-      // Call the RPC function to increment user event usage and event participants
-      const { data: data2, error: error2 } = await supabase
-        .rpc('increment_user_event_usage', {
-          user_id: userId,
-          event_id: eventId
-        });
+      // Check if user can register using the RPC function
+      const { data, error } = await supabase.rpc('can_register_for_event', {
+        user_id: userId,
+        event_id: eventId
+      });
       
-      if (error || !data) {
-        console.error('Error updating event usage:', error);
-        throw new Error(`Error updating event usage: ${error?.message || 'Unknown error'}`);
+      if (error) {
+        console.error('Error checking registration eligibility:', error);
+        return { 
+          success: false, 
+          message: 'Failed to check registration eligibility' 
+        };
       }
-      currentParticipants: increment(1);
+      
+      if (!data) {
+        // Get user's subscription data to determine the reason
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('subscription_status, subscription_events_quota, subscription_events_used')
+          .eq('id', userId)
+          .single();
+          
+        if (userError) {
+          console.error('Error getting user data:', userError);
+          return { success: false, message: 'Failed to check user subscription' };
+        }
+        
+        // Get event data to check if it's full
+        const { data: eventData, error: eventError } = await supabase
+          .from('events')
+          .select('current_participants, max_participants')
+          .eq('id', eventId)
+          .single();
+          
+        if (eventError) {
+          console.error('Error getting event data:', eventError);
+          return { success: false, message: 'Failed to check event availability' };
+        }
+        
+        // Determine the reason for failure
+        if (userData.subscription_events_used >= userData.subscription_events_quota) {
+          return { 
+            success: false, 
+            message: 'You have reached your event quota. Please upgrade your subscription.' 
+          };
+        }
+        
+        if (eventData.current_participants >= eventData.max_participants) {
+          return { 
+            success: false, 
+            message: 'This event is full. Please try another event.' 
+          };
+        }
+        
+        return { 
+          success: false, 
+          message: 'Unable to register for this event.' 
+        };
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error checking registration eligibility:', error);
+      return { 
+        success: false, 
+        message: 'An unexpected error occurred. Please try again.' 
+      };
+    }
+  },
+
+  async registerForEvent(userId: string, eventId: string): Promise<RegistrationResult> {
+    try {
+      // Use the RPC function to increment user event usage and event participants
+      const { data, error } = await supabase.rpc('increment_user_event_usage', {
+        user_id: userId,
+        event_id: eventId
+      });
+
+      if (error) {
+        console.error('Error registering for event in Supabase:', error);
+        return { 
+          success: false, 
+          message: 'Failed to register for event. Please try again.' 
+        };
+      }
+
+      if (!data) {
+        return { 
+          success: false, 
+          message: 'Registration failed. You may have reached your event quota or the event is full.' 
+        };
+      }
+
+      return { success: true };
     } catch (error) {
       console.error('Error registering for event:', error);
-      throw error;
+      return { 
+        success: false, 
+        message: 'An unexpected error occurred. Please try again.' 
+      };
     }
   },
 

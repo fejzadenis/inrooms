@@ -112,35 +112,25 @@ export function EventsPage() {
   const loadUserRegistrations = async () => {
     if (!user) return;
     
-    try {
-      const registrations = await eventService.getUserRegistrations(user.id);
-      setRegisteredEvents(registrations.map(reg => reg.eventId));
-    } catch (error) {
-      console.error('Failed to load user registrations:', error);
-    }
-  };
-
-  const handleRegister = async (eventId: string) => {
-    if (!user) {
-      toast.error('Please log in to register for events');
-      return;
-    }
-
-    try {
-      // Check if user can register
-      const eligibility = await eventService.canRegisterForEvent(user.id, eventId);
-      if (!eligibility.success) {
-        toast.error(eligibility.message || 'You cannot register for this event');
-        return;
-      }
-      
-      const event = events.find(e => e.id === eventId);
-      if (!event) return;
 
       console.log("EVENTS DEBUG: Registering for event:", event.title, "ID:", eventId);
       
       // Register for the event
-      await eventService.registerForEvent(user.id, eventId);
+      // First check if user can register
+      const eligibilityCheck = await eventService.canRegisterForEvent(user.id, eventId);
+      
+      if (!eligibilityCheck.success) {
+        toast.error(eligibilityCheck.message || 'Unable to register for this event');
+        return;
+      }
+      
+      // If eligible, proceed with registration
+      const result = await eventService.registerForEvent(user.id, eventId);
+      
+      if (!result.success) {
+        toast.error(result.message || 'Failed to register for event');
+        return;
+      }
       
       // Generate calendar event
       try {
@@ -167,7 +157,10 @@ export function EventsPage() {
       }
 
       setRegisteredEvents(prev => [...prev, eventId]);
-      await loadEvents(); // Reload to update counts
+      
+      // Reload to update counts and subscription data
+      await loadEvents();
+      
       toast.success('Successfully registered! Calendar invite downloaded.');
     } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
