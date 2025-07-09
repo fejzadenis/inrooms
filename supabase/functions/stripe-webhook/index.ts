@@ -311,15 +311,17 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           
           const userRef = firestore.collection('users').doc(userId);
           
-          await userRef.update({
-            'subscription.status': 'active',
-            'subscription.eventsQuota': planDetails.eventsQuota,
-            'subscription.eventsUsed': 0,
-            'stripe_customer_id': session.customer,
-            'stripe_subscription_id': session.subscription,
-            'stripe_subscription_status': 'active',
-            'updatedAt': new Date()
-          });
+          await userRef.set({
+            subscription: {
+              status: 'active',
+              eventsQuota: planDetails.eventsQuota,
+              eventsUsed: 0
+            },
+            stripe_customer_id: session.customer,
+            stripe_subscription_id: session.subscription,
+            stripe_subscription_status: 'active',
+            updatedAt: new Date()
+          }, { merge: true });
           
           console.log(`✅ Updated Firestore for user ${userId} with subscription data`);
           console.log(`  - Subscription ID: ${session.subscription}`);
