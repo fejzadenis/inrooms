@@ -278,6 +278,56 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         }
       }
       
+      // Initialize Firebase Admin SDK if not already initialized
+      try {
+        // Import Firebase Admin SDK
+        const { initializeApp, cert, getApps } = await import('npm:firebase-admin/app');
+        const { getFirestore } = await import('npm:firebase-admin/firestore');
+        
+        // Check if Firebase Admin SDK is already initialized
+        if (getApps().length === 0) {
+          // Get Firebase service account from environment variables
+          const serviceAccountStr = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
+          if (!serviceAccountStr) {
+            throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is not set");
+          }
+          
+          const serviceAccount = JSON.parse(serviceAccountStr);
+          
+          initializeApp({
+            credential: cert(serviceAccount)
+          });
+          
+          console.log("Firebase Admin SDK initialized successfully");
+        }
+        
+        // Get Firestore instance
+        const firestore = getFirestore();
+        
+        // Update Firestore document with subscription data
+        if (session.subscription) {
+          console.log(`Updating Firestore for user ${userId} with subscription data`);
+          
+          const userRef = firestore.collection('users').doc(userId);
+          
+          await userRef.update({
+            'subscription.status': 'active',
+            'subscription.eventsQuota': planDetails.eventsQuota,
+            'subscription.eventsUsed': 0,
+            'stripe_customer_id': session.customer,
+            'stripe_subscription_id': session.subscription,
+            'stripe_subscription_status': 'active',
+            'updatedAt': new Date()
+          });
+          
+          console.log(`✅ Updated Firestore for user ${userId} with subscription data`);
+          console.log(`  - Subscription ID: ${session.subscription}`);
+          console.log(`  - Events Quota: ${planDetails.eventsQuota}`);
+          console.log(`  - Status: active`);
+        }
+      } catch (firebaseError) {
+        console.error('❌ Error updating Firestore:', firebaseError);
+      }
       // Update user's subscription status
       const { error } = await supabaseClient
         .from('users')

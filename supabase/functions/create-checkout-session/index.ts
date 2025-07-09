@@ -209,16 +209,6 @@ serve(async (req) => {
 
     console.log(`Stored checkout session ${session.id} for user ${userId} in database`)
 
-    // Update user record with customer ID immediately
-    await supabaseClient
-      .from('users')
-      .update({
-        stripe_customer_id: customerId,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', userId)
-
-    console.log(`Updated user ${userId} with customer ID ${customerId}`)
 
     return new Response(
       JSON.stringify({ 

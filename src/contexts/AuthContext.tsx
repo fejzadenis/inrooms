@@ -863,35 +863,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return updatedUser;
       });
       
-      // Update subscription in Supabase
-      const { error } = await supabase
-        .from('users')
-        .update({
-          subscription_status: 'trial',
-          subscription_events_quota: 2,
-          subscription_events_used: 0,
-          subscription_trial_ends_at: trialEndsAt.toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-
-      if (error) {
-        console.error('Error updating Supabase with trial data:', error);
-        // Continue even if Supabase update fails
-      }
-      
-      // Sync updated user data to Supabase
-      const updatedUserForSync = {
-        ...user,
-        subscription: {
-          ...user.subscription,
-          status: 'trial',
-          eventsQuota: 2,
-          eventsUsed: 0,
-          trialEndsAt
-        }
-      };
-      await syncUserToSupabase(updatedUserForSync);
       
       toast.success('Free trial activated successfully!');
     } catch (err: any) {
