@@ -28,6 +28,230 @@ import { doc, getDoc, collection, query, where, getDocs, orderBy, limit } from '
 import { db } from '../config/firebase';
 import { toast } from 'react-hot-toast';
 
+// Extract the loadUserData function outside the component
+const loadUserData = async (
+  user: any,
+  navigate: any,
+  setLoading: (loading: boolean) => void,
+  setUserProfile: (profile: any) => void,
+  setRecentContributions: (contributions: any[]) => void,
+  setBadges: (badges: any[]) => void,
+  setReputationScore: (score: number) => void,
+  setEndorsements: (endorsements: any[]) => void
+) => {
+  try {
+    setLoading(true);
+    
+    if (!user) {
+      // If no user is logged in, use demo data
+      setUserProfile({
+        name: "Michael Chen",
+        title: "Founder & CEO",
+        company: "CloudTech Solutions",
+        location: "San Francisco, CA",
+        photoURL: "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg",
+        profile: {
+          skills: ["Product Strategy", "Fundraising", "Team Building", "Growth Hacking", "SaaS"],
+          points: 875
+        }
+      });
+      
+      // Set demo badges
+      setBadges([
+        { id: 'event_host', name: 'Event Host', count: 12, icon: Calendar, color: 'bg-blue-100 text-blue-600' },
+        { id: 'thought_leader', name: 'Thought Leader', count: 25, icon: MessageSquare, color: 'bg-green-100 text-green-600' },
+        { id: 'connector', name: 'Connector', count: 50, icon: Users, color: 'bg-purple-100 text-purple-600' },
+        { id: 'mentor', name: 'Mentor', count: 5, icon: Star, color: 'bg-yellow-100 text-yellow-600' },
+        { id: 'startup_founder', name: 'Startup Founder', count: 2, icon: Zap, color: 'bg-red-100 text-red-600' },
+        { id: 'verified_pro', name: 'Verified Pro', count: null, icon: Shield, color: 'bg-indigo-100 text-indigo-600' }
+      ]);
+      
+      // Set demo contributions
+      setRecentContributions([
+        {
+          id: 1,
+          type: 'event',
+          title: 'Hosted "Startup Funding Strategies" workshop',
+          description: 'Shared insights with 45 attendees',
+          date: new Date('2025-05-15'),
+          points: 25,
+          icon: Calendar,
+          color: 'bg-blue-100 text-blue-600'
+        },
+        {
+          id: 2,
+          type: 'connection',
+          title: 'Connected Sarah Johnson with Alex Rodriguez',
+          description: 'Successful introduction led to co-founding',
+          date: new Date('2025-04-28'),
+          points: 15,
+          icon: Users,
+          color: 'bg-purple-100 text-purple-600'
+        },
+        {
+          id: 3,
+          type: 'mentorship',
+          title: 'Provided mentorship to 3 early-stage founders',
+          description: '5-star feedback received',
+          date: new Date('2025-04-10'),
+          points: 30,
+          icon: MessageSquare,
+          color: 'bg-yellow-100 text-yellow-600'
+        }
+      ]);
+      
+      // Set demo endorsements
+      setEndorsements([
+        {
+          id: 1,
+          name: 'Sarah Johnson',
+          photoURL: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg',
+          text: "Michael's strategic insights helped us secure our seed round in record time."
+        },
+        {
+          id: 2,
+          name: 'Alex Rodriguez',
+          photoURL: 'https://images.pexels.com/photos/3778603/pexels-photo-3778603.jpeg',
+          text: "Exceptional mentor who truly cares about helping others succeed."
+        }
+      ]);
+      
+      setReputationScore(875);
+    } else {
+      // Get actual user data
+      const userRef = doc(db, 'users', user.id);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setUserProfile({
+          ...userData,
+          id: userDoc.id
+        });
+        
+        // Calculate reputation score based on profile points or other metrics
+        const points = userData.profile?.points || 0;
+        const connectionsCount = (userData.connections || []).length;
+        const eventsUsed = userData.subscription?.eventsUsed || 0;
+        
+        // Simple formula: base points + connections*5 + events*10
+        const calculatedScore = points + (connectionsCount * 5) + (eventsUsed * 10);
+        setReputationScore(calculatedScore);
+        
+        // Get user's badges
+        // In a real app, this would come from a badges collection
+        // For now, we'll generate based on user activity
+        const userBadges = [];
+        
+        if (eventsUsed > 0) {
+          userBadges.push({ 
+            id: 'event_participant', 
+            name: 'Event Participant', 
+            count: eventsUsed, 
+            icon: Calendar, 
+            color: 'bg-blue-100 text-blue-600' 
+          });
+        }
+        
+        if (connectionsCount > 0) {
+          userBadges.push({ 
+            id: 'connector', 
+            name: 'Connector', 
+            count: connectionsCount, 
+            icon: Users, 
+            color: 'bg-purple-100 text-purple-600' 
+          });
+        }
+        
+        if (userData.profile?.assignedRole) {
+          userBadges.push({ 
+            id: 'founder', 
+            name: 'Startup Founder', 
+            count: null, 
+            icon: Rocket, 
+            color: 'bg-red-100 text-red-600' 
+          });
+        }
+        
+        // Add verified badge if email is verified
+        if (userData.email_verified || user.emailVerified) {
+          userBadges.push({ 
+            id: 'verified', 
+            name: 'Verified Member', 
+            count: null, 
+            icon: Shield, 
+            color: 'bg-indigo-100 text-indigo-600' 
+          });
+        }
+        
+        setBadges(userBadges);
+        
+        // Get recent contributions
+        // In a real app, this would come from an activity log
+        // For now, we'll generate based on user data
+        const userContributions = [];
+        
+        // Add event participation
+        if (eventsUsed > 0) {
+          userContributions.push({
+            id: 1,
+            type: 'event',
+            title: `Participated in ${eventsUsed} networking events`,
+            description: 'Active community member',
+            date: new Date(),
+            points: eventsUsed * 10,
+            icon: Calendar,
+            color: 'bg-blue-100 text-blue-600'
+          });
+        }
+        
+        // Add profile completion
+        if (userData.profile && Object.keys(userData.profile).length > 5) {
+          userContributions.push({
+            id: 2,
+            type: 'profile',
+            title: 'Completed comprehensive profile',
+            description: 'Helps others connect with you',
+            date: new Date(userData.updatedAt?.toDate() || Date.now()),
+            points: 25,
+            icon: User,
+            color: 'bg-green-100 text-green-600'
+          });
+        }
+        
+        // Add connections
+        if (connectionsCount > 0) {
+          userContributions.push({
+            id: 3,
+            type: 'connection',
+            title: `Built a network of ${connectionsCount} connections`,
+            description: 'Growing professional network',
+            date: new Date(),
+            points: connectionsCount * 5,
+            icon: Users,
+            color: 'bg-purple-100 text-purple-600'
+          });
+        }
+        
+        setRecentContributions(userContributions);
+        
+        // In a real app, endorsements would come from a collection
+        // For now, we'll leave this empty for actual users
+        setEndorsements([]);
+      } else {
+        // User document doesn't exist
+        toast.error('User profile not found');
+        navigate('/');
+      }
+    }
+  } catch (error) {
+    console.error('Error loading reputation data:', error);
+    toast.error('Failed to load reputation data');
+  } finally {
+    setLoading(false);
+  }
+};
+
 export function ReputationPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -39,221 +263,16 @@ export function ReputationPage() {
   const [endorsements, setEndorsements] = useState<any[]>([]);
 
   useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        setLoading(true);
-        
-        if (!user) {
-          // If no user is logged in, use demo data
-          setUserProfile({
-            name: "Michael Chen",
-            title: "Founder & CEO",
-            company: "CloudTech Solutions",
-            location: "San Francisco, CA",
-            photoURL: "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg",
-            profile: {
-              skills: ["Product Strategy", "Fundraising", "Team Building", "Growth Hacking", "SaaS"],
-              points: 875
-            }
-          });
-          
-          // Set demo badges
-          setBadges([
-            { id: 'event_host', name: 'Event Host', count: 12, icon: Calendar, color: 'bg-blue-100 text-blue-600' },
-            { id: 'thought_leader', name: 'Thought Leader', count: 25, icon: MessageSquare, color: 'bg-green-100 text-green-600' },
-            { id: 'connector', name: 'Connector', count: 50, icon: Users, color: 'bg-purple-100 text-purple-600' },
-            { id: 'mentor', name: 'Mentor', count: 5, icon: Star, color: 'bg-yellow-100 text-yellow-600' },
-            { id: 'startup_founder', name: 'Startup Founder', count: 2, icon: Zap, color: 'bg-red-100 text-red-600' },
-            { id: 'verified_pro', name: 'Verified Pro', count: null, icon: Shield, color: 'bg-indigo-100 text-indigo-600' }
-          ]);
-          
-          // Set demo contributions
-          setRecentContributions([
-            {
-              id: 1,
-              type: 'event',
-              title: 'Hosted "Startup Funding Strategies" workshop',
-              description: 'Shared insights with 45 attendees',
-              date: new Date('2025-05-15'),
-              points: 25,
-              icon: Calendar,
-              color: 'bg-blue-100 text-blue-600'
-            },
-            {
-              id: 2,
-              type: 'connection',
-              title: 'Connected Sarah Johnson with Alex Rodriguez',
-              description: 'Successful introduction led to co-founding',
-              date: new Date('2025-04-28'),
-              points: 15,
-              icon: Users,
-              color: 'bg-purple-100 text-purple-600'
-            },
-            {
-              id: 3,
-              type: 'mentorship',
-              title: 'Provided mentorship to 3 early-stage founders',
-              description: '5-star feedback received',
-              date: new Date('2025-04-10'),
-              points: 30,
-              icon: MessageSquare,
-              color: 'bg-yellow-100 text-yellow-600'
-            }
-          ]);
-          
-          // Set demo endorsements
-          setEndorsements([
-            {
-              id: 1,
-              name: 'Sarah Johnson',
-              photoURL: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg',
-              text: "Michael's strategic insights helped us secure our seed round in record time."
-            },
-            {
-              id: 2,
-              name: 'Alex Rodriguez',
-              photoURL: 'https://images.pexels.com/photos/3778603/pexels-photo-3778603.jpeg',
-              text: "Exceptional mentor who truly cares about helping others succeed."
-            }
-          ]);
-          
-          setReputationScore(875);
-        } else {
-          // Get actual user data
-          const userRef = doc(db, 'users', user.id);
-          const userDoc = await getDoc(userRef);
-          
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setUserProfile({
-              ...userData,
-              id: userDoc.id
-            });
-            
-            // Calculate reputation score based on profile points or other metrics
-            const points = userData.profile?.points || 0;
-            const connectionsCount = (userData.connections || []).length;
-            const eventsUsed = userData.subscription?.eventsUsed || 0;
-            
-            // Simple formula: base points + connections*5 + events*10
-            const calculatedScore = points + (connectionsCount * 5) + (eventsUsed * 10);
-            setReputationScore(calculatedScore);
-            
-            // Get user's badges
-            // In a real app, this would come from a badges collection
-            // For now, we'll generate based on user activity
-            const userBadges = [];
-            
-            if (eventsUsed > 0) {
-              userBadges.push({ 
-                id: 'event_participant', 
-                name: 'Event Participant', 
-                count: eventsUsed, 
-                icon: Calendar, 
-                color: 'bg-blue-100 text-blue-600' 
-              });
-            }
-            
-            if (connectionsCount > 0) {
-              userBadges.push({ 
-                id: 'connector', 
-                name: 'Connector', 
-                count: connectionsCount, 
-                icon: Users, 
-                color: 'bg-purple-100 text-purple-600' 
-              });
-            }
-            
-            if (userData.profile?.assignedRole) {
-              userBadges.push({ 
-                id: 'founder', 
-                name: 'Startup Founder', 
-                count: null, 
-                icon: Rocket, 
-                color: 'bg-red-100 text-red-600' 
-              });
-            }
-            
-            // Add verified badge if email is verified
-            if (userData.email_verified || user.emailVerified) {
-              userBadges.push({ 
-                id: 'verified', 
-                name: 'Verified Member', 
-                count: null, 
-                icon: Shield, 
-                color: 'bg-indigo-100 text-indigo-600' 
-              });
-            }
-            
-            setBadges(userBadges);
-            
-            // Get recent contributions
-            // In a real app, this would come from an activity log
-            // For now, we'll generate based on user data
-            const userContributions = [];
-            
-            // Add event participation
-            if (eventsUsed > 0) {
-              userContributions.push({
-                id: 1,
-                type: 'event',
-                title: `Participated in ${eventsUsed} networking events`,
-                description: 'Active community member',
-                date: new Date(),
-                points: eventsUsed * 10,
-                icon: Calendar,
-                color: 'bg-blue-100 text-blue-600'
-              });
-            }
-            
-            // Add profile completion
-            if (userData.profile && Object.keys(userData.profile).length > 5) {
-              userContributions.push({
-                id: 2,
-                type: 'profile',
-                title: 'Completed comprehensive profile',
-                description: 'Helps others connect with you',
-                date: new Date(userData.updatedAt?.toDate() || Date.now()),
-                points: 25,
-                icon: User,
-                color: 'bg-green-100 text-green-600'
-              });
-            }
-            
-            // Add connections
-            if (connectionsCount > 0) {
-              userContributions.push({
-                id: 3,
-                type: 'connection',
-                title: `Built a network of ${connectionsCount} connections`,
-                description: 'Growing professional network',
-                date: new Date(),
-                points: connectionsCount * 5,
-                icon: Users,
-                color: 'bg-purple-100 text-purple-600'
-              });
-            }
-            
-            setRecentContributions(userContributions);
-            
-            // In a real app, endorsements would come from a collection
-            // For now, we'll leave this empty for actual users
-            setEndorsements([]);
-          } else {
-            // User document doesn't exist
-            toast.error('User profile not found');
-            navigate('/');
-          }
-        }
-      } catch (error) {
-        console.error('Error loading reputation data:', error);
-        toast.error('Failed to load reputation data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUserData();
+    loadUserData(
+      user,
+      navigate,
+      setLoading,
+      setUserProfile,
+      setRecentContributions,
+      setBadges,
+      setReputationScore,
+      setEndorsements
+    );
   }, [user, navigate]);
 
   if (loading) {
