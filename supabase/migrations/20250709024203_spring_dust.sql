@@ -26,9 +26,9 @@ BEGIN
     
     -- Determine events quota based on price ID
     CASE
-      WHEN price_id LIKE '%starter%' THEN events_quota := 3;
-      WHEN price_id LIKE '%professional%' THEN events_quota := 8;
-      WHEN price_id LIKE '%enterprise%' THEN events_quota := 15;
+      WHEN price_id LIKE '%price_1Rif3UGCopIxkzs6WPBgO8wt%' THEN events_quota := 3;
+      WHEN price_id LIKE '%price_1Rif4MGCopIxkzs6EN1InWXN%' THEN events_quota := 8;
+      WHEN price_id LIKE '%price_1Rif6HGCopIxkzs6rLt5gZQf%' THEN events_quota := 15;
       WHEN price_id LIKE '%team%' THEN events_quota := 10;
       ELSE events_quota := 0;
     END CASE;
