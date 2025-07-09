@@ -148,8 +148,14 @@ export function DashboardPage() {
       const result = await supabase
         .from('users')
         .select('subscription_status, subscription_events_quota, subscription_events_used')
-      }
+        .eq('id', userIdString)
+        .maybeSingle();
+        
+      userData = result.data;
+      userError = result.error;
+    }
       
+    try {
       // Register for the event
       // Register for the event - this will update the user's subscription_events_used count
       // First check if user can register
@@ -166,6 +172,12 @@ export function DashboardPage() {
       if (!result.success) {
         toast.error(result.message || 'Failed to register for event');
         return;
+      }
+      
+      const event = upcomingEvents.find(e => e.id === eventId);
+      
+      if (!event) {
+        throw new Error('Event not found');
       }
       
       // Generate calendar event
