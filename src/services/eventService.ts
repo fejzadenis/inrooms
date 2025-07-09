@@ -111,7 +111,7 @@ export const eventService = {
       const { error } = await supabase
         .from('registrations')
         .insert({
-          user_id: userId, // Firebase user IDs are strings, not UUIDs
+          user_id: userIdString,
           event_id: eventId,
           registered_at: new Date().toISOString(),
         });
@@ -142,7 +142,8 @@ export const eventService = {
         const { error: updateError } = await supabase
           .from('users')
           .update({ 
-            subscription_events_used: supabase.sql`subscription_events_used + 1`
+            subscription_events_used: supabase.sql`subscription_events_used + 1`,
+            updated_at: new Date().toISOString()
           })
           .eq('id', userIdString);
           
@@ -175,18 +176,6 @@ export const eventService = {
           console.error('Error updating Firebase after Supabase success:', firebaseError);
           // Continue even if Firebase update fails - Supabase is now primary
         }
-      }
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({ 
-          subscription_events_used: increment(1),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId);
-        
-      if (updateError) {
-        console.error('Error updating user event count:', updateError);
-        // Continue even if update fails - the registration was successful
       }
     } catch (error) {
       console.error('Error registering for event:', error);
