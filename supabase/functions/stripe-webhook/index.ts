@@ -335,6 +335,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
             credential: cert(serviceAccount)
           });
           
+        }
+      }
+    }
+  }
   // Store checkout session in Supabase for record keeping
   try {
     // Update the checkout session if it exists
