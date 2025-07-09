@@ -54,6 +54,9 @@ export function BillingPage() {
   console.debug('[Subscription] Fetching subscription data for user:', user.id);
 
   try {
+
+    console.log('[Subscription] user.id:', JSON.stringify(user.id));
+
     const { data, error } = await supabase
       .from('users')
       .select('*')
