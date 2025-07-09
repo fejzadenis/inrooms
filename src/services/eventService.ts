@@ -142,7 +142,7 @@ export const eventService = {
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('subscription_events_used')
-        .eq('id', userId)
+        .eq('id', userId.toString())
         .single();
       
       if (!userError && userData) {
@@ -153,7 +153,7 @@ export const eventService = {
             subscription_events_used: currentUsed + 1,
             updated_at: new Date().toISOString()
           })
-          .eq('id', userId);
+          .eq('id', userId.toString());
           
         if (updateError) {
           console.error('Error updating events used count in Supabase:', updateError);

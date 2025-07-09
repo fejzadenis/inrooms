@@ -37,7 +37,7 @@ export function DashboardPage() {
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at')
-        .eq('id', user.id)
+        .eq('id', user.id.toString())
         .maybeSingle();
         
       if (!userError && userData) {

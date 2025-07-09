@@ -636,7 +636,7 @@ export const stripeService = {
             subscription_trial_ends_at: trialEndsAt.toISOString(),
             updated_at: new Date().toISOString()
           })
-          .eq('id', userId);
+          .eq('id', userId.toString());
           
         if (error) {
           console.error('Error updating Supabase with trial data:', error);

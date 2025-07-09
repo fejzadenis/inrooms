@@ -59,47 +59,28 @@ export function BillingPage() {
     
     const userIdText = String(user.id);  // Convert UUID to string
     
-    const { data, error } = await supabase
+    const { data: userData, error } = await supabase
       .from('users')
-      .select('*')
-      .eq('id', userIdText);
+      .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at, stripe_subscription_status, stripe_current_period_end')
+      .eq('id', userIdText)
+      .maybeSingle();
     
-    console.debug('[Subscription] Fallback raw data:', data);
-
-
-    console.debug('[Subscription] Supabase query result:', { data, error });
+    console.debug('[Subscription] Query result:', { userData, error });
 
     if (error) {
       console.error('[Subscription] Supabase error:', error);
     }
 
-    if (data) {
-      console.info('[Subscription] Raw Supabase data:', data);
-
-      const {
-        subscription_status,
-        subscription_events_quota,
-        subscription_events_used,
-        subscription_trial_ends_at,
-        stripe_subscription_status,
-        stripe_current_period_end
-      } = data;
-
-      console.debug('[Subscription] Processed fields:');
-      console.debug(' - subscription_status:', subscription_status);
-      console.debug(' - subscription_events_quota:', subscription_events_quota);
-      console.debug(' - subscription_events_used:', subscription_events_used);
-      console.debug(' - subscription_trial_ends_at:', subscription_trial_ends_at);
-      console.debug(' - stripe_subscription_status:', stripe_subscription_status);
-      console.debug(' - stripe_current_period_end:', stripe_current_period_end);
+    if (userData) {
+      console.info('[Subscription] Supabase user data:', userData);
 
       setSubscriptionData({
-        status: subscription_status || 'inactive',
-        eventsQuota: subscription_events_quota ?? 0,
-        eventsUsed: subscription_events_used ?? 0,
-        trialEndsAt: subscription_trial_ends_at ? new Date(subscription_trial_ends_at) : undefined,
-        stripeSubscriptionStatus: stripe_subscription_status,
-        stripeCurrentPeriodEnd: stripe_current_period_end ? new Date(stripe_current_period_end) : undefined
+        status: userData.subscription_status || 'inactive',
+        eventsQuota: userData.subscription_events_quota || 0,
+        eventsUsed: userData.subscription_events_used || 0,
+        trialEndsAt: userData.subscription_trial_ends_at ? new Date(userData.subscription_trial_ends_at) : undefined,
+        stripeSubscriptionStatus: userData.stripe_subscription_status,
+        stripeCurrentPeriodEnd: userData.stripe_current_period_end ? new Date(userData.stripe_current_period_end) : undefined
       });
     } else {
       console.warn('[Subscription] No data returned for user in Supabase (null or empty).');
