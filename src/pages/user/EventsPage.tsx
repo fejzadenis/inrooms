@@ -161,8 +161,8 @@ export function EventsPage() {
   };
 
   const filteredEvents = events.filter(event =>
-    event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    event.description.toLowerCase().includes(searchTerm.toLowerCase())
+    (event.title ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (event.description ?? '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
