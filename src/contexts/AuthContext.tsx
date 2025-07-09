@@ -807,7 +807,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err: any) {
       console.error('Profile update error:', err);
       
-      if (err.code === 'resource-exhausted') {
+      if (err.code === 'resource-exhauste
+      )
+    }
+  }
+}d') {
         toast.error('Service temporarily unavailable. Please try again in a few minutes.');
       } else {
         toast.error(err.message || 'Failed to update profile');
