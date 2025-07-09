@@ -601,7 +601,7 @@ export const stripeService = {
   },
 
   // Start a free trial
-  async startFreeTrial(userId: string): Promise<void> {
+  async startFreeTrial(userId: string, updateSupabase: boolean = false): Promise<void> {
     try {
       console.log('Starting free trial for user:', userId);
       
@@ -632,6 +632,26 @@ export const stripeService = {
     }
   },
 
+        // Also update Supabase if requested
+        if (updateSupabase) {
+          console.log(`Setting trial data for user ${userId} in Supabase`);
+          const { error } = await supabase
+            .from('users')
+            .update({
+              subscription_status: 'trial',
+              subscription_events_quota: 2,
+              subscription_events_used: 0,
+              subscription_trial_ends_at: trialEndsAt.toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', userId);
+            
+          if (error) {
+            console.error('Error updating Supabase with trial data:', error);
+          } else {
+            console.log('Updated Supabase with trial subscription data');
+          }
+        }
   // Purchase feature for demo
   async purchaseFeatureForDemo(
     userId: string,

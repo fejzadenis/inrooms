@@ -104,19 +104,23 @@ export const eventService = {
   async registerForEvent(userId: string, eventId: string): Promise<void> {
     try {
       // Add registration
+      console.log(`EVENT SERVICE: Registering user ${userId} for event ${eventId}`);
       const firebaseRegistration = await addDoc(collection(db, 'registrations'), {
         userId,
         eventId,
         registeredAt: serverTimestamp(),
       });
+      console.log(`EVENT SERVICE: Firebase registration created with ID: ${firebaseRegistration.id}`);
 
       // Update event participant count
       const eventRef = doc(db, 'events', eventId);
       await updateDoc(eventRef, {
         currentParticipants: increment(1),
       });
+      console.log(`EVENT SERVICE: Updated event participant count in Firebase`);
 
       // Also register in Supabase for redundancy
+      console.log(`EVENT SERVICE: Creating registration in Supabase`);
       const { error } = await supabase
         .from('registrations')
         .insert({
@@ -127,11 +131,40 @@ export const eventService = {
         
       if (error) {
         console.error('Error registering in Supabase:', error);
+        console.log(`EVENT SERVICE: Failed to create registration in Supabase: ${error.message}`);
         // Continue even if Supabase fails - Firebase is primary
+      } else {
+        console.log(`EVENT SERVICE: Supabase registration created successfully`);
       }
       
       // Update user's events used count in Supabase
-      // The trigger in Supabase will handle this automatically
+      console.log(`EVENT SERVICE: Updating user's events_used count in Supabase`);
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('subscription_events_used')
+        .eq('id', userId)
+        .single();
+      
+      if (!userError && userData) {
+        const currentUsed = userData.subscription_events_used || 0;
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({ 
+            subscription_events_used: currentUsed + 1,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', userId);
+          
+        if (updateError) {
+          console.error('Error updating events used count in Supabase:', updateError);
+          console.log(`EVENT SERVICE: Failed to update events_used in Supabase: ${updateError.message}`);
+        } else {
+          console.log(`EVENT SERVICE: Updated events_used count in Supabase to ${currentUsed + 1}`);
+        }
+      } else {
+        console.error('Error fetching user data from Supabase:', userError);
+        console.log(`EVENT SERVICE: Failed to fetch user data from Supabase: ${userError?.message}`);
+      }
     } catch (error) {
       console.error('Error registering for event:', error);
       throw error;

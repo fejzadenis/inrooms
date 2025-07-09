@@ -57,6 +57,7 @@ export function BillingPage() {
         
       if (!error && data) {
         console.log("Supabase subscription data:", data);
+        console.log("Supabase subscription data:", data);
         // Set subscription data from Supabase
         setSubscriptionData({
           status: data.subscription_status || 'inactive',
@@ -67,6 +68,7 @@ export function BillingPage() {
           stripeCurrentPeriodEnd: data.stripe_current_period_end ? new Date(data.stripe_current_period_end) : undefined
         });
       } else {
+        console.log('No subscription data found in Supabase:', error);
         console.log('No subscription data found in Supabase');
         // Use data from user object as fallback
         if (user.subscription) {

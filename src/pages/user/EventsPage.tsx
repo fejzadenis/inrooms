@@ -53,6 +53,7 @@ export function EventsPage() {
       
       // If user is logged in, fetch latest subscription data
       if (user) {
+        console.log("EVENTS DEBUG: Fetching subscription data from Supabase for user", user.id);
         const { data: userData, error: userError } = await supabase
           .from('users')
           .select('subscription_status, subscription_events_quota, subscription_events_used')
@@ -60,11 +61,14 @@ export function EventsPage() {
           .maybeSingle();
           
         if (!userError && userData) {
+          console.log("EVENTS DEBUG: Supabase subscription data:", userData);
           setSubscriptionData({
             status: userData.subscription_status || 'inactive',
             eventsQuota: userData.subscription_events_quota || 0,
             eventsUsed: userData.subscription_events_used || 0
           });
+        } else {
+          console.log("EVENTS DEBUG: Error or no data from Supabase:", userError);
         }
       }
       
@@ -103,6 +107,7 @@ export function EventsPage() {
     }
 
     // Get latest subscription data from Supabase
+    console.log("EVENTS DEBUG: Checking subscription data before registration");
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('subscription_status, subscription_events_quota, subscription_events_used')
@@ -111,16 +116,20 @@ export function EventsPage() {
       
     // Update subscription data state
     if (!userError && userData) {
+      console.log("EVENTS DEBUG: Updated subscription data from Supabase:", userData);
       setSubscriptionData({
         status: userData.subscription_status || 'inactive',
         eventsQuota: userData.subscription_events_quota || 0,
         eventsUsed: userData.subscription_events_used || 0
       });
+    } else {
+      console.log("EVENTS DEBUG: Error fetching updated subscription data:", userError);
     }
     
     const eventsUsed = subscriptionData?.eventsUsed || userData?.subscription_events_used || user.subscription.eventsUsed;
     const eventsQuota = subscriptionData?.eventsQuota || userData?.subscription_events_quota || user.subscription.eventsQuota;
     
+    console.log("EVENTS DEBUG: Current usage:", eventsUsed, "/", eventsQuota);
     if (eventsUsed >= eventsQuota) {
       toast.error('You have reached your event quota. Please upgrade your subscription.');
       return;

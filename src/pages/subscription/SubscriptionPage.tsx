@@ -44,7 +44,8 @@ export function SubscriptionPage() {
 
     try {
       setLoading(true);
-      await stripeService.startFreeTrial(user.id);
+      // Start free trial in both Firebase and Supabase
+      await stripeService.startFreeTrial(user.id, true);
       toast.success('Free trial activated! Enjoy your 7-day trial with 2 events.');
       navigate('/events');
     } catch (error) {

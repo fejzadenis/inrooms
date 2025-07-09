@@ -33,6 +33,7 @@ export function DashboardPage() {
       setLoading(true);
       
       // Fetch latest subscription data from Supabase
+      console.log("DASHBOARD DEBUG: Fetching subscription data from Supabase for user", user.id);
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at')
@@ -40,6 +41,7 @@ export function DashboardPage() {
         .maybeSingle();
         
       if (!userError && userData) {
+        console.log("DASHBOARD DEBUG: Supabase subscription data:", userData);
         // Store the subscription data
         setSubscriptionData({
           status: userData.subscription_status || 'inactive',
@@ -47,6 +49,8 @@ export function DashboardPage() {
           eventsUsed: userData.subscription_events_used || 0,
           trialEndsAt: userData.subscription_trial_ends_at ? new Date(userData.subscription_trial_ends_at) : undefined
         });
+      } else {
+        console.log("DASHBOARD DEBUG: Error or no data from Supabase:", userError);
       }
       
       // Load user's registered events
