@@ -44,7 +44,7 @@ export function SubscriptionPage() {
 
     try {
       setLoading(true);
-      await startFreeTrial();
+      await stripeService.startFreeTrial(user.id);
       toast.success('Free trial activated! Enjoy your 7-day trial with 2 events.');
       navigate('/events');
     } catch (error) {

@@ -248,6 +248,7 @@ async function handleCheckoutCompleted(session) {
         }
         // Get Firestore instance
         const firestore = getFirestore();
+        
         // Update Firestore document with subscription data
         if (session.subscription) {
           console.log("Writing user data to Firestore:", {
@@ -261,6 +262,11 @@ async function handleCheckoutCompleted(session) {
             stripe_subscription_status: 'active',
             updatedAt: new Date()
           });
+          
+          // Create a reference to the user document in Firestore
+          const userRef = firestore.collection('users').doc(userId);
+          
+          // Update the user document with subscription data
           await userRef.set({
             subscription: {
               status: 'active',
