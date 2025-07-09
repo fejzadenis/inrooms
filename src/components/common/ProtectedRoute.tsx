@@ -54,8 +54,13 @@ export function ProtectedRoute({
     return <>{children}</>;
   }
 
-  // Enforce email verification if required
-  if (requireEmailVerification && !user.emailVerified && !user.dbEmailVerified && !isVerifyEmailRoute) {
+  // Enforce email verification if required, but bypass for admin users or admin@inrooms.com
+  if (requireEmailVerification && 
+      !user.emailVerified && 
+      !user.dbEmailVerified && 
+      !isVerifyEmailRoute && 
+      user.role !== 'admin' && 
+      user.email !== 'admin@inrooms.com') {
     console.log("ROUTE DEBUG: Email verification required but not verified in either Firebase or DB, redirecting to verify-email");
     return <Navigate to="/verify-email" replace />;
   }
