@@ -273,7 +273,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data: supabaseUser, error } = await supabase
           .from('users')
-          .select('*, subscription_trial_ends_at')
+          .select('*, subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at')
           .eq('id', firebaseUser.uid)
           .maybeSingle();
         
