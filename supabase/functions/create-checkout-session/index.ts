@@ -212,6 +212,9 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ 
+      }
+      )
+    )
     return new Response(
       JSON.stringify({
         error: 'Failed to create checkout session', 

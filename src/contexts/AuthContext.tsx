@@ -859,6 +859,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ...prev,
           subscription: {
             ...prev.subscription,
+          }
+        }
+      }
+      )
       toast.success('Free trial activated successfully!');
     } catch (err: any) {
       console.error('Free trial activation error:', err);
