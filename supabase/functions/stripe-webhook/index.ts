@@ -332,20 +332,18 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       // Update user's subscription status
       const { error } = await supabaseClient
         .from('users')
-        .update(session.subscription ? {
+        .update({
           // If we have a subscription ID, update all subscription-related fields
           stripe_customer_id: session.customer as string,
-          stripe_subscription_id: session.subscription,
-          stripe_subscription_status: 'active',
-          subscription_status: 'active', 
-          // Get plan details and update quota
-          subscription_events_quota: planDetails.eventsQuota,
-          subscription_events_used: 0,
+          ...(session.subscription ? {
+            stripe_subscription_id: session.subscription,
+            stripe_subscription_status: 'active',
+            subscription_status: 'active',
+            // Get plan details and update quota
+            subscription_events_quota: planDetails.eventsQuota,
+            subscription_events_used: 0,
+          } : {}),
           // Reset events used count for new subscription
-          updated_at: new Date().toISOString(),
-        } : {
-          // If no subscription (one-time purchase), just update customer ID
-          stripe_customer_id: session.customer as string,
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId)
@@ -677,14 +675,16 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   // Update user subscription info
   const { error } = await supabaseClient
     .from('users')
-    .update({
-      stripe_subscription_status: subscription.status,
-      stripe_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(), 
-      subscription_status: subscription.status === 'active' ? 'active' : 'inactive',
-      subscription_events_quota: planDetails.eventsQuota,
-      // Don't reset events_used on update to avoid losing usage data
-      updated_at: new Date().toISOString(),
-    })
+    .update(
+      {
+        "stripe_subscription_status": subscription.status,
+        "stripe_current_period_end": new Date(subscription.current_period_end * 1000).toISOString(), 
+        "subscription_status": subscription.status === 'active' ? 'active' : 'inactive',
+        "subscription_events_quota": planDetails.eventsQuota,
+        // Don't reset events_used on update to avoid losing usage data
+        "updated_at": new Date().toISOString(),
+      }
+    )
     .eq('id', userId)
 
   if (error) {
@@ -747,12 +747,14 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   // Update user subscription info
   const { error } = await supabaseClient
     .from('users')
-    .update({
-      stripe_subscription_status: 'canceled',
-      subscription_status: 'inactive',
-      subscription_events_quota: 0,
-      updated_at: new Date().toISOString(),
-    })
+    .update(
+      {
+        "stripe_subscription_status": 'canceled',
+        "subscription_status": 'inactive',
+        "subscription_events_quota": 0,
+        "updated_at": new Date().toISOString(),
+      }
+    )
     .eq('id', userId)
 
   if (error) {
@@ -871,14 +873,16 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
         // Reset events used count for new billing period and update subscription details
         const { error } = await supabaseClient
           .from('users')
-          .update({
-            subscription_events_used: 0,
-            subscription_events_quota: planDetails.eventsQuota,
-            subscription_status: 'active',
-            stripe_subscription_status: subscription.status,
-            stripe_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-            updated_at: new Date().toISOString(),
-          })
+          .update(
+            {
+              "subscription_events_used": 0,
+              "subscription_events_quota": planDetails.eventsQuota,
+              "subscription_status": 'active',
+              "stripe_subscription_status": subscription.status,
+              "stripe_current_period_end": new Date(subscription.current_period_end * 1000).toISOString(),
+              "updated_at": new Date().toISOString(),
+            }
+          )
           .eq('id', userId);
 
         if (error) {
@@ -892,10 +896,12 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
         // Still reset events used count even if we can't get subscription details
         const { error } = await supabaseClient
           .from('users')
-          .update({
-            subscription_events_used: 0,
-            updated_at: new Date().toISOString(),
-          })
+          .update(
+            {
+              "subscription_events_used": 0,
+              "updated_at": new Date().toISOString(),
+            }
+          )
           .eq('id', userId);
           
         if (error) {
@@ -908,10 +914,12 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
       // For non-subscription invoices, just reset the events count
       const { error } = await supabaseClient
         .from('users')
-        .update({
-          subscription_events_used: 0,
-          updated_at: new Date().toISOString(),
-        })
+        .update(
+          {
+            "subscription_events_used": 0,
+            "updated_at": new Date().toISOString(),
+          }
+        )
         .eq('id', userId);
         
       if (error) {
@@ -971,10 +979,12 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   // Update user subscription status to reflect payment failure
   const { error: userError } = await supabaseClient
     .from('users')
-    .update({
-      subscription_status: 'past_due',
-      updated_at: new Date().toISOString()
-    })
+    .update(
+      {
+        "subscription_status": 'past_due',
+        "updated_at": new Date().toISOString()
+      }
+    )
     .eq('id', customer.user_id)
     
   if (userError) {
