@@ -73,22 +73,22 @@ export function EventsPage() {
           // Fallback to direct query if RPC fails
           console.log("EVENTS DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
           
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('subscription_status, subscription_events_quota, subscription_events_used')
-          .eq('id', userIdString)
-          .maybeSingle();
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('subscription_status, subscription_events_quota, subscription_events_used')
+            .eq('id', userIdString)
+            .maybeSingle();
           
-        if (!userError && userData) {
-          console.log("EVENTS DEBUG: Supabase subscription data:", userData);
-          setSubscriptionData({
-            status: userData.subscription_status || 'inactive',
-            eventsQuota: userData.subscription_events_quota || 0,
-            eventsUsed: userData.subscription_events_used || 0
-          });
-        } else {
-          console.log("EVENTS DEBUG: Error or no data from Supabase:", userError);
-        }
+          if (!userError && userData) {
+            console.log("EVENTS DEBUG: Supabase subscription data:", userData);
+            setSubscriptionData({
+              status: userData.subscription_status || 'inactive',
+              eventsQuota: userData.subscription_events_quota || 0,
+              eventsUsed: userData.subscription_events_used || 0
+            });
+          } else {
+            console.log("EVENTS DEBUG: Error or no data from Supabase:", userError);
+          }
         }
       }
       
@@ -126,10 +126,7 @@ export function EventsPage() {
       return;
     }
 
-      console.log("EVENTS DEBUG: RPC returned subscription data:", rpcData[0]);
-      userData = rpcData[0];
-    } else {
-      // Fallback to direct query if RPC fails
+    try {
       // Check if user can register
       const eligibility = await eventService.canRegisterForEvent(user.id, eventId);
       if (!eligibility.success) {
@@ -137,44 +134,12 @@ export function EventsPage() {
         return;
       }
       
+      const event = events.find(e => e.id === eventId);
+      if (!event) return;
+
+      console.log("EVENTS DEBUG: Registering for event:", event.title, "ID:", eventId);
+      
       // Register for the event
-      console.log("EVENTS DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
-      
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('subscription_status, subscription_events_quota, subscription_events_used')
-      .eq('id', userIdString)
-      .maybeSingle();
-    }
-      
-    // Update subscription data state
-    if (!userError && userData) {
-      console.log("EVENTS DEBUG: Updated subscription data from Supabase:", userData);
-      setSubscriptionData({
-        status: userData.subscription_status || 'inactive',
-        eventsQuota: userData.subscription_events_quota || 0,
-        eventsUsed: userData.subscription_events_used || 0
-      });
-    } else {
-      console.log("EVENTS DEBUG: Error fetching updated subscription data:", userError);
-    }
-    
-    const eventsUsed = subscriptionData?.eventsUsed || userData?.subscription_events_used || user.subscription.eventsUsed;
-    const eventsQuota = subscriptionData?.eventsQuota || userData?.subscription_events_quota || user.subscription.eventsQuota;
-    
-    console.log("EVENTS DEBUG: Current usage:", eventsUsed, "/", eventsQuota);
-    if (eventsUsed >= eventsQuota) {
-      toast.error('You have reached your event quota. Please upgrade your subscription.');
-      return;
-    }
-
-    const event = events.find(e => e.id === eventId);
-    if (!event) return;
-
-    console.log("EVENTS DEBUG: Registering for event:", event.title, "ID:", eventId);
-    
-    try {
-      // Register for the event - this will update the user's subscription_events_used count
       await eventService.registerForEvent(user.id, eventId);
       
       // Generate calendar event
