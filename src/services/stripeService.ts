@@ -645,6 +645,32 @@ export const stripeService = {
           }
         } catch (supabaseError) {
           console.error('[Stripe Service] Exception updating Supabase with trial data:', supabaseError);
+      console.log('[Stripe Service] Updated Firestore with trial subscription data');
+      }
+      // Also update Supabase if requested
+      if (updateSupabase) {
+        try {
+          console.log(`[Stripe Service] Setting trial data for user ${userId} in Supabase`);
+          const userIdString = userId.toString();
+          
+          const { error } = await supabase
+            .from('users')
+            .update({
+              subscription_status: 'trial',
+              subscription_events_quota: 2,
+              subscription_events_used: 0,
+              subscription_trial_ends_at: trialEndsAt.toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', userIdString);
+            
+          if (error) {
+            console.error('[Stripe Service] Error updating Supabase with trial data:', error);
+          } else {
+            console.log('[Stripe Service] Updated Supabase with trial subscription data');
+          }
+        } catch (supabaseError) {
+          console.error('[Stripe Service] Exception updating Supabase with trial data:', supabaseError);
         }
       }
 

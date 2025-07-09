@@ -796,7 +796,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           };
           
           // Update cache with new data
-          setCachedUserData(userIdString, updatedUser);
+          setCachedUserData(userId, updatedUser);
           return updatedUser;
         });
       }
