@@ -864,7 +864,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             eventsUsed: 0,
             trialEndsAt
           }
-        }
         };
         
         // Update cache with new data
