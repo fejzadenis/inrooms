@@ -63,46 +63,46 @@ export function DashboardPage() {
         // Fallback to direct query if RPC fails
         console.log("DASHBOARD DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
         
-      console.log("DASHBOARD DEBUG: Fetching subscription data from Supabase for user", user.id);
-      
-      // Try using the RPC function first
-      const { data: rpcData, error: rpcError } = await supabase
-        .rpc('get_user_subscription', { user_id: userIdString });
-      
-      if (!rpcError && rpcData && rpcData.length > 0) {
-        console.log("DASHBOARD DEBUG: RPC returned subscription data:", rpcData[0]);
-        const subscriptionData = rpcData[0];
+        console.log("DASHBOARD DEBUG: Fetching subscription data from Supabase for user", user.id);
         
-        setSubscriptionData({
-          status: subscriptionData.subscription_status || 'inactive',
-          eventsQuota: subscriptionData.subscription_events_quota || 0,
-          eventsUsed: subscriptionData.subscription_events_used || 0,
-          trialEndsAt: subscriptionData.subscription_trial_ends_at ? new Date(subscriptionData.subscription_trial_ends_at) : undefined
-        });
-      } else {
-        // Fallback to direct query if RPC fails
-        console.log("DASHBOARD DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
+        // Try using the RPC function first
+        const { data: rpcData, error: rpcError } = await supabase
+          .rpc('get_user_subscription', { user_id: userIdString });
         
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at')
-        .eq('id', userIdString)
-        .maybeSingle();
-        
-      if (!userError && userData) {
-        console.log("DASHBOARD DEBUG: Supabase subscription data:", userData);
-        console.log("DASHBOARD DEBUG: Supabase subscription data:", userData);
-        // Store the subscription data
-        setSubscriptionData({
-          status: userData.subscription_status || 'inactive',
-          eventsQuota: userData.subscription_events_quota || 0,
-          eventsUsed: userData.subscription_events_used || 0,
-          trialEndsAt: userData.subscription_trial_ends_at ? new Date(userData.subscription_trial_ends_at) : undefined
-        });
-      } else {
-        console.log("DASHBOARD DEBUG: Error or no data from Supabase:", userError);
-      }
-      }
+        if (!rpcError && rpcData && rpcData.length > 0) {
+          console.log("DASHBOARD DEBUG: RPC returned subscription data:", rpcData[0]);
+          const subscriptionData = rpcData[0];
+          
+          setSubscriptionData({
+            status: subscriptionData.subscription_status || 'inactive',
+            eventsQuota: subscriptionData.subscription_events_quota || 0,
+            eventsUsed: subscriptionData.subscription_events_used || 0,
+            trialEndsAt: subscriptionData.subscription_trial_ends_at ? new Date(subscriptionData.subscription_trial_ends_at) : undefined
+          });
+        } else {
+          // Fallback to direct query if RPC fails
+          console.log("DASHBOARD DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
+          
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at')
+            .eq('id', userIdString)
+            .maybeSingle();
+            
+          if (!userError && userData) {
+            console.log("DASHBOARD DEBUG: Supabase subscription data:", userData);
+            console.log("DASHBOARD DEBUG: Supabase subscription data:", userData);
+            // Store the subscription data
+            setSubscriptionData({
+              status: userData.subscription_status || 'inactive',
+              eventsQuota: userData.subscription_events_quota || 0,
+              eventsUsed: userData.subscription_events_used || 0,
+              trialEndsAt: userData.subscription_trial_ends_at ? new Date(userData.subscription_trial_ends_at) : undefined
+            });
+          } else {
+            console.log("DASHBOARD DEBUG: Error or no data from Supabase:", userError);
+          }
+        }
       }
       
       // Load user's registered events
@@ -153,7 +153,7 @@ export function DashboardPage() {
         
       userData = result.data;
       userError = result.error;
-      
+    }
 
     console.log("DASHBOARD DEBUG: Registering for event:", event.title, "ID:", eventId);
 
