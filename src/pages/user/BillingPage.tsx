@@ -43,7 +43,7 @@ export function BillingPage() {
           .from('users')
           .select('subscription_status, subscription_events_quota, subscription_events_used, stripe_subscription_status, stripe_current_period_end')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
           
         if (!error && data) {
           // Update local user state with latest subscription data
@@ -320,7 +320,7 @@ export function BillingPage() {
                     .from('users')
                     .select('subscription_status, subscription_events_quota, subscription_events_used')
                     .eq('id', user.id)
-                    .single();
+                    .maybeSingle();
                     
                   if (!error && data) {
                     // Update local user state with latest subscription data
@@ -330,6 +330,8 @@ export function BillingPage() {
                       user.subscription.eventsUsed = data.subscription_events_used || user.subscription.eventsUsed;
                     }
                     toast.success('Subscription data refreshed');
+                  } else if (!data) {
+                    toast.info('No subscription data found for this user');
                   }
                 } catch (error) {
                   console.error('Error refreshing subscription data:', error);
