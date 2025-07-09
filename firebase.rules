@@ -166,7 +166,7 @@ service cloud.firestore {
     // === Registrations ===
     match /registrations/{registrationId} {
       allow read: if request.auth != null && (
-        ('userId' in resource.data && resource.data.userId == request.auth.uid) ||
+        resource.data.userId == request.auth.uid ||
         request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
         request.auth.token.email == 'admin@inrooms.com'
       );

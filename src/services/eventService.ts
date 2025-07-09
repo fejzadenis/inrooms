@@ -104,7 +104,7 @@ export const eventService = {
   async registerForEvent(userId: string, eventId: string): Promise<void> {
     try {
       // Add registration
-      console.log(`[Event Service] Registering user ${userId} (type: ${typeof userId}) for event ${eventId}`);
+      await addDoc(collection(db, 'registrations'), {
       const userIdString = userId.toString();
       console.log(`[Event Service] Converted userId to string: ${userIdString}`);
       
@@ -113,14 +113,14 @@ export const eventService = {
       const { error } = await supabase
         .from('registrations')
         .insert({
-          user_id: userIdString,
+          user_id: userId, // Firebase user IDs are strings, not UUIDs
           event_id: eventId,
           registered_at: new Date().toISOString(),
         });
         
       if (error) {
         console.error('Error registering in Supabase:', error);
-        console.log(`[Event Service] Failed to create registration in Supabase: ${error.message}`);
+        throw new Error(`Error registering in Supabase: ${error.message}`);
         // If Supabase fails, try Firebase as fallback
         console.log(`[Event Service] Falling back to Firebase registration`);
         const firebaseRegistration = await addDoc(collection(db, 'registrations'), {
@@ -177,6 +177,17 @@ export const eventService = {
           console.error('Error updating Firebase after Supabase success:', firebaseError);
           // Continue even if Firebase update fails - Supabase is now primary
         }
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ 
+          subscription_events_used: increment(1),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+        
+      if (updateError) {
+        console.error('Error updating user event count:', updateError);
+        // Continue even if update fails - the registration was successful
       }
     } catch (error) {
       console.error('Error registering for event:', error);
