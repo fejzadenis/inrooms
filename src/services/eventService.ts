@@ -103,80 +103,39 @@ export const eventService = {
 
   async registerForEvent(userId: string, eventId: string): Promise<void> {
     try {
-      const userIdString = userId.toString();
-      console.log(`[Event Service] Converted userId to string: ${userIdString}`);
+      console.log("Registering user for event:", { userId, eventId });
       
+      // Ensure userId is a string (Firebase UIDs are strings)
+      const userIdString = userId.toString();
+
       // Also register in Supabase for redundancy
-      console.log(`[Event Service] Creating registration in Supabase`);
-      const { error } = await supabase
+      const { error: supabaseError } = await supabase
         .from('registrations')
         .insert({
           user_id: userIdString,
-          event_id: eventId,
+          event_id: eventId.toString(), // Convert to string to match the text column type
           registered_at: new Date().toISOString(),
         });
         
-      if (error) {
-        console.error('Error registering in Supabase:', error);
-        throw new Error(`Error registering in Supabase: ${error.message}`);
-        // If Supabase fails, try Firebase as fallback
-        console.log(`[Event Service] Falling back to Firebase registration`);
-        const firebaseRegistration = await addDoc(collection(db, 'registrations'), {
-          userId: userIdString,
-          eventId,
-          registeredAt: serverTimestamp(),
-        });
-        console.log(`[Event Service] Firebase registration created with ID: ${firebaseRegistration.id}`);
-
-        // Update event participant count in Firebase
-        const eventRef = doc(db, 'events', eventId);
-        await updateDoc(eventRef, {
-          currentParticipants: increment(1),
-        });
-        console.log(`[Event Service] Updated event participant count in Firebase`);
-      } else {
-        console.log(`[Event Service] Supabase registration created successfully`);
-        
-        // Increment user's subscription_events_used count in Supabase
-        console.log(`[Event Service] Incrementing user's subscription_events_used count`);
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({ 
-            subscription_events_used: supabase.sql`subscription_events_used + 1`,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', userIdString);
-          
-        if (updateError) {
-          console.error('Error updating subscription_events_used:', updateError);
-        } else {
-          console.log(`[Event Service] Successfully incremented subscription_events_used for user ${userIdString}`);
-        }
-        
-        // Even if Supabase succeeds, we still need to update Firebase for consistency
-        // This ensures the UI updates correctly when using Firebase data
-        console.log(`[Event Service] Updating Firebase to match Supabase`);
-        
-        try {
-          // Add registration to Firebase
-          const firebaseRegistration = await addDoc(collection(db, 'registrations'), {
-            userId: userIdString,
-            eventId,
-            registeredAt: serverTimestamp(),
-          });
-          console.log(`[Event Service] Firebase registration created with ID: ${firebaseRegistration.id}`);
-          
-          // Update event participant count in Firebase
-          const eventRef = doc(db, 'events', eventId);
-          await updateDoc(eventRef, {
-            currentParticipants: increment(1),
-          });
-          console.log(`[Event Service] Updated event participant count in Firebase`);
-        } catch (firebaseError) {
-          console.error('Error updating Firebase after Supabase success:', firebaseError);
-          // Continue even if Firebase update fails - Supabase is now primary
-        }
+      if (supabaseError) {
+        console.error('Error registering in Supabase:', supabaseError);
+        throw new Error(`Error registering in Supabase: ${supabaseError.message}`);
       }
+      
+      // Add registration to Firebase
+      const firebaseRegistration = await addDoc(collection(db, 'registrations'), {
+        userId: userIdString,
+        eventId,
+        registeredAt: serverTimestamp(),
+      });
+
+      // Update event participant count in Firebase
+      const eventRef = doc(db, 'events', eventId);
+      await updateDoc(eventRef, {
+        currentParticipants: increment(1),
+      });
+      
+      console.log("Registration successful in both Supabase and Firebase");
     } catch (error) {
       console.error('Error registering for event:', error);
       throw error;
@@ -185,9 +144,11 @@ export const eventService = {
 
   async getUserRegistrations(userId: string): Promise<EventRegistration[]> {
     try {
+      // Ensure userId is a string
+      const userIdString = userId.toString();
+      
       // Try to get registrations from Supabase first
       console.log(`[Event Service] Getting registrations for user ${userId} from Supabase`);
-      const userIdString = userId.toString();
       
       const { data: supabaseRegistrations, error } = await supabase
         .from('registrations')
@@ -210,7 +171,7 @@ export const eventService = {
       // Fall back to Firebase if Supabase fails or returns no data
       const q = query(
         collection(db, 'registrations'), 
-        where('userId', '==', userId)
+        where('userId', '==', userIdString)
       );
       const querySnapshot = await getDocs(q);
       const firebaseRegistrations = querySnapshot.docs.map(doc => {
@@ -232,13 +193,16 @@ export const eventService = {
 
   async getEventRegistrations(eventId: string): Promise<EventRegistration[]> {
     try {
+      // Ensure eventId is a string for Supabase query
+      const eventIdString = eventId.toString();
+      
       // Try to get registrations from Supabase first
       console.log(`[Event Service] Getting registrations for event ${eventId} from Supabase`);
       
       const { data: supabaseRegistrations, error } = await supabase
         .from('registrations')
         .select('*')
-        .eq('event_id', eventId);
+        .eq('event_id', eventIdString);
         
       if (!error && supabaseRegistrations && supabaseRegistrations.length > 0) {
         console.log(`[Event Service] Found ${supabaseRegistrations.length} registrations in Supabase`);
