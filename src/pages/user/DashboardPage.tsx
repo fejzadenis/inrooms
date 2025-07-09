@@ -125,7 +125,7 @@ export function DashboardPage() {
   const handleRegister = async (eventId: string) => {
     if (!user) return;
 
-    console.log("DASHBOARD DEBUG: Registering for event", eventId, "User ID:", user.id, "Type:", typeof user.id);
+    console.log("DASHBOARD DEBUG: Registering for event", eventId, "User ID:", user.id);
     
     // Get latest subscription data from Supabase
     const userIdString = user.id.toString();
@@ -162,8 +162,6 @@ export function DashboardPage() {
     
     console.log("DASHBOARD DEBUG: Current usage:", eventsUsed, "/", eventsQuota);
     
-    console.log("DASHBOARD DEBUG: Current usage:", eventsUsed, "/", eventsQuota);
-    
     if (eventsUsed >= eventsQuota) {
       toast.error('You have reached your event quota. Please upgrade your subscription.');
       return;
@@ -172,9 +170,10 @@ export function DashboardPage() {
     const event = upcomingEvents.find(e => e.id === eventId);
     if (!event) return;
 
-    console.log("DASHBOARD DEBUG: Found event:", event.title, "ID:", eventId);
+    console.log("DASHBOARD DEBUG: Registering for event:", event.title, "ID:", eventId);
 
     try {
+      // Register for the event - this will update the user's subscription_events_used count
       await eventService.registerForEvent(user.id, eventId);
       
       // Generate calendar event
@@ -205,7 +204,7 @@ export function DashboardPage() {
       await loadDashboardData(); // Reload to update counts
       toast.success('Successfully registered! Calendar invite downloaded.');
     } catch (error: any) {
-      console.error('Failed to register for event:', error, error.stack);
+      console.error('Failed to register for event:', error);
       toast.error(`Failed to register for event: ${error.message || 'Please try again.'}`);
     }
   };

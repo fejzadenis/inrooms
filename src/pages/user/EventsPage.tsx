@@ -127,7 +127,7 @@ export function EventsPage() {
     }
 
     console.log("EVENTS DEBUG: Starting registration process for event", eventId);
-    console.log("EVENTS DEBUG: User ID:", user.id, "Type:", typeof user.id);
+    console.log("EVENTS DEBUG: User ID:", user.id);
 
     // Get latest subscription data from Supabase
     console.log("EVENTS DEBUG: Checking subscription data before registration for user", user.id);
@@ -181,6 +181,7 @@ export function EventsPage() {
     console.log("EVENTS DEBUG: Registering for event:", event.title, "ID:", eventId);
     
     try {
+      // Register for the event - this will update the user's subscription_events_used count
       await eventService.registerForEvent(user.id, eventId);
       
       // Generate calendar event
@@ -211,7 +212,7 @@ export function EventsPage() {
       await loadEvents(); // Reload to update counts
       toast.success('Successfully registered! Calendar invite downloaded.');
     } catch (error: any) {
-      console.error('Failed to register for event:', error, error.stack);
+      console.error('Failed to register for event:', error);
       toast.error(`Failed to register for event: ${error.message || 'Please try again.'}`);
     }
   };
