@@ -154,25 +154,18 @@ export function DashboardPage() {
       userData = result.data;
       userError = result.error;
       
-      console.log("DASHBOARD DEBUG: Direct query result:", userData, userError);
-    }
-      
-    const eventsUsed = userData?.subscription_events_used || user.subscription.eventsUsed;
-    const eventsQuota = userData?.subscription_events_quota || user.subscription.eventsQuota;
-    
-    console.log("DASHBOARD DEBUG: Current usage:", eventsUsed, "/", eventsQuota);
-    
-    if (eventsUsed >= eventsQuota) {
-      toast.error('You have reached your event quota. Please upgrade your subscription.');
-      return;
-    }
-
-    const event = upcomingEvents.find(e => e.id === eventId);
-    if (!event) return;
 
     console.log("DASHBOARD DEBUG: Registering for event:", event.title, "ID:", eventId);
 
     try {
+      // Check if user can register
+      const eligibility = await eventService.canRegisterForEvent(user.id, eventId);
+      if (!eligibility.success) {
+        toast.error(eligibility.message || 'You cannot register for this event');
+        return;
+      }
+      
+      // Register for the event
       // Register for the event - this will update the user's subscription_events_used count
       await eventService.registerForEvent(user.id, eventId);
       
@@ -204,8 +197,9 @@ export function DashboardPage() {
       await loadDashboardData(); // Reload to update counts
       toast.success('Successfully registered! Calendar invite downloaded.');
     } catch (error: any) {
-      console.error('Failed to register for event:', error);
-      toast.error(`Failed to register for event: ${error.message || 'Please try again.'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Failed to register for event:', errorMessage);
+      toast.error(`Failed to register for event: ${errorMessage}`);
     }
   };
 

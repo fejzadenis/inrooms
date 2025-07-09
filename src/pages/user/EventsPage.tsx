@@ -126,25 +126,18 @@ export function EventsPage() {
       return;
     }
 
-    console.log("EVENTS DEBUG: Starting registration process for event", eventId);
-    console.log("EVENTS DEBUG: User ID:", user.id);
-
-    // Get latest subscription data from Supabase
-    console.log("EVENTS DEBUG: Checking subscription data before registration for user", user.id);
-    const userIdString = user.id.toString();
-    
-    // Try using the RPC function first
-    const { data: rpcData, error: rpcError } = await supabase
-      .rpc('get_user_subscription', { user_id: userIdString });
-    
-    let userData = null;
-    let userError = null;
-    
-    if (!rpcError && rpcData && rpcData.length > 0) {
       console.log("EVENTS DEBUG: RPC returned subscription data:", rpcData[0]);
       userData = rpcData[0];
     } else {
       // Fallback to direct query if RPC fails
+      // Check if user can register
+      const eligibility = await eventService.canRegisterForEvent(user.id, eventId);
+      if (!eligibility.success) {
+        toast.error(eligibility.message || 'You cannot register for this event');
+        return;
+      }
+      
+      // Register for the event
       console.log("EVENTS DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
       
     const { data: userData, error: userError } = await supabase
@@ -212,8 +205,9 @@ export function EventsPage() {
       await loadEvents(); // Reload to update counts
       toast.success('Successfully registered! Calendar invite downloaded.');
     } catch (error: any) {
-      console.error('Failed to register for event:', error);
-      toast.error(`Failed to register for event: ${error.message || 'Please try again.'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Failed to register for event:', errorMessage);
+      toast.error(`Failed to register for event: ${errorMessage}`);
     }
   };
 

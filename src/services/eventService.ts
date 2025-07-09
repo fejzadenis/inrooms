@@ -16,6 +16,11 @@ import {
 import { db } from '../config/firebase';
 import { supabase } from '../config/supabase';
 
+interface RegistrationResult {
+  success: boolean;
+  message?: string;
+}
+
 export interface Event {
   id?: string;
   title: string;
@@ -88,8 +93,9 @@ export const eventService = {
             new Date(data.date));
             
         return {
-          id: doc.id,
-          ...data,
+          id: doc.id as string,
+          userId: data.userId as string,
+          eventId: data.eventId as string,
           date: date,
           createdAt: data.createdAt?.toDate?.() || null,
           updatedAt: data.updatedAt?.toDate?.() || null,
@@ -112,28 +118,17 @@ export const eventService = {
       const { data, error } = await supabase
         .rpc('increment_user_event_usage', {
           user_id: userIdString,
-          event_id: eventIdString
+      // Call the RPC function to increment user event usage and event participants
+      const { data, error } = await supabase
+        .rpc('increment_user_event_usage', {
+          user_id: userId,
+          event_id: eventId
         });
-
-      if (error) {
-        console.error('Error incrementing user event usage in Supabase:', error);
-        throw new Error(`Error updating subscription usage: ${error.message}`);
-      }
       
-      // Add registration to Firebase
-      const firebaseRegistration = await addDoc(collection(db, 'registrations'), {
-        userId: userIdString,
-        eventId: eventIdString,
-        registeredAt: serverTimestamp(),
-      });
-
-      // Update event participant count in Firebase  
-      const eventRef = doc(db, 'events', eventIdString);
-      await updateDoc(eventRef, {
+      if (error || !data) {
+        console.error('Error updating event usage:', error);
+        throw new Error(`Error updating event usage: ${error?.message || 'Unknown error'}`);
         currentParticipants: increment(1),
-      });
-
-      console.log("Registration successful - updated user quota and event participants");
     } catch (error) {
       console.error('Error registering for event:', error);
       throw error;
@@ -142,23 +137,7 @@ export const eventService = {
 
   async getUserRegistrations(userId: string): Promise<EventRegistration[]> {
     try {
-      // Ensure userId is a string
-      // We're now only using Firebase for registrations
-      console.log(`[Event Service] Getting registrations for user ${userId} from Firebase`);
-      const q = query(
-        collection(db, 'registrations'), 
-        where('userId', '==', userId.toString())
-      );
-      const querySnapshot = await getDocs(q);
-      const firebaseRegistrations = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          registeredAt: data.registeredAt?.toDate?.() || new Date(),
-        };
-      }) as EventRegistration[];
-      
+      // Get registrations from Firebase
       console.log(`[Event Service] Found ${firebaseRegistrations.length} registrations in Firebase`);
       return firebaseRegistrations;
     } catch (error) {
@@ -169,28 +148,73 @@ export const eventService = {
 
   async getEventRegistrations(eventId: string): Promise<EventRegistration[]> {
     try {
-      // Ensure eventId is a string for Supabase query
-      // We're now only using Firebase for registrations
-      console.log(`[Event Service] Getting registrations for event ${eventId} from Firebase`);
-      const q = query(
-        collection(db, 'registrations'), 
-        where('eventId', '==', eventId.toString())
-      );
-      const querySnapshot = await getDocs(q);
-      const firebaseRegistrations = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          registeredAt: data.registeredAt?.toDate?.() || new Date(),
-        };
-      }) as EventRegistration[];
-      
+      // Get registrations from Firebase
       console.log(`[Event Service] Found ${firebaseRegistrations.length} registrations in Firebase`);
       return firebaseRegistrations;
     } catch (error) {
       console.error('Error getting event registrations:', error);
       throw error;
+    }
+  }
+
+  // Check if user can register for an event
+  async canRegisterForEvent(userId: string, eventId: string): Promise<RegistrationResult> {
+    try {
+      const { data, error } = await supabase
+        .rpc('can_register_for_event', {
+          user_id: userId,
+          event_id: eventId
+        });
+      
+      if (error) {
+        console.error('Error checking registration eligibility:', error);
+        return { 
+          success: false, 
+          message: `Error checking registration eligibility: ${error.message}` 
+        };
+      }
+      
+      if (!data) {
+        // Get user's subscription data to determine the reason
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('subscription_status, subscription_events_quota, subscription_events_used')
+          .eq('id', userId)
+          .single();
+          
+        if (userError) {
+          return { success: false, message: 'Could not verify registration eligibility' };
+        }
+        
+        if (userData.subscription_events_used >= userData.subscription_events_quota) {
+          return { success: false, message: 'You have reached your event quota. Please upgrade your subscription.' };
+        }
+        
+        // Check if event is full
+        const { data: eventData, error: eventError } = await supabase
+          .from('events')
+          .select('max_participants, current_participants')
+          .eq('id', eventId)
+          .single();
+          
+        if (eventError) {
+          return { success: false, message: 'Could not verify event availability' };
+        }
+        
+        if (eventData.current_participants >= eventData.max_participants) {
+          return { success: false, message: 'This event is full' };
+        }
+        
+        return { success: false, message: 'You are not eligible to register for this event' };
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error checking registration eligibility:', error);
+      return { 
+        success: false, 
+        message: error instanceof Error ? error.message : 'Unknown error' 
+      };
     }
   }
 };
