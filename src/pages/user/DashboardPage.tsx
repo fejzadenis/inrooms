@@ -34,10 +34,30 @@ export function DashboardPage() {
       
       // Fetch latest subscription data from Supabase
       console.log("DASHBOARD DEBUG: Fetching subscription data from Supabase for user", user.id);
+      const userIdString = user.id.toString();
+      
+      // Try using the RPC function first
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_user_subscription', { user_id: userIdString });
+      
+      if (!rpcError && rpcData && rpcData.length > 0) {
+        console.log("DASHBOARD DEBUG: RPC returned subscription data:", rpcData[0]);
+        const subscriptionData = rpcData[0];
+        
+        setSubscriptionData({
+          status: subscriptionData.subscription_status || 'inactive',
+          eventsQuota: subscriptionData.subscription_events_quota || 0,
+          eventsUsed: subscriptionData.subscription_events_used || 0,
+          trialEndsAt: subscriptionData.subscription_trial_ends_at ? new Date(subscriptionData.subscription_trial_ends_at) : undefined
+        });
+      } else {
+        // Fallback to direct query if RPC fails
+        console.log("DASHBOARD DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
+        
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at')
-        .eq('id', user.id.toString())
+        .eq('id', userIdString)
         .maybeSingle();
         
       if (!userError && userData) {
@@ -51,6 +71,7 @@ export function DashboardPage() {
         });
       } else {
         console.log("DASHBOARD DEBUG: Error or no data from Supabase:", userError);
+      }
       }
       
       // Load user's registered events
@@ -154,9 +175,11 @@ export function DashboardPage() {
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Events Remaining</span>
               <span className="text-lg font-medium text-gray-900">
-                {subscriptionData 
-                  ? `${subscriptionData.eventsQuota - subscriptionData.eventsUsed} / ${subscriptionData.eventsQuota}`
-                  : `${user?.subscription.eventsQuota - user?.subscription.eventsUsed} / ${user?.subscription.eventsQuota}`
+                {subscriptionData
+                  ? `${Math.max(0, subscriptionData.eventsQuota - subscriptionData.eventsUsed)} / ${subscriptionData.eventsQuota}`
+                  : user?.subscription
+                    ? `${Math.max(0, user.subscription.eventsQuota - user.subscription.eventsUsed)} / ${user.subscription.eventsQuota}`
+                    : '0 / 0'
                 }
               </span>
             </div>
@@ -164,14 +187,16 @@ export function DashboardPage() {
               <div
                 className="bg-indigo-600 h-2 rounded-full"
                 style={{
-                  width: `${subscriptionData 
-                    ? (subscriptionData.eventsQuota > 0 
-                        ? (subscriptionData.eventsUsed / subscriptionData.eventsQuota) * 100 
-                        : 0)
-                    : (user?.subscription.eventsQuota > 0 
-                        ? (user?.subscription.eventsUsed / user?.subscription.eventsQuota) * 100 
-                        : 0)
-                  }%`,
+                  width: `${(() => {
+                    // Calculate percentage with safety checks
+                    if (subscriptionData && subscriptionData.eventsQuota > 0) {
+                      return Math.min(100, (subscriptionData.eventsUsed / subscriptionData.eventsQuota) * 100);
+                    } else if (user?.subscription && user.subscription.eventsQuota > 0) {
+                      return Math.min(100, (user.subscription.eventsUsed / user.subscription.eventsQuota) * 100);
+                    } else {
+                      return 0;
+                    }
+                  })()}%`,
                 }}
               />
             </div>

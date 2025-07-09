@@ -303,32 +303,30 @@ export const stripeService = {
     metadata?: Record<string, string>;
   }): Promise<{ sessionId: string; url: string }> {
     try {
-      console.log('Creating checkout session with data:', data);
-      console.log('User ID:', data.userId);
-      console.log('User Email:', data.userEmail);
-      console.log('Price ID:', data.priceId);
-      console.log('Success URL:', data.successUrl);
-      console.log('Cancel URL:', data.cancelUrl);
+      console.log('[Stripe Service] Creating checkout session with data:', {
+        userId: data.userId,
+        userEmail: data.userEmail,
+        priceId: data.priceId,
+        successUrl: data.successUrl,
+        cancelUrl: data.cancelUrl,
+        metadata: data.metadata
+      });
       
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
       if (!supabaseUrl || !supabaseAnonKey) {
-        console.error('Supabase configuration missing');
+        console.error('[Stripe Service] Supabase configuration missing');
         throw new Error('Supabase configuration is missing');
       }
 
-      console.log('Supabase URL:', supabaseUrl);
-      console.log('Supabase Anon Key:', supabaseAnonKey ? 'Present (not shown)' : 'Missing');
-      console.log('Making request to:', `${supabaseUrl}/functions/v1/create-checkout-session`);
+      console.log('[Stripe Service] Making request to:', `${supabaseUrl}/functions/v1/create-checkout-session`);
       
-      // Log the request details
-      console.log('Request method:', 'POST');
-      console.log('Request headers:', {
-        'Authorization': 'Bearer [REDACTED]',
-        'Content-Type': 'application/json',
-      });
-      console.log('Request body:', JSON.stringify(data));
+      // Convert userId to string to ensure consistency
+      const requestData = {
+        ...data,
+        userId: data.userId.toString()
+      };
       
       const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {
         method: 'POST',
@@ -336,55 +334,54 @@ export const stripeService = {
           'Authorization': `Bearer ${supabaseAnonKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(requestData),
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries([...response.headers.entries()]));
+      console.log('[Stripe Service] Response status:', response.status);
       
       if (!response.ok) {
-        console.error('Response not OK');
+        console.error('[Stripe Service] Response not OK');
         try {
           const errorText = await response.text();
-          console.error('Error response text:', errorText);
+          console.error('[Stripe Service] Error response text:', errorText);
           
           try {
             const errorData = JSON.parse(errorText);
-            console.error('Parsed error data:', errorData);
+            console.error('[Stripe Service] Parsed error data:', errorData);
             throw new Error(errorData.error || 'Failed to create checkout session');
           } catch (parseError) {
-            console.error('Error parsing error response:', parseError);
+            console.error('[Stripe Service] Error parsing error response:', parseError);
             throw new Error(`Failed to create checkout session: ${errorText}`);
           }
         } catch (textError) {
-          console.error('Error getting response text:', textError);
+          console.error('[Stripe Service] Error getting response text:', textError);
           throw new Error(`Failed to create checkout session: ${response.status} ${response.statusText}`);
         }
       }
 
       try {
         const responseText = await response.text();
-        console.log('Response text:', responseText);
+        console.log('[Stripe Service] Response text:', responseText);
         
         try {
           const result = JSON.parse(responseText);
-          console.log('Checkout session created:', result);
+          console.log('[Stripe Service] Checkout session created:', result);
           return { 
             sessionId: result.sessionId || '',
             url: result.url || '' 
           };
         } catch (parseError) {
-          console.error('Error parsing JSON response:', parseError);
+          console.error('[Stripe Service] Error parsing JSON response:', parseError);
           throw new Error('Invalid response format');
         }
       } catch (textError) {
-        console.error('Error getting response text:', textError);
+        console.error('[Stripe Service] Error getting response text:', textError);
         throw new Error('Failed to read response');
       }
     } catch (error) {
-      console.error('Error creating checkout session:', error);
-      console.error('Error details:', error instanceof Error ? error.message : String(error));
-      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error('[Stripe Service] Error creating checkout session:', error);
+      console.error('[Stripe Service] Error details:', error instanceof Error ? error.message : String(error));
+      console.error('[Stripe Service] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       throw error;
     }
   },
@@ -603,7 +600,7 @@ export const stripeService = {
   // Start a free trial
   async startFreeTrial(userId: string, updateSupabase: boolean = false): Promise<void> {
     try {
-      console.log('Starting free trial for user:', userId);
+      console.log('[Stripe Service] Starting free trial for user:', userId);
       
       const userRef = doc(db, 'users', userId);
       
@@ -611,7 +608,7 @@ export const stripeService = {
       const trialEndsAt = new Date();
       trialEndsAt.setDate(trialEndsAt.getDate() + 7);
 
-      console.log(`Setting trial data for user ${userId} in Firestore`);
+      console.log(`[Stripe Service] Setting trial data for user ${userId} in Firestore`);
       
       // Update subscription in Firestore
       await updateDoc(userRef, {
@@ -622,26 +619,32 @@ export const stripeService = {
         'updatedAt': serverTimestamp()
       });
       
-      console.log('Updated Firestore with trial subscription data');
+      console.log('[Stripe Service] Updated Firestore with trial subscription data');
 
       // Also update Supabase if requested
       if (updateSupabase) {
-        console.log(`Setting trial data for user ${userId} in Supabase`);
-        const { error } = await supabase
-          .from('users')
-          .update({
-            subscription_status: 'trial',
-            subscription_events_quota: 2,
-            subscription_events_used: 0,
-            subscription_trial_ends_at: trialEndsAt.toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', userId.toString());
+        try {
+          console.log(`[Stripe Service] Setting trial data for user ${userId} in Supabase`);
+          const userIdString = userId.toString();
           
-        if (error) {
-          console.error('Error updating Supabase with trial data:', error);
-        } else {
-          console.log('Updated Supabase with trial subscription data');
+          const { error } = await supabase
+            .from('users')
+            .update({
+              subscription_status: 'trial',
+              subscription_events_quota: 2,
+              subscription_events_used: 0,
+              subscription_trial_ends_at: trialEndsAt.toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', userIdString);
+            
+          if (error) {
+            console.error('[Stripe Service] Error updating Supabase with trial data:', error);
+          } else {
+            console.log('[Stripe Service] Updated Supabase with trial subscription data');
+          }
+        } catch (supabaseError) {
+          console.error('[Stripe Service] Exception updating Supabase with trial data:', supabaseError);
         }
       }
 

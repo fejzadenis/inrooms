@@ -44,64 +44,93 @@ export function BillingPage() {
   }, [user]);
 
   // Fetch latest subscription data from Supabase
- const fetchLatestSubscriptionData = async () => {
-  if (!user) {
-    console.warn('[Subscription] No user found — aborting fetch.');
-    return;
-  }
-
-  setRefreshingData(true);
-  console.debug('[Subscription] Fetching subscription data for user:', user.id);
-
-  try {
-
-    console.log('[Subscription] user.id:', JSON.stringify(user.id));
-    
-    const userIdText = String(user.id);  // Convert UUID to string
-    
-    const { data: userData, error } = await supabase
-      .from('users')
-      .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at, stripe_subscription_status, stripe_current_period_end')
-      .eq('id', userIdText)
-      .maybeSingle();
-    
-    console.debug('[Subscription] Query result:', { userData, error });
-
-    if (error) {
-      console.error('[Subscription] Supabase error:', error);
+  const fetchLatestSubscriptionData = async () => {
+    if (!user) {
+      console.warn('[Subscription] No user found — aborting fetch.');
+      return;
     }
 
-    if (userData) {
-      console.info('[Subscription] Supabase user data:', userData);
+    setRefreshingData(true);
+    console.debug('[Subscription] Fetching subscription data for user:', user.id);
 
-      setSubscriptionData({
-        status: userData.subscription_status || 'inactive',
-        eventsQuota: userData.subscription_events_quota || 0,
-        eventsUsed: userData.subscription_events_used || 0,
-        trialEndsAt: userData.subscription_trial_ends_at ? new Date(userData.subscription_trial_ends_at) : undefined,
-        stripeSubscriptionStatus: userData.stripe_subscription_status,
-        stripeCurrentPeriodEnd: userData.stripe_current_period_end ? new Date(userData.stripe_current_period_end) : undefined
-      });
-    } else {
-      console.warn('[Subscription] No data returned for user in Supabase (null or empty).');
-
-      if (user.subscription) {
-        console.info('[Subscription] Falling back to user.subscription object:', user.subscription);
+    try {
+      // Ensure user.id is a string
+      const userIdString = user.id.toString();
+      console.log('[Subscription] Using user ID:', userIdString);
+      
+      // Use RPC function to get subscription data
+      const { data, error } = await supabase
+        .rpc('get_user_subscription', { user_id: userIdString });
+      
+      if (error) {
+        console.error('[Subscription] Error calling get_user_subscription RPC:', error);
+        
+        // Fallback to direct query if RPC fails
+        console.log('[Subscription] Falling back to direct query');
+        const { data: userData, error: queryError } = await supabase
+          .from('users')
+          .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at, stripe_subscription_status, stripe_current_period_end')
+          .eq('id', userIdString)
+          .maybeSingle();
+        
+        if (queryError) {
+          console.error('[Subscription] Fallback query error:', queryError);
+          throw queryError;
+        }
+        
+        if (userData) {
+          console.info('[Subscription] Fallback query returned data:', userData);
+          setSubscriptionData({
+            status: userData.subscription_status || 'inactive',
+            eventsQuota: userData.subscription_events_quota || 0,
+            eventsUsed: userData.subscription_events_used || 0,
+            trialEndsAt: userData.subscription_trial_ends_at ? new Date(userData.subscription_trial_ends_at) : undefined,
+            stripeSubscriptionStatus: userData.stripe_subscription_status,
+            stripeCurrentPeriodEnd: userData.stripe_current_period_end ? new Date(userData.stripe_current_period_end) : undefined
+          });
+        } else {
+          console.warn('[Subscription] No data returned from fallback query');
+          // Use data from user object as fallback
+          if (user.subscription) {
+            console.info('[Subscription] Using user.subscription as fallback:', user.subscription);
+            setSubscriptionData({
+              status: user.subscription.status,
+              eventsQuota: user.subscription.eventsQuota,
+              eventsUsed: user.subscription.eventsUsed
+            });
+          }
+        }
+      } else if (data && data.length > 0) {
+        // RPC returns an array with a single object
+        const subscriptionData = data[0];
+        console.info('[Subscription] RPC returned data:', subscriptionData);
+        
         setSubscriptionData({
-          status: user.subscription.status,
-          eventsQuota: user.subscription.eventsQuota,
-          eventsUsed: user.subscription.eventsUsed
+          status: subscriptionData.subscription_status || 'inactive',
+          eventsQuota: subscriptionData.subscription_events_quota || 0,
+          eventsUsed: subscriptionData.subscription_events_used || 0,
+          trialEndsAt: subscriptionData.subscription_trial_ends_at ? new Date(subscriptionData.subscription_trial_ends_at) : undefined,
+          stripeSubscriptionStatus: subscriptionData.stripe_subscription_status,
+          stripeCurrentPeriodEnd: subscriptionData.stripe_current_period_end ? new Date(subscriptionData.stripe_current_period_end) : undefined
         });
       } else {
-        console.warn('[Subscription] No fallback subscription data available on user object.');
+        console.warn('[Subscription] RPC returned no data');
+        // Use data from user object as fallback
+        if (user.subscription) {
+          console.info('[Subscription] Using user.subscription as fallback:', user.subscription);
+          setSubscriptionData({
+            status: user.subscription.status,
+            eventsQuota: user.subscription.eventsQuota,
+            eventsUsed: user.subscription.eventsUsed
+          });
+        }
       }
+    } catch (err) {
+      console.error('[Subscription] Exception occurred while fetching subscription data:', err);
+    } finally {
+      setRefreshingData(false);
     }
-  } catch (err) {
-    console.error('[Subscription] Exception occurred while fetching subscription data:', err);
-  } finally {
-    setRefreshingData(false);
-  }
-};
+  };
 
   
   React.useEffect(() => {
@@ -130,9 +159,21 @@ export function BillingPage() {
 
   const currentPlan = React.useMemo(() => {
     if (!user?.subscription) return null;
-    return stripeService.getMonthlyPlans().find(plan => 
-      plan.eventsQuota === (subscriptionData?.eventsQuota || user.subscription.eventsQuota)
-    ) || stripeService.getMonthlyPlans()[0];
+    
+    // Get the events quota from subscription data or user object
+    const eventsQuota = subscriptionData?.eventsQuota || user.subscription.eventsQuota;
+    console.log('[Subscription] Looking for plan with events quota:', eventsQuota);
+    
+    // Find the plan that matches the events quota
+    const matchingPlan = stripeService.getMonthlyPlans().find(plan => plan.eventsQuota === eventsQuota);
+    
+    if (matchingPlan) {
+      console.log('[Subscription] Found matching plan:', matchingPlan.name);
+      return matchingPlan;
+    } else {
+      console.log('[Subscription] No matching plan found, using default');
+      return stripeService.getMonthlyPlans()[0];
+    }
   }, [user, subscriptionData]);
 
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
@@ -392,11 +433,11 @@ export function BillingPage() {
                 <h3 className="text-sm font-medium text-gray-500">Status</h3>
                 <div className="flex items-center mt-1">
                   <div className={`w-2 h-2 rounded-full mr-2 ${
-                    (subscriptionData?.status || user.subscription.status) === 'active' ? 'bg-green-500' :
-                    (subscriptionData?.status || user.subscription.status) === 'trial' ? 'bg-blue-500' : 'bg-gray-500'
+                    (subscriptionData?.status || user?.subscription?.status || 'inactive') === 'active' ? 'bg-green-500' :
+                    (subscriptionData?.status || user?.subscription?.status || 'inactive') === 'trial' ? 'bg-blue-500' : 'bg-gray-500'
                   }`} />
                   <p className="text-lg font-semibold text-gray-900 capitalize">
-                    {subscriptionData?.status || user.subscription.status}
+                    {subscriptionData?.status || user?.subscription?.status || 'inactive'}
                   </p>
                 </div>
                 {subscriptionData?.trialEndsAt && subscriptionData.status === 'trial' && (
@@ -414,22 +455,26 @@ export function BillingPage() {
                 <h3 className="text-sm font-medium text-gray-500">Events Remaining</h3>
                 <p className="text-lg font-semibold text-gray-900">
                   {subscriptionData 
-                    ? `${subscriptionData.eventsQuota - subscriptionData.eventsUsed} / ${subscriptionData.eventsQuota}`
-                    : `${user.subscription.eventsQuota - user.subscription.eventsUsed} / ${user.subscription.eventsQuota}`
+                    ? `${Math.max(0, subscriptionData.eventsQuota - subscriptionData.eventsUsed)} / ${subscriptionData.eventsQuota}`
+                    : user?.subscription 
+                      ? `${Math.max(0, user.subscription.eventsQuota - user.subscription.eventsUsed)} / ${user.subscription.eventsQuota}`
+                      : '0 / 0'
                   }
                 </p>
                 <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                   <div
                     className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
                     style={{
-                      width: `${subscriptionData 
-                        ? (subscriptionData.eventsQuota > 0 
-                            ? (subscriptionData.eventsUsed / subscriptionData.eventsQuota) * 100 
-                            : 0)
-                        : (user.subscription.eventsQuota > 0 
-                            ? (user.subscription.eventsUsed / user.subscription.eventsQuota) * 100 
-                            : 0)
-                      }%`,
+                      width: `${(() => {
+                        // Calculate percentage with safety checks
+                        if (subscriptionData && subscriptionData.eventsQuota > 0) {
+                          return Math.min(100, (subscriptionData.eventsUsed / subscriptionData.eventsQuota) * 100);
+                        } else if (user?.subscription && user.subscription.eventsQuota > 0) {
+                          return Math.min(100, (user.subscription.eventsUsed / user.subscription.eventsQuota) * 100);
+                        } else {
+                          return 0;
+                        }
+                      })()}%`,
                     }}
                   />
                 </div>
@@ -437,11 +482,11 @@ export function BillingPage() {
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-gray-500">Monthly Value</h3>
                 <p className="text-lg font-semibold text-green-600">
-                  ${currentPlan?.price || 0}
+                  ${currentPlan?.price || '0'}
                 </p>
                 <div className="flex items-center text-sm text-green-600 mt-1">
                   <TrendingUp className="w-4 h-4 mr-1" />
-                  <span>ROI: {currentPlan ? Math.round(10000 / currentPlan.price) : 0}x</span>
+                  <span>ROI: {currentPlan && currentPlan.price > 0 ? Math.round(10000 / currentPlan.price) : 0}x</span>
                 </div>
               </div>
             </div>
@@ -641,7 +686,7 @@ export function BillingPage() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
             <div className="flex items-start">
               <div className="flex-shrink-0">
-                <AlertCircle className="w-5 h-5 text-blue-600" />
+                <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
               </div>
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-blue-800">Get Started</h3>
@@ -665,7 +710,7 @@ export function BillingPage() {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
           <div className="flex items-start">
             <div className="flex-shrink-0">
-              <AlertCircle className="w-5 h-5 text-blue-600" />
+              <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-blue-800">Billing Information</h3>
@@ -685,9 +730,9 @@ export function BillingPage() {
         </div>
       </div>
 
-      <CustomQuoteModal 
-        isOpen={isQuoteModalOpen} 
-        onClose={() => setIsQuoteModalOpen(false)} 
+      <CustomQuoteModal
+        isOpen={isQuoteModalOpen}
+        onClose={() => setIsQuoteModalOpen(false)}
       />
     </MainLayout>
   );

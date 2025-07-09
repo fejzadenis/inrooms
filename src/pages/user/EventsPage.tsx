@@ -54,10 +54,29 @@ export function EventsPage() {
       // If user is logged in, fetch latest subscription data
       if (user) {
         console.log("EVENTS DEBUG: Fetching subscription data from Supabase for user", user.id);
+        const userIdString = user.id.toString();
+        
+        // Try using the RPC function first
+        const { data: rpcData, error: rpcError } = await supabase
+          .rpc('get_user_subscription', { user_id: userIdString });
+        
+        if (!rpcError && rpcData && rpcData.length > 0) {
+          console.log("EVENTS DEBUG: RPC returned subscription data:", rpcData[0]);
+          const subscriptionData = rpcData[0];
+          
+          setSubscriptionData({
+            status: subscriptionData.subscription_status || 'inactive',
+            eventsQuota: subscriptionData.subscription_events_quota || 0,
+            eventsUsed: subscriptionData.subscription_events_used || 0
+          });
+        } else {
+          // Fallback to direct query if RPC fails
+          console.log("EVENTS DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
+          
         const { data: userData, error: userError } = await supabase
           .from('users')
           .select('subscription_status, subscription_events_quota, subscription_events_used')
-          .eq('id', user.id.toString())
+          .eq('id', userIdString)
           .maybeSingle();
           
         if (!userError && userData) {
@@ -69,6 +88,7 @@ export function EventsPage() {
           });
         } else {
           console.log("EVENTS DEBUG: Error or no data from Supabase:", userError);
+        }
         }
       }
       
@@ -107,12 +127,29 @@ export function EventsPage() {
     }
 
     // Get latest subscription data from Supabase
-    console.log("EVENTS DEBUG: Checking subscription data before registration");
+    console.log("EVENTS DEBUG: Checking subscription data before registration for user", user.id);
+    const userIdString = user.id.toString();
+    
+    // Try using the RPC function first
+    const { data: rpcData, error: rpcError } = await supabase
+      .rpc('get_user_subscription', { user_id: userIdString });
+    
+    let userData = null;
+    let userError = null;
+    
+    if (!rpcError && rpcData && rpcData.length > 0) {
+      console.log("EVENTS DEBUG: RPC returned subscription data:", rpcData[0]);
+      userData = rpcData[0];
+    } else {
+      // Fallback to direct query if RPC fails
+      console.log("EVENTS DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
+      
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('subscription_status, subscription_events_quota, subscription_events_used')
-      .eq('id', user.id.toString())
+      .eq('id', userIdString)
       .maybeSingle();
+    }
       
     // Update subscription data state
     if (!userError && userData) {
@@ -138,6 +175,8 @@ export function EventsPage() {
     const event = events.find(e => e.id === eventId);
     if (!event) return;
 
+    console.log("EVENTS DEBUG: Registering for event:", event.title);
+    
     try {
       await eventService.registerForEvent(user.id, eventId);
       
@@ -223,11 +262,13 @@ export function EventsPage() {
           <div className="bg-indigo-50 rounded-lg p-4" data-tour="events-quota">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-medium text-indigo-900">Your Event Quota (from Supabase)</h3>
+                <h3 className="text-sm font-medium text-indigo-900">Your Event Quota</h3>
                 <p className="text-sm text-indigo-700">
                   {subscriptionData 
-                    ? `${subscriptionData.eventsQuota - subscriptionData.eventsUsed} events remaining this month`
-                    : `${(user?.subscription.eventsQuota || 0) - (user?.subscription.eventsUsed || 0)} events remaining this month`
+                    ? `${Math.max(0, subscriptionData.eventsQuota - subscriptionData.eventsUsed)} events remaining this month`
+                    : user?.subscription
+                      ? `${Math.max(0, user.subscription.eventsQuota - user.subscription.eventsUsed)} events remaining this month`
+                      : '0 events remaining this month'
                   }
                 </p>
               </div>
@@ -235,7 +276,9 @@ export function EventsPage() {
                 <div className="text-lg font-semibold text-indigo-900">
                   {subscriptionData 
                     ? `${subscriptionData.eventsUsed} / ${subscriptionData.eventsQuota}`
-                    : `${user?.subscription.eventsUsed || 0} / ${user?.subscription.eventsQuota || 0}`
+                    : user?.subscription
+                      ? `${user.subscription.eventsUsed || 0} / ${user.subscription.eventsQuota || 0}`
+                      : '0 / 0'
                   }
                 </div>
                 <div className="text-sm text-indigo-600">Events Used</div>
