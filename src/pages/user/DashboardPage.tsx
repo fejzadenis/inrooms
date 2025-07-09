@@ -115,8 +115,9 @@ export function DashboardPage() {
       const upcoming = allEvents.filter(event => event.date > new Date());
       setUpcomingEvents(upcoming);
     } catch (error) {
-      console.error('Failed to load dashboard data:', error);
-      toast.error('Failed to load dashboard data');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to register for event. Please try again.';
+      console.error('Failed to register for event:', errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -125,34 +126,16 @@ export function DashboardPage() {
   const handleRegister = async (eventId: string) => {
     if (!user) return;
 
-    // Check if user can register
-    const canRegister = await eventService.canRegisterForEvent(user.id, eventId);
-    if (!canRegister.success) {
-      toast.error(canRegister.message || 'You cannot register for this event');
-      return;
-    }
-    
-    if (!rpcError && rpcData && rpcData.length > 0) {
-      console.log("DASHBOARD DEBUG: RPC returned subscription data:", rpcData[0]);
-      userData = rpcData[0];
-    } else {
-      // Fallback to direct query if RPC fails
-      console.log("DASHBOARD DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
-      
-      const result = await supabase
-        .from('users')
-        .select('subscription_status, subscription_events_quota, subscription_events_used')
-        .eq('id', userIdString)
-        .maybeSingle();
-        
-      userData = result.data;
-      userError = result.error;
-    }
-      
     try {
       // Register for the event
       // Register for the event - this will update the user's subscription_events_used count
       // First check if user can register
+      // Check if user can register first
+      const canRegister = await eventService.canRegisterForEvent(user.id, eventId);
+      if (!canRegister) {
+        // The actual error will be thrown by registerForEvent
+      }
+      
       const eligibilityCheck = await eventService.canRegisterForEvent(user.id, eventId);
       
       if (!eligibilityCheck.success) {

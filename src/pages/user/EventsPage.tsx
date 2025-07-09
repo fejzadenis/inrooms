@@ -102,8 +102,9 @@ export function EventsPage() {
       });
       setEvents(upcomingEvents);
     } catch (error) {
-      console.error('Failed to load events:', error);
-      toast.error('Failed to load events');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to register for event. Please try again.';
+      console.error('Failed to register for event:', errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -119,34 +120,16 @@ export function EventsPage() {
       if (!event) {
         toast.error('Event not found');
         return;
-      }
-      // Check if user can register
-      const canRegister = await eventService.canRegisterForEvent(user.id, eventId);
-      if (!canRegister.success) {
-        toast.error(canRegister.message || 'You cannot register for this event');
-        return;
-      }
-      
-      // If eligible, proceed with registration
-      const result = await eventService.registerForEvent(user.id, eventId);
-      
-      if (!result.success) {
-        toast.error(result.message || 'Failed to register for event');
-        return;
-      }
-      
-      // Generate calendar event
-      try {
-        const icsFile = await generateCalendarEvent({
-          title: event.title,
-          description: event.description,
-          startTime: event.date,
-          duration: { hours: Math.floor(event.duration / 60), minutes: event.duration % 60 },
-          location: event.meetLink || 'Online Event',
         });
 
         // Create calendar download link
         const blob = new Blob([icsFile], { type: 'text/calendar' });
+      // Check if user can register first
+      const canRegister = await eventService.canRegisterForEvent(user.id, eventId);
+      if (!canRegister) {
+        // The actual error will be thrown by registerForEvent
+      }
+      
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
