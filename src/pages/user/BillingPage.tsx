@@ -56,11 +56,14 @@ export function BillingPage() {
   try {
 
     console.log('[Subscription] user.id:', JSON.stringify(user.id));
-
+    
+    const userIdText = String(user.id);  // Convert UUID to string
+    
     const { data, error } = await supabase
       .from('users')
       .select('*')
-      .eq('id', user.id);
+      .eq('id', userIdText);
+    
     console.debug('[Subscription] Fallback raw data:', data);
 
 
