@@ -292,7 +292,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
             throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is not set");
           }
           
-          const serviceAccount = JSON.parse(serviceAccountStr);
+          const serviceAccount = JSON.parse(atob(serviceAccountStr));
+
           
           initializeApp({
             credential: cert(serviceAccount)
