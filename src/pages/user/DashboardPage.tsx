@@ -28,13 +28,17 @@ export function DashboardPage() {
   const loadDashboardData = async () => {
     if (!user) return;
 
+    console.log("DASHBOARD DEBUG: Loading dashboard data for user", user.id, "type:", typeof user.id);
+    
     // Get latest subscription data from Supabase
     try {
       setLoading(true);
       
+      const userIdString = user.id.toString();
+      console.log("DASHBOARD DEBUG: Using user ID string:", userIdString);
+      
       // Fetch latest subscription data from Supabase
       console.log("DASHBOARD DEBUG: Fetching subscription data from Supabase for user", user.id);
-      const userIdString = user.id.toString();
       
       // Try using the RPC function first
       const { data: rpcData, error: rpcError } = await supabase
@@ -94,15 +98,42 @@ export function DashboardPage() {
   const handleRegister = async (eventId: string) => {
     if (!user) return;
 
+    console.log("DASHBOARD DEBUG: Registering for event", eventId);
+    
     // Get latest subscription data from Supabase
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('subscription_status, subscription_events_quota, subscription_events_used')
-      .eq('id', user.id)
-      .maybeSingle();
+    const userIdString = user.id.toString();
+    console.log("DASHBOARD DEBUG: Using user ID string:", userIdString);
+    
+    // Try using the RPC function first
+    const { data: rpcData, error: rpcError } = await supabase
+      .rpc('get_user_subscription', { user_id: userIdString });
+    
+    let userData = null;
+    let userError = null;
+    
+    if (!rpcError && rpcData && rpcData.length > 0) {
+      console.log("DASHBOARD DEBUG: RPC returned subscription data:", rpcData[0]);
+      userData = rpcData[0];
+    } else {
+      // Fallback to direct query if RPC fails
+      console.log("DASHBOARD DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
+      
+      const result = await supabase
+        .from('users')
+        .select('subscription_status, subscription_events_quota, subscription_events_used')
+        .eq('id', userIdString)
+        .maybeSingle();
+        
+      userData = result.data;
+      userError = result.error;
+      
+      console.log("DASHBOARD DEBUG: Direct query result:", userData, userError);
+    }
       
     const eventsUsed = userData?.subscription_events_used || user.subscription.eventsUsed;
     const eventsQuota = userData?.subscription_events_quota || user.subscription.eventsQuota;
+    
+    console.log("DASHBOARD DEBUG: Current usage:", eventsUsed, "/", eventsQuota);
     
     if (eventsUsed >= eventsQuota) {
       toast.error('You have reached your event quota. Please upgrade your subscription.');
