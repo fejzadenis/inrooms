@@ -56,16 +56,10 @@ export function BillingPage() {
   try {
     const { data, error } = await supabase
       .from('users')
-      .select(`
-        subscription_status,
-        subscription_events_quota,
-        subscription_events_used,
-        subscription_trial_ends_at,
-        stripe_subscription_status,
-        stripe_current_period_end
-      `)
-      .eq('id', user.id)
-      .maybeSingle();
+      .select('*')
+      .eq('id', user.id);
+    console.debug('[Subscription] Fallback raw data:', data);
+
 
     console.debug('[Subscription] Supabase query result:', { data, error });
 
