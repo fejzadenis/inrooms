@@ -102,8 +102,6 @@ export function DashboardPage() {
       } else {
         console.log("DASHBOARD DEBUG: Error or no data from Supabase:", userError);
       }
-      } else {
-        console.log("DASHBOARD DEBUG: Error or no data from Supabase:", userError);
       }
       }
       
@@ -137,29 +135,6 @@ export function DashboardPage() {
     
     // Try using the RPC function first
     const { data: rpcData, error: rpcError } = await supabase
-      .rpc('get_user_subscription', { user_id: userIdString });
-    
-    let userData = null;
-    let userError = null;
-    
-    if (!rpcError && rpcData && rpcData.length > 0) {
-      console.log("DASHBOARD DEBUG: RPC returned subscription data:", rpcData[0]);
-      userData = rpcData[0];
-    } else {
-      // Fallback to direct query if RPC fails
-      console.log("DASHBOARD DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
-      
-      const result = await supabase
-        .from('users')
-        .select('subscription_status, subscription_events_quota, subscription_events_used')
-        .eq('id', userIdString)
-        .maybeSingle();
-        
-      userData = result.data;
-      userError = result.error;
-      
-      console.log("DASHBOARD DEBUG: Direct query result:", userData, userError);
-    }
       .rpc('get_user_subscription', { user_id: userIdString });
     
     let userData = null;
@@ -264,8 +239,6 @@ export function DashboardPage() {
               <span className="text-lg font-medium text-gray-900">
                 {subscriptionData
                   ? `${Math.max(0, subscriptionData.eventsQuota - subscriptionData.eventsUsed)} / ${subscriptionData.eventsQuota}`
-                {subscriptionData
-                  ? `${Math.max(0, subscriptionData.eventsQuota - subscriptionData.eventsUsed)} / ${subscriptionData.eventsQuota}`
                   : user?.subscription
                     ? `${Math.max(0, user.subscription.eventsQuota - user.subscription.eventsUsed)} / ${user.subscription.eventsQuota}`
                     : '0 / 0'
@@ -285,9 +258,7 @@ export function DashboardPage() {
                     } else {
                       return 0;
                     }
-                  })()}%`,
-                    }
-                  })()}%`,
+                  })()}%`
                 }}
               />
             </div>
