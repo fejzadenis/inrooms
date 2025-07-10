@@ -37,6 +37,21 @@ export interface EventRegistration {
   registeredAt: Date;
 }
 
+const db = getFirestore();
+
+async function incrementEventParticipants(eventId: string) {
+  const eventRef = doc(db, "events", eventId);
+
+  try {
+    await updateDoc(eventRef, {
+      currentParticipants: increment(1)
+    });
+  } catch (error) {
+    console.error(`❌ Failed to update event participants in Firestore: ${error}`);
+    throw error;
+  }
+}
+
 export const eventService = {
   async createEvent(eventData: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
@@ -51,6 +66,8 @@ export const eventService = {
       throw error;
     }
   },
+
+  
 
   async updateEvent(eventId: string, eventData: Partial<Event>): Promise<void> {
     try {
@@ -138,6 +155,7 @@ export const eventService = {
     }
 
     // 3. Increment current_participants in events table
+    await incrementEventParticipants(eventId);
     const { error: updateEventError } = await supabase
       .from('events')
       .update({ current_participants: supabase.rpc('increment_by_one') })
