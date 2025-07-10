@@ -25,6 +25,7 @@ export function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
   const [verificationSuccess, setVerificationSuccess] = React.useState(false);
   const [loginInProgress, setLoginInProgress] = React.useState(false);
+  const [redirecting, setRedirecting] = React.useState(false);
   
   // Check for verification success from URL params
   React.useEffect(() => {
@@ -59,13 +60,14 @@ export function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       console.log("Login attempt started");
-      setLoginInProgress(true);
+     setLoginInProgress(true);
       
       const firebaseUser = await login(data.email, data.password);
       console.log("Login successful, user:", firebaseUser?.uid);
       
       // Check if user exists and has completed onboarding
       if (firebaseUser) {
+       setRedirecting(true);
         const userRef = doc(db, 'users', firebaseUser.uid);
         const userDoc = await getDoc(userRef);
         
@@ -94,6 +96,7 @@ export function LoginPage() {
       console.error("Login error:", error);
     } finally {
       setLoginInProgress(false);
+     setRedirecting(false);
     }
   };
 
@@ -106,6 +109,7 @@ export function LoginPage() {
       
       // Check if user exists and has completed onboarding
       if (firebaseUser) {
+       setRedirecting(true);
         const userRef = doc(db, 'users', firebaseUser.uid);
         const userDoc = await getDoc(userRef);
         
@@ -134,6 +138,7 @@ export function LoginPage() {
       console.error("Google login error:", error);
     } finally {
       setIsGoogleLoading(false);
+     setRedirecting(false);
     }
   };
 
@@ -250,7 +255,7 @@ export function LoginPage() {
                 <Button
                   type="submit"
                   className="w-full"
-                  isLoading={isSubmitting || loginInProgress}
+                 isLoading={isSubmitting || loginInProgress || redirecting}
                 >
                   Sign in
                 </Button>

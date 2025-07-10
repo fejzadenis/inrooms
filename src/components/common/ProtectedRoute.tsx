@@ -15,20 +15,16 @@ export function ProtectedRoute({
   const { user, loading } = useAuth();
   const location = useLocation();
   
-  // Add debug logging to help diagnose issues
-  React.useEffect(() => {
-    if (!loading) {
-      console.log("ProtectedRoute: Current path:", location.pathname);
-      console.log("ProtectedRoute: Auth state:", { 
-        isAuthenticated: !!user,
-        emailVerified: user?.emailVerified || user?.dbEmailVerified,
-        onboardingCompleted: user?.profile?.onboardingCompleted,
-        requireEmailVerification
-      });
-    }
-  }, [user, loading, location.pathname, requireEmailVerification]);
-  
-  // Removed debug logging for cleaner console output
+  // Debug logging for auth state
+  console.log("ROUTE DEBUG: ProtectedRoute check", {
+    path: location.pathname,
+    loading,
+    userExists: !!user,
+    emailVerified: user?.emailVerified,
+    dbEmailVerified: user?.dbEmailVerified,
+    onboardingCompleted: user?.profile?.onboardingCompleted,
+    requireEmailVerification
+  });
 
   // Show loading spinner while auth state is being resolved
   if (loading) {

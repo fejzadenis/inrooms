@@ -79,6 +79,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// Debug flag for auth issues
+const DEBUG_AUTH = true;
+
 // Cache for user data to prevent excessive Firestore reads
 const userDataCache = new Map<string, { data: User; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -209,15 +212,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       // Prevent multiple rapid calls during auth state changes
+      if (DEBUG_AUTH) console.log("AUTH DEBUG: Auth state changed", firebaseUser?.uid);
+      
       if (shouldRateLimit('authStateChange')) {
+        if (DEBUG_AUTH) console.log("AUTH DEBUG: Rate limited auth state change");
         return;
       }
 
       if (firebaseUser) {
         try {
+          if (DEBUG_AUTH) console.log("AUTH DEBUG: User authenticated", firebaseUser.uid);
+          
           // Check cache first
           const cachedData = getCachedUserData(firebaseUser.uid);
           if (cachedData && authStateInitialized) {
+            if (DEBUG_AUTH) console.log("AUTH DEBUG: Using cached user data");
             setUser(cachedData);
             setLoading(false);
             return;
@@ -225,6 +234,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           // Force reload from server to get latest emailVerified status
           try {
+            if (DEBUG_AUTH) console.log("AUTH DEBUG: Reloading user from Firebase");
             await firebaseUser.reload();
           } catch (reloadError) {
             console.warn('Failed to reload user, continuing with cached data:', reloadError);
@@ -234,14 +244,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const refreshedUser = auth.currentUser;
           
           if (!refreshedUser) {
+            if (DEBUG_AUTH) console.log("AUTH DEBUG: No refreshed user after reload");
             setUser(null);
             setLoading(false);
             return;
           }
 
+          if (DEBUG_AUTH) console.log("AUTH DEBUG: Getting user data from Firestore");
           const userData = await getUserData(refreshedUser);
           setCachedUserData(refreshedUser.uid, userData);
           setUser(userData);
+          if (DEBUG_AUTH) console.log("AUTH DEBUG: User data set", userData.id);
           
           // Sync user data to Supabase
           await syncUserToSupabase(userData);
@@ -250,15 +263,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // If we have cached data, use it as fallback
           const cachedData = getCachedUserData(firebaseUser.uid);
           if (cachedData) {
+            if (DEBUG_AUTH) console.log("AUTH DEBUG: Using cached data as fallback after error");
             setUser(cachedData);
           } else {
+            if (DEBUG_AUTH) console.log("AUTH DEBUG: No cached data available, setting user to null");
             setUser(null);
           }
         }
       } else {
+        if (DEBUG_AUTH) console.log("AUTH DEBUG: No Firebase user, setting user to null");
         setUser(null);
         userDataCache.clear(); // Clear cache on logout
       }
+      
+      if (DEBUG_AUTH) console.log("AUTH DEBUG: Auth state initialized, loading complete");
       setAuthStateInitialized(true);
       setLoading(false);
     });
