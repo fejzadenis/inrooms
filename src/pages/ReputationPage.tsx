@@ -19,7 +19,13 @@ import {
   Target,
   Activity,
   User,
-  Rocket
+  Rocket,
+  Lock,
+  TrendingUp,
+  Heart,
+  Brain,
+  Handshake,
+  Presentation
 } from 'lucide-react';
 import { Button } from '../components/common/Button';
 import { Link, useParams } from 'react-router-dom';
@@ -39,6 +45,280 @@ const loadUserData = async (
   setReputationScore: (score: number) => void,
   setEndorsements: (endorsements: any[]) => void
 ) => {
+  const calculateReputationScore = (userData: any, contributions: any[]) => {
+    // Base score from profile points
+    let score = userData?.profile?.points || 0;
+    
+    // Add points from connections
+    const connectionsCount = (userData?.connections || []).length;
+    score += connectionsCount * 5;
+    
+    // Add points from events
+    const eventsUsed = userData?.subscription?.eventsUsed || 0;
+    score += eventsUsed * 10;
+    
+    // Add points from contributions
+    score += contributions.reduce((sum, contribution) => sum + contribution.points, 0);
+    
+    // Add points for profile completeness
+    if (userData?.photoURL || userData?.photo_url) score += 25;
+    if (userData?.profile?.about || userData?.profile_about) score += 15;
+    if (userData?.profile?.skills?.length > 0 || userData?.profile_skills?.length > 0) score += 15;
+    
+    return score;
+  };
+  
+  const generateBadges = (userData: any, contributions: any[]) => {
+    const badges = [];
+    
+    // Connection badges
+    const connectionsCount = (userData?.connections || []).length;
+    if (connectionsCount >= 50) {
+      badges.push({ 
+        id: 'connector_gold', 
+        name: 'Master Connector', 
+        count: connectionsCount, 
+        icon: Users, 
+        color: 'bg-yellow-100 text-yellow-600',
+        locked: false
+      });
+    } else if (connectionsCount >= 25) {
+      badges.push({ 
+        id: 'connector_silver', 
+        name: 'Network Builder', 
+        count: connectionsCount, 
+        icon: Users, 
+        color: 'bg-purple-100 text-purple-600',
+        locked: false
+      });
+    } else if (connectionsCount >= 10) {
+      badges.push({ 
+        id: 'connector', 
+        name: 'Connector', 
+        count: connectionsCount, 
+        icon: Users, 
+        color: 'bg-blue-100 text-blue-600',
+        locked: false
+      });
+    } else {
+      badges.push({ 
+        id: 'connector_locked', 
+        name: 'Connector', 
+        count: connectionsCount, 
+        icon: Users, 
+        color: 'bg-gray-100 text-gray-600',
+        locked: true,
+        requiredCount: 10
+      });
+    }
+    
+    // Event badges
+    const eventsUsed = userData?.subscription?.eventsUsed || 0;
+    if (eventsUsed >= 15) {
+      badges.push({ 
+        id: 'event_master', 
+        name: 'Event Master', 
+        count: eventsUsed, 
+        icon: Calendar, 
+        color: 'bg-green-100 text-green-600',
+        locked: false
+      });
+    } else if (eventsUsed >= 5) {
+      badges.push({ 
+        id: 'event_regular', 
+        name: 'Event Regular', 
+        count: eventsUsed, 
+        icon: Calendar, 
+        color: 'bg-blue-100 text-blue-600',
+        locked: false
+      });
+    } else if (eventsUsed >= 1) {
+      badges.push({ 
+        id: 'event_participant', 
+        name: 'Event Participant', 
+        count: eventsUsed, 
+        icon: Calendar, 
+        color: 'bg-indigo-100 text-indigo-600',
+        locked: false
+      });
+    } else {
+      badges.push({ 
+        id: 'event_locked', 
+        name: 'Event Participant', 
+        count: 0, 
+        icon: Calendar, 
+        color: 'bg-gray-100 text-gray-600',
+        locked: true,
+        requiredCount: 1
+      });
+    }
+    
+    // Role badges
+    if (userData?.profile?.assignedRole) {
+      badges.push({ 
+        id: 'founder_role', 
+        name: getRoleLabel(userData.profile.assignedRole), 
+        count: null, 
+        icon: getRoleIcon(userData.profile.assignedRole), 
+        color: 'bg-indigo-100 text-indigo-600',
+        locked: false
+      });
+    }
+    
+    // Verification badge
+    if (userData?.emailVerified || userData?.dbEmailVerified) {
+      badges.push({ 
+        id: 'verified', 
+        name: 'Verified Member', 
+        count: null, 
+        icon: Shield, 
+        color: 'bg-green-100 text-green-600',
+        locked: false
+      });
+    }
+    
+    // Profile badges
+    if (userData?.photoURL || userData?.photo_url) {
+      badges.push({ 
+        id: 'profile_complete', 
+        name: 'Profile Complete', 
+        count: null, 
+        icon: User, 
+        color: 'bg-blue-100 text-blue-600',
+        locked: false
+      });
+    }
+    
+    // Locked badges
+    badges.push({ 
+      id: 'mentor_locked', 
+      name: 'Mentor', 
+      count: 0, 
+      icon: Presentation, 
+      color: 'bg-gray-100 text-gray-600',
+      locked: true,
+      requiredCount: 5,
+      description: 'Help 5 other founders with advice or guidance'
+    });
+    
+    badges.push({ 
+      id: 'thought_leader_locked', 
+      name: 'Thought Leader', 
+      count: 0, 
+      icon: Brain, 
+      color: 'bg-gray-100 text-gray-600',
+      locked: true,
+      requiredCount: 3,
+      description: 'Share 3 valuable insights or resources'
+    });
+    
+    badges.push({ 
+      id: 'collaborator_locked', 
+      name: 'Collaborator', 
+      count: 0, 
+      icon: Handshake, 
+      color: 'bg-gray-100 text-gray-600',
+      locked: true,
+      requiredCount: 2,
+      description: 'Participate in 2 collaborative projects'
+    });
+    
+    return badges;
+  };
+  
+  const generateContributions = (userData: any) => {
+    const contributions = [];
+    
+    // Profile completion contribution
+    if (userData?.photoURL || userData?.photo_url) {
+      contributions.push({
+        id: 1,
+        type: 'profile',
+        title: 'Completed your profile with photo',
+        description: 'Makes it easier for others to connect with you',
+        date: userData?.profile?.joinedAt ? new Date(userData.profile.joinedAt) : new Date(),
+        points: 25,
+        icon: User,
+        color: 'bg-blue-100 text-blue-600'
+      });
+    }
+    
+    // Connection contributions
+    const connectionsCount = (userData?.connections || []).length;
+    if (connectionsCount > 0) {
+      contributions.push({
+        id: 2,
+        type: 'connection',
+        title: `Built a network of ${connectionsCount} connections`,
+        description: 'Growing your professional network',
+        date: new Date(),
+        points: connectionsCount * 5,
+        icon: Users,
+        color: 'bg-purple-100 text-purple-600'
+      });
+    }
+    
+    // Event participation contributions
+    const eventsUsed = userData?.subscription?.eventsUsed || 0;
+    if (eventsUsed > 0) {
+      contributions.push({
+        id: 3,
+        type: 'event',
+        title: `Participated in ${eventsUsed} networking events`,
+        description: 'Active community engagement',
+        date: new Date(),
+        points: eventsUsed * 10,
+        icon: Calendar,
+        color: 'bg-green-100 text-green-600'
+      });
+    }
+    
+    // Bio contribution
+    if (userData?.profile?.about || userData?.profile_about) {
+      contributions.push({
+        id: 4,
+        type: 'profile',
+        title: 'Added a comprehensive bio',
+        description: 'Shared your story with the community',
+        date: userData?.profile?.joinedAt ? new Date(userData.profile.joinedAt) : new Date(),
+        points: 15,
+        icon: MessageSquare,
+        color: 'bg-indigo-100 text-indigo-600'
+      });
+    }
+    
+    // Skills contribution
+    if ((userData?.profile?.skills && userData.profile.skills.length > 0) || 
+        (userData?.profile_skills && userData.profile_skills.length > 0)) {
+      contributions.push({
+        id: 5,
+        type: 'profile',
+        title: 'Added professional skills',
+        description: 'Showcased your expertise',
+        date: userData?.profile?.joinedAt ? new Date(userData.profile.joinedAt) : new Date(),
+        points: 15,
+        icon: Award,
+        color: 'bg-yellow-100 text-yellow-600'
+      });
+    }
+    
+    // Onboarding contribution
+    if (userData?.profile?.onboardingCompleted) {
+      contributions.push({
+        id: 6,
+        type: 'onboarding',
+        title: 'Completed platform onboarding',
+        description: 'Set up for networking success',
+        date: userData?.profile?.joinedAt ? new Date(userData.profile.joinedAt) : new Date(),
+        points: 50,
+        icon: CheckCircle,
+        color: 'bg-green-100 text-green-600'
+      });
+    }
+    
+    return contributions;
+  };
+
   try {
     setLoading(true);
     
@@ -47,58 +327,91 @@ const loadUserData = async (
       setUserProfile({
         name: "Michael Chen",
         title: "Founder & CEO",
-        company: "CloudTech Solutions",
+        company: "CloudTech Innovations",
         location: "San Francisco, CA",
         photoURL: "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg",
         profile: {
-          skills: ["Product Strategy", "Fundraising", "Team Building", "Growth Hacking", "SaaS"],
+          skills: ["Product Strategy", "Fundraising", "Team Building", "Growth Hacking", "SaaS", "AI/ML"],
           points: 875
         }
       });
       
-      // Set demo badges
-      setBadges([
-        { id: 'event_host', name: 'Event Host', count: 12, icon: Calendar, color: 'bg-blue-100 text-blue-600' },
-        { id: 'thought_leader', name: 'Thought Leader', count: 25, icon: MessageSquare, color: 'bg-green-100 text-green-600' },
-        { id: 'connector', name: 'Connector', count: 50, icon: Users, color: 'bg-purple-100 text-purple-600' },
-        { id: 'mentor', name: 'Mentor', count: 5, icon: Star, color: 'bg-yellow-100 text-yellow-600' },
-        { id: 'startup_founder', name: 'Startup Founder', count: 2, icon: Zap, color: 'bg-red-100 text-red-600' },
-        { id: 'verified_pro', name: 'Verified Pro', count: null, icon: Shield, color: 'bg-indigo-100 text-indigo-600' }
-      ]);
+      // Generate demo badges
+      const demoBadges = [
+        { id: 'connector_gold', name: 'Master Connector', count: 50, icon: Users, color: 'bg-yellow-100 text-yellow-600', locked: false },
+        { id: 'thought_leader', name: 'Thought Leader', count: 25, icon: Brain, color: 'bg-green-100 text-green-600', locked: false },
+        { id: 'event_master', name: 'Event Master', count: 15, icon: Calendar, color: 'bg-blue-100 text-blue-600', locked: false },
+        { id: 'mentor', name: 'Mentor', count: 5, icon: Presentation, color: 'bg-purple-100 text-purple-600', locked: false },
+        { id: 'startup_founder', name: 'Startup Founder', count: null, icon: Rocket, color: 'bg-red-100 text-red-600', locked: false },
+        { id: 'verified_pro', name: 'Verified Member', count: null, icon: Shield, color: 'bg-indigo-100 text-indigo-600', locked: false },
+        { id: 'collaborator_locked', name: 'Collaborator', count: 0, icon: Handshake, color: 'bg-gray-100 text-gray-600', locked: true, requiredCount: 2, description: 'Participate in 2 collaborative projects' }
+      ];
+      setBadges(demoBadges);
       
-      // Set demo contributions
-      setRecentContributions([
+      // Generate demo contributions
+      const demoContributions = [
         {
           id: 1,
           type: 'event',
-          title: 'Hosted "Startup Funding Strategies" workshop',
-          description: 'Shared insights with 45 attendees',
+          title: 'Hosted "Startup Funding Strategies" Workshop',
+          description: 'Shared insights with 45 founders',
           date: new Date('2025-05-15'),
-          points: 25,
+          points: 75,
           icon: Calendar,
           color: 'bg-blue-100 text-blue-600'
         },
         {
           id: 2,
           type: 'connection',
-          title: 'Connected Sarah Johnson with Alex Rodriguez',
-          description: 'Successful introduction led to co-founding',
+          title: 'Built a network of 50 founders',
+          description: 'Growing your professional network',
           date: new Date('2025-04-28'),
-          points: 15,
+          points: 250,
           icon: Users,
           color: 'bg-purple-100 text-purple-600'
         },
         {
           id: 3,
           type: 'mentorship',
-          title: 'Provided mentorship to 3 early-stage founders',
-          description: '5-star feedback received',
+          title: 'Mentored 5 early-stage founders',
+          description: 'Received excellent feedback',
           date: new Date('2025-04-10'),
-          points: 30,
-          icon: MessageSquare,
+          points: 150,
+          icon: Presentation,
           color: 'bg-yellow-100 text-yellow-600'
+        },
+        {
+          id: 4,
+          type: 'profile',
+          title: 'Completed comprehensive founder profile',
+          description: 'Showcased your expertise and vision',
+          date: new Date('2025-03-20'),
+          points: 100,
+          icon: User,
+          color: 'bg-indigo-100 text-indigo-600'
+        },
+        {
+          id: 5,
+          type: 'content',
+          title: 'Shared "AI for Startups" resource guide',
+          description: 'Helped 32 founders implement AI solutions',
+          date: new Date('2025-03-05'),
+          points: 200,
+          icon: Brain,
+          color: 'bg-green-100 text-green-600'
+        },
+        {
+          id: 6,
+          type: 'collaboration',
+          title: 'Participated in Founder Hackathon',
+          description: 'Collaborated on cross-platform integration project',
+          date: new Date('2025-02-15'),
+          points: 100,
+          icon: Code,
+          color: 'bg-orange-100 text-orange-600'
         }
-      ]);
+      ];
+      setRecentContributions(demoContributions);
       
       // Set demo endorsements
       setEndorsements([
@@ -115,8 +428,10 @@ const loadUserData = async (
           text: "Exceptional mentor who truly cares about helping others succeed."
         }
       ]);
-      
-      setReputationScore(875);
+
+      // Calculate demo reputation score (sum of all contribution points)
+      const demoScore = demoContributions.reduce((sum, contribution) => sum + contribution.points, 0);
+      setReputationScore(demoScore);
     } else {
       // Get actual user data
       const userRef = doc(db, 'users', user.id);
@@ -130,110 +445,16 @@ const loadUserData = async (
         });
         
         // Calculate reputation score based on profile points or other metrics
-        const points = userData.profile?.points || 0;
-        const connectionsCount = (userData.connections || []).length;
-        const eventsUsed = userData.subscription?.eventsUsed || 0;
-        
-        // Simple formula: base points + connections*5 + events*10
-        const calculatedScore = points + (connectionsCount * 5) + (eventsUsed * 10);
-        setReputationScore(calculatedScore);
-        
-        // Get user's badges
-        // In a real app, this would come from a badges collection
-        // For now, we'll generate based on user activity
-        const userBadges = [];
-        
-        if (eventsUsed > 0) {
-          userBadges.push({ 
-            id: 'event_participant', 
-            name: 'Event Participant', 
-            count: eventsUsed, 
-            icon: Calendar, 
-            color: 'bg-blue-100 text-blue-600' 
-          });
-        }
-        
-        if (connectionsCount > 0) {
-          userBadges.push({ 
-            id: 'connector', 
-            name: 'Connector', 
-            count: connectionsCount, 
-            icon: Users, 
-            color: 'bg-purple-100 text-purple-600' 
-          });
-        }
-        
-        if (userData.profile?.assignedRole) {
-          userBadges.push({ 
-            id: 'founder', 
-            name: 'Startup Founder', 
-            count: null, 
-            icon: Rocket, 
-            color: 'bg-red-100 text-red-600' 
-          });
-        }
-        
-        // Add verified badge if email is verified
-        if (userData.email_verified || user.emailVerified) {
-          userBadges.push({ 
-            id: 'verified', 
-            name: 'Verified Member', 
-            count: null, 
-            icon: Shield, 
-            color: 'bg-indigo-100 text-indigo-600' 
-          });
-        }
-        
+        const contributions = generateContributions(userData);
+        setRecentContributions(contributions);
+
+        // Generate badges based on user data
+        const userBadges = generateBadges(userData, contributions);
         setBadges(userBadges);
-        
-        // Get recent contributions
-        // In a real app, this would come from an activity log
-        // For now, we'll generate based on user data
-        const userContributions = [];
-        
-        // Add event participation
-        if (eventsUsed > 0) {
-          userContributions.push({
-            id: 1,
-            type: 'event',
-            title: `Participated in ${eventsUsed} networking events`,
-            description: 'Active community member',
-            date: new Date(),
-            points: eventsUsed * 10,
-            icon: Calendar,
-            color: 'bg-blue-100 text-blue-600'
-          });
-        }
-        
-        // Add profile completion
-        if (userData.profile && Object.keys(userData.profile).length > 5) {
-          userContributions.push({
-            id: 2,
-            type: 'profile',
-            title: 'Completed comprehensive profile',
-            description: 'Helps others connect with you',
-            date: new Date(userData.updatedAt?.toDate() || Date.now()),
-            points: 25,
-            icon: User,
-            color: 'bg-green-100 text-green-600'
-          });
-        }
-        
-        // Add connections
-        if (connectionsCount > 0) {
-          userContributions.push({
-            id: 3,
-            type: 'connection',
-            title: `Built a network of ${connectionsCount} connections`,
-            description: 'Growing professional network',
-            date: new Date(),
-            points: connectionsCount * 5,
-            icon: Users,
-            color: 'bg-purple-100 text-purple-600'
-          });
-        }
-        
-        setRecentContributions(userContributions);
+
+        // Calculate reputation score
+        const calculatedScore = calculateReputationScore(userData, contributions);
+        setReputationScore(calculatedScore);
         
         // In a real app, endorsements would come from a collection
         // For now, we'll leave this empty for actual users
@@ -364,16 +585,29 @@ export function ReputationPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {badges.length > 0 ? (
                       badges.map((badge) => {
-                        const BadgeIcon = badge.icon;
+                        const BadgeIcon = badge.locked ? Lock : badge.icon;
                         return (
-                          <div key={badge.id} className="bg-white rounded-lg border border-gray-200 p-4 flex items-center space-x-3">
-                            <div className={`${badge.color} p-2 rounded-lg`}>
-                              <BadgeIcon className="w-6 h-6" />
+                          <div 
+                            key={badge.id} 
+                            className={`bg-white rounded-lg border ${badge.locked ? 'border-gray-300 opacity-70' : 'border-gray-200'} p-4 flex items-center space-x-3`}
+                            title={badge.locked ? `Locked: ${badge.description || `Requires ${badge.requiredCount} to unlock`}` : ''}
+                          >
+                            <div className={`${badge.color} p-2 rounded-lg relative`}>
+                              <BadgeIcon className={`w-6 h-6 ${badge.locked ? 'text-gray-400' : ''}`} />
+                              {badge.locked && (
+                                <div className="absolute -top-1 -right-1 bg-gray-200 rounded-full p-0.5">
+                                  <Lock className="w-3 h-3 text-gray-500" />
+                                </div>
+                              )}
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900">{badge.name}</p>
+                              <p className={`font-medium ${badge.locked ? 'text-gray-500' : 'text-gray-900'}`}>{badge.name}</p>
                               {badge.count && (
-                                <p className="text-sm text-gray-500">{badge.count} {badge.count === 1 ? 'instance' : 'instances'}</p>
+                                <p className="text-sm text-gray-500">
+                                  {badge.locked 
+                                    ? `0/${badge.requiredCount} completed` 
+                                    : `${badge.count} ${badge.count === 1 ? 'instance' : 'instances'}`}
+                                </p>
                               )}
                             </div>
                           </div>
@@ -392,11 +626,16 @@ export function ReputationPage() {
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-3">Recent Contributions</h3>
                   {recentContributions.length > 0 ? (
-                    <div className="space-y-4">
+                    <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
                       {recentContributions.map((contribution) => {
                         const ContributionIcon = contribution.icon;
                         return (
-                          <div key={contribution.id} className="bg-white rounded-lg border border-gray-200 p-4">
+                          <motion.div 
+                            key={contribution.id} 
+                            className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
+                            whileHover={{ y: -2 }}
+                            transition={{ duration: 0.2 }}
+                          >
                             <div className="flex items-start justify-between">
                               <div className="flex items-start space-x-3">
                                 <div className={`${contribution.color} p-2 rounded-lg`}>
@@ -407,13 +646,17 @@ export function ReputationPage() {
                                   <p className="text-sm text-gray-500 mt-1">
                                     {contribution.description} • {contribution.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                   </p>
+                                  <div className="mt-2 flex items-center">
+                                    <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
+                                    <span className="text-xs text-green-600">Contribution impact: High</span>
+                                  </div>
                                 </div>
                               </div>
                               <div className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
                                 +{contribution.points} points
                               </div>
                             </div>
-                          </div>
+                          </motion.div>
                         );
                       })}
                     </div>
@@ -520,7 +763,7 @@ export function ReputationPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <motion.div 
               whileHover={{ y: -5 }}
-              className="bg-white rounded-xl shadow-md p-6 border border-gray-200"
+              className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-md p-6 border border-blue-200"
             >
               <div className="bg-blue-100 p-4 rounded-lg inline-block mb-4">
                 <Target className="w-8 h-8 text-blue-600" />
@@ -534,7 +777,7 @@ export function ReputationPage() {
             
             <motion.div 
               whileHover={{ y: -5 }}
-              className="bg-white rounded-xl shadow-md p-6 border border-gray-200"
+              className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl shadow-md p-6 border border-green-200"
             >
               <div className="bg-green-100 p-4 rounded-lg inline-block mb-4">
                 <Shield className="w-8 h-8 text-green-600" />
@@ -548,7 +791,7 @@ export function ReputationPage() {
             
             <motion.div 
               whileHover={{ y: -5 }}
-              className="bg-white rounded-xl shadow-md p-6 border border-gray-200"
+              className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl shadow-md p-6 border border-purple-200"
             >
               <div className="bg-purple-100 p-4 rounded-lg inline-block mb-4">
                 <Briefcase className="w-8 h-8 text-purple-600" />
@@ -571,41 +814,41 @@ export function ReputationPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 text-center">
               <div className="bg-blue-100 p-4 rounded-full inline-flex items-center justify-center mb-4">
-                <Calendar className="w-8 h-8 text-blue-600" />
+                <Users className="w-8 h-8 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Event Host</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Connector</h3>
               <p className="text-sm text-gray-600">
-                Organize and lead valuable networking events for the community
+                Connect with other founders and build your network
               </p>
             </div>
             
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 text-center">
               <div className="bg-green-100 p-4 rounded-full inline-flex items-center justify-center mb-4">
-                <MessageSquare className="w-8 h-8 text-green-600" />
+                <Brain className="w-8 h-8 text-green-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Thought Leader</h3>
               <p className="text-sm text-gray-600">
-                Share valuable insights that help others grow professionally
+                Share valuable insights that help other founders grow
               </p>
             </div>
             
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 text-center">
               <div className="bg-purple-100 p-4 rounded-full inline-flex items-center justify-center mb-4">
-                <Users className="w-8 h-8 text-purple-600" />
+                <Calendar className="w-8 h-8 text-purple-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Connector</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Event Participant</h3>
               <p className="text-sm text-gray-600">
-                Facilitate meaningful connections between community members
+                Attend events and engage with the founder community
               </p>
             </div>
             
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 text-center">
               <div className="bg-yellow-100 p-4 rounded-full inline-flex items-center justify-center mb-4">
-                <Star className="w-8 h-8 text-yellow-600" />
+                <Presentation className="w-8 h-8 text-yellow-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Mentor</h3>
               <p className="text-sm text-gray-600">
-                Provide guidance and support to help others succeed
+                Provide guidance and support to help other founders succeed
               </p>
             </div>
             
@@ -654,11 +897,11 @@ export function ReputationPage() {
         {/* CTA Section */}
         <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl py-12 md:py-16 px-6 md:px-8 text-center text-white">
           <h2 className="text-3xl font-bold mb-4">
-            {user ? 'Continue Building Your Reputation' : 'Start Building Your Reputation Today'}
+            {user ? 'Level Up Your Founder Reputation' : 'Start Building Your Founder Reputation Today'}
           </h2>
           <p className="mt-4 text-xl text-indigo-100 max-w-2xl mx-auto">
-            Get recognized for real contributions — right alongside your work.
-            Join thousands of professionals building verifiable reputations on inRooms.
+            Get recognized for real contributions to the startup ecosystem.
+            Join thousands of founders building verifiable reputations on inRooms.
           </p>
           <div className="mt-8 flex justify-center">
             {user ? (
@@ -666,6 +909,7 @@ export function ReputationPage() {
                 <Button
                   size="lg"
                   className="text-lg px-8 bg-white text-indigo-600 hover:bg-gray-100"
+                  onClick={() => navigate('/events')}
                 >
                   Join an Event
                   <ArrowRight className="ml-2 w-5 h-5" />
@@ -676,6 +920,7 @@ export function ReputationPage() {
                 <Button
                   size="lg"
                   className="text-lg px-8 bg-white text-indigo-600 hover:bg-gray-100"
+                  onClick={() => navigate('/signup')}
                 >
                   Create Your Profile
                   <ArrowRight className="ml-2 w-5 h-5" />
