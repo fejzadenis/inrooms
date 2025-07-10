@@ -84,7 +84,7 @@ export function DemoRegistrationModal({
         console.warn('Failed to generate calendar event:', calendarError);
       }
 
-      toast.success('Successfully registered! Calendar invite downloaded.');
+      toast.success('Successfully registered!');
       reset();
       onClose();
       onSuccess();
