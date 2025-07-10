@@ -283,6 +283,3 @@ export function LoginPage() {
     </div>
   );
 }
-    }
-  }
-}
