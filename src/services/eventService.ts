@@ -109,7 +109,7 @@ export const eventService = {
     // 1. Fetch the user's current usage and quota
     const { data: userData, error: fetchError } = await supabase
       .from('users')
-      .select('subscriptions_events_used, subscriptions_events_quota')
+      .select('subscription_events_used, subscription_events_quota')
       .eq('id', userIdString)
       .single();
 
@@ -117,8 +117,8 @@ export const eventService = {
       throw new Error(`❌ Failed to fetch user data: ${fetchError?.message}`);
     }
 
-    const used = userData.subscriptions_events_used ?? 0;
-    const quota = userData.subscriptions_events_quota ?? 0;
+    const used = userData.subscription_events_used ?? 0;
+    const quota = userData.subscription_events_quota ?? 0;
 
     // 2. Quota check
     if (used >= quota) {
@@ -129,7 +129,7 @@ export const eventService = {
     // 3. Increment subscriptions_event_used
     const { error: updateError } = await supabase
       .from('users')
-      .update({ subscriptions_events_used: used + 1 })
+      .update({ subscription_events_used: used + 1 })
       .eq('id', userIdString);
 
     if (updateError) {
