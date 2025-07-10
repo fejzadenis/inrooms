@@ -138,13 +138,23 @@ export const eventService = {
     }
 
     // 3. Increment current_participants in events table
-    const { error: updateEventError } = await supabase.rpc('increment_participants', {
-      event_id_input: eventId,
-    });
+    const eventRef = doc(db, 'events', eventId);
+const eventSnap = await getDoc(eventRef);
 
-    if (updateEventError) {
-      throw new Error(`❌ Failed to update event participants: ${updateEventError.message}`);
-    }
+if (!eventSnap.exists()) {
+  throw new Error('🚫 Event not found.');
+}
+
+const eventData = eventSnap.data() as Event;
+
+if (eventData.currentParticipants >= eventData.maxParticipants) {
+  throw new Error('🚫 Event is full.');
+}
+
+await updateDoc(eventRef, {
+  currentParticipants: increment(1),
+  updatedAt: serverTimestamp(),
+});
 
     // 4. Increment user's quota usage
     const { error: updateUserError } = await supabase
