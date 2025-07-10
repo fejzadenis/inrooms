@@ -54,23 +54,40 @@ export function EventManagementModal({
       const startTime = new Date(`${data.date}T${data.time}`);
       const endTime = new Date(startTime.getTime() + data.duration * 60000);
 
+      console.log("Creating event with data:", {
+        title: data.title,
+        description: data.description,
+        startTime,
+        endTime
+      });
+      
       let meetLink = '';
       
       try {
         // Try to create Google Meet event
+        console.log("Attempting to create Google Meet link");
         const meetResponse = await createGoogleMeetEvent({
           title: data.title,
           description: data.description,
           startTime,
           endTime,
         });
-        meetLink = meetResponse.meetLink;
+        
+        console.log("Google Meet response:", meetResponse);
+        meetLink = meetResponse.meetLink || '';
+        
+        if (meetLink) {
+          console.log("Successfully created Google Meet link:", meetLink);
+        } else {
+          console.warn("No Google Meet link returned in response");
+        }
       } catch (meetError) {
         console.warn('Failed to create Google Meet link:', meetError);
         // Continue without Meet link - the event can still be created
         toast.warning('Event created successfully, but Google Meet link could not be generated');
       }
 
+      console.log("Preparing event data with meetLink:", meetLink);
       const eventData = {
         title: data.title,
         description: data.description,
@@ -82,19 +99,23 @@ export function EventManagementModal({
         createdBy: user.id,
       };
 
+      console.log("Saving event data:", eventData);
       let eventId: string;
 
       if (initialData?.id) {
         // Update existing event
+        console.log("Updating existing event:", initialData.id);
         await eventService.updateEvent(initialData.id, eventData);
         eventId = initialData.id;
         toast.success('Event updated successfully!');
       } else {
         // Create new event
+        console.log("Creating new event");
         eventId = await eventService.createEvent(eventData);
         toast.success('Event created successfully!');
       }
 
+      console.log("Event saved with ID:", eventId);
       await onSubmit(eventId);
       reset();
       onClose();
