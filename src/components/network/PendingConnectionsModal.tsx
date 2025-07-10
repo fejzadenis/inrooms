@@ -120,10 +120,8 @@ export function PendingConnectionsModal({
       // Update local state
       setReceivedRequests(prev => prev.filter(req => req.id !== requestId));
       
-      // Refresh user data to get updated connections list
-      await onSuccess();
-      
       toast.success('Connection request accepted');
+      onSuccess();
     } catch (error) {
       console.error('Error accepting connection request:', error);
       toast.error('Failed to accept connection request');

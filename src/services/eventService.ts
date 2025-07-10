@@ -11,7 +11,6 @@ import {
   orderBy,
   serverTimestamp,
   increment,
-  getFirestore,
   Timestamp
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -38,21 +37,6 @@ export interface EventRegistration {
   registeredAt: Date;
 }
 
-const db = getFirestore();
-
-async function incrementEventParticipants(eventId: string) {
-  const eventRef = doc(db, "events", eventId);
-
-  try {
-    await updateDoc(eventRef, {
-      currentParticipants: increment(1)
-    });
-  } catch (error) {
-    console.error(`❌ Failed to update event participants in Firestore: ${error}`);
-    throw error;
-  }
-}
-
 export const eventService = {
   async createEvent(eventData: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
@@ -67,8 +51,6 @@ export const eventService = {
       throw error;
     }
   },
-
-  
 
   async updateEvent(eventId: string, eventData: Partial<Event>): Promise<void> {
     try {
@@ -156,33 +138,12 @@ export const eventService = {
     }
 
     // 3. Increment current_participants in events table
-    await incrementEventParticipants(eventId);
-    const { error: updateEventError } = await supabase
-      .from('events')
-      .update({ current_participants: supabase.rpc('increment_by_one') })
-      .eq('id', eventId);
+    const { error: updateEventError } = await supabase.rpc('increment_participants', {
+      event_id_input: eventId,
+    });
 
     if (updateEventError) {
-      console.error(`❌ Failed to update event participants: ${updateEventError.message}`);
-      
-      // Fallback to direct update if RPC fails
-      const { data: eventData } = await supabase
-        .from('events')
-        .select('current_participants')
-        .eq('id', eventId)
-        .single();
-        
-      if (eventData) {
-        const newCount = (eventData.current_participants || 0) + 1;
-        const { error: directUpdateError } = await supabase
-          .from('events')
-          .update({ current_participants: newCount })
-          .eq('id', eventId);
-          
-        if (directUpdateError) {
-          throw new Error(`❌ Failed to update event participants: ${directUpdateError.message}`);
-        }
-      }
+      throw new Error(`❌ Failed to update event participants: ${updateEventError.message}`);
     }
 
     // 4. Increment user's quota usage

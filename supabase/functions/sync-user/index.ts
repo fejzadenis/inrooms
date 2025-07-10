@@ -40,6 +40,18 @@ interface UserData {
   interests?: string[];
   email_verified?: boolean;
   email_verified_at?: Date;
+  stripe_subscription_id?: string;
+  stripe_subscription_status?: string;
+  stripe_current_period_end?: Date;
+  is_founder?: boolean;
+  founder_status?: string;
+  company_stage?: string;
+  looking_for?: string[];
+  social_links?: Record<string, string>;
+  bio?: string;
+  interests?: string[];
+  email_verified?: boolean;
+  email_verified_at?: Date;
 }
 
 Deno.serve(async (req) => {
@@ -96,14 +108,15 @@ Deno.serve(async (req) => {
       profile_skills: userData.profile_skills || [],
       profile_points: userData.profile_points || 0,
       connections: userData.connections || [],
-      stripe_customer_id: userData.stripe_customer_id || null,
-      stripe_subscription_id: userData.stripe_subscription_id || null,
-      stripe_subscription_status: userData.stripe_subscription_status || null,
-      stripe_current_period_end: userData.stripe_current_period_end || null,
-      subscription_status: userData.subscription_status || 'inactive',
-      subscription_events_quota: userData.subscription_events_quota || 0,
-      subscription_events_used: userData.subscription_events_used || 0,
-      subscription_trial_ends_at: userData.subscription_trial_ends_at || null,
+      is_founder: userData.is_founder || false,
+      founder_status: userData.founder_status || null,
+      company_stage: userData.company_stage || null,
+      looking_for: userData.looking_for || [],
+      social_links: userData.social_links || {},
+      bio: userData.bio || null,
+      interests: userData.interests || [],
+      email_verified: userData.email_verified || false,
+      email_verified_at: userData.email_verified_at || null,
       is_founder: userData.is_founder || false,
       founder_status: userData.founder_status || null,
       company_stage: userData.company_stage || null,
