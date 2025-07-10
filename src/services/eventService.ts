@@ -106,40 +106,59 @@ export const eventService = {
     console.log(`[Event Service] Checking quota for user ${userId} for event ${eventId}`);
     const userIdString = userId.toString();
 
-    // 1. Fetch the user's current usage and quota
-    const { data: userData, error: fetchError } = await supabase
+    // 1. Fetch user's quota usage
+    const { data: userData, error: userFetchError } = await supabase
       .from('users')
       .select('subscription_events_used, subscription_events_quota')
       .eq('id', userIdString)
       .single();
 
-    if (fetchError || !userData) {
-      throw new Error(`❌ Failed to fetch user data: ${fetchError?.message}`);
+    if (userFetchError || !userData) {
+      throw new Error(`❌ Failed to fetch user data: ${userFetchError?.message}`);
     }
 
     const used = userData.subscription_events_used ?? 0;
     const quota = userData.subscription_events_quota ?? 0;
 
-    // 2. Quota check
     if (used >= quota) {
-      console.warn(`🚫 User ${userIdString} has reached their event quota (${used}/${quota})`);
-      throw new Error('You have reached your event participation limit.');
+      throw new Error('🚫 You have reached your event participation limit.');
     }
 
-    // 3. Increment subscriptions_event_used
-    const { error: updateError } = await supabase
+    // 2. Store registration
+    const { error: registrationError } = await supabase
+      .from('registrations')
+      .insert({
+        user_id: userIdString,
+        event_id: eventId,
+        registered_at: new Date().toISOString(),
+      });
+
+    if (registrationError) {
+      throw new Error(`❌ Failed to register user: ${registrationError.message}`);
+    }
+
+    // 3. Increment current_participants in events table
+    const { error: updateEventError } = await supabase.rpc('increment_participants', {
+      event_id_input: eventId,
+    });
+
+    if (updateEventError) {
+      throw new Error(`❌ Failed to update event participants: ${updateEventError.message}`);
+    }
+
+    // 4. Increment user's quota usage
+    const { error: updateUserError } = await supabase
       .from('users')
       .update({ subscription_events_used: used + 1 })
       .eq('id', userIdString);
 
-    if (updateError) {
-      throw new Error(`❌ Failed to update usage count: ${updateError.message}`);
+    if (updateUserError) {
+      throw new Error(`❌ Failed to update user's used quota: ${updateUserError.message}`);
     }
 
-    console.log(`✅ User ${userIdString} successfully incremented (${used + 1}/${quota})`);
-
+    console.log(`✅ Registration complete for user ${userIdString} for event ${eventId}`);
   } catch (error) {
-    console.error('Error in registerForEvent:', error);
+    console.error('❌ Error in registerForEvent:', error);
     throw error;
   }
 },
