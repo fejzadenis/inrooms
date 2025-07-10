@@ -84,7 +84,10 @@ export function EventManagementModal({
       } catch (meetError) {
         console.warn('Failed to create Google Meet link:', meetError);
         // Continue without Meet link - the event can still be created
-        toast.warning('Event created successfully, but Google Meet link could not be generated');
+        toast('Event created successfully, but Google Meet link could not be generated', { 
+          icon: '⚠️',
+          duration: 4000 
+        });
       }
 
       console.log("Preparing event data with meetLink:", meetLink);
