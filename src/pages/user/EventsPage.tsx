@@ -193,16 +193,7 @@ export function EventsPage() {
           location: event.meetLink || 'Online Event',
         });
 
-        // Create calendar download link
-        const blob = new Blob([icsFile], { type: 'text/calendar' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `${event.title.toLowerCase().replace(/\s+/g, '-')}.ics`);
-        document.body.appendChild(link);
-        link.click();
-        link.parentNode?.removeChild(link);
-        window.URL.revokeObjectURL(url);
+        
       } catch (calendarError) {
         console.warn('Failed to generate calendar event:', calendarError);
       }
