@@ -1,24 +1,146 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { create, getNumericDate, Header } from "https://deno.land/x/djwt@v2.8/mod.ts";
 
-interface MeetingParams {
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, x-client-info, apikey",
+};
+
+interface MeetingRequest {
   title: string;
   description?: string;
-  startTime: string; // ISO 8601 формат, нпр. "2025-07-10T12:00:00Z"
-  endTime: string;
+  startTime: string | Date;
+  endTime: string | Date;
 }
 
-async function createGoogleMeet(params: MeetingParams): Promise<string> {
-  const { title, description = "", startTime, endTime } = params;
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      status: 200,
+      headers: corsHeaders,
+    });
+  }
 
-  // Читање Service Account података из env
+  try {
+    const { title, description = "", startTime, endTime }: MeetingRequest = await req.json();
+
+    // Validate required fields
+    if (!title || !startTime || !endTime) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Get environment variables
+    const privateKeyRaw = Deno.env.get("GOOGLE_PRIVATE_KEY");
+    const clientEmail = Deno.env.get("GOOGLE_CLIENT_EMAIL");
+    
+    if (!privateKeyRaw || !clientEmail) {
+      console.error("Missing Google API credentials in environment variables");
+      return new Response(
+        JSON.stringify({ 
+          error: "Server configuration error", 
+          details: "Google API credentials not configured" 
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    try {
+      // Create a real Google Meet link
+      const meetLink = await createGoogleMeet({
+        title,
+        description,
+        startTime: typeof startTime === 'string' ? startTime : startTime.toISOString(),
+        endTime: typeof endTime === 'string' ? endTime : endTime.toISOString(),
+      });
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          meetLink,
+          title,
+          description,
+          startTime,
+          endTime,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    } catch (googleError) {
+      console.error("Error creating Google Meet event:", googleError);
+      
+      // If Google API fails, fall back to a mock link for development
+      if (Deno.env.get("ENVIRONMENT") === "development") {
+        const mockMeetLink = `https://meet.google.com/${generateMeetingId()}`;
+        console.log("Using mock Meet link for development:", mockMeetLink);
+        
+        return new Response(
+          JSON.stringify({
+            success: true,
+            meetLink: mockMeetLink,
+            title,
+            description,
+            startTime,
+            endTime,
+            mock: true
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+      
+      throw googleError;
+    }
+  } catch (error) {
+    console.error("Error creating Google Meet event:", error);
+    
+    return new Response(
+      JSON.stringify({ 
+        error: "Failed to create meeting",
+        details: error instanceof Error ? error.message : String(error)
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  }
+});
+
+// Function to create a Google Meet event using Google Calendar API
+async function createGoogleMeet(params: {
+  title: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+}): Promise<string> {
+  const { title, description, startTime, endTime } = params;
+
+  // Read Service Account data from env
   const privateKeyRaw = Deno.env.get("GOOGLE_PRIVATE_KEY");
   const clientEmail = Deno.env.get("GOOGLE_CLIENT_EMAIL");
-  if (!privateKeyRaw || !clientEmail) throw new Error("Missing GOOGLE_PRIVATE_KEY or GOOGLE_CLIENT_EMAIL env variables");
+  if (!privateKeyRaw || !clientEmail) {
+    throw new Error("Missing GOOGLE_PRIVATE_KEY or GOOGLE_CLIENT_EMAIL env variables");
+  }
 
-  // Замењујемо \n са стварним новим редом
+  // Replace \n with actual newlines
   const privateKey = privateKeyRaw.replace(/\\n/g, "\n");
 
-  // Припрема JWT токена за Google OAuth2
+  // Prepare JWT token for Google OAuth2
   const iat = getNumericDate(0);
   const exp = getNumericDate(3600);
 
@@ -32,7 +154,7 @@ async function createGoogleMeet(params: MeetingParams): Promise<string> {
     iat,
   };
 
-  // Упомоћна функција да претвори стринг у Uint8Array
+  // Helper function to convert string to Uint8Array
   function str2ab(str: string): Uint8Array {
     const buf = new ArrayBuffer(str.length);
     const bufView = new Uint8Array(buf);
@@ -42,7 +164,7 @@ async function createGoogleMeet(params: MeetingParams): Promise<string> {
     return bufView;
   }
 
-  // Импортујемо приватни кључ за потпис
+  // Import private key for signing
   const key = await crypto.subtle.importKey(
     "pkcs8",
     str2ab(atob(privateKey.replace(/-----.*PRIVATE KEY-----/g, "").replace(/\n/g, ""))),
@@ -51,10 +173,10 @@ async function createGoogleMeet(params: MeetingParams): Promise<string> {
     ["sign"],
   );
 
-  // Креирамо JWT
+  // Create JWT
   const jwt = await create(header, payload, key);
 
-  // Узимамо OAuth2 access token
+  // Get OAuth2 access token
   const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -73,7 +195,7 @@ async function createGoogleMeet(params: MeetingParams): Promise<string> {
   const accessToken = tokenData.access_token;
   if (!accessToken) throw new Error("No access token returned from Google");
 
-  // Креирање Google Calendar догађаја са Meet линком
+  // Create Google Calendar event with Meet link
   const event = {
     summary: title,
     description,
@@ -87,7 +209,7 @@ async function createGoogleMeet(params: MeetingParams): Promise<string> {
     },
   };
 
-  const calendarId = "primary"; // Или неки други календар
+  const calendarId = "primary"; // Or some other calendar
 
   const createEventResponse = await fetch(
     `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?conferenceDataVersion=1`,
@@ -108,7 +230,7 @@ async function createGoogleMeet(params: MeetingParams): Promise<string> {
 
   const eventData = await createEventResponse.json();
 
-  // Извлачимо Google Meet линк
+  // Extract Google Meet link
   const meetLink = eventData.conferenceData?.entryPoints?.find(
     (ep: any) => ep.entryPointType === "video"
   )?.uri;
@@ -116,4 +238,35 @@ async function createGoogleMeet(params: MeetingParams): Promise<string> {
   if (!meetLink) throw new Error("Google Meet link not found in event response");
 
   return meetLink;
+}
+
+// Generate a random meeting ID similar to Google Meet format
+function generateMeetingId(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz';
+  const numbers = '0123456789';
+  const allChars = chars + numbers;
+  
+  // Format: abc-defg-hij
+  let id = '';
+  
+  // First segment (3 chars)
+  for (let i = 0; i < 3; i++) {
+    id += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  id += '-';
+  
+  // Second segment (4 chars)
+  for (let i = 0; i < 4; i++) {
+    id += allChars.charAt(Math.floor(Math.random() * allChars.length));
+  }
+  
+  id += '-';
+  
+  // Third segment (3 chars)
+  for (let i = 0; i < 3; i++) {
+    id += allChars.charAt(Math.floor(Math.random() * allChars.length));
+  }
+  
+  return id;
 }
