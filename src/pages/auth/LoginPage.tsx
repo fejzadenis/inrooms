@@ -48,40 +48,14 @@ export function LoginPage() {
   const checkOnboardingAndRedirect = async (userId: string) => {
     try {
       console.log("This function is no longer used - direct navigation is used instead");
-      /* 
-      // Get user document to check onboarding status
-      const userRef = doc(db, 'users', userId);
-      const userDoc = await getDoc(userRef);
-      
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        console.log("LOGIN DEBUG: User data retrieved", { 
-          role: userData.role,
-          onboardingCompleted: userData.profile?.onboardingCompleted,
-          emailVerified: auth.currentUser?.emailVerified
-        });
-      
-      // Check if email is verified in either Firebase or database
-      const isEmailVerified = auth.currentUser?.emailVerified || userData.email_verified === true;
+      /*
+      This function is no longer used - direct navigation is used instead
+      */
+    } catch (error) {
+      console.error("Error in checkOnboardingAndRedirect:", error);
+    }
+  };
 
-      // Check if email is verified
-      if (!isEmailVerified) {
-        console.log("LOGIN DEBUG: Email not verified in Firebase or DB, redirecting to verify-email");
-        navigate('/verify-email');
-        return;
-      }
-        
-        // Check if user is admin
-        if (userData.role === 'admin') {
-          console.log("LOGIN DEBUG: User is admin, redirecting to admin dashboard");
-          navigate('/admin');
-          return;
-        }
-        
-        // Check if onboarding is completed
-        if (userData.profile?.onboardingCompleted) {
-          console.log("LOGIN DEBUG: Onboarding completed, redirecting to", from);
-          navigate(from);
   const onSubmit = async (data: LoginFormData) => {
     try {
       console.log("Login attempt started");
