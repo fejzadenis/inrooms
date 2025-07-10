@@ -200,7 +200,7 @@ export function EventsPage() {
 
       setRegisteredEvents(prev => [...prev, eventId]);
       await loadEvents(); // Reload to update counts
-      toast.success('Successfully registered! Calendar invite downloaded.');
+      toast.success('Successfully registered!');
     } catch (error: any) {
       console.error('Failed to register for event:', error, error.stack);
       toast.error(`Failed to register for event: ${error.message || 'Please try again.'}`);
