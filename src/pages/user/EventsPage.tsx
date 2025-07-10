@@ -178,6 +178,11 @@ export function EventsPage() {
     const event = events.find(e => e.id === eventId);
     if (!event) return;
 
+    // Check if event is already full
+    if (event.currentParticipants >= event.maxParticipants) {
+      toast.error('This event is already full. Please try another event.');
+      return;
+    }
     console.log("EVENTS DEBUG: Registering for event:", event.title, "ID:", eventId);
     
     try {
@@ -199,6 +204,16 @@ export function EventsPage() {
       }
 
       setRegisteredEvents(prev => [...prev, eventId]);
+      
+      // Update the local event data to reflect the registration
+      setEvents(prevEvents => 
+        prevEvents.map(e => 
+          e.id === eventId 
+            ? { ...e, currentParticipants: e.currentParticipants + 1 } 
+            : e
+        )
+      );
+      
       await loadEvents(); // Reload to update counts
       toast.success('Successfully registered! Calendar invite downloaded.');
     } catch (error: any) {

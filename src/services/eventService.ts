@@ -138,12 +138,32 @@ export const eventService = {
     }
 
     // 3. Increment current_participants in events table
-    const { error: updateEventError } = await supabase.rpc('increment_participants', {
-      event_id_input: eventId,
-    });
+    const { error: updateEventError } = await supabase
+      .from('events')
+      .update({ current_participants: supabase.rpc('increment_by_one') })
+      .eq('id', eventId);
 
     if (updateEventError) {
-      throw new Error(`❌ Failed to update event participants: ${updateEventError.message}`);
+      console.error(`❌ Failed to update event participants: ${updateEventError.message}`);
+      
+      // Fallback to direct update if RPC fails
+      const { data: eventData } = await supabase
+        .from('events')
+        .select('current_participants')
+        .eq('id', eventId)
+        .single();
+        
+      if (eventData) {
+        const newCount = (eventData.current_participants || 0) + 1;
+        const { error: directUpdateError } = await supabase
+          .from('events')
+          .update({ current_participants: newCount })
+          .eq('id', eventId);
+          
+        if (directUpdateError) {
+          throw new Error(`❌ Failed to update event participants: ${directUpdateError.message}`);
+        }
+      }
     }
 
     // 4. Increment user's quota usage

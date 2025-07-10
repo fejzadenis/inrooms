@@ -52,6 +52,19 @@ export function MyEventsPage() {
         return eventDate <= now;
       });
 
+      // Sort upcoming events by date (closest first)
+      upcoming.sort((a, b) => {
+        const dateA = a.date instanceof Date ? a.date : new Date(a.date);
+        const dateB = b.date instanceof Date ? b.date : new Date(b.date);
+        return dateA.getTime() - dateB.getTime();
+      });
+      
+      // Sort past events by date (most recent first)
+      past.sort((a, b) => {
+        const dateA = a.date instanceof Date ? a.date : new Date(a.date);
+        const dateB = b.date instanceof Date ? b.date : new Date(b.date);
+        return dateB.getTime() - dateA.getTime();
+      });
       setEvents({ upcoming, past });
     } catch (error) {
       console.error('Failed to load user events:', error);
