@@ -4,12 +4,11 @@ import { MainLayout } from '../../layouts/MainLayout';
 import { EventCard } from '../../components/common/EventCard';
 import { useAuth } from '../../contexts/AuthContext';
 import { eventService, type Event } from '../../services/eventService';
-import { stripeService } from '../../services/stripeService';
 import { supabase } from '../../config/supabase';
 import { generateCalendarEvent } from '../../utils/calendar';
 
 export function DashboardPage() {
-  const { user, refreshUser } = useAuth();
+  const { user } = useAuth();
   const [upcomingEvents, setUpcomingEvents] = React.useState<Event[]>([]);
   const [registeredEvents, setRegisteredEvents] = React.useState<string[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -163,23 +162,6 @@ export function DashboardPage() {
     
     console.log("DASHBOARD DEBUG: Current usage:", eventsUsed, "/", eventsQuota);
     
-   // Check if user has no subscription and needs to start a free trial
-   if (user.subscription.status === 'inactive' && eventsQuota === 0) {
-     try {
-       await stripeService.startFreeTrial(user.id, true);
-       toast.success('Free trial activated! You now have 1 event credit for the next 7 days.');
-       // Refresh user data to get updated subscription info
-       await refreshUser();
-       // Continue with registration after starting trial
-     } catch (error) {
-       console.error('Failed to start free trial:', error);
-       toast.error('Failed to start free trial. Please try again.');
-       return;
-     }
-   } else if (eventsUsed >= eventsQuota) {
-     toast.error('You have reached your event quota. Please upgrade your subscription.');
-     return;
-   }
     console.log("DASHBOARD DEBUG: Current usage:", eventsUsed, "/", eventsQuota);
     
     if (eventsUsed >= eventsQuota) {

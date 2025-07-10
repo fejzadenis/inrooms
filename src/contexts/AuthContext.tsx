@@ -610,7 +610,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Update subscription in Firestore
       await updateDoc(userRef, {
         'subscription.status': 'trial',
-       'subscription.eventsQuota': 1, // Free trial gets 1 event
+        'subscription.eventsQuota': 2, 
         'subscription.eventsUsed': 0, 
         'subscription.trialEndsAt': trialEndsAt, 
         'updatedAt': serverTimestamp()
@@ -630,7 +630,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           subscription: {
             ...prev.subscription,
             status: 'trial',
-           eventsQuota: 1, // Free trial gets 1 event
+            eventsQuota: 2,
             eventsUsed: 0,
             trialEndsAt
           }

@@ -5,14 +5,13 @@ import { Search, Filter } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { eventService, type Event } from '../../services/eventService';
 import { useAuth } from '../../contexts/AuthContext';
-import { stripeService } from '../../services/stripeService';
 import { useTour } from '../../contexts/TourContext';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../../config/supabase';
 import { generateCalendarEvent } from '../../utils/calendar';
 
 export function EventsPage() {
-  const { user, refreshUser } = useAuth();
+  const { user } = useAuth();
   const { askForTourPermission, startTour } = useTour();
   const [events, setEvents] = React.useState<Event[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -74,22 +73,22 @@ export function EventsPage() {
           // Fallback to direct query if RPC fails
           console.log("EVENTS DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
           
-          const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('subscription_status, subscription_events_quota, subscription_events_used')
-            .eq('id', userIdString)
-            .maybeSingle();
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('subscription_status, subscription_events_quota, subscription_events_used')
+          .eq('id', userIdString)
+          .maybeSingle();
           
-          if (!userError && userData) {
-            console.log("EVENTS DEBUG: Supabase subscription data:", userData);
-            setSubscriptionData({
-              status: userData.subscription_status || 'inactive',
-              eventsQuota: userData.subscription_events_quota || 0,
-              eventsUsed: userData.subscription_events_used || 0
-            });
-          } else {
-            console.log("EVENTS DEBUG: Error or no data from Supabase:", userError);
-          }
+        if (!userError && userData) {
+          console.log("EVENTS DEBUG: Supabase subscription data:", userData);
+          setSubscriptionData({
+            status: userData.subscription_status || 'inactive',
+            eventsQuota: userData.subscription_events_quota || 0,
+            eventsUsed: userData.subscription_events_used || 0
+          });
+        } else {
+          console.log("EVENTS DEBUG: Error or no data from Supabase:", userError);
+        }
         }
       }
       
@@ -148,14 +147,11 @@ export function EventsPage() {
       // Fallback to direct query if RPC fails
       console.log("EVENTS DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
       
-      const result = await supabase
-        .from('users')
-        .select('subscription_status, subscription_events_quota, subscription_events_used')
-        .eq('id', userIdString)
-        .maybeSingle();
-      
-      userData = result.data;
-      userError = result.error;
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('subscription_status, subscription_events_quota, subscription_events_used')
+      .eq('id', userIdString)
+      .maybeSingle();
     }
       
     // Update subscription data state
@@ -175,23 +171,8 @@ export function EventsPage() {
     
     console.log("EVENTS DEBUG: Current usage:", eventsUsed, "/", eventsQuota);
     if (eventsUsed >= eventsQuota) {
-      // Check if user has no subscription and needs to start a free trial
-      if (user.subscription.status === 'inactive' && eventsQuota === 0) {
-        try {
-          await stripeService.startFreeTrial(user.id, true);
-          toast.success('Free trial activated! You now have 1 event credit for the next 7 days.');
-          // Refresh user data to get updated subscription info
-          await refreshUser();
-          // Continue with registration after starting trial
-        } catch (error) {
-          console.error('Failed to start free trial:', error);
-          toast.error('Failed to start free trial. Please try again.');
-          return;
-        }
-      } else if (eventsUsed >= eventsQuota) {
-        toast.error('You have reached your event quota. Please upgrade your subscription.');
-        return;
-      }
+      toast.error('You have reached your event quota. Please upgrade your subscription.');
+      return;
     }
 
     const event = events.find(e => e.id === eventId);
@@ -216,6 +197,7 @@ export function EventsPage() {
           duration: { hours: Math.floor(event.duration / 60), minutes: event.duration % 60 },
           location: event.meetLink || 'Online Event',
         });
+
         
       } catch (calendarError) {
         console.warn('Failed to generate calendar event:', calendarError);
