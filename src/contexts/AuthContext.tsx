@@ -66,7 +66,7 @@ interface AuthContextType {
   signup: (email: string, password: string, name: string, isNewUser?: boolean) => Promise<void>;
   login: (email: string, password: string) => Promise<FirebaseUser>;
   loginWithGoogle: (isNewUser?: boolean) => Promise<FirebaseUser>;
-  logout: () => Promise<void>;
+  logout: () => Promise<void>; 
   updateUserProfile: (userId: string, profileData: any) => Promise<void>;
   startFreeTrial: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -420,16 +420,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("AuthContext: login attempt for", email);
       setError(null);
       const { user: firebaseUser } = await signInWithEmailAndPassword(auth, email, password);
       
       // Skip email verification for admin@inrooms.com
       if (!firebaseUser.emailVerified && email !== 'admin@inrooms.com') {
+        console.log("AuthContext: email not verified, signing out");
         toast.error('Please verify your email before logging in.');
         await signOut(auth);
         throw new Error('Email not verified');
       }
       
+      console.log("AuthContext: login successful for", email);
       toast.success('Logged in successfully!');
       return firebaseUser;
     } catch (err: any) {
@@ -442,6 +445,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = async (isNewUser: boolean = false) => {
     try {
+      console.log("AuthContext: Google login attempt");
       setError(null);
       const provider = new GoogleAuthProvider();      
       const { user: firebaseUser } = await signInWithPopup(auth, provider);
@@ -449,6 +453,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Check if this is a new user
       const userRef = doc(db, 'users', firebaseUser.uid);
       const userSnap = await getDoc(userRef);
+      console.log("AuthContext: Google login - user exists:", userSnap.exists());
       
       if (!userSnap.exists()) {
         await setDoc(userRef, {
@@ -467,6 +472,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isNewUser
         });
         toast.success('Account created successfully!');
+        console.log("AuthContext: New user created with Google");
       } else {
         toast.success('Logged in successfully!');
       }
@@ -474,6 +480,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Get user data and sync to Supabase
       const userData = await getUserData(firebaseUser);
       await syncUserToSupabase(userData);
+      console.log("AuthContext: Google login successful, returning user");
       
       return firebaseUser;
     } catch (err: any) {
