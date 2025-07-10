@@ -168,23 +168,18 @@ export function BillingPage() {
   };
 
   const currentPlan = React.useMemo(() => {
-    if (!user?.subscription) return null;
-    
-    // Get the events quota from subscription data or user object
-    const eventsQuota = subscriptionData?.eventsQuota || user.subscription.eventsQuota;
-    console.log('[Subscription] Looking for plan with events quota:', eventsQuota);
-    
-    // Find the plan that matches the events quota
-    const matchingPlan = stripeService.getMonthlyPlans().find(plan => plan.eventsQuota === eventsQuota);
-    
-    if (matchingPlan) {
-      console.log('[Subscription] Found matching plan:', matchingPlan.name);
-      return matchingPlan;
-    } else {
-      console.log('[Subscription] No matching plan found, using default');
-      return stripeService.getMonthlyPlans()[0];
-    }
+    if (!user?.subscription && !subscriptionData) return null;
+  
+    const eventsQuota = subscriptionData?.eventsQuota || user.subscription?.eventsQuota;
+    if (!eventsQuota) return null;
+  
+    const matchingPlan = stripeService.getMonthlyPlans().find(
+      plan => plan.eventsQuota === eventsQuota
+    );
+  
+    return matchingPlan || null;
   }, [user, subscriptionData]);
+
 
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
     console.log('Starting plan selection process for plan:', plan.id);
