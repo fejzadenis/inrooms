@@ -112,10 +112,9 @@ export const eventService = {
       .select('id')
       .eq('user_id', userIdString)
       .eq('event_id', eventId)
-      .single();
+      .maybeSingle();
 
-    if (checkError && checkError.code !== 'PGRST116') {
-      // PGRST116 is "not found" error, which is expected if no registration exists
+    if (checkError) {
       throw new Error(`❌ Failed to check existing registration: ${checkError.message}`);
     }
 
