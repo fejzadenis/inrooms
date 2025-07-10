@@ -11,6 +11,7 @@ import {
   orderBy,
   serverTimestamp,
   increment,
+  getFirestore,
   Timestamp
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
