@@ -5,13 +5,14 @@ import { Search, Filter } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { eventService, type Event } from '../../services/eventService';
 import { useAuth } from '../../contexts/AuthContext';
+import { stripeService } from '../../services/stripeService';
 import { useTour } from '../../contexts/TourContext';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../../config/supabase';
 import { generateCalendarEvent } from '../../utils/calendar';
 
 export function EventsPage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { askForTourPermission, startTour } = useTour();
   const [events, setEvents] = React.useState<Event[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -171,6 +172,20 @@ export function EventsPage() {
     
     console.log("EVENTS DEBUG: Current usage:", eventsUsed, "/", eventsQuota);
     if (eventsUsed >= eventsQuota) {
+   // Check if user has no subscription and needs to start a free trial
+   if (user.subscription.status === 'inactive' && eventsQuota === 0) {
+     try {
+       await stripeService.startFreeTrial(user.id, true);
+       toast.success('Free trial activated! You now have 1 event credit for the next 7 days.');
+       // Refresh user data to get updated subscription info
+       await refreshUser();
+       // Continue with registration after starting trial
+     } catch (error) {
+       console.error('Failed to start free trial:', error);
+       toast.error('Failed to start free trial. Please try again.');
+       return;
+     }
+   } else if (eventsUsed >= eventsQuota) {
       toast.error('You have reached your event quota. Please upgrade your subscription.');
       return;
     }

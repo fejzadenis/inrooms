@@ -205,7 +205,7 @@ export function SubscriptionPage() {
               <h3 className="text-2xl font-bold text-gray-900">Start Your Free Trial</h3>
             </div>
             <p className="text-gray-600 mb-6">
-              Get full access to all features for 7 days with 2 event credits. No credit card required.
+             Get full access to all features for 7 days with 1 event credit. No credit card required.
             </p>
             <Button
               onClick={handleFreeTrial}

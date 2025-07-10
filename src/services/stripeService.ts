@@ -606,14 +606,14 @@ export const stripeService = {
       
       // Set trial end date (7 days from now)
       const trialEndsAt = new Date();
-      trialEndsAt.setDate(trialEndsAt.getDate() + 7);
+     trialEndsAt.setDate(trialEndsAt.getDate() + 7); // 7-day trial
 
       console.log(`[Stripe Service] Setting trial data for user ${userId} in Firestore`);
       
       // Update subscription in Firestore
       await updateDoc(userRef, {
         'subscription.status': 'trial',
-        'subscription.eventsQuota': 2,
+       'subscription.eventsQuota': 1, // Free trial gets 1 event
         'subscription.eventsUsed': 0,
         'subscription.trialEndsAt': trialEndsAt,
         'updatedAt': serverTimestamp()
@@ -631,7 +631,7 @@ export const stripeService = {
             .from('users')
             .update({
               subscription_status: 'trial',
-              subscription_events_quota: 2,
+             subscription_events_quota: 1, // Free trial gets 1 event
               subscription_events_used: 0,
               subscription_trial_ends_at: trialEndsAt.toISOString(),
               updated_at: new Date().toISOString()
