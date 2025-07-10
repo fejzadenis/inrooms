@@ -64,8 +64,8 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   signup: (email: string, password: string, name: string, isNewUser?: boolean) => Promise<void>;
-  login: (email: string, password: string) => Promise<any>;
-  loginWithGoogle: (isNewUser?: boolean) => Promise<any>;
+  login: (email: string, password: string) => Promise<FirebaseUser>;
+  loginWithGoogle: (isNewUser?: boolean) => Promise<FirebaseUser>;
   logout: () => Promise<void>;
   updateUserProfile: (userId: string, profileData: any) => Promise<void>;
   startFreeTrial: () => Promise<void>;
@@ -421,17 +421,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setError(null);
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const { user: firebaseUser } = await signInWithEmailAndPassword(auth, email, password);
       
       // Skip email verification for admin@inrooms.com
-      if (!userCredential.user.emailVerified && email !== 'admin@inrooms.com') {
+      if (!firebaseUser.emailVerified && email !== 'admin@inrooms.com') {
         toast.error('Please verify your email before logging in.');
         await signOut(auth);
         throw new Error('Email not verified');
       }
       
       toast.success('Logged in successfully!');
-      return userCredential;
+      return firebaseUser;
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || 'Failed to log in');
@@ -443,19 +443,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginWithGoogle = async (isNewUser: boolean = false) => {
     try {
       setError(null);
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      const provider = new GoogleAuthProvider();      
+      const { user: firebaseUser } = await signInWithPopup(auth, provider);
       
       // Check if this is a new user
-      const userRef = doc(db, 'users', result.user.uid);
+      const userRef = doc(db, 'users', firebaseUser.uid);
       const userSnap = await getDoc(userRef);
       
       if (!userSnap.exists()) {
         await setDoc(userRef, {
-          name: result.user.displayName || 'New User',
-          email: result.user.email,
+          name: firebaseUser.displayName || 'New User',
+          email: firebaseUser.email,
           role: 'user',
-          photoURL: result.user.photoURL || null,
+          photoURL: firebaseUser.photoURL || null,
           profile: {},
           subscription: {
             status: 'inactive',
@@ -472,10 +472,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       // Get user data and sync to Supabase
-      const userData = await getUserData(result.user);
+      const userData = await getUserData(firebaseUser);
       await syncUserToSupabase(userData);
       
-      return result;
+      return firebaseUser;
     } catch (err: any) {
       console.error('Google login error:', err);
       setError(err.message || 'Failed to log in with Google');

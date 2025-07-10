@@ -21,7 +21,7 @@ export function LoginPage() {
   const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
   const [verificationSuccess, setVerificationSuccess] = React.useState(false);
   
@@ -46,7 +46,8 @@ export function LoginPage() {
 
   const checkOnboardingAndRedirect = async (userId: string) => {
     try {
-      console.log("LOGIN DEBUG: Checking onboarding status for user", userId);
+      console.log("This function is no longer used - direct navigation is used instead");
+      /* 
       // Get user document to check onboarding status
       const userRef = doc(db, 'users', userId);
       const userDoc = await getDoc(userRef);
@@ -89,6 +90,7 @@ export function LoginPage() {
         console.log("LOGIN DEBUG: User document doesn't exist, redirecting to onboarding");
         navigate('/onboarding');
       }
+      */
     } catch (error) {
       console.error('Error checking onboarding status:', error);
       // Default to onboarding on error
@@ -100,10 +102,9 @@ export function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       const userCredential = await login(data.email, data.password);
-      // Use the returned user ID for redirection
-      if (userCredential && userCredential.user) {
-        await checkOnboardingAndRedirect(userCredential.user.uid);
-      }
+      
+      // Navigate directly after successful login
+      navigate(from);
     } catch (error) {
       // Error is handled in the AuthContext
     }
@@ -112,11 +113,10 @@ export function LoginPage() {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
-      const userCredential = await loginWithGoogle();
-      // Use the returned user ID for redirection
-      if (userCredential && userCredential.user) {
-        await checkOnboardingAndRedirect(userCredential.user.uid);
-      }
+      await loginWithGoogle();
+      
+      // Navigate directly after successful login
+      navigate(from);
     } catch (error) {
       // AuthContext handles error display
     } finally {
