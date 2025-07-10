@@ -21,11 +21,9 @@ export function LoginPage() {
   const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
   const [verificationSuccess, setVerificationSuccess] = React.useState(false);
-  const [loginInProgress, setLoginInProgress] = React.useState(false);
-  const [redirecting, setRedirecting] = React.useState(false);
   
   // Check for verification success from URL params
   React.useEffect(() => {
@@ -49,96 +47,80 @@ export function LoginPage() {
   const checkOnboardingAndRedirect = async (userId: string) => {
     try {
       console.log("This function is no longer used - direct navigation is used instead");
-      /*
-      This function is no longer used - direct navigation is used instead
+      /* 
+      // Get user document to check onboarding status
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        console.log("LOGIN DEBUG: User data retrieved", { 
+          role: userData.role,
+          onboardingCompleted: userData.profile?.onboardingCompleted,
+          emailVerified: auth.currentUser?.emailVerified
+        });
+      
+      // Check if email is verified in either Firebase or database
+      const isEmailVerified = auth.currentUser?.emailVerified || userData.email_verified === true;
+
+      // Check if email is verified
+      if (!isEmailVerified) {
+        console.log("LOGIN DEBUG: Email not verified in Firebase or DB, redirecting to verify-email");
+        navigate('/verify-email');
+        return;
+      }
+        
+        // Check if user is admin
+        if (userData.role === 'admin') {
+          console.log("LOGIN DEBUG: User is admin, redirecting to admin dashboard");
+          navigate('/admin');
+          return;
+        }
+        
+        // Check if onboarding is completed
+        if (userData.profile?.onboardingCompleted) {
+          console.log("LOGIN DEBUG: Onboarding completed, redirecting to", from);
+          navigate(from);
+        } else {
+          console.log("LOGIN DEBUG: Onboarding not completed, redirecting to onboarding");
+          navigate('/onboarding');
+        }
+      } else {
+        // Default to onboarding if user document doesn't exist
+        console.log("LOGIN DEBUG: User document doesn't exist, redirecting to onboarding");
+        navigate('/onboarding');
+      }
       */
     } catch (error) {
-      console.error("Error in checkOnboardingAndRedirect:", error);
+      console.error('Error checking onboarding status:', error);
+      // Default to onboarding on error
+      console.log("LOGIN DEBUG: Error checking onboarding status, defaulting to onboarding");
+      navigate('/onboarding');
     }
   };
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      console.log("Login attempt started");
-     setLoginInProgress(true);
+      const userCredential = await login(data.email, data.password);
       
-      const firebaseUser = await login(data.email, data.password);
-      console.log("Login successful, user:", firebaseUser?.uid);
-      
-      // Check if user exists and has completed onboarding
-      if (firebaseUser) {
-       setRedirecting(true);
-        const userRef = doc(db, 'users', firebaseUser.uid);
-        const userDoc = await getDoc(userRef);
-        
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          console.log("User data retrieved:", {
-            onboardingCompleted: userData.profile?.onboardingCompleted,
-            emailVerified: firebaseUser.emailVerified || userData.email_verified
-          });
-          
-          // Determine where to navigate
-          if (!userData.profile?.onboardingCompleted) {
-            console.log("Redirecting to onboarding");
-            navigate('/onboarding', { replace: true });
-          } else {
-            console.log("Redirecting to:", from);
-            navigate(from, { replace: true });
-          }
-        } else {
-          console.log("No user document found, redirecting to onboarding");
-          navigate('/onboarding', { replace: true });
-        }
-      }
+      // Navigate directly after successful login
+      navigate(from);
     } catch (error) {
       // Error is handled in the AuthContext
-      console.error("Login error:", error);
-    } finally {
-      setLoginInProgress(false);
-     setRedirecting(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
-      console.log("Google login attempt started");
-      const firebaseUser = await loginWithGoogle();
-      console.log("Google login successful, user:", firebaseUser?.uid);
+      await loginWithGoogle();
       
-      // Check if user exists and has completed onboarding
-      if (firebaseUser) {
-       setRedirecting(true);
-        const userRef = doc(db, 'users', firebaseUser.uid);
-        const userDoc = await getDoc(userRef);
-        
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          console.log("User data retrieved:", {
-            onboardingCompleted: userData.profile?.onboardingCompleted,
-            emailVerified: firebaseUser.emailVerified || userData.email_verified
-          });
-          
-          // Determine where to navigate
-          if (!userData.profile?.onboardingCompleted) {
-            console.log("Redirecting to onboarding");
-            navigate('/onboarding', { replace: true });
-          } else {
-            console.log("Redirecting to:", from);
-            navigate(from, { replace: true });
-          }
-        } else {
-          console.log("No user document found, redirecting to onboarding");
-          navigate('/onboarding', { replace: true });
-        }
-      }
+      // Navigate directly after successful login
+      navigate(from);
     } catch (error) {
       // AuthContext handles error display
-      console.error("Google login error:", error);
     } finally {
       setIsGoogleLoading(false);
-     setRedirecting(false);
     }
   };
 
@@ -255,7 +237,7 @@ export function LoginPage() {
                 <Button
                   type="submit"
                   className="w-full"
-                 isLoading={isSubmitting || loginInProgress || redirecting}
+                  isLoading={isSubmitting}
                 >
                   Sign in
                 </Button>

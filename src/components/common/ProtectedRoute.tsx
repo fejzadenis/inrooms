@@ -15,16 +15,7 @@ export function ProtectedRoute({
   const { user, loading } = useAuth();
   const location = useLocation();
   
-  // Debug logging for auth state
-  console.log("ROUTE DEBUG: ProtectedRoute check", {
-    path: location.pathname,
-    loading,
-    userExists: !!user,
-    emailVerified: user?.emailVerified,
-    dbEmailVerified: user?.dbEmailVerified,
-    onboardingCompleted: user?.profile?.onboardingCompleted,
-    requireEmailVerification
-  });
+  // Removed debug logging for cleaner console output
 
   // Show loading spinner while auth state is being resolved
   if (loading) {
@@ -37,7 +28,6 @@ export function ProtectedRoute({
 
   // If no user, redirect to login
   if (!user) {
-    console.log("ProtectedRoute: No user, redirecting to login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -46,7 +36,6 @@ export function ProtectedRoute({
   
   // Allow onboarding route to bypass email verification check
   if (isOnboardingRoute) {
-    console.log("ProtectedRoute: On onboarding route, allowing access");
     return <>{children}</>;
   }
 
@@ -54,17 +43,14 @@ export function ProtectedRoute({
   // Skip verification for admin@inrooms.com
   const isAdminEmail = user.email === 'admin@inrooms.com';
   if (requireEmailVerification && !user.emailVerified && !user.dbEmailVerified && !isVerifyEmailRoute && !isAdminEmail) {
-    console.log("ProtectedRoute: Email verification required but not verified, redirecting to verify-email");
     return <Navigate to="/verify-email" replace />;
   }
 
   // Redirect to onboarding if email is verified but onboarding not completed
   if ((user.emailVerified || user.dbEmailVerified) && !user.profile?.onboardingCompleted && !isOnboardingRoute) {
-    console.log("ProtectedRoute: Email verified but onboarding not completed, redirecting to onboarding");
     return <Navigate to="/onboarding" replace />;
   }
 
-  console.log("ProtectedRoute: All checks passed, rendering protected content");
   // All checks passed; render the protected content
   return <>{children}</>;
 }

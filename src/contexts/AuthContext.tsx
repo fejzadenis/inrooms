@@ -66,7 +66,7 @@ interface AuthContextType {
   signup: (email: string, password: string, name: string, isNewUser?: boolean) => Promise<void>;
   login: (email: string, password: string) => Promise<FirebaseUser>;
   loginWithGoogle: (isNewUser?: boolean) => Promise<FirebaseUser>;
-  logout: () => Promise<void>; 
+  logout: () => Promise<void>;
   updateUserProfile: (userId: string, profileData: any) => Promise<void>;
   startFreeTrial: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -78,9 +78,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
-
-// Debug flag for auth issues
-const DEBUG_AUTH = true;
 
 // Cache for user data to prevent excessive Firestore reads
 const userDataCache = new Map<string, { data: User; timestamp: number }>();
@@ -212,21 +209,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       // Prevent multiple rapid calls during auth state changes
-      if (DEBUG_AUTH) console.log("AUTH DEBUG: Auth state changed", firebaseUser?.uid);
-      
       if (shouldRateLimit('authStateChange')) {
-        if (DEBUG_AUTH) console.log("AUTH DEBUG: Rate limited auth state change");
         return;
       }
 
       if (firebaseUser) {
         try {
-          if (DEBUG_AUTH) console.log("AUTH DEBUG: User authenticated", firebaseUser.uid);
-          
           // Check cache first
           const cachedData = getCachedUserData(firebaseUser.uid);
           if (cachedData && authStateInitialized) {
-            if (DEBUG_AUTH) console.log("AUTH DEBUG: Using cached user data");
             setUser(cachedData);
             setLoading(false);
             return;
@@ -234,7 +225,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           // Force reload from server to get latest emailVerified status
           try {
-            if (DEBUG_AUTH) console.log("AUTH DEBUG: Reloading user from Firebase");
             await firebaseUser.reload();
           } catch (reloadError) {
             console.warn('Failed to reload user, continuing with cached data:', reloadError);
@@ -244,17 +234,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const refreshedUser = auth.currentUser;
           
           if (!refreshedUser) {
-            if (DEBUG_AUTH) console.log("AUTH DEBUG: No refreshed user after reload");
             setUser(null);
             setLoading(false);
             return;
           }
 
-          if (DEBUG_AUTH) console.log("AUTH DEBUG: Getting user data from Firestore");
           const userData = await getUserData(refreshedUser);
           setCachedUserData(refreshedUser.uid, userData);
           setUser(userData);
-          if (DEBUG_AUTH) console.log("AUTH DEBUG: User data set", userData.id);
           
           // Sync user data to Supabase
           await syncUserToSupabase(userData);
@@ -263,20 +250,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // If we have cached data, use it as fallback
           const cachedData = getCachedUserData(firebaseUser.uid);
           if (cachedData) {
-            if (DEBUG_AUTH) console.log("AUTH DEBUG: Using cached data as fallback after error");
             setUser(cachedData);
           } else {
-            if (DEBUG_AUTH) console.log("AUTH DEBUG: No cached data available, setting user to null");
             setUser(null);
           }
         }
       } else {
-        if (DEBUG_AUTH) console.log("AUTH DEBUG: No Firebase user, setting user to null");
         setUser(null);
         userDataCache.clear(); // Clear cache on logout
       }
-      
-      if (DEBUG_AUTH) console.log("AUTH DEBUG: Auth state initialized, loading complete");
       setAuthStateInitialized(true);
       setLoading(false);
     });
@@ -438,19 +420,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      console.log("AuthContext: login attempt for", email);
       setError(null);
       const { user: firebaseUser } = await signInWithEmailAndPassword(auth, email, password);
       
       // Skip email verification for admin@inrooms.com
       if (!firebaseUser.emailVerified && email !== 'admin@inrooms.com') {
-        console.log("AuthContext: email not verified, signing out");
         toast.error('Please verify your email before logging in.');
         await signOut(auth);
         throw new Error('Email not verified');
       }
       
-      console.log("AuthContext: login successful for", email);
       toast.success('Logged in successfully!');
       return firebaseUser;
     } catch (err: any) {
@@ -463,7 +442,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = async (isNewUser: boolean = false) => {
     try {
-      console.log("AuthContext: Google login attempt");
       setError(null);
       const provider = new GoogleAuthProvider();      
       const { user: firebaseUser } = await signInWithPopup(auth, provider);
@@ -471,7 +449,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Check if this is a new user
       const userRef = doc(db, 'users', firebaseUser.uid);
       const userSnap = await getDoc(userRef);
-      console.log("AuthContext: Google login - user exists:", userSnap.exists());
       
       if (!userSnap.exists()) {
         await setDoc(userRef, {
@@ -490,7 +467,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isNewUser
         });
         toast.success('Account created successfully!');
-        console.log("AuthContext: New user created with Google");
       } else {
         toast.success('Logged in successfully!');
       }
@@ -498,7 +474,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Get user data and sync to Supabase
       const userData = await getUserData(firebaseUser);
       await syncUserToSupabase(userData);
-      console.log("AuthContext: Google login successful, returning user");
       
       return firebaseUser;
     } catch (err: any) {
