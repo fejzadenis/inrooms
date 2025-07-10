@@ -565,9 +565,10 @@ export function OnboardingFlow() {
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {[
-                    'Enterprise Sales', 'Inside Sales', 'Field Sales', 'Account Management',
-                    'Business Development', 'Customer Success', 'Sales Operations', 'Revenue Operations',
-                    'Technical Sales', 'Channel Sales', 'International Sales', 'Sales Leadership'
+                    'Product Development', 'Go-To-Market Strategy', 'Fundraising',
+              'Growth Hacking', 'Operations & Scaling', 'Technical Leadership',
+              'UI/UX Design', 'Investor Relations', 'Hiring & Team Building',
+              'Finance & Budgeting', 'Community Building', 'Startup Legal Basics'
                   ].map((spec) => (
                     <label key={spec} className="relative">
                       <input
@@ -593,7 +594,7 @@ export function OnboardingFlow() {
                 </label>
                 <textarea
                   {...step4Form.register('skills')}
-                  placeholder="e.g., Salesforce, Lead Generation, Negotiation, CRM, Cold Calling, Presentation Skills"
+                  placeholder="e.g., Pitching, MVP Design, Fundraising, Agile, SEO, Market Research"
                   rows={3}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
@@ -633,11 +634,12 @@ export function OnboardingFlow() {
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {[
-                    { value: 'networking', label: 'Networking', desc: 'Build professional connections' },
-                    { value: 'learning', label: 'Learning', desc: 'Develop new skills and knowledge' },
-                    { value: 'career_growth', label: 'Career Growth', desc: 'Advance my career' },
-                    { value: 'business_development', label: 'Business Development', desc: 'Find new opportunities' },
-                    { value: 'mentoring', label: 'Mentoring', desc: 'Help others and share knowledge' }
+                    { value: 'raising_funds', label: 'Raising Funds', desc: 'Connect with investors and pitch your startup' },
+                    { value: 'finding_cofounder', label: 'Finding a Co-founder', desc: 'Meet like-minded builders to launch together' },
+                    { value: 'building_product', label: 'Building a Product', desc: 'Get support with product design and development' },
+                    { value: 'scaling_startup', label: 'Scaling My Startup', desc: 'Learn strategies to grow and expand' },
+                    { value: 'gaining_users', label: 'Gaining Early Users', desc: 'Validate your idea and build traction' },
+                    { value: 'joining_community', label: 'Joining a Community', desc: 'Be part of a network of founders and makers' }
                   ].map((goal) => (
                     <label key={goal.value} className="relative">
                       <input
@@ -679,9 +681,16 @@ export function OnboardingFlow() {
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {[
-                    'Finding qualified leads', 'Closing deals faster', 'Building stronger relationships',
-                    'Learning new technologies', 'Improving presentation skills', 'Time management',
-                    'Team collaboration', 'Market understanding', 'Competitive positioning', 'Scaling processes'
+                    'Validating my startup idea',
+                    'Finding a technical co-founder',
+                    'Acquiring early users/customers',
+                    'Fundraising and investor outreach',
+                    'Hiring the right team',
+                    'Building an MVP or product prototype',
+                    'Managing runway and burn rate',
+                    'Standing out in a crowded market',
+                    'Finding product-market fit',
+                    'Handling legal or regulatory issues'
                   ].map((challenge) => (
                     <label key={challenge} className="relative">
                       <input
@@ -779,9 +788,18 @@ export function OnboardingFlow() {
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {[
-                    'AI & Machine Learning', 'Cybersecurity', 'Cloud Computing', 'Data Analytics',
-                    'Digital Transformation', 'Fintech', 'Healthcare Tech', 'E-commerce',
-                    'Mobile Technology', 'Blockchain', 'IoT', 'DevOps'
+                    'AI & Machine Learning',
+    'Blockchain & Web3',
+    'Fintech & Payments',
+    'HealthTech & BioTech',
+    'SaaS & B2B Platforms',
+    'E-commerce & DTC',
+    'Creator Economy',
+    'GreenTech & Sustainability',
+    'Future of Work',
+    'AR/VR & Spatial Computing',
+    'Mobile Apps & Super Apps',
+    'No-Code / Low-Code Tools'
                   ].map((interest) => (
                     <label key={interest} className="relative">
                       <input
