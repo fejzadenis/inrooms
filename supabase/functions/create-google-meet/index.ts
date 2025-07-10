@@ -1,107 +1,119 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { create, getNumericDate, Header } from "https://deno.land/x/djwt@v2.8/mod.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, x-client-info, apikey",
-};
-
-interface MeetingRequest {
+interface MeetingParams {
   title: string;
-  description: string;
-  startTime: string | Date;
-  endTime: string | Date;
+  description?: string;
+  startTime: string; // ISO 8601 формат, нпр. "2025-07-10T12:00:00Z"
+  endTime: string;
 }
 
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      status: 200,
-      headers: corsHeaders,
-    });
-  }
+async function createGoogleMeet(params: MeetingParams): Promise<string> {
+  const { title, description = "", startTime, endTime } = params;
 
-  try {
-    const { title, description, startTime, endTime }: MeetingRequest = await req.json();
+  // Читање Service Account података из env
+  const privateKeyRaw = Deno.env.get("GOOGLE_PRIVATE_KEY");
+  const clientEmail = Deno.env.get("GOOGLE_CLIENT_EMAIL");
+  if (!privateKeyRaw || !clientEmail) throw new Error("Missing GOOGLE_PRIVATE_KEY or GOOGLE_CLIENT_EMAIL env variables");
 
-    // Validate required fields
-    if (!title || !startTime || !endTime) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+  // Замењујемо \n са стварним новим редом
+  const privateKey = privateKeyRaw.replace(/\\n/g, "\n");
+
+  // Припрема JWT токена за Google OAuth2
+  const iat = getNumericDate(0);
+  const exp = getNumericDate(3600);
+
+  const header: Header = { alg: "RS256", typ: "JWT" };
+
+  const payload = {
+    iss: clientEmail,
+    scope: "https://www.googleapis.com/auth/calendar",
+    aud: "https://oauth2.googleapis.com/token",
+    exp,
+    iat,
+  };
+
+  // Упомоћна функција да претвори стринг у Uint8Array
+  function str2ab(str: string): Uint8Array {
+    const buf = new ArrayBuffer(str.length);
+    const bufView = new Uint8Array(buf);
+    for (let i = 0; i < str.length; i++) {
+      bufView[i] = str.charCodeAt(i);
     }
+    return bufView;
+  }
 
-    // Generate a unique meeting ID
-    const meetingId = generateMeetingId();
-    
-    // Create a Google Meet link
-    const meetLink = `https://meet.google.com/${meetingId}`;
+  // Импортујемо приватни кључ за потпис
+  const key = await crypto.subtle.importKey(
+    "pkcs8",
+    str2ab(atob(privateKey.replace(/-----.*PRIVATE KEY-----/g, "").replace(/\n/g, ""))),
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
 
-    // In a real implementation, you would use Google Calendar API to create an actual meeting
-    // For this demo, we'll just return a simulated response
-    
-    return new Response(
-      JSON.stringify({
-        success: true,
-        meetLink,
-        title,
-        description,
-        startTime,
-        endTime,
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
-  } catch (error) {
-    console.error("Error creating Google Meet event:", error);
-    
-    return new Response(
-      JSON.stringify({ 
-        error: "Failed to create meeting",
-        details: error instanceof Error ? error.message : String(error)
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
-  }
-});
+  // Креирамо JWT
+  const jwt = await create(header, payload, key);
 
-// Generate a random meeting ID similar to Google Meet format
-function generateMeetingId(): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyz';
-  const numbers = '0123456789';
-  const allChars = chars + numbers;
-  
-  // Format: abc-defg-hij
-  let id = '';
-  
-  // First segment (3 chars)
-  for (let i = 0; i < 3; i++) {
-    id += chars.charAt(Math.floor(Math.random() * chars.length));
+  // Узимамо OAuth2 access token
+  const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion: jwt,
+    }),
+  });
+
+  if (!tokenResponse.ok) {
+    const err = await tokenResponse.text();
+    throw new Error(`Failed to get access token: ${err}`);
   }
-  
-  id += '-';
-  
-  // Second segment (4 chars)
-  for (let i = 0; i < 4; i++) {
-    id += allChars.charAt(Math.floor(Math.random() * allChars.length));
+
+  const tokenData = await tokenResponse.json();
+  const accessToken = tokenData.access_token;
+  if (!accessToken) throw new Error("No access token returned from Google");
+
+  // Креирање Google Calendar догађаја са Meet линком
+  const event = {
+    summary: title,
+    description,
+    start: { dateTime: startTime },
+    end: { dateTime: endTime },
+    conferenceData: {
+      createRequest: {
+        requestId: crypto.randomUUID(),
+        conferenceSolutionKey: { type: "hangoutsMeet" },
+      },
+    },
+  };
+
+  const calendarId = "primary"; // Или неки други календар
+
+  const createEventResponse = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?conferenceDataVersion=1`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(event),
+    }
+  );
+
+  if (!createEventResponse.ok) {
+    const err = await createEventResponse.text();
+    throw new Error(`Failed to create calendar event: ${err}`);
   }
-  
-  id += '-';
-  
-  // Third segment (3 chars)
-  for (let i = 0; i < 3; i++) {
-    id += allChars.charAt(Math.floor(Math.random() * allChars.length));
-  }
-  
-  return id;
+
+  const eventData = await createEventResponse.json();
+
+  // Извлачимо Google Meet линк
+  const meetLink = eventData.conferenceData?.entryPoints?.find(
+    (ep: any) => ep.entryPointType === "video"
+  )?.uri;
+
+  if (!meetLink) throw new Error("Google Meet link not found in event response");
+
+  return meetLink;
 }
