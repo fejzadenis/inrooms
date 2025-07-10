@@ -98,7 +98,7 @@ export function EventManagementModal({
         duration: data.duration,
         maxParticipants: data.maxParticipants,
         currentParticipants: 0,
-        meetLink: meetLink || undefined,
+        meetLink: meetLink || null,
         createdBy: user.id,
       };
 

@@ -205,9 +205,6 @@ async function createGoogleMeet(params: {
       createRequest: {
         requestId: crypto.randomUUID(),
         conferenceSolutionKey: { type: "hangoutsMeet" },
-        status: {
-          statusCode: "pending"
-        }
       },
     },
   };
