@@ -143,7 +143,7 @@ const syncUserToSupabase = async (userData: User): Promise<void> => {
     const syncData = {
       id: userData.id,
       email: userData.email,
-      name: userData.name,
+      name: userData.name || 'New User',
       role: userData.role,
       photo_url: userData.photoURL || null,
       avatar_url: userData.photoURL || null,
@@ -439,7 +439,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         return {
           id: firebaseUser.uid,
-          name: userData.name || firebaseUser.displayName || '',
+          name: userData.name || firebaseUser.displayName || 'New User',
           email: userData.email || firebaseUser.email || '',
           role: userData.role || 'user',
           photoURL: userData.photoURL || firebaseUser.photoURL || undefined,
@@ -461,7 +461,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("AUTH DEBUG: User doesn't exist in Firestore, creating new document");
         const newUser = {
           id: firebaseUser.uid,
-          name: firebaseUser.displayName || '',
+          name: firebaseUser.displayName || 'New User',
           email: firebaseUser.email || '',
           role: 'user',
           photoURL: firebaseUser.photoURL || null,
@@ -480,7 +480,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
         
         await setDoc(userRef, {
-          name: newUser.name,
+          name: firebaseUser.displayName || 'New User',
           email: newUser.email,
           role: newUser.role,
           photoURL: newUser.photoURL,
@@ -634,7 +634,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Create user document
       const userRef = doc(db, 'users', userCredential.user.uid);
       await setDoc(userRef, {
-        name,
+        name: name || 'New User',
         email,
         role: 'user',
         photoURL: userCredential.user.photoURL,
@@ -698,7 +698,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (!userSnap.exists()) {
         await setDoc(userRef, {
-          name: result.user.displayName,
+          name: result.user.displayName || 'New User',
           email: result.user.email,
           role: 'user',
           photoURL: result.user.photoURL || null,
