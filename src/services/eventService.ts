@@ -11,6 +11,7 @@ import {
   orderBy,
   serverTimestamp,
   increment,
+  getFirestore,
   Timestamp
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -36,6 +37,8 @@ export interface EventRegistration {
   eventId: string;
   registeredAt: Date;
 }
+
+const db = getFirestore();
 
 async function incrementEventParticipants(eventId: string) {
   const eventRef = doc(db, "events", eventId);
