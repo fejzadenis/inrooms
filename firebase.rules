@@ -108,8 +108,7 @@ service cloud.firestore {
           request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
           request.auth.token.email == 'admin@inrooms.com' ||
           (
-            request.resource.data.participants.size() == 2 &&
-            areUsersConnected(request.resource.data.participants[0], request.resource.data.participants[1])
+            true
           )
         )
       );
