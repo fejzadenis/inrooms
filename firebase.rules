@@ -4,15 +4,19 @@ service cloud.firestore {
 
     // === Helper Functions ===
     function areUsersConnected(userId1, userId2) {
-      let user1Doc = get(/databases/$(database)/documents/users/$(userId1));
-      let user2Doc = get(/databases/$(database)/documents/users/$(userId2));
-
-      let user1Connections = user1Doc.exists && user1Doc.data.connections is list ? user1Doc.data.connections : [];
-      let user2Connections = user2Doc.exists && user2Doc.data.connections is list ? user2Doc.data.connections : [];
-
-      return user1Doc.exists && user2Doc.exists &&
-             (user1Connections.has(userId2) || user2Connections.has(userId1));
+      return
+        get(/databases/$(database)/documents/users/$(userId1)).exists &&
+        get(/databases/$(database)/documents/users/$(userId2)).exists &&
+        (
+          (get(/databases/$(database)/documents/users/$(userId1)).data.connections is list &&
+           get(/databases/$(database)/documents/users/$(userId1)).data.connections.indexOf(userId2) >= 0)
+          &&
+          (get(/databases/$(database)/documents/users/$(userId2)).data.connections is list &&
+           get(/databases/$(database)/documents/users/$(userId2)).data.connections.indexOf(userId1) >= 0)
+        );
     }
+
+
 
 
     // === USERS ===
@@ -59,32 +63,26 @@ service cloud.firestore {
 
     // === CHATS ===
     match /chats/{chatId} {
-    allow read: if request.auth != null && (
-      request.auth.uid in resource.data.participants ||
-      request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
-      request.auth.token.email == 'admin@inrooms.com'
-    );
-
-    allow create: if request.auth != null &&
-      request.resource.data.participants is list &&
-      request.resource.data.participants.size() == 2 &&
-      request.auth.uid in request.resource.data.participants &&
-      (
-        request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
-        request.auth.token.email == 'admin@inrooms.com' ||
-        areUsersConnected(
-          request.resource.data.participants[0],
-          request.resource.data.participants[1]
-        )
+      allow read: if request.auth != null && (
+        request.auth.uid in resource.data.participants ||
+        request.auth.uid == 'ADMIN_UID' ||
+        request.auth.token.email == 'admin@inrooms.com'
       );
 
+      allow create: if request.auth != null &&
+        request.resource.data.participants is list &&
+        request.resource.data.participants.size() == 2 &&
+        request.auth.uid in request.resource.data.participants &&
+        areUsersConnected(request.resource.data.participants[0], request.resource.data.participants[1]);
+    
 
-    allow update: if request.auth != null && (
-      request.auth.uid in resource.data.participants ||
-      request.auth.uid == 'uJLXftk0DCYd2ujOjxX30zETSm33' ||
-      request.auth.token.email == 'admin@inrooms.com'
-    );
-  }
+      allow update: if request.auth != null && (
+        request.auth.uid in resource.data.participants ||
+        request.auth.uid == 'ADMIN_UID' ||
+        request.auth.token.email == 'admin@inrooms.com'
+      );
+    }
+
 
 
     // === MESSAGES ===
