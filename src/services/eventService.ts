@@ -102,79 +102,48 @@ export const eventService = {
   },
 
   async registerForEvent(userId: string, eventId: string): Promise<void> {
-    try {
-      // Add registration
-      console.log(`[Event Service] Registering user ${userId} (type: ${typeof userId}) for event ${eventId}`);
-      const userIdString = userId.toString();
-      console.log(`[Event Service] Converted userId to string: ${userIdString}`);
-      
-      // Also register in Supabase for redundancy
-      console.log(`[Event Service] Creating registration in Supabase`);
-      const { error } = await supabase
-        .from('registrations')
-        .insert({
-          user_id: userIdString,
-          event_id: eventId,
-          registered_at: new Date().toISOString(),
-        });
-        
-      if (error) {
-        console.error('Error registering in Supabase:', error);
-        console.log(`[Event Service] Failed to create registration in Supabase: ${error.message}`);
-        // If Supabase fails, try Firebase as fallback
-        console.log(`[Event Service] Falling back to Firebase registration`);
-        const firebaseRegistration = await addDoc(collection(db, 'registrations'), {
-          userId,
-          eventId,
-          registeredAt: serverTimestamp(),
-        });
-        console.log(`[Event Service] Firebase registration created with ID: ${firebaseRegistration.id}`);
+  try {
+    console.log(`[Event Service] Checking quota for user ${userId} for event ${eventId}`);
+    const userIdString = userId.toString();
 
-        // Update event participant count in Firebase
-        const eventRef = doc(db, 'events', eventId);
-        await updateDoc(eventRef, {
-          currentParticipants: increment(1),
-        });
-        console.log(`[Event Service] Updated event participant count in Firebase`);
-      } else {
-        console.log(`[Event Service] Supabase registration created successfully`);
-        
-        // Even if Supabase succeeds, we still need to update Firebase for consistency
-        // This ensures the UI updates correctly when using Firebase data
-        console.log(`[Event Service] Updating Firebase to match Supabase`);
-        
-        try {
-          // Add registration to Firebase
-          const firebaseRegistration = await addDoc(collection(db, 'registrations'), {
-            userId,
-            eventId,
-            registeredAt: serverTimestamp(),
-          });
-          console.log(`[Event Service] Firebase registration created with ID: ${firebaseRegistration.id}`);
-          
-          // Update event participant count in Firebase
-          const eventRef = doc(db, 'events', eventId);
-          await updateDoc(eventRef, {
-            currentParticipants: increment(1),
-          });
-          console.log(`[Event Service] Updated event participant count in Firebase`);
-        } catch (firebaseError) {
-          console.error('Error updating Firebase after Supabase success:', firebaseError);
-          // Continue even if Firebase update fails - Supabase is now primary
-        }
-      }
-      
-      // Update user's events used count in Supabase
-      console.log(`[Event Service] Updating user's events_used count in Supabase`);
-      
-      // Note: We don't need to manually update the events_used count anymore
-      // The update_event_registration trigger in Supabase will handle this automatically
-      console.log(`[Event Service] The update_event_registration trigger will handle updating events_used count`);
-    } catch (error) {
-      console.error('Error registering for event:', error);
-      throw error;
+    // 1. Fetch the user's current usage and quota
+    const { data: userData, error: fetchError } = await supabase
+      .from('users')
+      .select('subscriptions_event_used, subscriptions_event_quota')
+      .eq('id', userIdString)
+      .single();
+
+    if (fetchError || !userData) {
+      throw new Error(`❌ Failed to fetch user data: ${fetchError?.message}`);
     }
-  },
+
+    const used = userData.subscriptions_event_used ?? 0;
+    const quota = userData.subscriptions_event_quota ?? 0;
+
+    // 2. Quota check
+    if (used >= quota) {
+      console.warn(`🚫 User ${userIdString} has reached their event quota (${used}/${quota})`);
+      throw new Error('You have reached your event participation limit.');
+    }
+
+    // 3. Increment subscriptions_event_used
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ subscriptions_event_used: used + 1 })
+      .eq('id', userIdString);
+
+    if (updateError) {
+      throw new Error(`❌ Failed to update usage count: ${updateError.message}`);
+    }
+
+    console.log(`✅ User ${userIdString} successfully incremented (${used + 1}/${quota})`);
+
+  } catch (error) {
+    console.error('Error in registerForEvent:', error);
+    throw error;
+  }
+},
+
 
   async getUserRegistrations(userId: string): Promise<EventRegistration[]> {
     try {
