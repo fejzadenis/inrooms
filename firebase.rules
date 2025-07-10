@@ -4,7 +4,7 @@ service cloud.firestore {
 
     // === Helper Functions ===
     function areUsersConnected(userId1, userId2) {
-      return
+      return (
         get(/databases/$(database)/documents/users/$(userId1)).exists &&
         get(/databases/$(database)/documents/users/$(userId2)).exists &&
         (
@@ -13,7 +13,8 @@ service cloud.firestore {
           &&
           (get(/databases/$(database)/documents/users/$(userId2)).data.connections is list &&
            get(/databases/$(database)/documents/users/$(userId2)).data.connections.indexOf(userId1) >= 0)
-        );
+        )
+      );
     }
 
 
