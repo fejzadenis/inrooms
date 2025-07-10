@@ -106,7 +106,24 @@ export const eventService = {
     console.log(`[Event Service] Checking quota for user ${userId} for event ${eventId}`);
     const userIdString = userId.toString();
 
-    // 1. Fetch user's quota usage
+    // 1. Check if user is already registered for this event
+    const { data: existingRegistration, error: checkError } = await supabase
+      .from('registrations')
+      .select('id')
+      .eq('user_id', userIdString)
+      .eq('event_id', eventId)
+      .single();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      // PGRST116 is "not found" error, which is expected if no registration exists
+      throw new Error(`❌ Failed to check existing registration: ${checkError.message}`);
+    }
+
+    if (existingRegistration) {
+      throw new Error('🚫 You are already registered for this event.');
+    }
+
+    // 2. Fetch user's quota usage
     const { data: userData, error: userFetchError } = await supabase
       .from('users')
       .select('subscription_events_used, subscription_events_quota')
@@ -124,7 +141,7 @@ export const eventService = {
       throw new Error('🚫 You have reached your event participation limit.');
     }
 
-    // 2. Store registration
+    // 3. Store registration
     const { error: registrationError } = await supabase
       .from('registrations')
       .insert({
@@ -137,7 +154,7 @@ export const eventService = {
       throw new Error(`❌ Failed to register user: ${registrationError.message}`);
     }
 
-    // 3. Increment current_participants in events table
+    // 4. Increment current_participants in events table
     const eventRef = doc(db, 'events', eventId);
 const eventSnap = await getDoc(eventRef);
 
@@ -156,7 +173,7 @@ await updateDoc(eventRef, {
   updatedAt: serverTimestamp(),
 });
 
-    // 4. Increment user's quota usage
+    // 5. Increment user's quota usage
     const { error: updateUserError } = await supabase
       .from('users')
       .update({ subscription_events_used: used + 1 })
