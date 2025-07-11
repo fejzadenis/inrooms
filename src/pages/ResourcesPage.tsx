@@ -264,33 +264,6 @@ export function ResourcesPage() {
             </Button>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 text-center">
-            <div className="bg-green-100 p-4 rounded-full inline-flex items-center justify-center mb-4">
-              <Rocket className="w-8 h-8 text-green-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Founder Resources</h3>
-            <p className="text-gray-600 mb-4">
-              Access exclusive resources, templates, and tools for startup founders.
-            </p>
-            <Button variant="outline" size="sm">
-              Explore Resources
-            </Button>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 text-center">
-            <div className="bg-purple-100 p-4 rounded-full inline-flex items-center justify-center mb-4">
-              <MessageSquare className="w-8 h-8 text-purple-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
-            <p className="text-gray-600 mb-4">
-              Tips and strategies for maximizing your networking success on inRooms.
-            </p>
-            <Button variant="outline" size="sm">
-              Learn More
-            </Button>
-          </div>
-        </div>
-      </div>
     </MainLayout>
   );
 }
