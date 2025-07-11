@@ -13,7 +13,8 @@ import {
   User,
   Calendar,
   MessageSquare,
-  Settings
+  Settings,
+  Download
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Link } from 'react-router-dom';
