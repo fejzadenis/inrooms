@@ -2,28 +2,18 @@ import React from 'react';
 import { MainLayout } from '../../layouts/MainLayout';
 import { guides } from '../../data/guides';
 import { 
-  FileText, 
+  FileText,
   Rocket, 
   Video, 
-  Download, 
-  ExternalLink, 
+  ExternalLink,
   Search, 
-  ChevronRight, 
+  ChevronRight,
   Play,
   Clock,
   User,
   Calendar,
   MessageSquare,
-  Settings,
-  CreditCard,
-  Users,
-  Star,
-  Bookmark,
-  Building,
-  Target,
-  Zap,
-  Code,
-  Briefcase
+  Settings
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Link } from 'react-router-dom';
@@ -277,14 +267,18 @@ export function DocsPage() {
         </div>
 
         {/* Documentation Articles */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-8">
             <FileText className="inline-block w-6 h-6 mr-2" />
             Documentation
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredDocs.map((doc) => (
-              <div key={doc.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+              <div 
+                key={doc.id} 
+                className="bg-gradient-to-br from-white to-gray-50 rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 hover:-translate-y-1 cursor-pointer"
+                onClick={() => setSelectedGuide(doc.id)}
+              >
                 <div className="flex items-start justify-between mb-4" onClick={() => setSelectedGuide(doc.id)} style={{ cursor: 'pointer' }}>
                   <div className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-medium">
                     guide
@@ -296,7 +290,11 @@ export function DocsPage() {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{doc.title}</h3>
                 <p className="text-gray-600 mb-4">{doc.description}</p>
-                <Button variant="outline" className="w-full" onClick={() => setSelectedGuide(doc.id)}>
+                <Button 
+                  variant="outline" 
+                  className="w-full bg-white hover:bg-indigo-50 border-indigo-200 text-indigo-600 hover:text-indigo-700 hover:border-indigo-300"
+                  onClick={() => setSelectedGuide(doc.id)}
+                >
                   <Rocket className="w-4 h-4 mr-2" />
                   Read Guide
                 </Button>
@@ -307,25 +305,31 @@ export function DocsPage() {
 
         {/* Selected Guide Content */}
         {selectedGuide && (
-          <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8 mt-8">
+          <div className="bg-gradient-to-br from-white to-gray-50 rounded-lg shadow-lg border border-gray-200 p-8 mt-8">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">
                 {guides.find(g => g.id === selectedGuide)?.title}
               </h2>
-              <Button variant="outline" size="sm" onClick={() => setSelectedGuide(null)}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                onClick={() => setSelectedGuide(null)}
+              >
                 Back to Guides
               </Button>
             </div>
-            <div className="prose prose-indigo max-w-none">
+            <div className="prose prose-indigo max-w-none prose-headings:text-indigo-900 prose-headings:font-bold prose-p:text-gray-700 prose-strong:text-gray-900 prose-strong:font-semibold prose-li:text-gray-700">
               <div dangerouslySetInnerHTML={{ 
                 __html: guides.find(g => g.id === selectedGuide)?.content
                   ? guides.find(g => g.id === selectedGuide)!.content
                       .replace(/^# .+$/m, '') // Remove the first heading as we already show it above
-                      .replace(/^#{1,6} (.+)$/gm, (_, heading) => `<h3 class="text-xl font-bold text-gray-900 mt-6 mb-3">${heading}</h3>`)
+                      .replace(/^#{1,6} (.+)$/gm, (_, heading) => `<h3 class="text-xl font-bold text-indigo-900 mt-6 mb-3">${heading}</h3>`)
                       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
                       .replace(/\*(.+?)\*/g, '<em>$1</em>')
-                      .replace(/- (.+)/g, '<li>$1</li>').replace(/(?:<li>.*<\/li>\n)+/g, match => `<ul class="list-disc list-inside space-y-1 ml-4 my-3">${match}</ul>`)
-                      .replace(/\n\n/g, '<br/><br/>')
+                      .replace(/- (.+)/g, '<li>$1</li>').replace(/(?:<li>.*<\/li>\n)+/g, match => `<ul class="list-disc list-inside space-y-2 ml-4 my-4 text-gray-700">${match}</ul>`)
+                      .replace(/\n\n/g, '</p><p class="my-4">')
+                      .replace(/^(.+)(?!\<\/p\>)$/gm, '<p class="my-4">$1</p>')
                   : ''
               }} />
             </div>
@@ -333,70 +337,26 @@ export function DocsPage() {
         )}
 
         {/* Video Tutorials */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-8">
             <Video className="inline-block w-6 h-6 mr-2" />
             Founder Video Tutorials
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredVideos.map((video) => (
-              <div key={video.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
-                <div className="relative">
-                  <img
-                    src={video.thumbnail}
-                    alt={video.title}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                    <div className="bg-white bg-opacity-90 rounded-full p-3">
-                      <Play className="w-6 h-6 text-gray-900" />
-                    </div>
-                  </div>
-                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-sm">
-                    {video.duration}
-                  </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{video.title}</h3>
-                  <p className="text-gray-600 mb-4">{video.description}</p>
-                  <Button className="w-full">
-                    <Play className="w-4 h-4 mr-2" />
-                    Watch Video
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Downloads */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            <Download className="inline-block w-6 h-6 mr-2" />
-            Founder Resources & Downloads
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredDownloads.map((download) => (
-              <div key={download.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm font-medium">
-                    {download.type}
-                  </div>
-                  <span className="text-sm text-gray-500">{download.size}</span>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{download.title}</h3>
-                <p className="text-gray-600 mb-4">{download.description}</p>
-                <Button variant="outline" className="w-full">
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
-                </Button>
-              </div>
-            ))}
+          <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-8 text-center border border-indigo-100">
+            <Video className="w-16 h-16 text-indigo-400 mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-indigo-900 mb-3">Coming Soon</h3>
+            <p className="text-lg text-indigo-700 max-w-2xl mx-auto mb-6">
+              We're currently producing high-quality video tutorials to help you make the most of the platform.
+              Check back soon for comprehensive guides on networking, profile optimization, and more!
+            </p>
+            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              Get Notified When Available
+            </Button>
           </div>
         </div>
 
         {/* Additional Resources */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-8 text-white">
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-8 text-white shadow-xl">
           <div className="text-center">
             <h3 className="text-2xl font-bold mb-4">Need More Help?</h3>
             <p className="text-indigo-100 mb-6 max-w-2xl mx-auto">
@@ -405,13 +365,13 @@ export function DocsPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/help">
-                <Button variant="outline" className="bg-white text-indigo-600 hover:bg-gray-50 border-white">
+                <Button variant="outline" className="bg-white text-indigo-600 hover:bg-gray-50 border-white shadow-md">
                   <MessageSquare className="w-4 h-4 mr-2" />
                   Visit Help Center
                 </Button>
               </Link>
               <a href="mailto:support@inrooms.com">
-                <Button className="bg-indigo-700 hover:bg-indigo-800 text-white">
+                <Button className="bg-indigo-700 hover:bg-indigo-800 text-white shadow-md">
                   <MessageSquare className="w-4 h-4 mr-2" />
                   Contact Support
                 </Button>
