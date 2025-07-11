@@ -354,10 +354,6 @@ export function HelpPage() {
                   Email Support
                 </Button>
               </a>
-              <Button className="bg-indigo-700 hover:bg-indigo-800 text-white">
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Live Chat
-              </Button>
               <Button 
                 className="bg-indigo-700 hover:bg-indigo-800 text-white"
                 onClick={() => setIsChatOpen(true)}
