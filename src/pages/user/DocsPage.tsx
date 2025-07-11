@@ -326,6 +326,7 @@ export function DocsPage() {
                       .replace(/\*(.+?)\*/g, '<em>$1</em>')
                       .replace(/- (.+)/g, '<li>$1</li>').replace(/(?:<li>.*<\/li>\n)+/g, match => `<ul class="list-disc list-inside space-y-1 ml-4 my-3">${match}</ul>`)
                       .replace(/\n\n/g, '<br/><br/>')
+                  : ''
               }} />
             </div>
           </div>
