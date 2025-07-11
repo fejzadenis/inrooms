@@ -263,6 +263,8 @@ export function ResourcesPage() {
               Read Guide
             </Button>
           </div>
+        </div>
+      </div>
 </div>
     </MainLayout>
   );
