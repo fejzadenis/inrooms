@@ -248,22 +248,6 @@ export function ResourcesPage() {
             </Button>
           </div>
         </div>
-
-        {/* Quick Links */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 text-center">
-            <div className="bg-blue-100 p-4 rounded-full inline-flex items-center justify-center mb-4">
-              <Users className="w-8 h-8 text-blue-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Getting Started Guide</h3>
-            <p className="text-gray-600 mb-4">
-              Learn the basics of using inRooms effectively for networking and growth.
-            </p>
-            <Button variant="outline" size="sm">
-              Read Guide
-            </Button>
-          </div>
-        </div>
       </div>
     </MainLayout>
   );
