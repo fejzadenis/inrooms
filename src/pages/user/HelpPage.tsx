@@ -241,7 +241,7 @@ export function HelpPage() {
                 <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
                 Online Now
               </div>
-              <p className="text-sm text-gray-500 mt-1">Average response: 2 hours</p>
+              <p className="text-sm text-gray-500 mt-1">Average response: 15 minutes</p>
             </div>
           </div>
         </div>
