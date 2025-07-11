@@ -350,9 +350,6 @@ export function DocsPage() {
               We're currently producing high-quality video tutorials to help you make the most of the platform.
               Check back soon for comprehensive guides on networking, profile optimization, and more!
             </p>
-            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
-              Get Notified When Available
-            </Button>
           </div>
         </div>
 
