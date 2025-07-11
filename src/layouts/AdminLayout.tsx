@@ -5,7 +5,6 @@ import {
   Users, 
   BarChart3, 
   Settings, 
-  MessageSquare,
   CreditCard,
   Bell
 } from 'lucide-react';
@@ -38,12 +37,6 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       href: '/admin/subscriptions', 
       icon: CreditCard,
       description: 'Manage plans and billing'
-    },
-    { 
-      name: 'Communications', 
-      href: '/admin/communications', 
-      icon: MessageSquare,
-      description: 'Email and notifications'
     },
     { 
       name: 'Notifications', 

@@ -35,6 +35,7 @@ import { MainTour } from './components/tour/MainTour';
 import { PrivacyPolicyPage } from './pages/legal/PrivacyPolicyPage';
 import { RefundPolicyPage } from './pages/legal/RefundPolicyPage';
 import { TermsPage } from './pages/legal/TermsPage';
+import { ChatButton } from './components/chat/ChatButton';
 
 function App() {
   return (

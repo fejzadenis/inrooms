@@ -17,6 +17,8 @@ import {
   XCircle
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { supabase } from '../../config/supabase';
+import { useEffect, useState } from 'react';
 
 interface SubscriptionData {
   id: string;
@@ -38,88 +40,96 @@ interface SubscriptionData {
 }
 
 export function AdminSubscriptionsPage() {
-  const [subscriptions, setSubscriptions] = React.useState<SubscriptionData[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [filterPlan, setFilterPlan] = React.useState<'all' | 'starter' | 'professional' | 'enterprise'>('all');
-  const [filterStatus, setFilterStatus] = React.useState<'all' | 'trial' | 'active' | 'cancelled' | 'past_due'>('all');
+  const [subscriptions, setSubscriptions] = useState<SubscriptionData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterPlan, setFilterPlan] = useState<'all' | 'starter' | 'professional' | 'enterprise'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'trial' | 'active' | 'cancelled' | 'past_due'>('all');
 
-  // Mock data - in real app, this would come from Stripe/payment processor
-  React.useEffect(() => {
-    const mockSubscriptions: SubscriptionData[] = [
-      {
-        id: 'sub_1',
-        userId: 'user_1',
-        userName: 'John Doe',
-        userEmail: 'john@example.com',
-        plan: 'professional',
-        status: 'active',
-        amount: 99,
-        billingCycle: 'monthly',
-        currentPeriodStart: new Date('2024-03-01'),
-        currentPeriodEnd: new Date('2024-04-01'),
-        eventsQuota: 5,
-        eventsUsed: 3,
-        lastPayment: new Date('2024-03-01'),
-        nextPayment: new Date('2024-04-01'),
-        paymentMethod: '**** 4242'
-      },
-      {
-        id: 'sub_2',
-        userId: 'user_2',
-        userName: 'Jane Smith',
-        userEmail: 'jane@example.com',
-        plan: 'starter',
-        status: 'trial',
-        amount: 49,
-        billingCycle: 'monthly',
-        currentPeriodStart: new Date('2024-03-15'),
-        currentPeriodEnd: new Date('2024-04-15'),
-        trialEnd: new Date('2024-03-22'),
-        eventsQuota: 2,
-        eventsUsed: 1,
-        paymentMethod: '**** 5555'
-      },
-      {
-        id: 'sub_3',
-        userId: 'user_3',
-        userName: 'Bob Johnson',
-        userEmail: 'bob@example.com',
-        plan: 'enterprise',
-        status: 'active',
-        amount: 199,
-        billingCycle: 'monthly',
-        currentPeriodStart: new Date('2024-02-15'),
-        currentPeriodEnd: new Date('2024-03-15'),
-        eventsQuota: 12,
-        eventsUsed: 8,
-        lastPayment: new Date('2024-02-15'),
-        nextPayment: new Date('2024-03-15'),
-        paymentMethod: '**** 1234'
-      },
-      {
-        id: 'sub_4',
-        userId: 'user_4',
-        userName: 'Alice Brown',
-        userEmail: 'alice@example.com',
-        plan: 'professional',
-        status: 'past_due',
-        amount: 99,
-        billingCycle: 'monthly',
-        currentPeriodStart: new Date('2024-02-01'),
-        currentPeriodEnd: new Date('2024-03-01'),
-        eventsQuota: 5,
-        eventsUsed: 5,
-        lastPayment: new Date('2024-01-01'),
-        nextPayment: new Date('2024-03-01'),
-        paymentMethod: '**** 9876'
+  useEffect(() => {
+    const fetchSubscriptions = async () => {
+      try {
+        setLoading(true);
+        
+        // Get subscriptions with user data
+        const { data: subData, error: subError } = await supabase
+          .from('stripe_subscriptions')
+          .select(`
+            id,
+            user_id,
+            price_id,
+            status,
+            current_period_start,
+            current_period_end,
+            cancel_at_period_end,
+            canceled_at,
+            users (
+              id,
+              name,
+              email,
+              subscription_events_quota,
+              subscription_events_used
+            ),
+            stripe_prices (
+              unit_amount,
+              currency,
+              interval
+            )
+          `);
+          
+        if (subError) throw subError;
+        
+        // Get payment methods
+        const { data: paymentData, error: paymentError } = await supabase
+          .from('stripe_payment_methods')
+          .select('customer_id, card_last4');
+          
+        if (paymentError) throw paymentError;
+        
+        // Format subscription data
+        const formattedSubscriptions = subData.map(sub => {
+          // Find payment method for this customer
+          const paymentMethod = paymentData.find(pm => pm.customer_id === sub.customer_id);
+          
+          // Determine plan type based on price
+          let plan: 'starter' | 'professional' | 'enterprise' = 'starter';
+          if (sub.users?.subscription_events_quota >= 8) {
+            plan = 'professional';
+          }
+          if (sub.users?.subscription_events_quota >= 12) {
+            plan = 'enterprise';
+          }
+          
+          return {
+            id: sub.id,
+            userId: sub.user_id,
+            userName: sub.users?.name || 'Unknown User',
+            userEmail: sub.users?.email || 'unknown@example.com',
+            plan,
+            status: sub.status as any,
+            amount: (sub.stripe_prices?.unit_amount || 0) / 100,
+            billingCycle: sub.stripe_prices?.interval === 'year' ? 'yearly' : 'monthly',
+            currentPeriodStart: new Date(sub.current_period_start),
+            currentPeriodEnd: new Date(sub.current_period_end),
+            trialEnd: sub.trial_end ? new Date(sub.trial_end) : undefined,
+            eventsQuota: sub.users?.subscription_events_quota || 0,
+            eventsUsed: sub.users?.subscription_events_used || 0,
+            lastPayment: sub.current_period_start ? new Date(sub.current_period_start) : undefined,
+            nextPayment: sub.current_period_end ? new Date(sub.current_period_end) : undefined,
+            paymentMethod: paymentMethod ? `**** ${paymentMethod.card_last4}` : 'Unknown'
+          };
+        });
+
+        setSubscriptions(formattedSubscriptions);
+      } catch (error) {
+        console.error('Error fetching subscriptions:', error);
+        toast.error('Failed to load subscription data');
+      } finally {
+        setLoading(false);
       }
-    ];
-
-    setTimeout(() => {
-      setSubscriptions(mockSubscriptions);
-      setLoading(false);
-    }, 1000);
+    };
+    
+    fetchSubscriptions();
   }, []);
 
   const handleCancelSubscription = async (subscriptionId: string) => {
@@ -128,7 +138,16 @@ export function AdminSubscriptionsPage() {
     }
 
     try {
-      // In real app, this would call Stripe API
+      // Call Stripe API through Supabase function
+      const { error } = await supabase.functions.invoke('cancel-subscription', {
+        body: { subscriptionId }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Update local state
       setSubscriptions(subs => 
         subs.map(sub => 
           sub.id === subscriptionId 
@@ -136,6 +155,7 @@ export function AdminSubscriptionsPage() {
             : sub
         )
       );
+      
       toast.success('Subscription cancelled successfully');
     } catch (error) {
       console.error('Error cancelling subscription:', error);
@@ -194,14 +214,14 @@ export function AdminSubscriptionsPage() {
   const stats = React.useMemo(() => {
     const totalRevenue = subscriptions
       .filter(sub => sub.status === 'active')
-      .reduce((sum, sub) => sum + sub.amount, 0);
+      .reduce((sum, sub) => sum + (sub.amount || 0), 0);
     
     const activeSubscriptions = subscriptions.filter(sub => sub.status === 'active').length;
     const trialSubscriptions = subscriptions.filter(sub => sub.status === 'trial').length;
     const churnRate = subscriptions.filter(sub => sub.status === 'cancelled').length / subscriptions.length * 100;
 
     return {
-      totalRevenue,
+      totalRevenue: Math.round(totalRevenue),
       activeSubscriptions,
       trialSubscriptions,
       churnRate: Math.round(churnRate * 100) / 100

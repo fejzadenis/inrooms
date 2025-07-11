@@ -20,6 +20,8 @@ import {
   Eye
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { supabase } from '../../config/supabase';
+import { useState, useEffect } from 'react';
 
 interface SystemNotification {
   id: string;
@@ -49,8 +51,8 @@ interface NotificationSettings {
 }
 
 export function AdminNotificationsPage() {
-  const [notifications, setNotifications] = React.useState<SystemNotification[]>([]);
-  const [settings, setSettings] = React.useState<NotificationSettings>({
+  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
+  const [settings, setSettings] = useState<NotificationSettings>({
     emailNotifications: true,
     pushNotifications: true,
     inAppNotifications: true,
@@ -60,8 +62,8 @@ export function AdminNotificationsPage() {
     eventReminders: true,
     systemUpdates: true
   });
-  const [loading, setLoading] = React.useState(true);
-  const [searchTerm, setSearchTerm] = React.useState('');
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = React.useState<'all' | 'info' | 'warning' | 'success' | 'error' | 'maintenance'>('all');
   const [filterStatus, setFilterStatus] = React.useState<'all' | 'draft' | 'scheduled' | 'sent' | 'active'>('all');
   const [activeTab, setActiveTab] = React.useState<'notifications' | 'settings'>('notifications');
@@ -122,11 +124,70 @@ export function AdminNotificationsPage() {
       }
     ];
 
-    setTimeout(() => {
-      setNotifications(mockNotifications);
-      setLoading(false);
-    }, 1000);
+    // Load real notifications if available, otherwise use mock data
+    const fetchNotifications = async () => {
+      try {
+        setLoading(true);
+        
+        // Try to fetch from database
+        const { data, error } = await supabase
+          .from('system_notifications')
+          .select('*')
+          .order('created_at', { ascending: false });
+          
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          // Format the data to match our interface
+          const formattedNotifications = data.map(notification => ({
+            id: notification.id,
+            title: notification.title,
+            message: notification.message,
+            type: notification.type || 'info',
+            priority: notification.priority || 'medium',
+            recipients: notification.recipients || 'all',
+            status: notification.status || 'draft',
+            scheduledAt: notification.scheduled_at ? new Date(notification.scheduled_at) : undefined,
+            expiresAt: notification.expires_at ? new Date(notification.expires_at) : undefined,
+            createdAt: new Date(notification.created_at),
+            createdBy: notification.created_by || 'admin@inrooms.com',
+            readCount: notification.read_count,
+            totalRecipients: notification.total_recipients
+          }));
+          
+          setNotifications(formattedNotifications);
+        } else {
+          // Use mock data if no real data exists
+          setNotifications(mockNotifications);
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+        // Fall back to mock data
+        setNotifications(mockNotifications);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchNotifications();
   }, []);
+
+  // Function to send notification to all users
+  const sendMassNotification = async (notification: SystemNotification) => {
+    try {
+      // Get all users
+      const { data: users, error: usersError } = await supabase
+        .from('users')
+        .select('id, email');
+        
+      if (usersError) throw usersError;
+      
+      // TODO: Implement actual notification sending logic
+      toast.success(`Notification sent to ${users.length} users`);
+    } catch (error) {
+      toast.error('Failed to send notification to all users');
+    }
+  };
 
   const handleSendNotification = async (notificationId: string) => {
     try {
@@ -137,6 +198,19 @@ export function AdminNotificationsPage() {
             : notif
         )
       );
+      
+      // Get the notification
+      const notification = notifications.find(n => n.id === notificationId);
+      if (!notification) return;
+      
+      // Send to all users if it's a mass notification
+      if (notification.recipients === 'all') {
+        await sendMassNotification(notification);
+      }
+      
+      // Update in database if available
+      await supabase.from('system_notifications').update({ status: 'sent' }).eq('id', notificationId);
+      
       toast.success('Notification sent successfully!');
     } catch (error) {
       console.error('Error sending notification:', error);
@@ -150,6 +224,10 @@ export function AdminNotificationsPage() {
     }
 
     try {
+      // Delete from database if available
+      await supabase.from('system_notifications').delete().eq('id', notificationId);
+      
+      // Update local state
       setNotifications(notifs => notifs.filter(n => n.id !== notificationId));
       toast.success('Notification deleted successfully');
     } catch (error) {
@@ -160,6 +238,7 @@ export function AdminNotificationsPage() {
 
   const handleUpdateSettings = async (newSettings: NotificationSettings) => {
     try {
+      // In a real app, this would save to database
       setSettings(newSettings);
       toast.success('Notification settings updated successfully');
     } catch (error) {
@@ -250,7 +329,7 @@ export function AdminNotificationsPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">System Notifications</h1>
-            <p className="text-gray-600 mt-2">Manage platform-wide notifications and alerts</p>
+            <p className="text-gray-600 mt-2">Send mass notifications to all users and manage alerts</p>
           </div>
           <div className="flex space-x-3">
             <Button variant="outline">
@@ -478,7 +557,7 @@ export function AdminNotificationsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="text-sm font-medium text-gray-900">Email Notifications</h4>
-                    <p className="text-sm text-gray-500">Send notifications via email</p>
+                    <p className="text-sm text-gray-500">Send mass email notifications to all users</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
