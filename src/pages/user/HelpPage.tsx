@@ -1,12 +1,15 @@
 import React from 'react';
 import { MainLayout } from '../../layouts/MainLayout';
 import { Search, MessageCircle, Phone, Mail, Clock, ChevronRight, HelpCircle, Book, Video, FileText } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '../../components/common/Button';
 import { Link } from 'react-router-dom';
+import { LiveSupportChat } from '../../components/chat/LiveSupportChat';
 
 export function HelpPage() {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const categories = [
     {
@@ -355,9 +358,22 @@ export function HelpPage() {
                 <MessageCircle className="w-4 h-4 mr-2" />
                 Live Chat
               </Button>
+              <Button 
+                className="bg-indigo-700 hover:bg-indigo-800 text-white"
+                onClick={() => setIsChatOpen(true)}
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Live Chat
+              </Button>
             </div>
           </div>
         </div>
+        
+        {/* Live Support Chat */}
+        <LiveSupportChat 
+          isOpen={isChatOpen} 
+          onClose={() => setIsChatOpen(false)} 
+        />
       </div>
     </MainLayout>
   );

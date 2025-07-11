@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { TourProvider } from './contexts/TourContext';
+import { ChatButton } from './components/chat/ChatButton';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { AdminProtectedRoute } from './components/common/AdminProtectedRoute';
 import { HomePage } from './pages/HomePage';
@@ -173,6 +174,7 @@ function App() {
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
           <Toaster position="top-right" />
+          <ChatButton />
         </TourProvider>
       </AuthProvider>
     </BrowserRouter>

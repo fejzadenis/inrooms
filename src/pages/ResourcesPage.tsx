@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MainLayout } from '../layouts/MainLayout';
+import { LiveSupportChat } from '../components/chat/LiveSupportChat';
 import { 
   Search, 
   HelpCircle, 
@@ -34,6 +35,7 @@ export function ResourcesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [openFaqId, setOpenFaqId] = useState<string | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const categories = [
     { id: 'general', name: 'General', icon: HelpCircle, color: 'bg-blue-500' },
@@ -218,8 +220,15 @@ export function ResourcesPage() {
               <HelpCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-medium text-gray-900 mb-2">No results found</h3>
               <p className="text-gray-600">
-                Try adjusting your search terms or browse all categories.
+                Live Chat
               </p>
+              <Button 
+                className="bg-indigo-700 hover:bg-indigo-800 text-white"
+                onClick={() => setIsChatOpen(true)}
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Live Chat
+              </Button>
             </div>
           )}
         </div>
@@ -248,6 +257,12 @@ export function ResourcesPage() {
             </Button>
           </div>
         </div>
+        
+        {/* Live Support Chat */}
+        <LiveSupportChat 
+          isOpen={isChatOpen} 
+          onClose={() => setIsChatOpen(false)} 
+        />
       </div>
     </MainLayout>
   );
