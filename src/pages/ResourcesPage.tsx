@@ -265,7 +265,6 @@ export function ResourcesPage() {
           </div>
         </div>
       </div>
-</div>
     </MainLayout>
   );
 }
