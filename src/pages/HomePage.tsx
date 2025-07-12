@@ -101,9 +101,9 @@ export function HomePage() {
                         View Plans
                       </Button>
                     </Link>
-                    <Link to="/courses/business-formation" className="w-full sm:w-auto">
+                    <Link to="/about" className="w-full sm:w-auto">
                       <Button variant="outline" className="w-full sm:w-auto px-8 py-3 text-base font-medium">
-                        Business Courses
+                        Learn More
                       </Button>
                     </Link>
                   </div>
