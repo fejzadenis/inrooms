@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MainLayout } from '../layouts/MainLayout';
 import { useAuth } from '../contexts/AuthContext';
+import { useTour } from '../contexts/TourContext';
 import { useNavigate } from 'react-router-dom';
 import { 
   Award, 
@@ -25,10 +26,11 @@ import {
   Heart,
   Brain,
   Handshake,
-  Presentation
+  Presentation,
+  Building
 } from 'lucide-react';
 import { Button } from '../components/common/Button';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { doc, getDoc, collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -66,6 +68,34 @@ const loadUserData = async (
     if (userData?.profile?.skills?.length > 0 || userData?.profile_skills?.length > 0) score += 15;
     
     return score;
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'enterprise_closer': return 'Enterprise Closer';
+      case 'startup_hustler': return 'Startup Hustler';
+      case 'saas_specialist': return 'SaaS Specialist';
+      case 'relationship_builder': return 'Relationship Builder';
+      case 'sales_leader': return 'Sales Leader';
+      case 'business_developer': return 'Business Developer';
+      case 'growth_hacker': return 'Growth Hacker';
+      case 'partnership_manager': return 'Partnership Manager';
+      default: return 'Founder';
+    }
+  };
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'enterprise_closer': return <Building className="w-5 h-5" />;
+      case 'startup_hustler': return <Zap className="w-5 h-5" />;
+      case 'saas_specialist': return <TrendingUp className="w-5 h-5" />;
+      case 'relationship_builder': return <Heart className="w-5 h-5" />;
+      case 'sales_leader': return <Star className="w-5 h-5" />;
+      case 'business_developer': return <Briefcase className="w-5 h-5" />;
+      case 'growth_hacker': return <Rocket className="w-5 h-5" />;
+      case 'partnership_manager': return <Handshake className="w-5 h-5" />;
+      default: return <User className="w-5 h-5" />;
+    }
   };
   
   const generateBadges = (userData: any, contributions: any[]) => {
@@ -344,6 +374,7 @@ const loadUserData = async (
         { id: 'mentor', name: 'Mentor', count: 5, icon: Presentation, color: 'bg-purple-100 text-purple-600', locked: false },
         { id: 'startup_founder', name: 'Startup Founder', count: null, icon: Rocket, color: 'bg-red-100 text-red-600', locked: false },
         { id: 'verified_pro', name: 'Verified Member', count: null, icon: Shield, color: 'bg-indigo-100 text-indigo-600', locked: false },
+        { id: 'business_founder', name: 'Business Founder', count: null, icon: Briefcase, color: 'bg-green-100 text-green-600', locked: false },
         { id: 'collaborator_locked', name: 'Collaborator', count: 0, icon: Handshake, color: 'bg-gray-100 text-gray-600', locked: true, requiredCount: 2, description: 'Participate in 2 collaborative projects' }
       ];
       setBadges(demoBadges);
@@ -409,6 +440,16 @@ const loadUserData = async (
           points: 100,
           icon: Code,
           color: 'bg-orange-100 text-orange-600'
+        },
+        {
+          id: 7,
+          type: 'course',
+          title: 'Completed Business Formation Course',
+          description: 'Learned how to legally establish a business entity',
+          date: new Date('2025-01-30'),
+          points: 100,
+          icon: Briefcase,
+          color: 'bg-green-100 text-green-600'
         }
       ];
       setRecentContributions(demoContributions);
@@ -451,6 +492,40 @@ const loadUserData = async (
         // Generate badges based on user data
         const userBadges = generateBadges(userData, contributions);
         setBadges(userBadges);
+        
+        // Check for completed courses
+        if (userData.profile?.completedCourses?.includes('business-formation')) {
+          // Add business founder badge if not already in badges
+          const hasBadge = userBadges.some(badge => badge.id === 'business_founder');
+          if (!hasBadge) {
+            setBadges([...userBadges, {
+              id: 'business_founder',
+              name: 'Business Founder',
+              count: null,
+              icon: Briefcase,
+              color: 'bg-green-100 text-green-600',
+              locked: false
+            }]);
+          }
+          
+          // Add course completion to contributions if not already there
+          const hasCourseContribution = contributions.some(c => c.type === 'course' && c.title.includes('Business Formation'));
+          if (!hasCourseContribution) {
+            setRecentContributions([
+              {
+                id: contributions.length + 1,
+                type: 'course',
+                title: 'Completed Business Formation Course',
+                description: 'Learned how to legally establish a business entity',
+                date: new Date(),
+                points: 100,
+                icon: Briefcase,
+                color: 'bg-green-100 text-green-600'
+              },
+              ...contributions
+            ]);
+          }
+        }
 
         // Calculate reputation score
         const calculatedScore = calculateReputationScore(userData, contributions);
