@@ -427,7 +427,7 @@ export function BusinessFormationCourse() {
                       const randomPurpose = purposes[Math.floor(Math.random() * purposes.length)];
                       toast.success(`Generated Purpose: "${randomPurpose}"`, { duration: 5000 });
                     } else {
-                      toast.info('This tool will be available soon!');
+                      toast('This tool will be available soon!');
                     }
                   }}
                 >
