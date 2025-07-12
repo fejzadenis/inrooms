@@ -20,6 +20,8 @@ import {
 import { businessCourseModules, entityTypeInfo, stateFilingInfo } from '../../data/businessCourse';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
+import { doc, updateDoc, arrayUnion, increment } from 'firebase/firestore';
+import { db } from '../../config/firebase';
 import ReactMarkdown from 'react-markdown';
 
 export function BusinessFormationCourse() {
@@ -34,6 +36,7 @@ export function BusinessFormationCourse() {
   const [showRecommendation, setShowRecommendation] = useState(false);
   const [businessName, setBusinessName] = useState('');
   const [selectedState, setSelectedState] = useState('');
+  const [isCompletingCourse, setIsCompletingCourse] = useState(false);
 
   // Load the specified module or default to the first one
   useEffect(() => {
@@ -203,6 +206,43 @@ export function BusinessFormationCourse() {
   const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedState(e.target.value);
     saveProgress({ selectedState: e.target.value });
+  };
+
+  // Award badge and points for course completion
+  const awardCourseCompletion = async () => {
+    if (!user) return;
+    
+    try {
+      setIsCompletingCourse(true);
+      
+      // Update user profile with badge and points
+      const userRef = doc(db, 'users', user.id);
+      await updateDoc(userRef, {
+        'profile.badges': arrayUnion('business_founder'),
+        'profile.points': increment(100),
+        'profile.completedCourses': arrayUnion('business-formation')
+      });
+      
+      // Show success message
+      toast.success('Congratulations! You earned the Business Founder badge and 100 reputation points!');
+      
+      // Mark course as completed in local storage
+      saveProgress({ courseCompleted: true });
+      
+      // Navigate to reputation page to see new badge
+      setTimeout(() => {
+        navigate('/reputation');
+      }, 2000);
+    } catch (error) {
+      console.error('Error awarding course completion:', error);
+      toast.error('There was an error updating your profile. Please try again.');
+      
+      // Still mark as completed in local storage
+      saveProgress({ courseCompleted: true });
+      navigate('/');
+    } finally {
+      setIsCompletingCourse(false);
+    }
   };
 
   // Render quiz component
@@ -427,7 +467,7 @@ export function BusinessFormationCourse() {
                       const randomPurpose = purposes[Math.floor(Math.random() * purposes.length)];
                       toast.success(`Generated Purpose: "${randomPurpose}"`, { duration: 5000 });
                     } else {
-                      toast('This tool will be available soon!');
+                      toast('This tool will be available soon!', { icon: 'ℹ️' });
                     }
                   }}
                 >
@@ -627,11 +667,10 @@ export function BusinessFormationCourse() {
           )}
           
           {currentModule.order === businessCourseModules.length - 1 && (
-            <Button onClick={() => {
-              saveProgress({ courseCompleted: true });
-              toast.success('Congratulations on completing the business formation course!');
-              navigate('/');
-            }}>
+            <Button 
+              onClick={awardCourseCompletion}
+              isLoading={isCompletingCourse}
+            >
               Complete Course
               <CheckCircle className="w-4 h-4 ml-2" />
             </Button>
