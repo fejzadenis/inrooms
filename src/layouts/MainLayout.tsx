@@ -104,6 +104,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const navigationItems = [
     { name: 'Events', href: '/events', dataTour: 'events' },
     { name: 'Network', href: '/network', dataTour: 'network' },
+    { name: 'Courses', href: '/courses/business-formation', dataTour: 'courses' },
     { name: 'Product Showcase', href: '/solutions', dataTour: 'solutions' },
     { name: 'FAQ', href: '/faq', dataTour: 'resources' },
     { name: 'Reputation', href: '/reputation', dataTour: 'reputation' }

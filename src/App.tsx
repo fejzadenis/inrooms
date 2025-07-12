@@ -35,6 +35,8 @@ import { MainTour } from './components/tour/MainTour';
 import { PrivacyPolicyPage } from './pages/legal/PrivacyPolicyPage';
 import { RefundPolicyPage } from './pages/legal/RefundPolicyPage';
 import { TermsPage } from './pages/legal/TermsPage';
+import { BusinessCoursesPage } from './pages/courses/BusinessCoursesPage';
+import { BusinessFormationCourse } from './pages/courses/BusinessFormationCourse';
 
 function App() {
   return (
@@ -66,6 +68,8 @@ function App() {
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
             <Route path="/refund-policy" element={<RefundPolicyPage />} />
             <Route path="/terms" element={<TermsPage />} />
+            <Route path="/courses/business-formation" element={<BusinessCoursesPage />} />
+            <Route path="/courses/business-formation/:moduleId" element={<BusinessFormationCourse />} />
             <Route
               path="/profile"
               element={
