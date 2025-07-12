@@ -576,7 +576,7 @@ Complete the checklist below to ensure you're ready for the next step: filing yo
         title: 'Domain Availability Checker',
         description: 'Check if your business name is available as a domain name',
         type: 'lookup',
-        url: 'https://domains.google.com'
+        url: 'https://instantdomainsearch.com/'
       },
       {
         id: 'purpose-generator',
