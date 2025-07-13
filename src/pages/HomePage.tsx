@@ -33,7 +33,7 @@ export function HomePage() {
       title: "Legacy-Level Leadership: 8-Figure Growth Through Masterful Sales and Marketing",
       date: "July 30, 2025",
       topic: "With 40+ years of experience, Russell reveals timeless strategies that have built empires and changed lives. Discover how he helped thousands unlock their potential, craft winning offers, and scale into 8 figures—while building a legacy worth leading.",
-      image: "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.linkedin.com%2Fin%2Frussellpaley&psig=AOvVaw2l5co71u64lgcS4d0ydhVF&ust=1752504785593000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCJjuvJuLuo4DFQAAAAAdAAAAABAE"
+      image: "https://media.licdn.com/dms/image/v2/D4E03AQFG7t5FojIfuA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1707747915922?e=2147483647&v=beta&t=tIUP0kuo4HovllV2srlBJXmwNu3p35g_cyy9gTcwtws"
     },
     {
       name: "Alex Rodriguez",
