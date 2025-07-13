@@ -169,11 +169,14 @@ export function HomePage() {
                               <span className="text-gray-700">{speaker.topic}</span>
                             </div>
                             <div className="mt-4">
-                              <Link to="/events">
-                                <Button variant="outline" className="text-sm">
-                                  Register for this event
-                                </Button>
-                              </Link>
+                              <Button
+  variant="outline"
+  className="text-sm opacity-50 cursor-not-allowed"
+  disabled
+>
+  Register (Coming Soon)
+</Button>
+
                             </div>
                           </div>
                         </div>
