@@ -22,18 +22,18 @@ export function HomePage() {
 
   const speakers = [
     {
-      name: "Sarah Johnson",
-      title: "Enterprise Sales Director at TechCorp",
-      date: "June 15, 2025",
-      topic: "Building Enterprise Relationships That Last",
+      name: "Cody Olive",
+      title: "From Wall Street to the Front Door: Mastering the D2D Millionaire Mindset",
+      date: "July 24, 2025",
+      topic: "Cody shares his journey from the high-stakes world of Goldman Sachs to building massive success in direct sales. Learn how to apply Wall Street discipline, mental toughness, and tactical strategy to dominate door-to-door sales and create personal wealth.",
       image: "https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
     },
     {
-      name: "Michael Chen",
-      title: "VP of Sales at CloudSystems",
-      date: "June 22, 2025",
-      topic: "Navigating Complex Sales Cycles",
-      image: "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+      name: "Russell Paley",
+      title: "Legacy-Level Leadership: 8-Figure Growth Through Masterful Sales and Marketing",
+      date: "July 30, 2025",
+      topic: "With 40+ years of experience, Russell reveals timeless strategies that have built empires and changed lives. Discover how he helped thousands unlock their potential, craft winning offers, and scale into 8 figures—while building a legacy worth leading.",
+      image: "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.linkedin.com%2Fin%2Frussellpaley&psig=AOvVaw2l5co71u64lgcS4d0ydhVF&ust=1752504785593000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCJjuvJuLuo4DFQAAAAAdAAAAABAE"
     },
     {
       name: "Alex Rodriguez",
