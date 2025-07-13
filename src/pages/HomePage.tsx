@@ -34,20 +34,6 @@ export function HomePage() {
       date: "July 30, 2025",
       topic: "With 40+ years of experience, Russell reveals timeless strategies that have built empires and changed lives. Discover how he helped thousands unlock their potential, craft winning offers, and scale into 8 figures—while building a legacy worth leading.",
       image: "https://media.licdn.com/dms/image/v2/D4E03AQFG7t5FojIfuA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1707747915922?e=2147483647&v=beta&t=tIUP0kuo4HovllV2srlBJXmwNu3p35g_cyy9gTcwtws"
-    },
-    {
-      name: "Alex Rodriguez",
-      title: "Chief Revenue Officer at InnovateHub",
-      date: "July 5, 2025",
-      topic: "The Future of Tech Sales",
-      image: "https://images.pexels.com/photos/3778603/pexels-photo-3778603.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-    },
-    {
-      name: "Jessica Williams",
-      title: "Sales Enablement Director at SaaS Leaders",
-      date: "July 12, 2025",
-      topic: "Building High-Performance Sales Teams",
-      image: "https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
     }
   ];
 
