@@ -26,7 +26,7 @@ export function HomePage() {
       title: "From Wall Street to the Front Door: Mastering the D2D Millionaire Mindset",
       date: "July 24, 2025",
       topic: "Cody shares his journey from the high-stakes world of Goldman Sachs to building massive success in direct sales. Learn how to apply Wall Street discipline, mental toughness, and tactical strategy to dominate door-to-door sales and create personal wealth.",
-      image: "https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+      image: "https://media.licdn.com/dms/image/v2/D5603AQE9vVvtZfT2bQ/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1698967488446?e=2147483647&v=beta&t=bQNgzVOPUmwylbDFvvi5jO_sgj08L8jyg7fFi_1rxGs"
     },
     {
       name: "Russell Paley",
