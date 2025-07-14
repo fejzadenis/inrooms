@@ -658,6 +658,7 @@ export function BusinessFormationCourse() {
               <ReactMarkdown>{currentModule.content}</ReactMarkdown>
             </div>
           )}
+        </div>
         
         {/* Business Info Inputs (for business-foundation module) */}
         {renderBusinessInfoInputs()}
