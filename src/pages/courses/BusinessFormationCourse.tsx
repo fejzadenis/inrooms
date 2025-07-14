@@ -624,8 +624,40 @@ export function BusinessFormationCourse() {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">{currentModule.title}</h2>
           <p className="text-gray-600 mb-6">{currentModule.description}</p>
           
-          <div className="prose max-w-none">
-            <ReactMarkdown>{currentModule.content}</ReactMarkdown>
+          {currentModule.id === 'orientation' && (
+          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl p-8 border border-indigo-100 mb-6">
+            <h3 className="text-2xl font-bold text-indigo-900 mb-4">Orientation – What Are You Building?</h3>
+            <p className="text-lg text-indigo-800 mb-6">Define your business idea, goals, and commitment level</p>
+            
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h4 className="text-xl font-semibold text-gray-900 mb-4">Welcome to Start to Form: Your Business Formation Journey</h4>
+              <p className="text-gray-700 mb-4">
+                This comprehensive course will guide you through the process of legally forming your business. 
+                By the end, you'll have chosen the right business structure, filed your entity, and set up the 
+                essential systems every new business needs.
+              </p>
+              
+              <div className="mt-6">
+                <label className="block text-lg font-medium text-gray-900 mb-3">
+                  What is your business idea in one sentence?
+                </label>
+                <textarea
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  rows={3}
+                  placeholder="Write your answer here..."
+                  value={businessName}
+                  onChange={handleBusinessNameChange}
+                ></textarea>
+              </div>
+            </div>
+          </div>
+          )}
+          
+          {currentModule.id !== 'orientation' && (
+            <div className="prose max-w-none">
+              <ReactMarkdown>{currentModule.content}</ReactMarkdown>
+            </div>
+          )}
           </div>
         </div>
         
