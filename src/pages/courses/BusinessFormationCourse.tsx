@@ -662,6 +662,22 @@ export function BusinessFormationCourse() {
         </div>
         
         <div className="space-y-8">
+          {currentModule.id === 'orientation' && (
+            <div>
+              <label className="block text-md font-medium text-gray-700 mb-3">
+                What is your business idea in one sentence?
+              </label>
+              <textarea
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm text-lg"
+                placeholder="Describe your business idea briefly..."
+                rows={3}
+                onChange={(e) => saveProgress({ businessIdea: e.target.value })}
+                defaultValue={progress.businessIdea || ''}
+              />
+              <p className="text-sm text-gray-500 mt-2">This helps clarify your vision and will guide your entity selection.</p>
+            </div>
+          )}
+          
           <div>
             <label htmlFor="businessName" className="block text-md font-medium text-gray-700 mb-3">
               Business Name
