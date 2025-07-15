@@ -75,65 +75,50 @@ export const businessCourseModules: CourseModule[] = [
     title: 'Orientation – What Are You Building?',
     description: 'Define your business idea, goals, and commitment level',
     order: 0,
-    content: `# Welcome to Start to Form: Your Business Formation Journey
+    content: `## Welcome to Start to Form: Your Business Formation Journey
 
 This comprehensive course will guide you through the process of legally forming your business. By the end, you'll have chosen the right business structure, filed your entity, and set up the essential foundations for long-term success.
 
-## What to Expect
+### Why Business Formation Matters
 
-This course is designed to be **action-oriented** and **results-driven**. Each module builds toward a specific outcome, with the final result being your registered business entity and a solid foundation for growth.
+Properly forming your business is about more than just paperwork—it's about:
 
-Throughout this journey, you'll:
-- Learn about different business structures and their implications
-- Make informed decisions based on your specific situation
-- Complete actual filing steps with state-specific guidance
-- Set up essential business systems and compliance measures
-- Earn a "Business Founder" badge for your inRooms profile
+- **Legal Protection**: Separating your personal and business assets
+- **Credibility**: Establishing legitimacy with customers and partners
+- **Tax Benefits**: Optimizing your tax situation from day one
+- **Growth Foundation**: Creating a structure that can scale with you
 
-## Before We Begin
+### What You'll Accomplish
 
-Let's clarify your business idea and goals. This will help personalize your journey through the course.
+By completing this course, you will:
 
-### Your Business Concept
+1. **Determine the ideal business structure** for your specific needs
+2. **Choose and register your business name**
+3. **File the necessary formation documents** with your state
+4. **Obtain your EIN** (Employer Identification Number)
+5. **Set up essential business systems** (banking, accounting, etc.)
+6. **Understand ongoing compliance requirements**
 
-Take a moment to define your business in one clear sentence. This will serve as your north star throughout the formation process. A clear business concept helps you:
+### How to Use This Course
 
-- Stay focused on your core value proposition
-- Explain your business concisely to others
-- Make consistent decisions about your business structure
-- Create alignment if you have co-founders
+This course is designed to be action-oriented. Each module builds on the previous one and includes:
 
-### Your Timeline
+- **Learning content**: Essential information you need to know
+- **Interactive quizzes**: Help you make informed decisions
+- **Checklists**: Track your progress through required steps
+- **Tools**: Practical resources to complete each task
+- **State-specific guidance**: Tailored to your location
 
-How soon do you plan to launch your business?
-- **Exploring options** (3-6 months): You're still refining your idea and researching the market
-- **Planning to launch soon** (1-3 months): Your concept is solid and you're preparing for launch
-- **Ready to form now** (immediate): You're ready to register your business and start operations
+### Before You Begin
 
-### Your Goals
+Take a moment to consider:
 
-What matters most to you in forming your business?
-- **Protecting personal assets**: Separating personal and business liabilities
-- **Minimizing taxes**: Optimizing your tax situation from the start
-- **Attracting investors**: Setting up a structure conducive to outside investment
-- **Simplicity and low cost**: Keeping formation and maintenance straightforward
-- **Building a sellable asset**: Creating a business that can eventually be sold
+- **Vision**: What are your business goals for the next 1-3 years?
+- **Resources**: How much time and money can you invest in formation?
+- **Protection**: What level of liability protection do you need?
+- **Taxation**: What tax situation would be most advantageous?
 
-Your answers to these questions will help tailor the recommendations throughout this course.
-
-### Common Pitfalls to Avoid
-
-As you begin this journey, be aware of these common mistakes:
-
-1. **Choosing the wrong entity type** for your specific situation
-2. **Mixing personal and business finances** from day one
-3. **Neglecting state-specific requirements** for your business
-4. **Failing to maintain proper records** and corporate formalities
-5. **Overlooking tax implications** of your chosen structure
-
-This course will help you navigate these challenges successfully.
-
-Let's get started on your entrepreneurial journey!`,
+Let's get started on your business formation journey!`,
     quiz: {
       id: 'orientation-quiz',
       title: 'Business Foundation Quiz',
