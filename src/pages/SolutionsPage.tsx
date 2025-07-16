@@ -65,7 +65,7 @@ export function SolutionsPage() {
   // Check if we should show the solutions tour
   useEffect(() => {
     const checkTourStatus = async () => {
-      if (user && !loading) {
+      if (user && !loading && !demos.length) {
         // Complete the tour journey if user has reached this page
         if (user.id) {
           await completeTour('main', user.id);
@@ -76,6 +76,21 @@ export function SolutionsPage() {
             duration: 5000,
           });
         }
+        
+        // Don't start the solutions tour automatically
+        // This prevents the tour from starting repeatedly
+        /*
+        // Complete the tour journey if user has reached this page
+        if (user.id) {
+          await completeTour('main', user.id);
+          await completeTour('events', user.id);
+          await completeTour('network', user.id);
+          
+          toast.success('Tour completed! You now know the basics of inRooms. Explore and enjoy the platform!', {
+            duration: 5000,
+          });
+        }
+        */
       }
     };
 

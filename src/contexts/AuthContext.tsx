@@ -67,6 +67,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<any>;
   loginWithGoogle: (isNewUser?: boolean) => Promise<any>;
   logout: () => Promise<void>;
+  reloadUser: () => Promise<void>;
   updateUserProfile: (userId: string, profileData: any) => Promise<void>;
   startFreeTrial: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -264,6 +265,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => unsubscribe();
   }, []);
+
+  const reloadUser = async () => {
+    if (!auth.currentUser) {
+      console.log("Cannot reload user: No current user");
+      return;
+    }
+    
+    try {
+      console.log("Reloading user data for", auth.currentUser.uid);
+      
+      // Force reload from server to get latest data
+      await auth.currentUser.reload();
+      
+      // Get fresh user data
+      const userData = await getUserData(auth.currentUser);
+      
+      // Update cache
+      setCachedUserData(auth.currentUser.uid, userData);
+      
+      // Update state
+      setUser(userData);
+      
+      console.log("User data reloaded successfully");
+    } catch (error) {
+      console.error("Error reloading user data:", error);
+    }
+  };
 
   const getUserData = async (firebaseUser: FirebaseUser): Promise<User> => {
     // Rate limit getUserData calls
@@ -1069,6 +1097,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         loginWithGoogle,
         logout,
+        reloadUser,
         updateUserProfile,
         startFreeTrial,
         resetPassword,

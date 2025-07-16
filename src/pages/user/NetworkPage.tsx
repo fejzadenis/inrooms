@@ -38,13 +38,16 @@ export function NetworkPage() {
   // Check if we should show the network tour
   useEffect(() => {
     const checkTourStatus = async () => {
-      if (user && !loading) {
+      if (user && !loading && !connections.length) {
         const shouldStart = await askForTourPermission('network');
         if (shouldStart) {
+          console.log("NETWORK DEBUG: Starting network tour based on permission check");
           // Small delay to ensure the UI is fully rendered
           setTimeout(() => {
             startTour('network');
           }, 1000);
+        } else {
+          console.log("NETWORK DEBUG: Not starting network tour - permission denied");
         }
       }
     };

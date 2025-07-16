@@ -41,14 +41,17 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   // Check if we should show the tour when the user first logs in
   React.useEffect(() => {
     const checkTourStatus = async () => {
-      if (user && location.pathname !== '/onboarding') {
+      if (user && location.pathname === '/' && user.isNewUser) {
         // Ask for permission before starting the tour
         const shouldStart = await askForTourPermission('main');
         if (shouldStart) {
+          console.log("MAIN LAYOUT DEBUG: Starting main tour based on permission check");
           // Small delay to ensure the UI is fully rendered
           setTimeout(() => {
             startTour('main');
           }, 1000);
+        } else {
+          console.log("MAIN LAYOUT DEBUG: Not starting main tour - permission denied");
         }
       }
     };

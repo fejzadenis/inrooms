@@ -33,13 +33,16 @@ export function EventsPage() {
   // Check if we should show the events tour
   useEffect(() => {
     const checkTourStatus = async () => {
-      if (user && !loading) {
+      if (user && !loading && !events.length) {
         const shouldStart = await askForTourPermission('events');
         if (shouldStart) {
+          console.log("EVENTS DEBUG: Starting events tour based on permission check");
           // Small delay to ensure the UI is fully rendered
           setTimeout(() => {
             startTour('events');
           }, 1000);
+        } else {
+          console.log("EVENTS DEBUG: Not starting events tour - permission denied");
         }
       }
     };

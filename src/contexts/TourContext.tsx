@@ -33,7 +33,7 @@ const TourContext = createContext<TourContextType>({
 export const useTour = () => useContext(TourContext);
 
 export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, reloadUser } = useAuth();
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [currentTour, setCurrentTour] = useState<TourType | null>(null);
   const [tourStep, setTourStep] = useState(0); 
@@ -87,6 +87,7 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const completeTour = async (tourType: TourType, userId?: string) => {
     // Mark tour as shown locally
     console.log(`TOUR DEBUG: Completing tour ${tourType}`);
+    
     setShownTours(prev => ({
       ...prev,
       [tourType]: true
@@ -109,8 +110,15 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log(`TOUR DEBUG: Setting isNewUser to false for user ${id}`);
           updateData.isNewUser = false;
           updateData.updatedAt = serverTimestamp();
+          
+          // After updating the database, reload the user to get the latest data
+          await updateDoc(userRef, updateData);
+          console.log(`TOUR DEBUG: Database updated, reloading user data`);
+          await reloadUser();
+          return;
         }
         
+        // For other tours, just update the database
         await updateDoc(userRef, updateData);
         
       } catch (error) {
@@ -131,24 +139,40 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const askForTourPermission = async (tourType: TourType): Promise<boolean> => {
     // Check if this tour has already been shown
     if (shownTours[tourType]) {
+      console.log(`TOUR DEBUG: Tour ${tourType} already shown, not showing again`);
       // Tour already shown, don't ask again
+      return false;
+    }
+    
+    // If user has completedTours in their profile and this tour is marked as completed
+    if (user?.profile?.completedTours && user.profile.completedTours[tourType]) {
+      console.log(`TOUR DEBUG: Tour ${tourType} marked as completed in user profile, not showing again`);
+      // Update local state to match database
+      setShownTours(prev => ({
+        ...prev,
+        [tourType]: true
+      }));
       return false;
     }
     
     // For new users, automatically show the main tour without asking
     if (user?.isNewUser && tourType === 'main') {
+      console.log(`TOUR DEBUG: User is new, showing main tour automatically`);
       // User is new, show main tour
       return true;
     }
     
     // For profile tour, never show automatically
     if (tourType === 'profile') {
+      console.log(`TOUR DEBUG: Profile tour should not appear automatically`);
       // Profile tour should not appear automatically
       return false;
     }
     
     // For other tours (events, network, solutions), only show if the user is new
-    return user?.isNewUser || false;
+    const shouldShow = user?.isNewUser || false;
+    console.log(`TOUR DEBUG: For tour ${tourType}, shouldShow = ${shouldShow} based on isNewUser = ${user?.isNewUser}`);
+    return shouldShow;
   };
 
   return (
