@@ -835,6 +835,8 @@ export function BusinessFormationCourse() {
                   Start Growth Course
                 </Button>
               </Link>
+                </Button>
+              </Link>
             </div>
           </motion.div>
         )}

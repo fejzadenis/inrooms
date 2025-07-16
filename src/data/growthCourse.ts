@@ -381,7 +381,7 @@ Your growth journey starts here. Let's turn your formed business into a scalable
         },
         {
           id: 'customer_acquisition',
-          text: 'What's your current primary customer acquisition channel?',
+          text: 'What\'s your current primary customer acquisition channel?',
           type: 'multiple',
           options: [
             {
@@ -1725,8 +1725,8 @@ export const growthStrategyRecommendationInfo = {
     ],
     resources: [
       'Product-Led Growth by Wes Bush',
-      'Amplitude's North Star Playbook',
-      'Reforge's Product-Led Growth course',
+      'Amplitude\'s North Star Playbook',
+      'Reforge\'s Product-Led Growth course',
       'ProductLed.org resources and community'
     ],
     nextSteps: [

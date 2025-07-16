@@ -394,21 +394,28 @@ export function BusinessCoursesPage() {
           <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-blue-500 rounded-full filter blur-3xl opacity-20"></div>
           <div className="absolute -top-24 -left-24 w-64 h-64 bg-purple-500 rounded-full filter blur-3xl opacity-20"></div>
           
-          <div className="relative z-10 text-center max-w-3xl mx-auto">
-            <Award className="w-16 h-16 text-white/80 mx-auto mb-6" />
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Ready to Start Your Business?</h2>
-            <p className="text-xl text-white/90 mb-8">
-              Join thousands of entrepreneurs who have successfully launched their businesses with our step-by-step guidance. Get started today and earn your Business Founder badge!
-            </p>
-            <Button 
-              onClick={() => navigate(`/courses/business-formation/${businessCourseModules[0].id}`)}
-              size="lg"
-              className="bg-white text-indigo-600 hover:bg-indigo-50 shadow-xl px-8 py-4 text-lg"
-            >
-              <Briefcase className="w-6 h-6 mr-2" />
-              Begin Your Business Journey
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+          className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-8 border border-purple-200 shadow-sm"
+        >
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <div className="flex items-center">
+                <TrendingUp className="w-6 h-6 text-purple-600 mr-2" />
+                <h3 className="text-xl font-bold text-gray-900">Ready for the next step?</h3>
+              </div>
+              <p className="text-gray-700 mt-2">
+                After forming your business, learn how to grow it strategically with our Growth Playbook course.
+              </p>
+            </div>
+            <Link to="/courses/growth">
+              <Button className="whitespace-nowrap bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
+                <Rocket className="w-5 h-5 mr-2" />
+                Explore Growth Course
+              </Button>
+            </Link>
           </div>
         </motion.div>
       </div>
