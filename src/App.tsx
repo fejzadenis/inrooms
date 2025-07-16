@@ -39,8 +39,7 @@ import { BusinessCoursesPage } from './pages/courses/BusinessCoursesPage';
 import { BusinessFormationCourse } from './pages/courses/BusinessFormationCourse'; 
 import { GrowthCoursesPage } from './pages/courses/GrowthCoursesPage';
 import { GrowthCoursePage } from './pages/courses/GrowthCoursePage';
-import { GrowthCoursesPage } from './pages/courses/GrowthCoursesPage';
-import { GrowthCoursePage } from './pages/courses/GrowthCoursePage';
+
 
 function App() {
   return (
