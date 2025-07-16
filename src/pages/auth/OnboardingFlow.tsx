@@ -56,7 +56,7 @@ const step4Schema = z.object({
 });
 
 const step5Schema = z.object({
-  primaryGoal: z.enum(['networking', 'learning', 'career_growth', 'business_development', 'mentoring']),
+  primaryGoal: z.enum(['raising_funds', 'finding_cofounder', 'building_product', 'scaling_startup', 'gaining_users', 'joining_community']),
   careerAspirations: z.string().min(1, 'Career aspirations are required'),
   currentChallenges: z.array(z.string()).min(1, 'Select at least one challenge'),
 });
