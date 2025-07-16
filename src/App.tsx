@@ -37,6 +37,8 @@ import { RefundPolicyPage } from './pages/legal/RefundPolicyPage';
 import { TermsPage } from './pages/legal/TermsPage';
 import { BusinessCoursesPage } from './pages/courses/BusinessCoursesPage';
 import { BusinessFormationCourse } from './pages/courses/BusinessFormationCourse';
+import { GrowthCoursesPage } from './pages/courses/GrowthCoursesPage';
+import { GrowthCoursePage } from './pages/courses/GrowthCoursePage';
 
 function App() {
   return (
@@ -70,6 +72,8 @@ function App() {
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/courses/business-formation" element={<BusinessCoursesPage />} />
             <Route path="/courses/business-formation/:moduleId" element={<BusinessFormationCourse />} />
+            <Route path="/courses/growth" element={<GrowthCoursesPage />} />
+            <Route path="/courses/growth/:moduleId" element={<GrowthCoursePage />} />
             <Route
               path="/profile"
               element={
