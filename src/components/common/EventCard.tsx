@@ -32,28 +32,28 @@ export function EventCard({
   return (
     <div className="bg-white rounded-lg shadow-md p-4 md:p-6 space-y-4">
       <div>
-        <h3 className="text-3xl md:text-4xl font-semibold text-gray-900">{title}</h3>
-        <p className="text-gray-600 mt-2 text-xl md:text-2xl">{description}</p>
+        <h3 className="text-2xl md:text-3xl font-semibold text-gray-900">{title}</h3>
+        <p className="text-gray-600 mt-2 text-lg md:text-xl">{description}</p>
       </div>
       
       <div className="space-y-2">
-        <div className="flex items-center text-gray-600 text-lg">
-          <Calendar className="w-8 h-8 mr-3 flex-shrink-0" />
+        <div className="flex items-center text-gray-600 text-base">
+          <Calendar className="w-6 h-6 mr-2 flex-shrink-0" />
           <span>{format(date, 'MMMM d, yyyy')}</span>
         </div>
         
-        <div className="flex items-center text-gray-600 text-lg">
-          <Clock className="w-8 h-8 mr-3 flex-shrink-0" />
+        <div className="flex items-center text-gray-600 text-base">
+          <Clock className="w-6 h-6 mr-2 flex-shrink-0" />
           <span>{format(date, 'h:mm a')}</span>
         </div>
         
-        <div className="flex items-center text-gray-600 text-lg">
-          <Users className="w-8 h-8 mr-3 flex-shrink-0" />
+        <div className="flex items-center text-gray-600 text-base">
+          <Users className="w-6 h-6 mr-2 flex-shrink-0" />
           <span>{currentParticipants} / {maxParticipants} participants</span>
         </div>
         {isRegistered && meetLink && (
-          <div className="flex items-center text-gray-600 text-lg">
-            <Video className="w-8 h-8 mr-3 flex-shrink-0" />
+          <div className="flex items-center text-gray-600 text-base">
+            <Video className="w-6 h-6 mr-2 flex-shrink-0" />
             <a href={meetLink} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800">
               Meeting Link
             </a>
