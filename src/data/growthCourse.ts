@@ -44,267 +44,16 @@ export interface CourseModule {
   }[];
 }
 
-export const growthStrategyInfo: Record<string, {
-  name: string;
-  description: string;
-  bestFor: string;
-  advantages: string[];
-  disadvantages: string[];
-  keyMetrics: string[];
-  examples: string[];
-}> = {
-  productLed: {
-    name: 'Product-Led Growth',
-    description: 'A strategy where the product itself is the primary driver of customer acquisition, conversion, and expansion.',
-    bestFor: 'SaaS, mobile apps, and digital products with strong product-market fit and clear value proposition',
-    advantages: [
-      'Lower customer acquisition costs',
-      'Faster user adoption and viral growth potential',
-      'More efficient scaling with less sales headcount',
-      'Better user experience and product stickiness',
-      'Data-driven improvement cycles'
-    ],
-    disadvantages: [
-      'Requires exceptional product and UX',
-      'May struggle with enterprise/complex sales',
-      'Needs strong product analytics capabilities',
-      'Can be difficult for high-touch products',
-      'May leave money on the table without sales touch'
-    ],
-    keyMetrics: [
-      'Product Qualified Leads (PQLs)',
-      'Time to Value',
-      'Feature Adoption Rate',
-      'User Activation Rate',
-      'Net Revenue Retention',
-      'Viral Coefficient'
-    ],
-    examples: [
-      'Slack',
-      'Dropbox',
-      'Zoom',
-      'Calendly',
-      'Notion'
-    ]
-  },
-  salesLed: {
-    name: 'Sales-Led Growth',
-    description: 'A strategy that relies on a direct sales team to identify, qualify, and close deals with potential customers.',
-    bestFor: 'Enterprise software, complex solutions, high-ticket products, and services requiring customization',
-    advantages: [
-      'Higher average contract value',
-      'Better for complex or high-touch products',
-      'More control over the customer journey',
-      'Builds stronger customer relationships',
-      'Easier to communicate complex value propositions'
-    ],
-    disadvantages: [
-      'Higher customer acquisition costs',
-      'Slower scaling due to hiring/training needs',
-      'More resource-intensive',
-      'Potential for misalignment between sales and product',
-      'Dependent on sales talent'
-    ],
-    keyMetrics: [
-      'Customer Acquisition Cost (CAC)',
-      'Sales Cycle Length',
-      'Conversion Rate by Stage',
-      'Average Contract Value (ACV)',
-      'Sales Qualified Leads (SQLs)',
-      'Sales Efficiency'
-    ],
-    examples: [
-      'Salesforce',
-      'Oracle',
-      'SAP',
-      'Workday',
-      'ServiceNow'
-    ]
-  },
-  marketingLed: {
-    name: 'Marketing-Led Growth',
-    description: 'A strategy focused on creating awareness and demand through content, advertising, and other marketing channels.',
-    bestFor: 'Consumer products, SMB-focused solutions, and products with clear positioning in competitive markets',
-    advantages: [
-      'Builds brand awareness and market positioning',
-      'Scalable demand generation',
-      'Works well for products with clear value props',
-      'Can reach broad audiences efficiently',
-      'Supports other growth strategies'
-    ],
-    disadvantages: [
-      'Rising customer acquisition costs',
-      'Requires consistent content creation',
-      'Effectiveness can be difficult to measure',
-      'May attract lower-quality leads',
-      'Dependent on changing platform algorithms'
-    ],
-    keyMetrics: [
-      'Marketing Qualified Leads (MQLs)',
-      'Cost Per Lead (CPL)',
-      'Channel Conversion Rates',
-      'Content Engagement Metrics',
-      'Brand Awareness Metrics',
-      'Attribution Analysis'
-    ],
-    examples: [
-      'HubSpot',
-      'Mailchimp',
-      'Shopify',
-      'Canva',
-      'Monday.com'
-    ]
-  },
-  communityLed: {
-    name: 'Community-Led Growth',
-    description: 'A strategy that leverages community engagement, user advocacy, and network effects to drive growth.',
-    bestFor: 'Products with strong network effects, platforms, marketplaces, and tools for creators or developers',
-    advantages: [
-      'Creates strong moats and defensibility',
-      'Lower customer acquisition costs',
-      'Higher retention and lifetime value',
-      'Valuable product feedback loops',
-      'Authentic word-of-mouth growth'
-    ],
-    disadvantages: [
-      'Takes time to build momentum',
-      'Requires dedicated community management',
-      'Can be difficult to measure ROI initially',
-      'Needs consistent engagement and moderation',
-      'May face scaling challenges'
-    ],
-    keyMetrics: [
-      'Community Engagement Rate',
-      'User-Generated Content Volume',
-      'Net Promoter Score (NPS)',
-      'Member Retention Rate',
-      'Referral Rate',
-      'Community Contribution Metrics'
-    ],
-    examples: [
-      'Figma',
-      'Discord',
-      'Roblox',
-      'Notion',
-      'Substack'
-    ]
-  },
-  operationsLed: {
-    name: 'Operations-Led Growth',
-    description: 'A strategy that focuses on operational excellence, efficiency, and superior execution as the primary growth driver.',
-    bestFor: 'Logistics, manufacturing, service businesses, and companies in competitive markets with thin margins',
-    advantages: [
-      'Creates sustainable competitive advantage',
-      'Improves unit economics and profitability',
-      'Enables pricing advantages',
-      'Builds reputation for reliability',
-      'Scales predictably with investment'
-    ],
-    disadvantages: [
-      'Requires significant process discipline',
-      'May need substantial upfront investment',
-      'Can be difficult to communicate as value prop',
-      'Needs strong operational leadership',
-      'May sacrifice speed for quality'
-    ],
-    keyMetrics: [
-      'Operational Efficiency Ratio',
-      'Unit Economics',
-      'Customer Satisfaction Score (CSAT)',
-      'On-time Delivery Rate',
-      'Error/Defect Rate',
-      'Process Cycle Time'
-    ],
-    examples: [
-      'Amazon',
-      'Costco',
-      'Toyota',
-      'UPS',
-      'McDonald\'s'
-    ]
-  }
-};
-
-export const pmfAssessmentInfo: Record<string, {
-  name: string;
-  description: string;
-  questions: string[];
-  interpretation: string[];
-}> = {
-  seanEllis: {
-    name: 'Sean Ellis Test',
-    description: 'The classic "very disappointed" test that measures how disappointed users would be if they could no longer use your product.',
-    questions: [
-      'How would you feel if you could no longer use [product]?',
-      'What type of people do you think would most benefit from [product]?',
-      'What is the main benefit you receive from [product]?',
-      'How can we improve [product] for you?'
-    ],
-    interpretation: [
-      'If >40% say "very disappointed," you likely have product-market fit',
-      '25-40% indicates you\'re on the right track but not there yet',
-      '<25% means you need significant product changes'
-    ]
-  },
-  retentionCohort: {
-    name: 'Retention Cohort Analysis',
-    description: 'Measures how many users continue to use your product over time, broken down by acquisition cohorts.',
-    questions: [
-      'What percentage of users are still active after 1 week?',
-      'What percentage of users are still active after 1 month?',
-      'What percentage of users are still active after 3 months?',
-      'How does retention vary across different user segments?'
-    ],
-    interpretation: [
-      'Flat retention curves after initial drop indicate product-market fit',
-      'Different retention patterns across segments help identify your core users',
-      'Improving retention for key segments is often more valuable than acquisition'
-    ]
-  },
-  netPromoterScore: {
-    name: 'Net Promoter Score (NPS)',
-    description: 'Measures customer loyalty and likelihood to recommend your product to others.',
-    questions: [
-      'On a scale of 0-10, how likely are you to recommend [product] to a friend or colleague?',
-      'What is the primary reason for your score?'
-    ],
-    interpretation: [
-      'Promoters (9-10): Loyal enthusiasts who will fuel growth',
-      'Passives (7-8): Satisfied but vulnerable to competitive offerings',
-      'Detractors (0-6): Unhappy customers who can damage growth through negative word-of-mouth',
-      'NPS = % Promoters - % Detractors'
-    ]
-  },
-  customerInterviews: {
-    name: 'Customer Interview Framework',
-    description: 'Qualitative research method to deeply understand customer problems, needs, and experiences.',
-    questions: [
-      'What problem were you trying to solve when you started using [product]?',
-      'What solutions did you try before [product]?',
-      'What made you choose [product] over alternatives?',
-      'What would you improve about [product]?',
-      'How would you feel if [product] was no longer available?'
-    ],
-    interpretation: [
-      'Look for patterns in problems and use cases across interviews',
-      'Pay attention to emotional responses and intensity',
-      'Note specific language and terminology customers use',
-      'Identify workarounds and hacks that indicate unmet needs'
-    ]
-  }
-};
-
 export const growthCourseModules: CourseModule[] = [
   {
     id: 'growth-mindset',
-    title: 'Growth Mindset – What Scale Really Means',
-    description: 'Define your growth strategy, identify bottlenecks, and build for sustainable expansion',
+    title: 'Growth Mindset',
+    description: 'Define your growth strategy and build for sustainable expansion',
     order: 0,
-    content: `# Growth Mindset – What Scale Really Means
+    content: `
+# Growth Mindset – What Scale Really Means
 
-## Welcome to Build to Scale: Your Growth Journey
-
-Now that you've formed your business, it's time to grow it strategically. This comprehensive course will guide you through the essential frameworks and systems needed to scale sustainably. By the end, you'll have a clear growth strategy, validated product-market fit, and the operational foundation to handle increased demand.
+Welcome to Build to Scale: Your Growth Playbook! Now that you've formed your business, it's time to grow it strategically. This comprehensive course will guide you through the essential frameworks and systems needed to scale sustainably.
 
 ## Why Strategic Scaling Matters
 
@@ -327,20 +76,85 @@ By completing this course, you will:
 - Implement key metrics and tracking systems for continuous optimization
 - Develop contingency plans for common scaling challenges
 
-## How to Use This Course
+## Understanding Growth Models
 
-This course is designed for active implementation. Each module includes:
+Before diving into tactics, it's crucial to understand the different growth models available to your business:
 
-- **Strategic frameworks**: Proven methodologies used by successful companies
-- **Assessment tools**: Evaluate your current state and identify gaps
-- **Implementation guides**: Step-by-step playbooks for each area
-- **Real case studies**: Learn from companies that scaled successfully
-- **Community workshops**: Connect with other founders facing similar challenges
-- **Expert mentorship**: Access to operators who've scaled businesses
+### Product-Led Growth (PLG)
 
-## Before You Begin
+In this model, the product itself is the primary driver of customer acquisition, conversion, and expansion. Users discover, try, adopt, and upgrade with minimal sales intervention.
 
-Reflect on your current situation:
+**Key characteristics:**
+- Self-service onboarding
+- Freemium or free trial models
+- Expansion through product usage and value
+- Focus on user experience and product quality
+
+**Examples:** Slack, Dropbox, Notion
+
+### Sales-Led Growth (SLG)
+
+This traditional approach relies on sales teams to identify prospects, demonstrate value, and close deals. It's typically used for complex, high-value products.
+
+**Key characteristics:**
+- Outbound prospecting
+- Consultative selling
+- Relationship-based expansion
+- Focus on sales enablement and process
+
+**Examples:** Salesforce, Oracle, ServiceNow
+
+### Marketing-Led Growth (MLG)
+
+Marketing drives awareness, lead generation, and nurturing to create demand that sales can convert or that drives direct purchases.
+
+**Key characteristics:**
+- Content marketing and SEO
+- Paid acquisition channels
+- Lead nurturing sequences
+- Focus on brand and messaging
+
+**Examples:** HubSpot, Mailchimp, Canva
+
+### Community-Led Growth (CLG)
+
+The community around your product becomes a growth engine through advocacy, support, and network effects.
+
+**Key characteristics:**
+- User communities and forums
+- Ambassador programs
+- User-generated content
+- Focus on engagement and belonging
+
+**Examples:** Figma, Roblox, Discord
+
+### Operations-Led Growth (OLG)
+
+Operational excellence and efficiency drive competitive advantage and enable sustainable growth.
+
+**Key characteristics:**
+- Process optimization
+- Automation and systems
+- Data-driven decision making
+- Focus on unit economics and margins
+
+**Examples:** Amazon, Uber, DoorDash
+
+## Choosing Your Primary Growth Model
+
+Most successful companies use a hybrid approach, but typically have one primary growth model. The right model for your business depends on:
+
+1. **Your product complexity**: Higher complexity often requires more sales involvement
+2. **Average contract value**: Higher ACVs justify more sales resources
+3. **Target market**: B2C vs. B2B, enterprise vs. SMB
+4. **Customer acquisition cost**: How much can you afford to spend to acquire a customer?
+5. **Time to value**: How quickly can users experience value?
+
+In the next module, we'll help you validate your product-market fit, which is the essential foundation for any growth strategy.
+
+## Before You Continue
+
+Take a moment to reflect on your current situation:
 
 - **Current State**: What's working well? What's breaking as you grow?
 - **Growth Goals**: Where do you want to be in 12-18 months?
@@ -348,236 +162,344 @@ Reflect on your current situation:
 - **Risk Tolerance**: How fast do you want to grow vs. how stable do you want to be?
 - **Market Opportunity**: How big is your addressable market really?
 
-## The Five Growth Strategies
-
-Before diving into the tactical elements of scaling, it's important to understand the primary growth strategies available to you. Each has its own advantages, resource requirements, and best-fit scenarios:
-
-### 1. Product-Led Growth (PLG)
-
-In product-led growth, your product itself is the primary driver of acquisition, conversion, and expansion. Users discover, try, adopt, and upgrade with minimal human intervention.
-
-**Best for**: SaaS, mobile apps, and digital products with clear value proposition
-**Examples**: Slack, Dropbox, Notion
-
-**Key characteristics**:
-- Self-service onboarding and adoption
-- Freemium or free trial business models
-- Focus on product experience and time-to-value
-- Strong emphasis on user analytics and product iteration
-
-### 2. Sales-Led Growth (SLG)
-
-Sales-led growth relies on a direct sales team to identify, qualify, and close deals with potential customers.
-
-**Best for**: Enterprise software, complex solutions, high-ticket products
-**Examples**: Salesforce, Oracle, ServiceNow
-
-**Key characteristics**:
-- Dedicated sales team with defined process
-- Longer sales cycles with multiple touchpoints
-- Higher average contract values
-- Emphasis on relationship building and consultative selling
-
-### 3. Marketing-Led Growth (MLG)
-
-Marketing-led growth focuses on creating awareness and demand through content, advertising, and other marketing channels.
-
-**Best for**: Consumer products, SMB-focused solutions, products with clear positioning
-**Examples**: HubSpot, Mailchimp, Shopify
-
-**Key characteristics**:
-- Strong content marketing and SEO focus
-- Multi-channel demand generation
-- Brand-building emphasis
-- Clear messaging and positioning
-
-### 4. Community-Led Growth (CLG)
-
-Community-led growth leverages community engagement, user advocacy, and network effects to drive growth.
-
-**Best for**: Products with network effects, platforms, marketplaces
-**Examples**: Figma, Discord, Roblox
-
-**Key characteristics**:
-- Active user communities and forums
-- User-generated content and templates
-- Strong focus on user success and advocacy
-- Events and knowledge sharing
-
-### 5. Operations-Led Growth (OLG)
-
-Operations-led growth focuses on operational excellence, efficiency, and superior execution as the primary growth driver.
-
-**Best for**: Logistics, manufacturing, service businesses
-**Examples**: Amazon, Costco, UPS
-
-**Key characteristics**:
-- Exceptional operational efficiency
-- Continuous process improvement
-- Superior quality and reliability
-- Scale economies that improve unit economics
-
-## Choosing Your Primary Growth Strategy
-
-Most successful companies employ a hybrid approach, but typically have one primary growth strategy that aligns with their strengths, resources, and market position.
-
-Consider these factors when choosing your primary growth strategy:
-
-- **Product complexity**: How much explanation or customization does your product need?
-- **Average contract value**: Higher ACVs typically justify more sales-intensive approaches
-- **User adoption curve**: How quickly can users understand and get value from your product?
-- **Market education**: Does your market understand the problem you solve, or do they need education?
-- **Resource constraints**: What resources (people, capital, time) do you have available?
-- **Founder strengths**: What are your team's core competencies and experiences?
-
-In the next section, we'll help you assess your current situation and identify the right growth strategy for your specific business.
-
-## Your Growth Journey Starts Here
-
-You've built the foundation—now it's time to build the engine. Let's turn your formed business into a scalable growth machine that can handle whatever comes next.
-
-Ready to scale smart? Let's begin.`,
+Your growth journey starts here. Let's turn your formed business into a scalable growth machine that can handle whatever comes next.
+`,
     quiz: {
       title: 'Growth Strategy Assessment',
-      description: 'Let\'s determine which growth strategy might be the best fit for your business.',
+      description: 'Answer these questions to help determine your optimal growth strategy',
       questions: [
         {
           id: 'product_complexity',
-          text: 'How much explanation or customization does your product require?',
+          text: 'How would you describe your product\'s complexity?',
           type: 'single',
           options: [
             {
-              id: 'self_explanatory',
-              text: 'Very little - users can understand and use it immediately',
-              points: { productLed: 10, salesLed: 0, marketingLed: 5, communityLed: 5, operationsLed: 3 }
+              id: 'simple',
+              text: 'Simple, intuitive, requires minimal training',
+              points: {
+                productLed: 10,
+                salesLed: 0,
+                marketingLed: 5,
+                communityLed: 5,
+                operationsLed: 3
+              }
             },
             {
-              id: 'some_explanation',
-              text: 'Some explanation needed, but fairly straightforward',
-              points: { productLed: 5, salesLed: 5, marketingLed: 8, communityLed: 7, operationsLed: 5 }
+              id: 'moderate',
+              text: 'Moderately complex, some training required',
+              points: {
+                productLed: 5,
+                salesLed: 5,
+                marketingLed: 7,
+                communityLed: 3,
+                operationsLed: 5
+              }
             },
             {
-              id: 'significant_training',
-              text: 'Significant training or onboarding required',
-              points: { productLed: 0, salesLed: 8, marketingLed: 5, communityLed: 3, operationsLed: 7 }
-            },
-            {
-              id: 'highly_customized',
-              text: 'Highly customized for each customer',
-              points: { productLed: 0, salesLed: 10, marketingLed: 2, communityLed: 0, operationsLed: 8 }
+              id: 'complex',
+              text: 'Complex, requires significant training or onboarding',
+              points: {
+                productLed: 0,
+                salesLed: 10,
+                marketingLed: 3,
+                communityLed: 2,
+                operationsLed: 7
+              }
             }
           ]
         },
         {
           id: 'pricing_model',
-          text: 'What is your typical pricing model or average contract value?',
+          text: 'What is your pricing model?',
           type: 'single',
           options: [
             {
               id: 'freemium',
-              text: 'Freemium or low-cost subscription (<$50/month)',
-              points: { productLed: 10, salesLed: 0, marketingLed: 8, communityLed: 8, operationsLed: 5 }
+              text: 'Freemium with paid upgrades',
+              points: {
+                productLed: 10,
+                salesLed: 0,
+                marketingLed: 7,
+                communityLed: 8,
+                operationsLed: 3
+              }
             },
             {
-              id: 'mid_tier',
-              text: 'Mid-tier subscription ($50-500/month)',
-              points: { productLed: 8, salesLed: 5, marketingLed: 10, communityLed: 5, operationsLed: 7 }
-            },
-            {
-              id: 'high_value',
-              text: 'High-value subscription ($500-5,000/month)',
-              points: { productLed: 3, salesLed: 8, marketingLed: 5, communityLed: 3, operationsLed: 8 }
+              id: 'subscription',
+              text: 'Subscription-based (monthly/annual)',
+              points: {
+                productLed: 7,
+                salesLed: 5,
+                marketingLed: 8,
+                communityLed: 5,
+                operationsLed: 5
+              }
             },
             {
               id: 'enterprise',
-              text: 'Enterprise deals ($5,000+/month)',
-              points: { productLed: 0, salesLed: 10, marketingLed: 3, communityLed: 0, operationsLed: 7 }
+              text: 'Enterprise pricing (high-value contracts)',
+              points: {
+                productLed: 2,
+                salesLed: 10,
+                marketingLed: 5,
+                communityLed: 3,
+                operationsLed: 8
+              }
+            },
+            {
+              id: 'transactional',
+              text: 'Transactional (pay-per-use)',
+              points: {
+                productLed: 5,
+                salesLed: 3,
+                marketingLed: 7,
+                communityLed: 2,
+                operationsLed: 10
+              }
+            }
+          ]
+        },
+        {
+          id: 'target_market',
+          text: 'Who is your primary target market?',
+          type: 'single',
+          options: [
+            {
+              id: 'consumers',
+              text: 'Individual consumers (B2C)',
+              points: {
+                productLed: 8,
+                salesLed: 0,
+                marketingLed: 10,
+                communityLed: 7,
+                operationsLed: 5
+              }
+            },
+            {
+              id: 'smb',
+              text: 'Small to medium businesses',
+              points: {
+                productLed: 7,
+                salesLed: 5,
+                marketingLed: 8,
+                communityLed: 6,
+                operationsLed: 6
+              }
+            },
+            {
+              id: 'enterprise',
+              text: 'Enterprise organizations',
+              points: {
+                productLed: 3,
+                salesLed: 10,
+                marketingLed: 5,
+                communityLed: 4,
+                operationsLed: 8
+              }
+            }
+          ]
+        },
+        {
+          id: 'time_to_value',
+          text: 'How quickly can users experience value from your product?',
+          type: 'single',
+          options: [
+            {
+              id: 'immediate',
+              text: 'Immediately or within minutes',
+              points: {
+                productLed: 10,
+                salesLed: 2,
+                marketingLed: 8,
+                communityLed: 7,
+                operationsLed: 5
+              }
+            },
+            {
+              id: 'days',
+              text: 'Within days of setup/onboarding',
+              points: {
+                productLed: 6,
+                salesLed: 6,
+                marketingLed: 7,
+                communityLed: 5,
+                operationsLed: 7
+              }
+            },
+            {
+              id: 'weeks',
+              text: 'Weeks or months of implementation',
+              points: {
+                productLed: 2,
+                salesLed: 10,
+                marketingLed: 4,
+                communityLed: 3,
+                operationsLed: 8
+              }
             }
           ]
         },
         {
           id: 'network_effects',
-          text: 'How important are network effects to your product\'s value?',
+          text: 'Does your product benefit from network effects (becomes more valuable as more people use it)?',
           type: 'single',
           options: [
             {
-              id: 'critical',
-              text: 'Critical - the product gets significantly better with more users',
-              points: { productLed: 7, salesLed: 0, marketingLed: 5, communityLed: 10, operationsLed: 3 }
+              id: 'strong',
+              text: 'Strong network effects (e.g., communication tools, marketplaces)',
+              points: {
+                productLed: 8,
+                salesLed: 3,
+                marketingLed: 6,
+                communityLed: 10,
+                operationsLed: 4
+              }
             },
             {
-              id: 'important',
-              text: 'Important - users benefit from others using it',
-              points: { productLed: 5, salesLed: 3, marketingLed: 7, communityLed: 8, operationsLed: 5 }
+              id: 'moderate',
+              text: 'Some network benefits but not essential',
+              points: {
+                productLed: 6,
+                salesLed: 5,
+                marketingLed: 7,
+                communityLed: 7,
+                operationsLed: 5
+              }
             },
             {
-              id: 'somewhat',
-              text: 'Somewhat - there are some collaboration features',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'not_important',
-              text: 'Not important - users get full value independently',
-              points: { productLed: 5, salesLed: 8, marketingLed: 7, communityLed: 0, operationsLed: 8 }
+              id: 'minimal',
+              text: 'Minimal or no network effects',
+              points: {
+                productLed: 5,
+                salesLed: 8,
+                marketingLed: 7,
+                communityLed: 2,
+                operationsLed: 8
+              }
             }
           ]
         },
         {
-          id: 'market_education',
-          text: 'How much education does your market need about the problem you solve?',
-          type: 'single',
-          options: [
-            {
-              id: 'well_understood',
-              text: 'Well-understood problem with existing solutions',
-              points: { productLed: 8, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 8 }
-            },
-            {
-              id: 'somewhat_familiar',
-              text: 'Somewhat familiar problem with some education needed',
-              points: { productLed: 5, salesLed: 7, marketingLed: 8, communityLed: 7, operationsLed: 5 }
-            },
-            {
-              id: 'new_category',
-              text: 'New category creation requiring significant education',
-              points: { productLed: 3, salesLed: 8, marketingLed: 10, communityLed: 7, operationsLed: 3 }
-            },
-            {
-              id: 'complex_problem',
-              text: 'Complex problem requiring consultative approach',
-              points: { productLed: 0, salesLed: 10, marketingLed: 5, communityLed: 3, operationsLed: 5 }
-            }
-          ]
-        },
-        {
-          id: 'team_strengths',
-          text: 'What are your team\'s core strengths? (Select all that apply)',
+          id: 'customer_acquisition',
+          text: 'What's your current primary customer acquisition channel?',
           type: 'multiple',
           options: [
             {
-              id: 'product_design',
-              text: 'Product design and development',
-              points: { productLed: 10, salesLed: 2, marketingLed: 3, communityLed: 5, operationsLed: 3 }
+              id: 'word_of_mouth',
+              text: 'Word of mouth/referrals',
+              points: {
+                productLed: 8,
+                salesLed: 4,
+                marketingLed: 5,
+                communityLed: 10,
+                operationsLed: 3
+              }
             },
             {
-              id: 'sales_experience',
-              text: 'Sales experience and relationship building',
-              points: { productLed: 2, salesLed: 10, marketingLed: 3, communityLed: 5, operationsLed: 3 }
+              id: 'content_seo',
+              text: 'Content marketing/SEO',
+              points: {
+                productLed: 6,
+                salesLed: 3,
+                marketingLed: 10,
+                communityLed: 7,
+                operationsLed: 4
+              }
             },
             {
-              id: 'marketing_content',
-              text: 'Marketing, content creation, and storytelling',
-              points: { productLed: 3, salesLed: 3, marketingLed: 10, communityLed: 7, operationsLed: 2 }
+              id: 'paid_ads',
+              text: 'Paid advertising',
+              points: {
+                productLed: 5,
+                salesLed: 4,
+                marketingLed: 10,
+                communityLed: 3,
+                operationsLed: 6
+              }
             },
             {
-              id: 'community_building',
-              text: 'Community building and engagement',
-              points: { productLed: 3, salesLed: 2, marketingLed: 5, communityLed: 10, operationsLed: 2 }
+              id: 'sales_outreach',
+              text: 'Direct sales outreach',
+              points: {
+                productLed: 2,
+                salesLed: 10,
+                marketingLed: 4,
+                communityLed: 3,
+                operationsLed: 5
+              }
             },
             {
-              id: 'operations_process',
-              text: 'Operations, process design, and efficiency',
-              points: { productLed: 3, salesLed: 3, marketingLed: 2, communityLed: 2, operationsLed: 10 }
+              id: 'partnerships',
+              text: 'Partnerships/integrations',
+              points: {
+                productLed: 6,
+                salesLed: 7,
+                marketingLed: 6,
+                communityLed: 5,
+                operationsLed: 8
+              }
+            }
+          ]
+        },
+        {
+          id: 'resources',
+          text: 'What resources do you have the most of right now?',
+          type: 'single',
+          options: [
+            {
+              id: 'product_team',
+              text: 'Strong product/engineering team',
+              points: {
+                productLed: 10,
+                salesLed: 3,
+                marketingLed: 4,
+                communityLed: 5,
+                operationsLed: 6
+              }
+            },
+            {
+              id: 'sales_team',
+              text: 'Experienced sales talent',
+              points: {
+                productLed: 3,
+                salesLed: 10,
+                marketingLed: 4,
+                communityLed: 3,
+                operationsLed: 5
+              }
+            },
+            {
+              id: 'marketing_team',
+              text: 'Marketing expertise',
+              points: {
+                productLed: 4,
+                salesLed: 3,
+                marketingLed: 10,
+                communityLed: 6,
+                operationsLed: 4
+              }
+            },
+            {
+              id: 'community',
+              text: 'Engaged user community',
+              points: {
+                productLed: 5,
+                salesLed: 2,
+                marketingLed: 6,
+                communityLed: 10,
+                operationsLed: 3
+              }
+            },
+            {
+              id: 'operations',
+              text: 'Operational excellence/systems',
+              points: {
+                productLed: 4,
+                salesLed: 5,
+                marketingLed: 3,
+                communityLed: 2,
+                operationsLed: 10
+              }
             }
           ]
         }
@@ -585,379 +507,213 @@ Ready to scale smart? Let's begin.`,
     },
     tools: [
       {
-        id: 'growth-strategy-calculator',
-        title: 'Growth Strategy Calculator',
-        description: 'Analyze your business model and resources to determine the optimal growth strategy',
+        id: 'growth-model-calculator',
+        title: 'Growth Model Calculator',
+        description: 'Estimate your growth potential with different strategies',
         type: 'calculator'
       },
       {
-        id: 'bottleneck-identifier',
-        title: 'Growth Bottleneck Identifier',
-        description: 'Identify the current constraints limiting your growth potential',
+        id: 'growth-strategy-template',
+        title: 'Growth Strategy Template',
+        description: 'Document your growth approach with this comprehensive template',
+        type: 'template'
+      },
+      {
+        id: 'market-sizing-tool',
+        title: 'Market Sizing Tool',
+        description: 'Calculate your total addressable market (TAM) and serviceable obtainable market (SOM)',
         type: 'calculator'
       },
       {
-        id: 'growth-roadmap-template',
-        title: 'Growth Roadmap Template',
-        description: 'Create a strategic roadmap for your growth initiatives over the next 12 months',
-        type: 'template',
-        url: 'https://docs.google.com/spreadsheets/d/1-example-growth-roadmap'
+        id: 'growth-roadmap-generator',
+        title: 'Growth Roadmap Generator',
+        description: 'Create a visual timeline for your growth initiatives',
+        type: 'generator'
       }
     ]
   },
   {
     id: 'product-market-fit',
     title: 'Product-Market Fit Validation',
-    description: 'Measure, validate, and strengthen your product-market fit',
+    description: 'Measure and strengthen your product-market fit',
     order: 1,
-    content: `# Product-Market Fit Validation
+    content: `
+# Product-Market Fit Validation
 
-## The Foundation of Sustainable Growth
+Product-market fit (PMF) is the foundation of sustainable growth. Without it, you're building on quicksand. This module will help you objectively measure your current PMF and strengthen it before scaling.
 
-Before you can effectively scale your business, you need to ensure you have strong product-market fit (PMF). Without it, you'll be wasting resources trying to grow something that people don't truly want or need.
+## What is True Product-Market Fit?
 
-## What is Product-Market Fit?
+Product-market fit exists when:
 
-Product-market fit occurs when:
+1. Your product solves a real, painful problem for a specific market
+2. Customers are willing to pay for your solution
+3. The value you deliver exceeds the price you charge
+4. Users would be genuinely disappointed if your product disappeared
+5. You're seeing organic growth through word-of-mouth
 
-1. Your product solves a significant problem for a specific market
-2. Customers recognize this value and are willing to pay for it
-3. The solution is better than existing alternatives
-4. You can acquire customers at a cost that allows for profitability
+Many founders mistake initial traction or early sales for PMF. True PMF is characterized by:
 
-As Marc Andreessen famously said: "Product-market fit means being in a good market with a product that can satisfy that market."
+- **Retention**: Users stick around and keep using your product
+- **Expansion**: Users increase their usage or spending over time
+- **Referral**: Users actively recommend your product to others
+- **Engagement**: Users engage deeply with core features
+- **Feedback**: Users provide constructive feedback because they care
 
-## Why PMF Must Come Before Scale
+## Measuring Your Product-Market Fit
 
-Scaling without PMF leads to:
-
-- **Wasted resources** on acquiring customers who won't stick around
-- **False signals** that can lead to incorrect strategic decisions
-- **Premature optimization** of the wrong aspects of your business
-- **Organizational strain** without the revenue to support it
-- **Loss of focus** on what actually matters - solving a real problem
-
-## The Four Levels of Product-Market Fit
-
-Product-market fit exists on a spectrum:
-
-### Level 1: Problem-Solution Fit
-- You've identified a real problem worth solving
-- You have evidence that your solution addresses this problem
-- Early users show interest and engagement
-
-### Level 2: Minimum Viable Product (MVP) Fit
-- Your product delivers core value to early adopters
-- Users are actively using key features
-- You're getting positive feedback and initial word-of-mouth
-
-### Level 3: Monetization Fit
-- Customers are willing to pay for your solution
-- Your unit economics are viable (LTV > CAC)
-- You have a repeatable sales or conversion process
-
-### Level 4: Scale Fit
-- You have predictable acquisition channels
-- Strong retention and expansion metrics
-- Clear ideal customer profile and positioning
-
-## How to Measure Product-Market Fit
-
-There are several frameworks to measure PMF:
+Here are several frameworks to objectively assess your current PMF:
 
 ### 1. The Sean Ellis Test
 
 Ask your users: "How would you feel if you could no longer use [product]?"
-- **>40% "very disappointed"**: You have PMF
-- **25-40% "very disappointed"**: You're on the right track
-- **<25% "very disappointed"**: You need significant changes
+- Very disappointed
+- Somewhat disappointed
+- Not disappointed
+- N/A - I no longer use the product
 
-### 2. Retention Cohort Analysis
+If over 40% say "very disappointed," you likely have PMF. Below 40%, you have work to do.
 
-Track how many users continue to use your product over time:
-- A retention curve that flattens (doesn't go to zero) indicates PMF
-- Different retention patterns across segments help identify your core users
-- Improving retention for key segments is often more valuable than acquisition
-
-### 3. Net Promoter Score (NPS)
+### 2. Net Promoter Score (NPS)
 
 Ask: "On a scale of 0-10, how likely are you to recommend [product] to a friend or colleague?"
-- **Promoters (9-10)**: Loyal enthusiasts who will fuel growth
-- **Passives (7-8)**: Satisfied but vulnerable to competitive offerings
-- **Detractors (0-6)**: Unhappy customers who can damage growth
-- **NPS = % Promoters - % Detractors**
 
-### 4. Customer Interviews
+- Promoters (9-10): Enthusiastic customers who will fuel growth
+- Passives (7-8): Satisfied but vulnerable to competitors
+- Detractors (0-6): Unhappy customers who can damage growth
 
-Qualitative research to deeply understand customer problems, needs, and experiences:
-- What problem were you trying to solve when you started using our product?
-- What solutions did you try before ours?
-- What made you choose our product over alternatives?
-- What would you improve about our product?
-- How would you feel if our product was no longer available?
+Calculate NPS = % Promoters - % Detractors
 
-## Strengthening Product-Market Fit
+A score above 50 is excellent. Below 0 indicates serious problems.
 
-If your PMF assessment reveals gaps, here are strategies to strengthen it:
+### 3. Retention Cohort Analysis
 
-### 1. Narrow Your Target Market
-- Focus on a more specific customer segment where your solution resonates strongly
-- Double down on use cases where you're seeing the most traction
-- Consider vertical-specific solutions before expanding horizontally
+Track how many users from each acquisition cohort remain active over time. A flattening retention curve (where it stops declining) indicates PMF.
 
-### 2. Enhance Your Core Value Proposition
-- Identify and amplify the "aha moment" that demonstrates your product's value
-- Reduce time-to-value through improved onboarding and UX
-- Eliminate features that distract from your core value
+### 4. The "Why Now" Test
 
-### 3. Improve Product-Channel Fit
-- Ensure your acquisition channels match your target customers' behavior
-- Test different messaging and positioning to improve conversion
-- Align pricing model with the value customers receive
+Can you clearly articulate why your solution is needed now, not 5 years ago or 5 years from now? If market timing is right, PMF is more likely.
 
-### 4. Build a Feedback Loop
-- Implement systematic ways to collect and analyze customer feedback
-- Prioritize product improvements based on impact to core value delivery
-- Create a culture of customer obsession across the organization
+## Strengthening Your Product-Market Fit
 
-## When You're Ready to Scale
+If your PMF metrics aren't strong enough, here's how to improve:
+
+### 1. Customer Development Interviews
+
+Conduct in-depth interviews with:
+- Current customers (especially power users)
+- Churned customers (to understand why they left)
+- Prospective customers (to understand hesitations)
+
+Focus on understanding:
+- Their biggest pain points
+- How they currently solve these problems
+- What would make your solution indispensable
+- What features they don't use or need
+
+### 2. Feature Prioritization
+
+Use the RICE framework to prioritize features:
+- **Reach**: How many users will this impact?
+- **Impact**: How much will it impact each user?
+- **Confidence**: How confident are you in your estimates?
+- **Effort**: How much work is required?
+
+RICE Score = (Reach × Impact × Confidence) ÷ Effort
+
+### 3. Iterate Rapidly
+
+- Build minimum viable improvements
+- Get them to users quickly
+- Measure impact on key metrics
+- Double down on what works, abandon what doesn't
+
+### 4. Narrow Your Focus
+
+Often, weak PMF comes from trying to serve too many customer segments or solve too many problems. Consider:
+
+- Focusing on a more specific customer segment
+- Solving fewer problems, but solving them exceptionally well
+- Removing features that dilute your core value proposition
+
+## When to Scale
 
 You're ready to scale when:
 
-1. You have quantitative evidence of strong PMF (using the frameworks above)
-2. You understand exactly who your ideal customers are and why they buy
-3. You have a repeatable process for acquiring and retaining customers
-4. Your unit economics work (you make more from customers than it costs to acquire them)
-5. You have the operational capacity to handle increased demand
+1. Your PMF metrics consistently meet or exceed benchmarks
+2. You have a repeatable process for delivering value
+3. Your unit economics make sense (LTV > CAC by at least 3x)
+4. You've identified scalable acquisition channels
+5. Your systems can handle increased volume
 
-In the next module, we'll explore how to build your growth engine once you've validated product-market fit.
+Don't rush this step. Premature scaling is one of the primary reasons startups fail.
 
-## Case Study: How Dropbox Validated PMF Before Scaling
-
-Before building their product, Dropbox created a simple explainer video demonstrating their concept. This video generated over 70,000 signups for their waitlist overnight, validating strong demand for their solution.
-
-Once they launched, they measured PMF using retention cohorts and found that users who stored at least one file had significantly higher retention. This insight helped them focus their onboarding on getting users to store their first file as quickly as possible.
-
-Only after validating strong retention did Dropbox invest heavily in growth, implementing their famous referral program that drove viral acquisition at scale.`,
-    quiz: {
-      title: 'Product-Market Fit Assessment',
-      description: 'Let\'s evaluate your current product-market fit status.',
-      questions: [
-        {
-          id: 'pmf_status',
-          text: 'How would your customers feel if they could no longer use your product?',
-          type: 'single',
-          options: [
-            {
-              id: 'very_disappointed',
-              text: 'Over 40% would be very disappointed',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'somewhat_disappointed',
-              text: '25-40% would be very disappointed',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'not_disappointed',
-              text: 'Less than 25% would be very disappointed',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            },
-            {
-              id: 'dont_know',
-              text: 'I haven\'t measured this yet',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
-        },
-        {
-          id: 'retention_curve',
-          text: 'What does your user retention curve look like?',
-          type: 'single',
-          options: [
-            {
-              id: 'flattens_high',
-              text: 'Flattens at a high percentage (strong retention)',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'flattens_low',
-              text: 'Flattens but at a low percentage',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'drops_to_zero',
-              text: 'Continues dropping toward zero',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            },
-            {
-              id: 'not_tracking',
-              text: 'I\'m not tracking retention cohorts',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
-        },
-        {
-          id: 'acquisition_efficiency',
-          text: 'How efficient is your customer acquisition?',
-          type: 'single',
-          options: [
-            {
-              id: 'very_efficient',
-              text: 'Very efficient (CAC < LTV/3)',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'somewhat_efficient',
-              text: 'Somewhat efficient (CAC < LTV)',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'inefficient',
-              text: 'Inefficient (CAC > LTV)',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            },
-            {
-              id: 'not_measured',
-              text: 'I haven\'t measured CAC or LTV',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
-        },
-        {
-          id: 'growth_source',
-          text: 'Where does most of your growth come from currently?',
-          type: 'single',
-          options: [
-            {
-              id: 'word_of_mouth',
-              text: 'Organic word-of-mouth and referrals',
-              points: { productLed: 10, salesLed: 5, marketingLed: 5, communityLed: 10, operationsLed: 7 }
-            },
-            {
-              id: 'marketing_channels',
-              text: 'Marketing channels (content, ads, etc.)',
-              points: { productLed: 5, salesLed: 3, marketingLed: 10, communityLed: 5, operationsLed: 3 }
-            },
-            {
-              id: 'sales_outreach',
-              text: 'Direct sales and outreach',
-              points: { productLed: 3, salesLed: 10, marketingLed: 5, communityLed: 3, operationsLed: 5 }
-            },
-            {
-              id: 'no_growth',
-              text: 'We\'re not seeing significant growth yet',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
-        },
-        {
-          id: 'customer_feedback',
-          text: 'What kind of feedback do you get from customers?',
-          type: 'single',
-          options: [
-            {
-              id: 'enthusiastic',
-              text: 'Enthusiastic, specific praise about core value',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'positive',
-              text: 'Generally positive but with significant feature requests',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'mixed',
-              text: 'Mixed or lukewarm feedback',
-              points: { productLed: 2, salesLed: 2, marketingLed: 2, communityLed: 2, operationsLed: 2 }
-            },
-            {
-              id: 'minimal',
-              text: 'Minimal engagement or feedback',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
-        }
-      ]
-    },
+In the next module, we'll build your growth engine—but only after you've validated your product-market fit.
+`,
     checklist: {
       title: 'Product-Market Fit Validation Checklist',
       items: [
         {
-          id: 'conduct_sean_ellis',
-          text: 'Conduct the Sean Ellis "very disappointed" survey with at least 40 users',
-          description: 'Ask "How would you feel if you could no longer use [product]?" with multiple-choice responses',
+          id: 'pmf_survey',
+          text: 'Conduct Sean Ellis Test with at least 40 customers',
+          description: 'Survey existing customers to measure disappointment if your product disappeared',
           required: true
         },
         {
-          id: 'analyze_retention',
-          text: 'Analyze user retention cohorts for at least 3 months',
-          description: 'Track how many users continue to use your product over time, broken down by acquisition cohorts',
+          id: 'nps_survey',
+          text: 'Measure Net Promoter Score',
+          description: 'Survey customers on likelihood to recommend your product',
           required: true
         },
         {
-          id: 'calculate_nps',
-          text: 'Calculate your Net Promoter Score (NPS)',
-          description: 'Ask users "On a scale of 0-10, how likely are you to recommend [product] to a friend or colleague?"',
-          required: true
-        },
-        {
-          id: 'conduct_interviews',
-          text: 'Conduct at least 5 in-depth customer interviews',
-          description: 'Use the customer interview framework to understand problems, alternatives, and value perception',
-          required: true
-        },
-        {
-          id: 'identify_core_users',
-          text: 'Identify your core user segment with the strongest PMF',
-          description: 'Analyze which user segments show the highest retention, engagement, and enthusiasm',
-          required: true
-        },
-        {
-          id: 'document_value_prop',
-          text: 'Document your validated value proposition',
-          description: 'Clearly articulate the problem you solve and why your solution is uniquely valuable',
-          required: true
-        },
-        {
-          id: 'calculate_unit_economics',
-          text: 'Calculate your basic unit economics (CAC, LTV)',
-          description: 'Ensure you can acquire customers at a cost that allows for profitability',
+          id: 'retention_analysis',
+          text: 'Analyze retention cohorts for at least 3 months',
+          description: 'Track how many users remain active over time',
           required: false
         },
         {
-          id: 'identify_improvements',
-          text: 'Identify 3 key product improvements to strengthen PMF',
-          description: 'Based on customer feedback, determine the highest-impact improvements',
+          id: 'customer_interviews',
+          text: 'Conduct at least 5 customer development interviews',
+          description: 'In-depth conversations with current, churned, or prospective customers',
+          required: true
+        },
+        {
+          id: 'feature_prioritization',
+          text: 'Create RICE-scored feature roadmap',
+          description: 'Prioritize features based on Reach, Impact, Confidence, and Effort',
           required: false
+        },
+        {
+          id: 'unit_economics',
+          text: 'Calculate key unit economics (CAC, LTV, payback period)',
+          description: 'Ensure your business model is viable at scale',
+          required: true
         }
       ]
     },
     tools: [
       {
-        id: 'sean-ellis-survey-template',
-        title: 'Sean Ellis Survey Template',
-        description: 'Ready-to-use survey template for measuring product-market fit',
-        type: 'template',
-        url: 'https://docs.google.com/forms/d/1-example-sean-ellis'
-      },
-      {
-        id: 'retention-cohort-calculator',
-        title: 'Retention Cohort Calculator',
-        description: 'Analyze your user retention patterns to assess product-market fit',
-        type: 'calculator'
+        id: 'pmf-survey-template',
+        title: 'PMF Survey Template',
+        description: 'Ready-to-use survey for measuring product-market fit',
+        type: 'template'
       },
       {
         id: 'customer-interview-guide',
         title: 'Customer Interview Guide',
-        description: 'Comprehensive framework for conducting insightful customer interviews',
-        type: 'template',
-        url: 'https://docs.google.com/document/d/1-example-interview-guide'
+        description: 'Script and question framework for effective customer interviews',
+        type: 'template'
       },
       {
-        id: 'pmf-scoring-tool',
-        title: 'PMF Scoring Tool',
-        description: 'Quantify your product-market fit across multiple dimensions',
+        id: 'retention-calculator',
+        title: 'Retention Analysis Tool',
+        description: 'Calculate and visualize your retention cohorts',
+        type: 'calculator'
+      },
+      {
+        id: 'rice-calculator',
+        title: 'RICE Prioritization Tool',
+        description: 'Score and rank features based on the RICE framework',
         type: 'calculator'
       }
     ]
@@ -965,886 +721,401 @@ Only after validating strong retention did Dropbox invest heavily in growth, imp
   {
     id: 'growth-engine',
     title: 'Building Your Growth Engine',
-    description: 'Design and implement a repeatable, scalable system for sustainable growth',
+    description: 'Design a repeatable, scalable system for sustainable customer acquisition',
     order: 2,
-    content: `# Building Your Growth Engine
+    content: `
+# Building Your Growth Engine
 
-## From Product-Market Fit to Scalable Growth
+Now that you've validated your product-market fit, it's time to build a systematic approach to growth. A growth engine is a repeatable, scalable system for acquiring, retaining, and expanding your customer base.
 
-Once you've validated product-market fit, it's time to build a systematic approach to growth. A growth engine is a repeatable, scalable system that consistently acquires, activates, retains, and monetizes customers.
+## The AARRR Framework: Your Growth Engine Blueprint
 
-## The Growth Engine Framework
+We'll use the AARRR framework (also known as Pirate Metrics) to build your growth engine:
 
-A complete growth engine consists of five interconnected components:
+1. **Acquisition**: How users discover your product
+2. **Activation**: How users experience value for the first time
+3. **Retention**: How users continue to engage over time
+4. **Referral**: How users tell others about your product
+5. **Revenue**: How users generate income for your business
 
-### 1. Acquisition
-How you attract potential customers to your product
+Let's break down each component and how to optimize it.
 
-### 2. Activation
-How you help new users experience your product's core value
+## Acquisition: Filling Your Funnel
 
-### 3. Retention
-How you keep users engaged and coming back
+Acquisition is about finding scalable, profitable channels to bring users to your product.
 
-### 4. Referral
-How you leverage existing users to bring in new ones
+### Channel Strategy
 
-### 5. Revenue
-How you monetize and expand customer relationships
+Different channels work better for different businesses:
 
-This framework, often called AARRR or "Pirate Metrics," provides a comprehensive view of your entire customer journey.
+- **Organic Search (SEO)**: High intent, sustainable, but slow to build
+- **Content Marketing**: Builds authority, compounds over time
+- **Paid Advertising**: Scalable but can be expensive
+- **Social Media**: Good for awareness and community building
+- **Partnerships**: Leverage existing audiences
+- **Sales Outreach**: High touch, good for complex/high-value products
+- **App Store Optimization**: Critical for mobile apps
 
-## Designing Your Acquisition Strategy
+### Channel Selection Framework
 
-Acquisition is about finding scalable, repeatable channels to bring new users to your product. The key is to identify channels that:
+For each potential channel, evaluate:
 
-1. Reach your target audience efficiently
-2. Scale with your budget and resources
-3. Deliver customers with strong retention and LTV potential
+1. **Channel-Product Fit**: Does this channel reach your target audience?
+2. **Economics**: Can you acquire customers profitably through this channel?
+3. **Scalability**: Can this channel grow with your business?
+4. **Controllability**: How much control do you have over the channel?
+5. **Saturation**: How competitive is this channel in your industry?
 
-### Channel Strategy Development
+### Multi-Channel Strategy
 
-Follow these steps to develop your acquisition channel strategy:
+Don't rely on a single channel. Develop:
 
-#### 1. Channel Brainstorming
-List all potential channels that could reach your audience:
+- **Core Channels**: 1-2 channels that drive most of your growth
+- **Experimental Channels**: 1-2 channels you're testing for future growth
+- **Brand Channels**: Long-term investments in brand awareness
 
-- **Organic channels**: SEO, content marketing, social media, community
-- **Paid channels**: SEM, social ads, display, OOH, TV, radio
-- **Partnership channels**: Integrations, co-marketing, affiliates, resellers
-- **Sales channels**: Outbound, inside sales, field sales, channel partners
-- **Product channels**: Viral loops, network effects, embeds, extensions
+## Activation: Delivering the "Aha Moment"
 
-#### 2. Channel Prioritization
-Score each channel on these dimensions (1-5 scale):
+Activation is about helping new users experience your product's value as quickly as possible.
 
-- **Market presence**: How many of your potential customers are there?
-- **Competition**: How crowded is the channel with competitors?
-- **Cost**: What's the expected CAC relative to your LTV?
-- **Time to results**: How quickly will you see meaningful results?
-- **Scalability**: How much can you grow through this channel?
-- **Team fit**: Do you have the skills and resources to execute well?
+### Identifying Your "Aha Moment"
 
-#### 3. Channel Testing Framework
-For your highest-potential channels:
+The "aha moment" is when users first experience the core value of your product. To identify it:
 
-1. Define clear success metrics and testing budget
-2. Create minimum viable tests to validate assumptions
-3. Implement tracking to measure results accurately
-4. Set timeframes for evaluation and decision-making
+1. Analyze your power users' behavior
+2. Look for patterns in users who convert vs. those who don't
+3. Identify the key actions that correlate with long-term retention
 
-#### 4. Channel Optimization
-Once you identify promising channels:
+### Optimizing Your Activation Funnel
 
-1. Systematically test variables to improve performance
-2. Develop playbooks for consistent execution
-3. Build automation and tools to increase efficiency
-4. Train team members on best practices
+1. **Map the journey** from signup to "aha moment"
+2. **Measure conversion** at each step
+3. **Identify and fix** the biggest drop-offs
+4. **Simplify the path** by removing unnecessary steps
+5. **Guide users** with onboarding flows, tooltips, and empty states
 
-## Activation: Turning Visitors into Engaged Users
+## Retention: Keeping Users Engaged
 
-Activation is about helping new users quickly experience your product's core value. This critical step bridges acquisition and retention.
+Retention is often the most important and overlooked part of growth.
 
-### The Activation Framework
+### Retention Strategies
 
-1. **Map the ideal customer journey**
-   - Identify the key steps from signup to "aha moment"
-   - Define the minimum actions needed to experience value
+1. **Email/Push Notification Sequences**: Remind users of value and features
+2. **Feature Education**: Help users discover more value over time
+3. **Habit Formation**: Build your product into users' regular workflows
+4. **Ongoing Value Delivery**: Continuously improve and add relevant features
+5. **Reactivation Campaigns**: Bring back dormant users
 
-2. **Measure your activation funnel**
-   - Track conversion at each step of the journey
-   - Identify where users drop off or get stuck
+### Retention Analysis
 
-3. **Optimize for time-to-value**
-   - Eliminate unnecessary steps and friction
-   - Provide clear guidance and contextual help
-   - Use progressive onboarding to avoid overwhelm
+Segment your retention analysis by:
+- Acquisition channel
+- User persona
+- Feature usage
+- Pricing tier
 
-4. **Personalize the experience**
-   - Tailor onboarding to user segments and use cases
-   - Use what you know about users to customize their path
-   - Provide relevant examples and templates
+Look for patterns in users who stay vs. those who leave.
 
-## Retention: The Growth Multiplier
+## Referral: Turning Users Into Advocates
 
-Retention is often the most impactful area to focus on. Improving retention:
-- Increases customer lifetime value
-- Reduces pressure on acquisition
-- Enables sustainable growth
-- Validates product-market fit
+Referral programs can create a viral growth loop when done right.
 
-### The Retention Framework
+### Referral Program Design
 
-1. **Measure retention properly**
-   - Define what "active" means for your product
-   - Track cohort-based retention curves
-   - Segment users to identify patterns
+1. **Double-Sided Incentives**: Reward both referrer and referee
+2. **Timing**: Ask for referrals after users experience value
+3. **Simplicity**: Make it easy to share and track referrals
+4. **Personalization**: Allow personal messages in referrals
+5. **Recognition**: Acknowledge and thank successful referrers
 
-2. **Identify your core retention drivers**
-   - What features correlate with higher retention?
-   - What usage patterns predict long-term retention?
-   - What user characteristics indicate better fit?
+### Measuring Viral Growth
 
-3. **Build retention-focused habits**
-   - Design for repeated use and engagement
-   - Create triggers and reminders (in-product and external)
-   - Develop features that improve with continued use
+Track your viral coefficient (K):
+- K = average referrals per user × conversion rate of referrals
+- If K > 1, you have viral growth
+- If K < 1, you need other acquisition channels
 
-4. **Implement proactive retention tactics**
-   - Engagement emails and notifications
-   - Regular product education and success content
-   - Check-ins and health scores for at-risk accounts
+## Revenue: Optimizing Your Business Model
 
-## Referral: Turning Customers into Advocates
+Revenue optimization ensures your growth is sustainable.
 
-A well-designed referral system can significantly reduce acquisition costs and bring in pre-qualified users.
+### Revenue Levers
 
-### The Referral Framework
+1. **Pricing Optimization**: Test different price points and structures
+2. **Upselling**: Move users to higher tiers
+3. **Cross-selling**: Offer complementary products
+4. **Expansion Revenue**: Usage-based growth within accounts
+5. **Reducing Churn**: Minimize revenue lost to cancellations
 
-1. **Identify your referral moments**
-   - When do users experience maximum value?
-   - When do they naturally want to share?
-   - What triggers could prompt referral behavior?
+### Lifetime Value Optimization
 
-2. **Design the referral mechanism**
-   - Make it easy and frictionless to share
-   - Provide clear incentives for both parties
-   - Create compelling messaging that's easy to pass along
+Increase customer lifetime value (LTV) by:
+- Extending customer lifespan (reducing churn)
+- Increasing average revenue per user (ARPU)
+- Creating additional revenue streams
 
-3. **Track and optimize the referral funnel**
-   - Measure invite sends, accepts, and conversions
-   - Test different incentives and messaging
-   - Identify and remove friction points
+## Building Your Growth System
 
-## Revenue: Monetization and Expansion
+Now it's time to put it all together:
 
-Your revenue engine focuses on both initial conversion and expanding customer relationships over time.
+1. **Set Clear Growth Metrics**: Define your north star metric and supporting metrics
+2. **Build a Growth Team**: Assign ownership of different parts of the funnel
+3. **Establish Growth Processes**: Create regular growth meetings and reviews
+4. **Implement Testing Framework**: Develop a system for running growth experiments
+5. **Create Feedback Loops**: Ensure learnings inform product development
 
-### The Revenue Framework
-
-1. **Optimize your pricing strategy**
-   - Align pricing with value metrics
-   - Test different pricing models and tiers
-   - Implement value-based pricing where possible
-
-2. **Improve conversion to paid**
-   - Clearly communicate value proposition
-   - Reduce friction in the purchase process
-   - Use appropriate urgency and scarcity tactics
-
-3. **Develop expansion revenue streams**
-   - Identify upsell and cross-sell opportunities
-   - Implement usage-based growth mechanisms
-   - Create natural expansion paths as users grow
-
-4. **Reduce churn and increase renewals**
-   - Proactively address at-risk accounts
-   - Demonstrate ongoing value and ROI
-   - Make renewal processes seamless
-
-## Integrating Your Growth Engine
-
-While we've discussed each component separately, a truly effective growth engine integrates all these elements into a cohesive system:
-
-1. **Align metrics and goals** across all components
-2. **Create feedback loops** between different parts of the engine
-3. **Build cross-functional growth teams** with clear ownership
-4. **Implement regular growth reviews** to identify opportunities
-5. **Develop a testing and learning culture** to continuously improve
-
-## Case Study: How Slack Built Their Growth Engine
-
-Slack's growth engine demonstrates how all components work together:
-
-**Acquisition**: Focused on bottom-up adoption within teams, starting with free plans and word-of-mouth
-
-**Activation**: Streamlined onboarding to get teams sending messages and uploading files within minutes
-
-**Retention**: Built features like channel organization, search, and integrations that increased value over time
-
-**Referral**: Created natural team expansion through invites and workspace sharing
-
-**Revenue**: Implemented usage-based pricing that grew with team size and feature needs
-
-By optimizing each component and creating virtuous cycles between them, Slack achieved extraordinary growth without massive marketing spend.
-
-## Building Your Growth Engine Action Plan
-
-1. **Audit your current growth system** using the frameworks above
-2. **Identify your biggest opportunities** across the five components
-3. **Prioritize 1-2 areas** to focus on first (usually retention and one other)
-4. **Design experiments** to improve your weakest areas
-5. **Build measurement systems** to track progress
-6. **Create cross-functional ownership** of growth metrics
-
-In the next module, we'll explore how to build operations that can scale with your growth.`,
-    quiz: {
-      title: 'Growth Engine Assessment',
-      description: 'Let\'s evaluate the current state of your growth engine components.',
-      questions: [
+In the next module, we'll focus on building operations that can scale with your growth.
+`,
+    checklist: {
+      title: 'Growth Engine Implementation Checklist',
+      items: [
         {
           id: 'acquisition_channels',
-          text: 'Which acquisition channels are currently working best for you?',
-          type: 'multiple',
-          options: [
-            {
-              id: 'organic_search',
-              text: 'Organic search (SEO)',
-              points: { productLed: 8, salesLed: 3, marketingLed: 10, communityLed: 5, operationsLed: 3 }
-            },
-            {
-              id: 'paid_advertising',
-              text: 'Paid advertising (PPC, social ads)',
-              points: { productLed: 5, salesLed: 5, marketingLed: 10, communityLed: 3, operationsLed: 3 }
-            },
-            {
-              id: 'content_marketing',
-              text: 'Content marketing (blog, videos, podcasts)',
-              points: { productLed: 7, salesLed: 5, marketingLed: 10, communityLed: 8, operationsLed: 3 }
-            },
-            {
-              id: 'direct_sales',
-              text: 'Direct sales outreach',
-              points: { productLed: 2, salesLed: 10, marketingLed: 3, communityLed: 2, operationsLed: 5 }
-            },
-            {
-              id: 'partnerships',
-              text: 'Partnerships and integrations',
-              points: { productLed: 7, salesLed: 7, marketingLed: 5, communityLed: 7, operationsLed: 7 }
-            },
-            {
-              id: 'word_of_mouth',
-              text: 'Word of mouth and referrals',
-              points: { productLed: 10, salesLed: 5, marketingLed: 5, communityLed: 10, operationsLed: 7 }
-            },
-            {
-              id: 'community',
-              text: 'Community engagement',
-              points: { productLed: 5, salesLed: 2, marketingLed: 5, communityLed: 10, operationsLed: 3 }
-            }
-          ]
+          text: 'Identify and set up at least 2 core acquisition channels',
+          description: 'Select channels based on channel-product fit and economics',
+          required: true
         },
         {
-          id: 'activation_rate',
-          text: 'What percentage of new users successfully reach your "aha moment"?',
-          type: 'single',
-          options: [
-            {
-              id: 'high_activation',
-              text: 'Over 60% reach the aha moment',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'medium_activation',
-              text: '30-60% reach the aha moment',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'low_activation',
-              text: 'Under 30% reach the aha moment',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            },
-            {
-              id: 'not_measured',
-              text: 'We don\'t measure activation rate',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
+          id: 'aha_moment',
+          text: 'Define your product\'s "aha moment" and optimize the path to it',
+          description: 'Identify the key action that delivers core value to users',
+          required: true
         },
         {
-          id: 'retention_strategy',
-          text: 'How developed is your retention strategy?',
-          type: 'single',
-          options: [
-            {
-              id: 'comprehensive',
-              text: 'Comprehensive with proactive measures and regular optimization',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'basic',
-              text: 'Basic retention tactics but not systematic',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'reactive',
-              text: 'Mostly reactive to churn when it happens',
-              points: { productLed: 2, salesLed: 2, marketingLed: 2, communityLed: 2, operationsLed: 2 }
-            },
-            {
-              id: 'nonexistent',
-              text: 'No formal retention strategy',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
+          id: 'retention_program',
+          text: 'Implement a retention program with at least 3 strategies',
+          description: 'Email sequences, feature education, or reactivation campaigns',
+          required: true
         },
         {
           id: 'referral_system',
-          text: 'Do you have a formal referral or word-of-mouth system?',
-          type: 'single',
-          options: [
-            {
-              id: 'optimized',
-              text: 'Yes, with incentives and tracking that we regularly optimize',
-              points: { productLed: 10, salesLed: 7, marketingLed: 8, communityLed: 10, operationsLed: 5 }
-            },
-            {
-              id: 'basic_system',
-              text: 'Yes, but it\'s basic and not a major focus',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 3 }
-            },
-            {
-              id: 'informal',
-              text: 'No formal system, but we get organic referrals',
-              points: { productLed: 3, salesLed: 3, marketingLed: 3, communityLed: 5, operationsLed: 3 }
-            },
-            {
-              id: 'no_referrals',
-              text: 'No, we don\'t get many referrals',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
-        },
-        {
-          id: 'revenue_expansion',
-          text: 'How effective is your revenue expansion strategy?',
-          type: 'single',
-          options: [
-            {
-              id: 'strong_expansion',
-              text: 'Strong expansion (net revenue retention >110%)',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'moderate_expansion',
-              text: 'Moderate expansion (net revenue retention 100-110%)',
-              points: { productLed: 7, salesLed: 7, marketingLed: 7, communityLed: 7, operationsLed: 7 }
-            },
-            {
-              id: 'minimal_expansion',
-              text: 'Minimal expansion (net revenue retention 90-100%)',
-              points: { productLed: 3, salesLed: 3, marketingLed: 3, communityLed: 3, operationsLed: 3 }
-            },
-            {
-              id: 'revenue_shrinking',
-              text: 'Revenue is shrinking (net revenue retention <90%)',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            },
-            {
-              id: 'not_tracking',
-              text: 'Not tracking expansion metrics',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
-        }
-      ]
-    },
-    checklist: {
-      title: 'Growth Engine Development Checklist',
-      items: [
-        {
-          id: 'acquisition_strategy',
-          text: 'Develop a multi-channel acquisition strategy',
-          description: 'Identify, prioritize, and test at least 3 acquisition channels',
-          required: true
-        },
-        {
-          id: 'activation_funnel',
-          text: 'Map and optimize your activation funnel',
-          description: 'Define your "aha moment" and the steps needed to get users there',
-          required: true
-        },
-        {
-          id: 'retention_analysis',
-          text: 'Conduct retention analysis by cohort and segment',
-          description: 'Identify patterns in user retention and the factors that drive it',
-          required: true
-        },
-        {
-          id: 'referral_program',
-          text: 'Design a referral program appropriate for your business',
-          description: 'Create incentives and mechanisms for existing users to refer new ones',
+          text: 'Design a referral system with double-sided incentives',
+          description: 'Create a mechanism for users to refer others',
           required: false
         },
         {
-          id: 'revenue_expansion',
-          text: 'Develop a strategy for revenue expansion',
-          description: 'Identify opportunities for upselling, cross-selling, or usage expansion',
+          id: 'revenue_optimization',
+          text: 'Identify at least 2 revenue optimization opportunities',
+          description: 'Pricing changes, upselling, or expansion strategies',
           required: true
         },
         {
           id: 'growth_metrics',
-          text: 'Establish key growth metrics and tracking',
-          description: 'Define KPIs for each component of your growth engine',
-          required: true
-        },
-        {
-          id: 'growth_experiments',
-          text: 'Create a backlog of growth experiments',
-          description: 'Develop at least 10 testable hypotheses to improve your growth engine',
-          required: false
-        },
-        {
-          id: 'growth_roles',
-          text: 'Define growth responsibilities within your team',
-          description: 'Assign ownership for different components of the growth engine',
+          text: 'Define your north star metric and supporting metrics',
+          description: 'Select the key metrics that will guide your growth decisions',
           required: true
         }
       ]
     },
     tools: [
       {
-        id: 'channel-prioritization-matrix',
-        title: 'Channel Prioritization Matrix',
-        description: 'Evaluate and prioritize potential acquisition channels based on multiple factors',
-        type: 'template',
-        url: 'https://docs.google.com/spreadsheets/d/1-example-channel-matrix'
+        id: 'channel-evaluation-matrix',
+        title: 'Channel Evaluation Matrix',
+        description: 'Evaluate and compare potential acquisition channels',
+        type: 'template'
       },
       {
         id: 'activation-funnel-analyzer',
         title: 'Activation Funnel Analyzer',
-        description: 'Visualize and optimize your user activation journey',
+        description: 'Map and measure your activation funnel',
         type: 'calculator'
       },
       {
-        id: 'retention-cohort-template',
-        title: 'Retention Cohort Analysis Template',
-        description: 'Track and analyze user retention over time by acquisition cohort',
-        type: 'template',
-        url: 'https://docs.google.com/spreadsheets/d/1-example-retention-cohort'
+        id: 'retention-curve-calculator',
+        title: 'Retention Curve Calculator',
+        description: 'Visualize and project your retention over time',
+        type: 'calculator'
       },
       {
-        id: 'referral-program-designer',
-        title: 'Referral Program Designer',
-        description: 'Create an effective referral program with the right incentives and mechanics',
-        type: 'generator'
+        id: 'viral-coefficient-calculator',
+        title: 'Viral Coefficient Calculator',
+        description: 'Calculate your viral growth potential',
+        type: 'calculator'
       },
       {
-        id: 'growth-experiment-template',
-        title: 'Growth Experiment Template',
-        description: 'Structure and track your growth experiments for maximum learning',
-        type: 'template',
-        url: 'https://docs.google.com/document/d/1-example-growth-experiment'
+        id: 'ltv-calculator',
+        title: 'Lifetime Value Calculator',
+        description: 'Project customer lifetime value across segments',
+        type: 'calculator'
       }
     ]
   },
   {
-    id: 'operations-scale',
+    id: 'operations-scaling',
     title: 'Operations That Scale',
-    description: 'Build systems and processes that support sustainable growth',
+    description: 'Create systems and processes that can handle 10x growth',
     order: 3,
-    content: `# Operations That Scale
+    content: `
+# Operations That Scale
 
-## Building the Foundation for Sustainable Growth
-
-As your business grows, operations that worked when you were small will start to break. This module focuses on building scalable operational systems that can support your growth without creating chaos.
+As you grow, operational challenges can quickly become bottlenecks. This module focuses on building systems and processes that can handle 10x growth without breaking down.
 
 ## Why Operations Matter for Growth
 
 Operational excellence enables growth by:
 
-1. **Maintaining quality** as you scale
-2. **Reducing costs** through efficiency and automation
-3. **Improving customer experience** with consistent delivery
-4. **Freeing up resources** to focus on strategic initiatives
-5. **Creating competitive advantages** through superior execution
+1. **Maintaining Quality**: Ensuring consistent delivery as volume increases
+2. **Improving Efficiency**: Reducing costs and increasing margins
+3. **Enabling Speed**: Allowing faster execution and iteration
+4. **Reducing Chaos**: Creating predictability and reducing firefighting
+5. **Freeing Resources**: Allowing focus on strategic initiatives rather than daily problems
 
-## The Scalable Operations Framework
+## Identifying Operational Bottlenecks
 
-### 1. Process Documentation and Standardization
+Before building new systems, identify where your current operations will break under growth:
 
-The first step to scalable operations is documenting and standardizing your core processes:
+### Common Bottlenecks
 
-#### Process Mapping
-- Identify your critical business processes
-- Document current workflows step-by-step
-- Identify bottlenecks, redundancies, and failure points
-- Standardize processes for consistency
+1. **Manual Processes**: Tasks that require human intervention for each transaction
+2. **Tribal Knowledge**: Information that exists only in employees' heads
+3. **Single Points of Failure**: Processes or people without redundancy
+4. **Technical Debt**: Short-term solutions that limit future capabilities
+5. **Communication Gaps**: Breakdowns between teams or departments
 
-#### Standard Operating Procedures (SOPs)
-- Create clear, detailed instructions for key processes
-- Include roles, responsibilities, and decision rights
-- Document exceptions and edge cases
-- Establish quality standards and metrics
+### Bottleneck Assessment
 
-#### Process Governance
-- Assign process owners for each critical process
-- Establish review and update cadences
-- Create feedback mechanisms for continuous improvement
-- Develop training materials for new team members
+For each core business process, ask:
+- What would happen if volume increased 10x?
+- Where would quality suffer first?
+- What would cause the most stress on the team?
+- Which customers would be affected first?
 
-### 2. Systems and Tools Architecture
+## Building Scalable Systems
 
-The right technology stack is crucial for operational scalability:
+### 1. Process Documentation
 
-#### Technology Stack Assessment
-- Audit current tools and systems
-- Identify integration points and data flows
-- Evaluate scalability limitations
-- Map technology to business processes
+Document your core processes:
+- **Standard Operating Procedures (SOPs)**: Step-by-step instructions
+- **Process Maps**: Visual representations of workflows
+- **Decision Trees**: Frameworks for handling common scenarios
+- **Knowledge Base**: Centralized repository of information
 
-#### Build vs. Buy Decisions
-- Assess core vs. context functionality
-- Evaluate total cost of ownership
-- Consider customization requirements
-- Plan for future integration needs
+### 2. Automation Strategy
 
-#### Technology Roadmap
-- Prioritize system implementations and upgrades
-- Plan for data migration and system transitions
-- Allocate resources for implementation and training
-- Establish success metrics for technology investments
+Not everything should be automated. Use this framework:
 
-### 3. Automation and Efficiency
+1. **Eliminate**: Can this process be eliminated entirely?
+2. **Simplify**: Can this process be simplified before automating?
+3. **Automate**: Is this process stable and repetitive enough to automate?
+4. **Delegate**: If not automatable, can it be delegated or outsourced?
 
-Identify opportunities to automate repetitive tasks and improve efficiency:
+Focus automation efforts on:
+- High-volume, repetitive tasks
+- Error-prone processes
+- Customer-facing operations that impact experience
+- Data collection and reporting
 
-#### Automation Opportunity Assessment
-- Catalog manual, repetitive processes
-- Quantify time and resources spent
-- Prioritize based on impact and feasibility
-- Start with simple, high-impact automations
+### 3. Scalable Tech Stack
 
-#### Automation Implementation
-- Begin with "no-code" or "low-code" solutions where possible
-- Document automation logic and decision rules
-- Build in exception handling and monitoring
-- Measure time and cost savings
+Your technology choices can enable or limit growth:
 
-#### Continuous Optimization
-- Regularly review automation performance
-- Identify new automation opportunities
-- Refine and improve existing automations
-- Balance automation with human touch points
+- **API-First Architecture**: Enables integration and automation
+- **Microservices**: Allow independent scaling of components
+- **Cloud Infrastructure**: Provides elastic resources
+- **No-Code/Low-Code Tools**: Enable rapid adaptation without engineering
+- **Data Pipeline**: Supports decision-making at scale
 
-### 4. Team Structure and Scaling
+### 4. Customer Service Scalability
 
-Design your organization to scale efficiently:
+As you grow, customer service demand increases:
 
-#### Organizational Design
-- Define clear roles and responsibilities
-- Create scalable team structures
-- Establish reporting relationships and spans of control
-- Plan for growth stages and transitions
-
-#### Hiring and Onboarding
-- Develop structured hiring processes
-- Create comprehensive onboarding programs
-- Build training materials and knowledge bases
-- Establish performance expectations and metrics
-
-#### Outsourcing and Partnerships
-- Identify functions suitable for outsourcing
-- Develop vendor selection criteria
-- Create service level agreements
-- Establish vendor management processes
+- **Tiered Support Model**: Route issues based on complexity
+- **Self-Service Options**: Knowledge base, tutorials, FAQs
+- **Community Support**: Enable customers to help each other
+- **Proactive Communication**: Prevent issues before they occur
+- **Service Level Agreements (SLAs)**: Set clear expectations
 
 ### 5. Financial Operations
 
-Build financial systems that support and enable growth:
+Scalable financial operations provide visibility and control:
 
-#### Financial Planning and Analysis
-- Develop rolling forecasts and budgets
-- Create financial models for scenario planning
-- Establish regular financial review cadence
-- Connect financial metrics to operational KPIs
+- **Automated Billing and Collections**: Reduce revenue leakage
+- **Financial Dashboards**: Real-time visibility into key metrics
+- **Forecasting Models**: Project cash needs and resource requirements
+- **Expense Management**: Systems for approvals and tracking
+- **Compliance Frameworks**: Ensure regulatory requirements are met
 
-#### Cash Flow Management
-- Optimize accounts receivable processes
-- Manage accounts payable strategically
-- Develop cash flow forecasting capabilities
-- Establish cash reserves policies
+## Implementing Operational Excellence
 
-#### Unit Economics Tracking
-- Calculate and monitor customer acquisition costs
-- Track lifetime value by customer segment
-- Measure contribution margins by product/service
-- Analyze payback periods and ROI
+### The Operational Maturity Model
 
-### 6. Customer Operations
+Assess your current operational maturity:
 
-Scale your ability to serve customers effectively:
+1. **Reactive (Level 1)**: Firefighting mode, manual processes
+2. **Organized (Level 2)**: Basic documentation and tools in place
+3. **Proactive (Level 3)**: Processes are standardized and partially automated
+4. **Optimized (Level 4)**: Data-driven improvement, high automation
+5. **Innovative (Level 5)**: Operations provide competitive advantage
 
-#### Customer Journey Mapping
-- Document end-to-end customer experience
-- Identify friction points and opportunities
-- Standardize customer touchpoints
-- Measure satisfaction at key moments
+### Prioritizing Operational Improvements
 
-#### Support Scalability
-- Develop tiered support models
-- Create self-service knowledge bases
-- Implement ticketing and case management
-- Establish SLAs and performance metrics
+Not everything can be fixed at once. Prioritize based on:
 
-#### Customer Success Systems
-- Build proactive customer health monitoring
-- Develop playbooks for common scenarios
-- Create scalable onboarding processes
-- Implement account expansion frameworks
+1. **Impact on Customer Experience**: Which improvements directly affect customers?
+2. **Growth Constraints**: Which operations are currently limiting growth?
+3. **Resource Efficiency**: Which improvements give the biggest ROI?
+4. **Risk Mitigation**: Which areas pose the greatest risk if they fail?
 
-## Operational Maturity Model
+### Change Management
 
-As you scale, your operations will evolve through these stages:
+Implementing new operational systems requires:
 
-### Stage 1: Ad Hoc
-- Processes are undocumented and inconsistent
-- Heavy reliance on tribal knowledge
-- Manual execution with minimal tools
-- Reactive problem-solving
+1. **Clear Communication**: Explain the why behind changes
+2. **Training**: Ensure everyone knows how to use new systems
+3. **Phased Rollout**: Test changes before full implementation
+4. **Feedback Loops**: Gather input and make adjustments
+5. **Celebration**: Recognize operational wins and improvements
 
-### Stage 2: Emerging
-- Key processes are documented
-- Basic tools implemented
-- Some standardization, but still person-dependent
-- Beginning to measure operational metrics
+## Measuring Operational Success
 
-### Stage 3: Defined
-- Standardized processes across the organization
-- Integrated tools and systems
-- Clear roles and responsibilities
-- Regular reporting and reviews
+Track these metrics to ensure your operations are scaling effectively:
 
-### Stage 4: Optimized
-- Continuous improvement processes
-- Automation of routine tasks
-- Data-driven decision making
-- Proactive problem prevention
+- **Efficiency Metrics**: Cost per transaction, time per process
+- **Quality Metrics**: Error rates, rework required
+- **Capacity Metrics**: Utilization rates, headroom for growth
+- **Satisfaction Metrics**: Internal team and customer satisfaction
+- **Agility Metrics**: Time to implement changes or respond to issues
 
-### Stage 5: Innovative
-- Operations as competitive advantage
-- Predictive analytics and insights
-- Highly efficient resource utilization
-- Adaptable to changing conditions
-
-## Prioritizing Operational Improvements
-
-Not everything needs to be perfect before you scale. Focus on:
-
-1. **Customer-facing operations** that directly impact experience
-2. **Revenue operations** that affect your ability to sell and deliver
-3. **Financial operations** that ensure cash flow and profitability
-4. **People operations** that enable team growth and performance
-5. **Support operations** that maintain infrastructure and systems
-
-## Case Study: How Shopify Scaled Operations
-
-Shopify's growth from serving small merchants to powering enterprise e-commerce required significant operational scaling:
-
-1. They built a **modular architecture** that allowed different components to scale independently
-
-2. They implemented **automated testing and deployment** to maintain quality while increasing development velocity
-
-3. They created **tiered support systems** with specialized teams for different merchant segments
-
-4. They developed **self-serve merchant education** through Shopify Academy to reduce support burden
-
-5. They built **partner ecosystems** to extend capabilities without linear team growth
-
-The result was the ability to serve millions of merchants while maintaining high service quality and continuing to innovate rapidly.
-
-## Building Your Operational Scaling Plan
-
-1. **Assess your current operational maturity** using the model above
-2. **Identify your biggest operational bottlenecks** to growth
-3. **Prioritize improvements** based on impact and urgency
-4. **Create a phased implementation plan** with clear milestones
-5. **Assign ownership** for key operational areas
-6. **Establish metrics** to track operational performance
-7. **Review and adjust** as you grow
-
-In the next module, we'll explore how to build a team and culture that can scale with your business.`,
-    quiz: {
-      title: 'Operational Scalability Assessment',
-      description: 'Let\'s evaluate how ready your operations are to support growth.',
-      questions: [
+In the next module, we'll focus on building a team and culture that can support your growing operations.
+`,
+    checklist: {
+      title: 'Operations Scaling Checklist',
+      items: [
+        {
+          id: 'bottleneck_assessment',
+          text: 'Complete bottleneck assessment for all core processes',
+          description: 'Identify where operations will break under 10x growth',
+          required: true
+        },
         {
           id: 'process_documentation',
-          text: 'How well documented are your core business processes?',
-          type: 'single',
-          options: [
-            {
-              id: 'comprehensive',
-              text: 'Comprehensive documentation with regular updates',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'partial',
-              text: 'Partial documentation of key processes',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'minimal',
-              text: 'Minimal documentation, mostly tribal knowledge',
-              points: { productLed: 2, salesLed: 2, marketingLed: 2, communityLed: 2, operationsLed: 2 }
-            },
-            {
-              id: 'none',
-              text: 'No formal documentation',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
+          text: 'Document at least 3 critical business processes',
+          description: 'Create SOPs, process maps, or knowledge base articles',
+          required: true
         },
         {
-          id: 'systems_integration',
-          text: 'How integrated are your business systems and tools?',
-          type: 'single',
-          options: [
-            {
-              id: 'fully_integrated',
-              text: 'Fully integrated with automated data flows',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'partially_integrated',
-              text: 'Partially integrated with some manual steps',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'minimal_integration',
-              text: 'Minimal integration, mostly siloed systems',
-              points: { productLed: 2, salesLed: 2, marketingLed: 2, communityLed: 2, operationsLed: 2 }
-            },
-            {
-              id: 'manual_processes',
-              text: 'Primarily manual processes with basic tools',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
+          id: 'automation_plan',
+          text: 'Develop automation strategy for high-volume processes',
+          description: 'Identify processes to eliminate, simplify, automate, or delegate',
+          required: true
         },
         {
-          id: 'automation_level',
-          text: 'What level of automation exists in your core processes?',
-          type: 'single',
-          options: [
-            {
-              id: 'highly_automated',
-              text: 'Highly automated with minimal manual intervention',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'partially_automated',
-              text: 'Key processes partially automated',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'minimal_automation',
-              text: 'Minimal automation, mostly manual work',
-              points: { productLed: 2, salesLed: 2, marketingLed: 2, communityLed: 2, operationsLed: 2 }
-            },
-            {
-              id: 'no_automation',
-              text: 'No significant automation',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
+          id: 'tech_stack_review',
+          text: 'Evaluate current tech stack for scalability',
+          description: 'Identify technology limitations and improvement opportunities',
+          required: false
+        },
+        {
+          id: 'customer_service_model',
+          text: 'Design scalable customer service model',
+          description: 'Create tiered support, self-service, or community options',
+          required: true
         },
         {
           id: 'financial_operations',
-          text: 'How mature are your financial operations?',
-          type: 'single',
-          options: [
-            {
-              id: 'sophisticated',
-              text: 'Sophisticated with forecasting, unit economics tracking, and regular reviews',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'established',
-              text: 'Established systems with basic reporting and analysis',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'basic',
-              text: 'Basic bookkeeping and compliance only',
-              points: { productLed: 2, salesLed: 2, marketingLed: 2, communityLed: 2, operationsLed: 2 }
-            },
-            {
-              id: 'minimal',
-              text: 'Minimal financial tracking',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
-        },
-        {
-          id: 'customer_operations',
-          text: 'How scalable are your customer-facing operations?',
-          type: 'single',
-          options: [
-            {
-              id: 'highly_scalable',
-              text: 'Highly scalable with self-service, automation, and tiered support',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'moderately_scalable',
-              text: 'Moderately scalable with some systems and processes',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'limited_scalability',
-              text: 'Limited scalability, would strain with significant growth',
-              points: { productLed: 2, salesLed: 2, marketingLed: 2, communityLed: 2, operationsLed: 2 }
-            },
-            {
-              id: 'not_scalable',
-              text: 'Not scalable, highly dependent on specific people',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
-        }
-      ]
-    },
-    checklist: {
-      title: 'Operational Scaling Checklist',
-      items: [
-        {
-          id: 'document_core_processes',
-          text: 'Document your core business processes',
-          description: 'Create step-by-step documentation for critical operational workflows',
-          required: true
-        },
-        {
-          id: 'create_sops',
-          text: 'Create standard operating procedures (SOPs) for key functions',
-          description: 'Develop detailed instructions for consistent execution of important tasks',
-          required: true
-        },
-        {
-          id: 'tech_stack_assessment',
-          text: 'Assess your technology stack for scalability',
-          description: 'Evaluate current systems and identify gaps or limitations',
-          required: true
-        },
-        {
-          id: 'automation_opportunities',
-          text: 'Identify and prioritize automation opportunities',
-          description: 'List manual processes that could be automated and rank by impact',
-          required: true
-        },
-        {
-          id: 'financial_reporting',
-          text: 'Establish regular financial reporting and reviews',
-          description: 'Create dashboards and cadence for monitoring financial performance',
-          required: true
-        },
-        {
-          id: 'customer_journey',
-          text: 'Map and optimize the end-to-end customer journey',
-          description: 'Document all customer touchpoints and identify improvement opportunities',
+          text: 'Implement scalable financial operations',
+          description: 'Set up automated billing, dashboards, or forecasting',
           required: false
-        },
-        {
-          id: 'scalable_support',
-          text: 'Implement scalable customer support systems',
-          description: 'Set up tiered support, knowledge base, and appropriate tools',
-          required: false
-        },
-        {
-          id: 'operational_metrics',
-          text: 'Define and track key operational metrics',
-          description: 'Establish KPIs for operational performance and efficiency',
-          required: true
         }
       ]
     },
@@ -1852,35 +1123,32 @@ In the next module, we'll explore how to build a team and culture that can scale
       {
         id: 'process-mapping-template',
         title: 'Process Mapping Template',
-        description: 'Document your business processes with this structured template',
-        type: 'template',
-        url: 'https://docs.google.com/spreadsheets/d/1-example-process-mapping'
+        description: 'Document your business processes visually',
+        type: 'template'
+      },
+      {
+        id: 'automation-assessment-tool',
+        title: 'Automation Assessment Tool',
+        description: 'Evaluate processes for automation potential',
+        type: 'calculator'
+      },
+      {
+        id: 'tech-stack-evaluation',
+        title: 'Tech Stack Evaluation Matrix',
+        description: 'Assess your technology for scalability',
+        type: 'template'
       },
       {
         id: 'sop-template',
         title: 'Standard Operating Procedure Template',
-        description: 'Create comprehensive SOPs for consistent execution',
-        type: 'template',
-        url: 'https://docs.google.com/document/d/1-example-sop-template'
+        description: 'Create clear, consistent process documentation',
+        type: 'template'
       },
       {
-        id: 'tech-stack-assessment',
-        title: 'Technology Stack Assessment Tool',
-        description: 'Evaluate your current systems and plan for scaling',
-        type: 'calculator'
-      },
-      {
-        id: 'automation-roi-calculator',
-        title: 'Automation ROI Calculator',
-        description: 'Calculate the return on investment for automation initiatives',
-        type: 'calculator'
-      },
-      {
-        id: 'customer-journey-mapper',
-        title: 'Customer Journey Mapping Tool',
-        description: 'Visualize and optimize your end-to-end customer experience',
-        type: 'template',
-        url: 'https://docs.google.com/spreadsheets/d/1-example-journey-map'
+        id: 'operational-metrics-dashboard',
+        title: 'Operational Metrics Dashboard',
+        description: 'Track key operational performance indicators',
+        type: 'template'
       }
     ]
   },
@@ -1889,1193 +1157,676 @@ In the next module, we'll explore how to build a team and culture that can scale
     title: 'Team & Culture Foundation',
     description: 'Build a team and culture that can scale with your business',
     order: 4,
-    content: `# Team & Culture Foundation
+    content: `
+# Team & Culture Foundation
 
-## Building a Team That Scales
+As your business grows, your team and culture will either enable or limit your success. This module focuses on building a scalable organization that can support your growth ambitions.
 
-As your business grows, your team and culture will become either your greatest asset or your biggest liability. This module focuses on building a strong foundation that can support your growth ambitions.
+## The Challenges of Team Scaling
 
-## Why Team and Culture Matter for Scale
+Growing teams face predictable challenges:
 
-The right team and culture enable growth by:
+1. **Communication Overhead**: As team size increases, communication complexity grows exponentially
+2. **Culture Dilution**: Original values and norms become harder to maintain
+3. **Coordination Costs**: More people means more time spent coordinating
+4. **Knowledge Transfer**: Tribal knowledge must become institutional knowledge
+5. **Role Evolution**: Founders and early employees must evolve their roles
 
-1. **Attracting and retaining top talent**
-2. **Maintaining quality and consistency** as you grow
-3. **Enabling faster, better decisions** throughout the organization
-4. **Reducing coordination costs** and bureaucracy
-5. **Creating resilience** during challenging periods
+## Building a Scalable Organizational Structure
 
-## The Scalable Team Framework
+### Organizational Design Principles
 
-### 1. Organizational Design
+1. **Span of Control**: Each manager should have 5-8 direct reports
+2. **Functional Clarity**: Clear ownership of responsibilities
+3. **Decision Rights**: Explicit decision-making authority
+4. **Information Flow**: Efficient communication pathways
+5. **Adaptability**: Structure that can evolve with growth
 
-Your org structure needs to evolve as you grow:
+### Common Organizational Models
 
-#### Startup Phase (1-10 people)
-- Flat structure with generalists
-- Founder-led with direct communication
-- Minimal formal processes
-- Everyone contributes across functions
+1. **Functional**: Organized by function (Engineering, Marketing, Sales)
+   - **Pros**: Efficiency, skill development, clear career paths
+   - **Cons**: Silos, slower cross-functional coordination
 
-#### Early Growth Phase (10-50 people)
-- Basic functional structure emerges
-- Team leads with direct reports
-- Core processes become formalized
-- Specialization begins
+2. **Product/Division**: Organized around products or business units
+   - **Pros**: Customer focus, autonomy, clear P&L responsibility
+   - **Cons**: Duplication, inconsistency across divisions
 
-#### Scaling Phase (50-200 people)
-- Clear functional departments
-- Management layers develop
-- Formalized processes and systems
-- Specialized roles and expertise
+3. **Matrix**: Combination of functional and product structures
+   - **Pros**: Flexibility, resource sharing, multiple perspectives
+   - **Cons**: Complexity, potential for conflict, dual reporting
 
-#### Maturity Phase (200+ people)
-- Multiple organizational layers
-- Possible matrix or divisional structures
-- Comprehensive systems and processes
-- Highly specialized roles
+4. **Flat/Network**: Minimal hierarchy, self-organizing teams
+   - **Pros**: Agility, empowerment, reduced bureaucracy
+   - **Cons**: Coordination challenges, requires high autonomy
 
-#### Designing for Your Next Phase
-1. **Anticipate needs** before they become urgent
-2. **Create clear reporting lines** and decision rights
-3. **Balance specialization** with cross-functional collaboration
-4. **Design for communication flow**, not just hierarchy
-5. **Build flexibility** to adapt as you learn
+### Evolving Your Structure
 
-### 2. Hiring Strategy
+Your organizational structure should evolve with your growth:
 
-Your ability to hire effectively will be a major constraint or enabler of growth:
+- **1-10 employees**: Flat structure, everyone reports to founders
+- **10-25 employees**: Begin functional grouping with team leads
+- **25-75 employees**: Formal management layer, defined departments
+- **75-200 employees**: Multiple management layers, possible matrix elements
+- **200+ employees**: More complex structures, possible divisions
 
-#### Hiring Philosophy
-- Define your hiring bar and non-negotiables
-- Decide between hiring for experience vs. potential
-- Determine culture fit vs. culture add approach
-- Balance specialist vs. generalist needs
+## Hiring for Scale
 
-#### Hiring Process Design
-- Create structured interview processes
-- Develop role-specific evaluation criteria
-- Implement consistent assessment methods
-- Build diverse interview panels
+### Strategic Workforce Planning
 
-#### Scaling Recruitment
-- Develop your employer brand and value proposition
-- Create a candidate pipeline strategy
-- Build relationships with talent sources
-- Implement applicant tracking and management
-- Consider recruitment partners for scaling
+1. **Skills Audit**: Assess current capabilities vs. future needs
+2. **Hiring Roadmap**: Plan key hires 6-12 months in advance
+3. **Role Design**: Create roles that can evolve with growth
+4. **Hiring Sequence**: Determine which roles to prioritize
 
-### 3. Onboarding and Development
+### Hiring Process Design
 
-Getting new team members productive quickly becomes critical as you scale:
+A scalable hiring process includes:
 
-#### Onboarding System
-- Create comprehensive onboarding playbooks
-- Develop role-specific training materials
-- Establish buddy/mentor programs
-- Set clear 30/60/90 day expectations
-- Build feedback mechanisms to improve
+1. **Consistent Evaluation**: Structured interviews and scoring
+2. **Cultural Assessment**: Evaluate values alignment, not just "culture fit"
+3. **Skill Verification**: Practical assessments of key skills
+4. **Diversity Considerations**: Processes that mitigate bias
+5. **Candidate Experience**: Efficient, respectful process that builds your brand
 
-#### Continuous Development
-- Implement regular performance reviews
-- Create growth paths for key roles
-- Develop internal training programs
-- Support external learning opportunities
-- Build knowledge sharing systems
+### Onboarding Systems
 
-### 4. Culture and Values
+Effective onboarding reduces time-to-productivity:
 
-Your culture is what happens when no one is watching:
+1. **Pre-boarding**: Information and setup before day one
+2. **Role Clarity**: Clear expectations and success metrics
+3. **Knowledge Transfer**: Structured learning of key information
+4. **Relationship Building**: Connections with key stakeholders
+5. **Early Wins**: Opportunities for initial success
 
-#### Defining Core Values
-- Identify behaviors that drive success
-- Articulate values that guide decisions
-- Ensure values are authentic and actionable
-- Create simple, memorable expressions
+## Building Scalable Culture
 
-#### Operationalizing Values
-- Incorporate values into hiring criteria
-- Recognize and reward values-aligned behaviors
-- Address values violations consistently
-- Use values for decision-making frameworks
-- Regularly reinforce through communication
+### Culture Definition
 
-#### Culture Maintenance
-- Measure cultural health regularly
-- Identify cultural carriers and champions
-- Create rituals that reinforce culture
-- Adapt cultural practices as you grow
-- Preserve core while evolving practices
+Culture is "how we do things here." A scalable culture needs:
 
-### 5. Communication Systems
+1. **Explicit Values**: Clearly articulated principles that guide decisions
+2. **Behavioral Norms**: Specific behaviors that demonstrate values
+3. **Reinforcement Mechanisms**: Systems that reward aligned behaviors
+4. **Artifacts & Symbols**: Visible manifestations of culture
 
-As you scale, information flow becomes increasingly challenging:
+### Culture Transmission
 
-#### Communication Principles
-- Default to transparency where possible
-- Establish what, when, how, and who for key information
-- Balance synchronous and asynchronous communication
-- Create appropriate documentation standards
-- Design for information discovery, not just sharing
+As you grow, culture must be actively transmitted through:
 
-#### Communication Cadences
-- Establish regular team meeting rhythms
-- Create cascading information flows
-- Implement appropriate reporting and dashboards
-- Design effective 1:1 meeting frameworks
-- Build cross-functional communication channels
+1. **Leadership Modeling**: Leaders demonstrating cultural values
+2. **Storytelling**: Narratives that reinforce cultural elements
+3. **Rituals & Traditions**: Regular activities that embody culture
+4. **Recognition Programs**: Celebrating behaviors that exemplify values
+5. **Onboarding Integration**: Culture embedded in new hire experience
 
-#### Communication Tools
-- Select appropriate tools for different purposes
-- Create usage guidelines and expectations
-- Implement information architecture
-- Train team on effective tool usage
-- Regularly audit and optimize
+### Remote & Hybrid Considerations
 
-### 6. Decision-Making Frameworks
+For distributed teams, culture requires additional attention:
 
-Clear decision processes prevent bottlenecks as you scale:
+1. **Intentional Communication**: More explicit, frequent communication
+2. **Digital Rituals**: Virtual versions of cultural practices
+3. **Documentation**: Greater emphasis on written culture artifacts
+4. **Synchronous Moments**: Strategic use of real-time interaction
+5. **Inclusion Practices**: Ensuring equal participation regardless of location
 
-#### Decision Rights
-- Clarify who can make which decisions
-- Implement appropriate approval thresholds
-- Document decision-making authority
-- Balance autonomy with alignment
+## Performance Management at Scale
 
-#### Decision Frameworks
-- RACI (Responsible, Accountable, Consulted, Informed)
-- RAPID (Recommend, Agree, Perform, Input, Decide)
-- Consensus vs. consultation vs. command
-- Decision velocity vs. quality tradeoffs
+### Performance Framework
 
-#### Decision Documentation
-- Create decision logs for important choices
-- Document rationale and alternatives considered
-- Communicate decisions effectively
-- Review outcomes and learn from results
+A scalable performance system includes:
 
-## Common Team Scaling Challenges
+1. **Clear Expectations**: Well-defined roles and objectives
+2. **Regular Feedback**: Ongoing, not just annual reviews
+3. **Development Planning**: Growth opportunities for all employees
+4. **Calibration Process**: Consistency across managers
+5. **Consequence Management**: Addressing both high and low performance
 
-### 1. The Communication Breakdown
-As teams grow, information doesn't flow as easily. Combat this with:
-- Structured communication systems
-- Documentation culture
-- Information accessibility tools
-- Regular cross-team touchpoints
+### Compensation Strategy
 
-### 2. The Process Pendulum
-Teams often swing between too little and too much process. Find balance with:
-- Process where it reduces friction
-- Clear process ownership and evolution
-- Regular process reviews and optimization
-- Appropriate process for stage and function
+Your compensation approach should:
 
-### 3. The Culture Dilution
-Rapid hiring can dilute culture. Preserve it through:
-- Deliberate culture onboarding
-- Values-based recognition
-- Cultural ambassadors program
-- Regular culture health checks
+1. **Align with Values**: Reward behaviors that match your culture
+2. **Scale Appropriately**: Work at different company sizes
+3. **Balance Components**: Base, variable, equity, benefits
+4. **Ensure Fairness**: Internal equity and external competitiveness
+5. **Support Retention**: Address key retention drivers
 
-### 4. The Management Gap
-First-time managers often struggle. Support them with:
-- Management training programs
-- Clear expectations and frameworks
-- Peer support networks
-- Regular coaching and feedback
+## Leadership Development
 
-### 5. The Coordination Cost
-More people means exponentially more coordination. Reduce this with:
-- Clear team mandates and boundaries
-- Decision-making frameworks
-- Appropriate autonomy
-- Cross-functional processes
+As you scale, developing leaders becomes critical:
 
-## Case Study: How Atlassian Scaled Their Team
+1. **Leadership Pipeline**: Identify and develop future leaders
+2. **Management Training**: Core skills for new and existing managers
+3. **Delegation Framework**: Clear guidance on what/how to delegate
+4. **Decision-Making Models**: Frameworks for consistent decisions
+5. **Coaching Systems**: Support for leadership development
 
-Atlassian grew from a small team to thousands of employees while maintaining a strong culture:
-
-1. They created **documented values** that guided decisions at all levels
-
-2. They implemented **"ShipIt Days"** (hackathons) to preserve innovation as they grew
-
-3. They developed the **"Team Playbook"** to share best practices across the organization
-
-4. They used **"Health Monitors"** for teams to self-assess and improve
-
-5. They maintained a **"no assholes" hiring policy** even when scaling rapidly
-
-The result was the ability to scale while preserving their innovative culture and maintaining product quality.
-
-## Building Your Team Scaling Plan
-
-1. **Assess your current team structure** and identify scaling limitations
-2. **Document your core values** and how they translate to behaviors
-3. **Design your next-stage organization** structure
-4. **Create hiring plans** for critical roles
-5. **Develop onboarding and training** systems
-6. **Implement communication frameworks** appropriate for your size
-7. **Establish decision-making processes** that balance speed and alignment
-
-In the next module, we'll explore how to implement metrics and optimization frameworks to continuously improve as you scale.`,
-    quiz: {
-      title: 'Team & Culture Assessment',
-      description: 'Let\'s evaluate your team and culture readiness for scaling.',
-      questions: [
+In the next module, we'll focus on the metrics and optimization frameworks that will help you measure and improve your growth efforts.
+`,
+    checklist: {
+      title: 'Team & Culture Foundation Checklist',
+      items: [
         {
           id: 'org_structure',
-          text: 'How well-defined is your organizational structure?',
-          type: 'single',
-          options: [
-            {
-              id: 'well_defined',
-              text: 'Well-defined with clear roles, reporting lines, and decision rights',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'somewhat_defined',
-              text: 'Somewhat defined but with some ambiguity',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'loosely_defined',
-              text: 'Loosely defined and mostly informal',
-              points: { productLed: 2, salesLed: 2, marketingLed: 2, communityLed: 2, operationsLed: 2 }
-            },
-            {
-              id: 'undefined',
-              text: 'Undefined or constantly changing',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
+          text: 'Design organizational structure for next 12 months',
+          description: 'Create an org chart that can support your growth plans',
+          required: true
+        },
+        {
+          id: 'hiring_plan',
+          text: 'Develop strategic hiring plan',
+          description: 'Identify key roles, skills needed, and hiring sequence',
+          required: true
         },
         {
           id: 'hiring_process',
-          text: 'How structured is your hiring process?',
-          type: 'single',
-          options: [
-            {
-              id: 'very_structured',
-              text: 'Very structured with consistent evaluation criteria and stages',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'somewhat_structured',
-              text: 'Somewhat structured but varies by role or hiring manager',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'minimal_structure',
-              text: 'Minimal structure, mostly based on interviews and gut feel',
-              points: { productLed: 2, salesLed: 2, marketingLed: 2, communityLed: 2, operationsLed: 2 }
-            },
-            {
-              id: 'ad_hoc',
-              text: 'Ad hoc and reactive when we need someone',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
+          text: 'Create standardized hiring process',
+          description: 'Design consistent interview stages and evaluation criteria',
+          required: true
         },
         {
-          id: 'onboarding',
-          text: 'How comprehensive is your employee onboarding?',
-          type: 'single',
-          options: [
-            {
-              id: 'comprehensive',
-              text: 'Comprehensive with role-specific training and clear milestones',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'basic',
-              text: 'Basic onboarding covering essential information',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'minimal',
-              text: 'Minimal onboarding, mostly learn as you go',
-              points: { productLed: 2, salesLed: 2, marketingLed: 2, communityLed: 2, operationsLed: 2 }
-            },
-            {
-              id: 'nonexistent',
-              text: 'No formal onboarding process',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
+          id: 'onboarding_system',
+          text: 'Implement structured onboarding system',
+          description: 'Create process for efficiently integrating new team members',
+          required: false
         },
         {
           id: 'values_definition',
-          text: 'How well-defined and operationalized are your company values?',
-          type: 'single',
-          options: [
-            {
-              id: 'well_operationalized',
-              text: 'Well-defined and actively used in decisions and recognition',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'defined_not_operationalized',
-              text: 'Defined but not consistently operationalized',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'informally_defined',
-              text: 'Informally defined but not documented',
-              points: { productLed: 2, salesLed: 2, marketingLed: 2, communityLed: 2, operationsLed: 2 }
-            },
-            {
-              id: 'not_defined',
-              text: 'Not defined or articulated',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
-        },
-        {
-          id: 'decision_making',
-          text: 'How clear are your decision-making processes?',
-          type: 'single',
-          options: [
-            {
-              id: 'very_clear',
-              text: 'Very clear with defined frameworks and authorities',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'somewhat_clear',
-              text: 'Somewhat clear but with some ambiguity',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'unclear',
-              text: 'Unclear or inconsistent across the organization',
-              points: { productLed: 2, salesLed: 2, marketingLed: 2, communityLed: 2, operationsLed: 2 }
-            },
-            {
-              id: 'ad_hoc_decisions',
-              text: 'Ad hoc and highly centralized',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
-        }
-      ]
-    },
-    checklist: {
-      title: 'Team & Culture Scaling Checklist',
-      items: [
-        {
-          id: 'document_values',
-          text: 'Document your core values and behaviors',
-          description: 'Define what your company stands for and how that translates to everyday actions',
+          text: 'Define and document company values',
+          description: 'Articulate 3-5 core values with behavioral examples',
           required: true
         },
         {
-          id: 'org_structure',
-          text: 'Create an organizational structure for your next growth phase',
-          description: 'Design roles, reporting relationships, and team structures to support growth',
-          required: true
-        },
-        {
-          id: 'hiring_process',
-          text: 'Develop a structured hiring process',
-          description: 'Create job descriptions, interview guides, and evaluation criteria',
-          required: true
-        },
-        {
-          id: 'onboarding_program',
-          text: 'Build a comprehensive onboarding program',
-          description: 'Create materials and processes to get new hires productive quickly',
-          required: true
-        },
-        {
-          id: 'communication_system',
-          text: 'Establish communication systems and cadences',
-          description: 'Define how information flows through the organization',
-          required: true
-        },
-        {
-          id: 'decision_framework',
-          text: 'Implement decision-making frameworks',
-          description: 'Clarify who makes which decisions and how they should be made',
+          id: 'performance_framework',
+          text: 'Establish performance management framework',
+          description: 'Create system for setting expectations and providing feedback',
           required: false
-        },
-        {
-          id: 'performance_management',
-          text: 'Create a performance management system',
-          description: 'Develop processes for feedback, reviews, and development',
-          required: false
-        },
-        {
-          id: 'culture_initiatives',
-          text: 'Plan culture-building initiatives and rituals',
-          description: 'Design activities that reinforce your values and build community',
-          required: true
         }
       ]
     },
     tools: [
       {
-        id: 'values-definition-workshop',
-        title: 'Values Definition Workshop',
-        description: 'Collaborative process to define and articulate your company values',
-        type: 'template',
-        url: 'https://docs.google.com/presentation/d/1-example-values-workshop'
-      },
-      {
         id: 'org-design-template',
         title: 'Organizational Design Template',
-        description: 'Create and visualize your ideal organizational structure',
-        type: 'template',
-        url: 'https://docs.google.com/spreadsheets/d/1-example-org-design'
+        description: 'Create and visualize your organizational structure',
+        type: 'template'
       },
       {
-        id: 'hiring-process-builder',
-        title: 'Hiring Process Builder',
-        description: 'Design a structured hiring process with interview guides',
-        type: 'template',
-        url: 'https://docs.google.com/document/d/1-example-hiring-process'
+        id: 'hiring-plan-calculator',
+        title: 'Strategic Hiring Plan Calculator',
+        description: 'Project hiring needs based on growth targets',
+        type: 'calculator'
       },
       {
-        id: 'onboarding-checklist-generator',
-        title: 'Onboarding Checklist Generator',
-        description: 'Create comprehensive onboarding plans for different roles',
-        type: 'generator'
+        id: 'interview-scorecard',
+        title: 'Interview Scorecard Template',
+        description: 'Standardize candidate evaluation across interviewers',
+        type: 'template'
       },
       {
-        id: 'decision-framework-template',
-        title: 'Decision Framework Template',
-        description: 'Implement RACI or other decision-making frameworks',
-        type: 'template',
-        url: 'https://docs.google.com/spreadsheets/d/1-example-decision-framework'
+        id: 'onboarding-checklist',
+        title: 'Onboarding Process Template',
+        description: 'Comprehensive checklist for new hire onboarding',
+        type: 'template'
       },
       {
-        id: 'culture-survey-template',
-        title: 'Culture Survey Template',
-        description: 'Measure and track your company culture health',
-        type: 'template',
-        url: 'https://docs.google.com/forms/d/1-example-culture-survey'
+        id: 'values-workshop-guide',
+        title: 'Values Definition Workshop',
+        description: 'Facilitate a workshop to define company values',
+        type: 'template'
       }
     ]
   },
   {
     id: 'metrics-optimization',
     title: 'Metrics & Optimization Framework',
-    description: 'Implement systems to measure, analyze, and continuously improve your business',
+    description: 'Implement data-driven systems for continuous improvement',
     order: 5,
-    content: `# Metrics & Optimization Framework
+    content: `
+# Metrics & Optimization Framework
 
-## Measuring What Matters for Growth
+To scale effectively, you need a data-driven approach to measuring progress and optimizing performance. This module will help you implement the right metrics and frameworks for continuous improvement.
 
-As the saying goes, "What gets measured gets managed." This module focuses on building a comprehensive metrics and optimization framework to drive continuous improvement as you scale.
+## The Growth Metrics Hierarchy
 
-## Why Metrics Matter for Scaling
-
-The right metrics framework enables growth by:
-
-1. **Providing visibility** into what's working and what's not
-2. **Aligning teams** around common goals and priorities
-3. **Enabling data-driven decisions** instead of opinions
-4. **Identifying opportunities** for optimization and improvement
-5. **Creating accountability** for results
-
-## The Metrics Hierarchy
-
-Not all metrics are created equal. A well-designed metrics framework has multiple levels:
+Not all metrics are created equal. A good metrics framework has a clear hierarchy:
 
 ### 1. North Star Metric
 
-Your North Star Metric (NSM) is the single most important measure of your company's success. It should:
-- Reflect the core value you deliver to customers
-- Align with long-term business success
-- Be simple to understand and communicate
-- Drive the right behaviors across the organization
-
-Examples of effective North Star Metrics:
-- Airbnb: Nights Booked
-- Facebook: Daily Active Users
-- Slack: Messages Sent
-- Shopify: Merchant GMV
-- Spotify: Time Spent Listening
+This is the single metric that best captures the value you deliver to customers and aligns with your long-term business success. Examples:
 
-### 2. Key Performance Indicators (KPIs)
+- **Airbnb**: Nights booked
+- **Spotify**: Time spent listening
+- **Slack**: Messages sent between teams
+- **Shopify**: Merchant sales volume
 
-KPIs are the primary metrics that track performance across major business functions. Effective KPIs:
-- Directly influence your North Star Metric
-- Provide a balanced view of the business
-- Are actionable and can be influenced by the team
-- Have clear ownership and accountability
+Your North Star should be:
+- **Leading indicator** of business success
+- **Measure of customer value**
+- **Reflective of your growth model**
+- **Simple to understand**
+- **Difficult to game**
 
-Common KPI categories:
-- **Acquisition KPIs**: CAC, CAC Payback, Channel Efficiency
-- **Engagement KPIs**: DAU/MAU, Core Action Frequency
-- **Retention KPIs**: Churn Rate, Retention by Cohort
-- **Revenue KPIs**: MRR, ARPU, LTV
-- **Unit Economics KPIs**: Gross Margin, Contribution Margin
+### 2. Input Metrics
 
-### 3. Driver Metrics
+These are the key drivers that influence your North Star. For example, if your North Star is "Monthly Active Users," input metrics might include:
 
-Driver metrics are the operational metrics that influence your KPIs. They:
-- Provide deeper insights into specific areas
-- Help diagnose issues when KPIs change
-- Guide day-to-day optimization efforts
-- Often have functional or team-level ownership
+- New user acquisition
+- Activation rate
+- Retention rate
+- Resurrection rate (returning dormant users)
 
-Examples of driver metrics:
-- **Marketing**: Click-through Rate, Conversion Rate by Channel
-- **Product**: Feature Adoption, Time to Value
-- **Sales**: Pipeline Coverage, Conversion by Stage
-- **Customer Success**: Time to Resolution, NPS
-- **Finance**: Cash Burn Rate, Runway
+Focus your team on improving these inputs, which will drive your North Star.
 
-### 4. Experimental Metrics
+### 3. Business Health Metrics
 
-Experimental metrics are temporary measures used to evaluate specific initiatives or experiments:
-- Tied to specific hypotheses
-- Time-bound measurement periods
-- Clear success/failure criteria
-- Designed to inform specific decisions
+These ensure your growth is sustainable and profitable:
 
-## Building Your Metrics Framework
+- **Revenue metrics**: MRR, ARR, ARPU
+- **Cost metrics**: CAC, COGS, operating expenses
+- **Efficiency metrics**: LTV/CAC ratio, payback period
+- **Cash metrics**: Burn rate, runway, cash conversion cycle
 
-### 1. Define Your North Star Metric
+### 4. Team/Department Metrics
 
-To identify your North Star Metric:
+Each team should have metrics aligned with the North Star:
 
-1. **Clarify your core value proposition**
-   - What is the primary value you deliver to customers?
-   - How do customers measure success with your product?
+- **Marketing**: CAC by channel, conversion rates
+- **Product**: Feature adoption, user engagement
+- **Sales**: Pipeline velocity, close rates
+- **Customer Success**: NPS, retention rates
+- **Engineering**: Release velocity, quality metrics
 
-2. **Identify metrics that capture this value**
-   - What measurable activities reflect value delivery?
-   - Which metrics correlate with customer success?
+## Building Your Metrics Stack
 
-3. **Test against key criteria**
-   - Does it reflect customer value?
-   - Does it align with business success?
-   - Is it a leading (not lagging) indicator?
-   - Can it be influenced by teams across the company?
+### Data Infrastructure
 
-4. **Validate with data**
-   - Does it correlate with retention and growth?
-   - Does it predict customer lifetime value?
-
-### 2. Establish Your KPI Framework
+A scalable metrics system requires proper infrastructure:
 
-To build your KPI framework:
-
-1. **Map the customer journey**
-   - Acquisition → Activation → Retention → Referral → Revenue
-
-2. **Define 1-3 KPIs for each stage**
-   - What best measures success at each stage?
-   - What metrics will drive the right behaviors?
-
-3. **Set targets and thresholds**
-   - What represents good/great/poor performance?
-   - What growth rates are needed to hit business goals?
+1. **Data Collection**: Tracking key user actions and business events
+2. **Data Storage**: Centralized repository for all data
+3. **Data Processing**: Cleaning and transforming raw data
+4. **Data Visualization**: Dashboards and reporting tools
+5. **Data Governance**: Ensuring data quality and security
 
-4. **Assign clear ownership**
-   - Who is responsible for each KPI?
-   - Who has authority to make changes that affect it?
+### Metrics Implementation Process
 
-### 3. Develop Driver Metrics
+1. **Define**: Clearly define each metric and its calculation
+2. **Instrument**: Implement tracking for required data points
+3. **Validate**: Ensure data accuracy and completeness
+4. **Visualize**: Create accessible dashboards
+5. **Socialize**: Ensure team understanding and buy-in
 
-For each KPI, identify the operational drivers:
+## Optimization Frameworks
 
-1. **Brainstorm potential drivers**
-   - What factors influence this KPI?
-   - What levers can we pull to improve it?
-
-2. **Validate with data**
-   - Which factors show statistical correlation?
-   - What is the relative impact of each driver?
-
-3. **Create driver trees**
-   - Map the relationships between drivers and KPIs
-   - Identify common drivers that affect multiple KPIs
-
-4. **Prioritize by impact and controllability**
-   - Which drivers have the biggest impact?
-   - Which can we most easily influence?
+With metrics in place, you need frameworks to drive improvement.
 
-## Implementing Your Measurement System
+### 1. Growth Experimentation System
 
-### 1. Data Infrastructure
-
-Your metrics are only as good as your data:
+A systematic approach to testing growth ideas:
 
-#### Data Collection
-- Implement comprehensive event tracking
-- Ensure consistent user and account identification
-- Capture contextual metadata for segmentation
-- Validate data accuracy and completeness
-
-#### Data Storage
-- Design schemas for efficient analysis
-- Implement appropriate data warehousing
-- Plan for data volume growth
-- Consider data retention policies
+1. **Idea Generation**: Structured process for creating hypotheses
+2. **Prioritization**: Framework for selecting which tests to run
+3. **Experiment Design**: Methodology for valid, conclusive tests
+4. **Analysis**: Statistical approach to interpreting results
+5. **Knowledge Management**: System for documenting learnings
 
-#### Data Access
-- Create self-serve access for stakeholders
-- Implement appropriate security controls
-- Document data definitions and sources
-- Provide training on data tools
-
-### 2. Reporting and Visualization
-
-Make metrics accessible and actionable:
-
-#### Dashboards
-- Create role-specific dashboards
-- Design for clarity and focus
-- Include context and benchmarks
-- Update at appropriate frequencies
-
-#### Alerts and Notifications
-- Set thresholds for key metrics
-- Create automated alerts for anomalies
-- Design escalation processes
-- Prevent alert fatigue
-
-#### Narrative and Context
-- Provide interpretation alongside data
-- Include relevant external factors
-- Show historical trends and patterns
-- Link to deeper analysis resources
-
-### 3. Meeting and Review Cadences
-
-Embed metrics into your operating rhythm:
-
-#### Daily/Weekly Operational Reviews
-- Focus on driver metrics
-- Identify immediate action items
-- Track experiment progress
-- Address emerging issues
-
-#### Monthly Business Reviews
-- Review KPI performance
-- Assess strategic initiatives
-- Make resource allocation decisions
-- Identify cross-functional opportunities
-
-#### Quarterly Strategic Reviews
-- Evaluate progress toward North Star
-- Assess competitive position
-- Review major strategic bets
-- Set priorities for coming quarter
-
-## The Optimization Framework
-
-Metrics alone don't drive improvement. You need a systematic approach to optimization:
-
-### 1. Opportunity Identification
-
-Systematically identify improvement opportunities:
-
-#### Data Analysis
-- Look for anomalies and patterns
-- Identify high-variance areas
-- Compare segments and cohorts
-- Benchmark against industry standards
-
-#### User Research
-- Conduct customer interviews
-- Analyze support tickets and feedback
-- Implement user testing
-- Create customer advisory boards
-
-#### Team Input
-- Gather frontline insights
-- Run cross-functional ideation sessions
-- Create idea submission systems
-- Review competitor approaches
+### 2. The ICE Framework
 
-### 2. Hypothesis Development
+A simple method for prioritizing growth initiatives:
 
-Turn opportunities into testable hypotheses:
+- **Impact**: Potential effect on key metrics (1-10)
+- **Confidence**: Certainty of the impact (1-10)
+- **Ease**: Simplicity of implementation (1-10)
 
-#### Hypothesis Structure
-- "We believe that [change] will result in [outcome] because [rationale]."
-- Include clear success metrics
-- Define minimum success criteria
-- Identify potential risks and side effects
+ICE Score = (Impact × Confidence × Ease) / 3
 
-#### Prioritization Framework
-- Impact: How much will this move the needle?
-- Confidence: How certain are we about the outcome?
-- Effort: How much resource is required?
-- ICE Score = Impact × Confidence ÷ Effort
+### 3. The Scientific Method for Growth
 
-### 3. Experimentation Process
+1. **Observe**: Identify patterns or opportunities in data
+2. **Question**: Form specific questions about these observations
+3. **Hypothesize**: Create testable predictions
+4. **Test**: Run controlled experiments
+5. **Analyze**: Evaluate results against hypotheses
+6. **Conclude**: Draw conclusions and document learnings
+7. **Iterate**: Apply learnings to new hypotheses
 
-Run disciplined experiments to test hypotheses:
+## Creating a Data-Driven Culture
 
-#### Experiment Design
-- Define clear test and control groups
-- Determine sample size and duration
-- Control for external variables
-- Plan for statistical significance
+Metrics alone aren't enough—you need a culture that uses data effectively.
 
-#### Implementation
-- Document experiment details
-- Minimize implementation variables
-- Monitor for unexpected issues
-- Maintain test integrity
+### Elements of Data-Driven Culture
 
-#### Analysis
-- Compare results to hypothesis
-- Check for statistical significance
-- Look for segment-specific impacts
-- Identify learnings beyond the hypothesis
+1. **Data Accessibility**: Everyone can access relevant metrics
+2. **Data Literacy**: Team members understand how to interpret data
+3. **Decision Frameworks**: Clear processes for using data in decisions
+4. **Psychological Safety**: Freedom to share both good and bad results
+5. **Learning Orientation**: Focus on insights, not just outcomes
 
-### 4. Implementation and Scaling
+### Common Pitfalls to Avoid
 
-Turn successful experiments into standard practice:
+1. **Vanity Metrics**: Focusing on numbers that look good but don't matter
+2. **Analysis Paralysis**: Overthinking data at the expense of action
+3. **Data Silos**: Information trapped in departments or tools
+4. **Metric Fixation**: Optimizing metrics at the expense of actual goals
+5. **Correlation/Causation Confusion**: Misattributing causes of changes
 
-#### Rollout Planning
-- Design phased implementation
-- Create training and documentation
-- Establish monitoring systems
-- Plan for potential issues
+## Continuous Optimization System
 
-#### Change Management
-- Communicate the why behind changes
-- Train affected team members
-- Address concerns and resistance
-- Celebrate wins and share success stories
+Implement a regular cadence for optimization:
 
-#### Continuous Improvement
-- Monitor post-implementation performance
-- Gather feedback and iterate
-- Document learnings for future reference
-- Identify follow-on opportunities
+1. **Weekly Growth Meetings**: Review experiments and metrics
+2. **Monthly Metric Reviews**: Deeper analysis of trends
+3. **Quarterly Strategy Adjustments**: Larger pivots based on learnings
+4. **Annual Metric Audits**: Ensure metrics still align with business goals
 
-## Building a Data-Driven Culture
+## Scaling Your Data Capabilities
 
-Metrics and optimization work best in the right culture:
+As you grow, your data needs will evolve:
 
-### 1. Leadership Behaviors
-- Make decisions based on data, not just intuition
-- Ask for evidence and hypothesis testing
-- Reward learning, not just success
-- Model intellectual honesty and curiosity
+1. **Early Stage**: Simple tracking, manual analysis, focus on core metrics
+2. **Growth Stage**: Data warehouse, dedicated analysts, expanded metrics
+3. **Scale Stage**: Data science, predictive analytics, advanced experimentation
 
-### 2. Team Capabilities
-- Provide data literacy training
-- Develop analytical skills across functions
-- Create data champions within teams
-- Build hypothesis-driven thinking
+Plan your data team and infrastructure to grow with your needs.
 
-### 3. Psychological Safety
-- Separate ideas from egos
-- Celebrate learning from failure
-- Focus on future improvement, not blame
-- Encourage challenging assumptions
+## Congratulations!
 
-### 4. Process Integration
-- Embed metrics in regular workflows
-- Make data accessible at decision points
-- Include metrics in planning processes
-- Tie incentives to key metrics appropriately
+You've completed the Build to Scale course! You now have the frameworks, tools, and knowledge to grow your business strategically and sustainably.
 
-## Case Study: How Airbnb Built Their Metrics Framework
+Remember that scaling is a journey, not a destination. Continue to apply these principles as your business evolves, and don't hesitate to revisit modules as new challenges arise.
 
-Airbnb's growth was driven by a sophisticated metrics and optimization approach:
-
-1. They identified "Nights Booked" as their North Star Metric, aligning customer value with business success
-
-2. They built a comprehensive metrics framework around the guest and host journeys
-
-3. They created a dedicated Growth Team with a rigorous experimentation process
-
-4. They developed the "Experiment Idea Market" where anyone could propose and advocate for test ideas
-
-5. They built a culture where decisions were made based on data, not opinions or hierarchy
-
-The result was consistent, data-driven growth that helped them scale from startup to global platform.
-
-## Building Your Metrics and Optimization Plan
-
-1. **Define your North Star Metric** and validate it with data
-2. **Establish your KPI framework** across the customer journey
-3. **Identify the key drivers** for each KPI
-4. **Build your data infrastructure** for reliable measurement
-5. **Implement reporting systems** for visibility and accountability
-6. **Create your experimentation process** for continuous improvement
-7. **Develop team capabilities** in data analysis and optimization
-
-By implementing a robust metrics and optimization framework, you'll create a foundation for sustainable growth through continuous, data-driven improvement.`,
-    quiz: {
-      title: 'Metrics & Optimization Assessment',
-      description: 'Let\'s evaluate your current approach to measurement and improvement.',
-      questions: [
+We'd love to hear about your scaling journey and success stories. Share your experience with the community and help other founders on their growth path.
+`,
+    checklist: {
+      title: 'Metrics & Optimization Implementation Checklist',
+      items: [
         {
           id: 'north_star',
-          text: 'Do you have a clearly defined North Star Metric?',
-          type: 'single',
-          options: [
-            {
-              id: 'clear_north_star',
-              text: 'Yes, clearly defined and widely understood',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'somewhat_defined',
-              text: 'Somewhat defined but not consistently used',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'multiple_competing',
-              text: 'Multiple competing metrics without clear priority',
-              points: { productLed: 2, salesLed: 2, marketingLed: 2, communityLed: 2, operationsLed: 2 }
-            },
-            {
-              id: 'no_north_star',
-              text: 'No defined North Star Metric',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
+          text: 'Define your North Star Metric',
+          description: 'Identify the single metric that best captures customer value and business success',
+          required: true
         },
         {
-          id: 'kpi_framework',
-          text: 'How comprehensive is your KPI framework?',
-          type: 'single',
-          options: [
-            {
-              id: 'comprehensive',
-              text: 'Comprehensive with clear ownership and targets',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'basic',
-              text: 'Basic KPIs defined but not comprehensive',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'ad_hoc',
-              text: 'Ad hoc metrics without a cohesive framework',
-              points: { productLed: 2, salesLed: 2, marketingLed: 2, communityLed: 2, operationsLed: 2 }
-            },
-            {
-              id: 'minimal',
-              text: 'Minimal or no defined KPIs',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
+          id: 'input_metrics',
+          text: 'Identify 3-5 key input metrics',
+          description: 'Determine the drivers that influence your North Star Metric',
+          required: true
+        },
+        {
+          id: 'business_health',
+          text: 'Establish business health metrics',
+          description: 'Define metrics that ensure sustainable, profitable growth',
+          required: true
+        },
+        {
+          id: 'team_metrics',
+          text: 'Create team/department metrics',
+          description: 'Align team-specific metrics with your North Star',
+          required: false
         },
         {
           id: 'data_infrastructure',
-          text: 'How mature is your data infrastructure?',
-          type: 'single',
-          options: [
-            {
-              id: 'sophisticated',
-              text: 'Sophisticated with reliable collection, storage, and access',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'functional',
-              text: 'Functional but with some limitations or gaps',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'basic',
-              text: 'Basic tracking with significant manual effort',
-              points: { productLed: 2, salesLed: 2, marketingLed: 2, communityLed: 2, operationsLed: 2 }
-            },
-            {
-              id: 'minimal',
-              text: 'Minimal or unreliable data collection',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
-        },
-        {
-          id: 'experimentation',
-          text: 'How developed is your experimentation process?',
-          type: 'single',
-          options: [
-            {
-              id: 'systematic',
-              text: 'Systematic process with clear hypotheses and analysis',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'regular',
-              text: 'Regular experiments but not fully systematic',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'occasional',
-              text: 'Occasional ad hoc experiments',
-              points: { productLed: 2, salesLed: 2, marketingLed: 2, communityLed: 2, operationsLed: 2 }
-            },
-            {
-              id: 'no_experimentation',
-              text: 'No formal experimentation',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
-        },
-        {
-          id: 'data_culture',
-          text: 'How would you describe your data culture?',
-          type: 'single',
-          options: [
-            {
-              id: 'data_driven',
-              text: 'Strongly data-driven with decisions based on evidence',
-              points: { productLed: 10, salesLed: 10, marketingLed: 10, communityLed: 10, operationsLed: 10 }
-            },
-            {
-              id: 'data_informed',
-              text: 'Data-informed with metrics considered alongside other factors',
-              points: { productLed: 5, salesLed: 5, marketingLed: 5, communityLed: 5, operationsLed: 5 }
-            },
-            {
-              id: 'occasional_data',
-              text: 'Data used occasionally but not consistently',
-              points: { productLed: 2, salesLed: 2, marketingLed: 2, communityLed: 2, operationsLed: 2 }
-            },
-            {
-              id: 'intuition_driven',
-              text: 'Primarily intuition-driven with minimal data use',
-              points: { productLed: 0, salesLed: 0, marketingLed: 0, communityLed: 0, operationsLed: 0 }
-            }
-          ]
-        }
-      ]
-    },
-    checklist: {
-      title: 'Metrics & Optimization Framework Checklist',
-      items: [
-        {
-          id: 'define_north_star',
-          text: 'Define your North Star Metric',
-          description: 'Identify the single most important measure of your company\'s success',
+          text: 'Implement basic data infrastructure',
+          description: 'Set up systems for collecting, storing, and visualizing key metrics',
           required: true
         },
         {
-          id: 'establish_kpis',
-          text: 'Establish KPIs for each area of the business',
-          description: 'Define 1-3 key metrics for each major function or customer journey stage',
+          id: 'experimentation_system',
+          text: 'Establish growth experimentation system',
+          description: 'Create process for generating, prioritizing, and testing growth ideas',
           required: true
-        },
-        {
-          id: 'identify_drivers',
-          text: 'Identify key drivers for each KPI',
-          description: 'Determine the operational metrics that influence your KPIs',
-          required: true
-        },
-        {
-          id: 'implement_tracking',
-          text: 'Implement comprehensive data tracking',
-          description: 'Ensure all key metrics are being reliably collected and stored',
-          required: true
-        },
-        {
-          id: 'create_dashboards',
-          text: 'Create dashboards for key metrics',
-          description: 'Build visualizations that make metrics accessible to stakeholders',
-          required: true
-        },
-        {
-          id: 'establish_reviews',
-          text: 'Establish regular metric review meetings',
-          description: 'Set up cadences for reviewing performance at different levels',
-          required: true
-        },
-        {
-          id: 'develop_experimentation',
-          text: 'Develop an experimentation process',
-          description: 'Create a system for testing hypotheses and measuring results',
-          required: false
-        },
-        {
-          id: 'document_learnings',
-          text: 'Document and share learnings and insights',
-          description: 'Create a knowledge base of what you\'ve learned from data and experiments',
-          required: false
         }
       ]
     },
     tools: [
       {
+        id: 'metrics-definition-template',
+        title: 'Metrics Definition Template',
+        description: 'Clearly define and document your key metrics',
+        type: 'template'
+      },
+      {
         id: 'north-star-workshop',
         title: 'North Star Metric Workshop',
-        description: 'Collaborative process to define your North Star Metric',
-        type: 'template',
-        url: 'https://docs.google.com/presentation/d/1-example-north-star-workshop'
-      },
-      {
-        id: 'kpi-framework-template',
-        title: 'KPI Framework Template',
-        description: 'Build a comprehensive set of KPIs across your business',
-        type: 'template',
-        url: 'https://docs.google.com/spreadsheets/d/1-example-kpi-framework'
-      },
-      {
-        id: 'driver-tree-builder',
-        title: 'Metric Driver Tree Builder',
-        description: 'Map the relationships between metrics and their drivers',
-        type: 'template',
-        url: 'https://docs.google.com/spreadsheets/d/1-example-driver-tree'
+        description: 'Facilitate a session to identify your North Star Metric',
+        type: 'template'
       },
       {
         id: 'experiment-design-template',
-        title: 'Experiment Design Template',
-        description: 'Structure your experiments for maximum learning',
-        type: 'template',
-        url: 'https://docs.google.com/document/d/1-example-experiment-design'
+        title: 'Growth Experiment Template',
+        description: 'Structure your growth experiments for valid results',
+        type: 'template'
       },
       {
-        id: 'metrics-review-template',
-        title: 'Metrics Review Meeting Template',
-        description: 'Framework for effective metrics review meetings',
-        type: 'template',
-        url: 'https://docs.google.com/presentation/d/1-example-metrics-review'
-      },
-      {
-        id: 'ab-test-calculator',
-        title: 'A/B Test Sample Size Calculator',
-        description: 'Determine the sample size needed for statistically significant results',
+        id: 'ice-scoring-calculator',
+        title: 'ICE Prioritization Tool',
+        description: 'Score and rank growth initiatives',
         type: 'calculator'
+      },
+      {
+        id: 'metrics-dashboard-template',
+        title: 'Metrics Dashboard Template',
+        description: 'Visualize your key metrics in one place',
+        type: 'template'
       }
     ]
   }
 ];
 
-export const growthStrategyRecommendationInfo: Record<string, {
-  title: string;
-  description: string;
-  keyTactics: string[];
-  resources: string[];
-  nextSteps: string[];
-}> = {
+export const growthStrategyInfo = {
   productLed: {
-    title: 'Product-Led Growth Strategy',
-    description: 'Your assessment suggests that a Product-Led Growth strategy would be most effective for your business. This approach leverages your product itself as the primary driver of acquisition, conversion, and expansion.',
-    keyTactics: [
-      'Implement a frictionless self-service onboarding process',
-      'Create a freemium or free trial model to reduce acquisition barriers',
-      'Focus on time-to-value and the "aha moment"',
-      'Build in-product education and tooltips',
-      'Develop usage analytics to identify expansion opportunities',
-      'Create viral or network-effect features'
+    name: 'Product-Led Growth Strategy',
+    description: 'A growth model where the product itself is the primary driver of customer acquisition, conversion, and expansion.',
+    bestFor: 'Products with immediate value, intuitive interfaces, and potential for viral/network effects.',
+    advantages: [
+      'Lower customer acquisition costs',
+      'Faster scaling potential',
+      'More efficient conversion funnel',
+      'Better user experience focus',
+      'Data-rich environment for optimization'
     ],
-    resources: [
-      'Product-Led Growth by Wes Bush',
-      'Intercom on Product-Led Growth',
-      'OpenView\'s Product-Led Growth Resources',
-      'Product-Led Institute\'s Playbooks'
-    ],
-    nextSteps: [
-      'Map your user activation journey and identify friction points',
-      'Implement product analytics to track user behavior',
-      'Develop a self-service onboarding experience',
-      'Create an in-product education strategy',
-      'Design your freemium or trial model'
+    disadvantages: [
+      'Requires exceptional product experience',
+      'May leave money on table with enterprise customers',
+      'Less relationship-building with customers',
+      'Requires strong product and engineering teams',
+      'Can be challenging for complex products'
     ]
   },
   salesLed: {
-    title: 'Sales-Led Growth Strategy',
-    description: 'Your assessment suggests that a Sales-Led Growth strategy would be most effective for your business. This approach leverages direct sales engagement to identify, qualify, and close deals with potential customers.',
+    name: 'Sales-Led Growth Strategy',
+    description: 'A growth model that relies on sales teams to identify prospects, demonstrate value, and close deals.',
+    bestFor: 'Complex, high-value products with longer sales cycles, especially in B2B and enterprise markets.',
+    advantages: [
+      'Higher average contract values',
+      'Better for complex products requiring explanation',
+      'Stronger customer relationships',
+      'More control over the pipeline',
+      'Easier to enter enterprise markets'
+    ],
+    disadvantages: [
+      'Higher customer acquisition costs',
+      'Slower scaling due to human dependency',
+      'Requires significant investment in sales talent',
+      'More challenging to maintain consistent quality',
+      'Harder to create predictable growth models'
+    ]
+  },
+  marketingLed: {
+    name: 'Marketing-Led Growth Strategy',
+    description: 'A growth model where marketing drives awareness, lead generation, and nurturing to create demand.',
+    bestFor: 'Products with clear value propositions, defined target audiences, and moderate complexity.',
+    advantages: [
+      'Scalable customer acquisition',
+      'Brand building alongside acquisition',
+      'Works well for both B2B and B2C',
+      'Can be more predictable with proper attribution',
+      'Supports other growth models effectively'
+    ],
+    disadvantages: [
+      'Increasingly competitive and expensive channels',
+      'Requires continuous content and creative production',
+      'Attribution can be challenging',
+      'May generate lower-quality leads than other methods',
+      'Effectiveness varies widely by industry and product'
+    ]
+  },
+  communityLed: {
+    name: 'Community-Led Growth Strategy',
+    description: 'A growth model where the community around your product becomes a growth engine through advocacy, support, and network effects.',
+    bestFor: 'Products with strong network effects, collaborative use cases, or passionate user bases.',
+    advantages: [
+      'High trust and authentic advocacy',
+      'Lower customer acquisition costs',
+      'Valuable product feedback and ideas',
+      'Strong retention through social bonds',
+      'Defensibility through network effects'
+    ],
+    disadvantages: [
+      'Slower to build initially',
+      'Requires dedicated community management',
+      'Less direct control over messaging',
+      'Can be challenging to monetize effectively',
+      'Requires ongoing nurturing and attention'
+    ]
+  },
+  operationsLed: {
+    name: 'Operations-Led Growth Strategy',
+    description: 'A growth model where operational excellence and efficiency drive competitive advantage and enable sustainable growth.',
+    bestFor: 'Businesses in competitive markets with thin margins, logistics components, or complex fulfillment requirements.',
+    advantages: [
+      'Superior unit economics',
+      'Ability to compete on price or service levels',
+      'More capital-efficient growth',
+      'Better customer experience through reliability',
+      'Scalability through systems rather than people'
+    ],
+    disadvantages: [
+      'Requires significant process expertise',
+      'May need substantial upfront investment',
+      'Can lead to rigidity if overdone',
+      'Less flashy than other growth models',
+      'Requires continuous optimization'
+    ]
+  }
+};
+
+export const growthStrategyRecommendationInfo = {
+  productLed: {
+    description: 'Based on your responses, a Product-Led Growth strategy appears to be your optimal approach. Your product has the characteristics that enable users to discover, try, adopt, and expand usage with minimal sales intervention.',
     keyTactics: [
-      'Build a structured sales process from prospecting to close',
-      'Develop ideal customer profiles and buyer personas',
-      'Create sales enablement materials and training',
-      'Implement a CRM system with pipeline management',
-      'Establish sales metrics and performance tracking',
-      'Design compensation structures that drive desired behaviors'
+      'Optimize your self-service onboarding to deliver value in minutes',
+      'Implement a freemium or free trial model to reduce adoption friction',
+      'Build in-product prompts to guide users to "aha moments"',
+      'Create viral loops and referral mechanisms within the product',
+      'Use product analytics to identify and remove friction points'
+    ],
+    resources: [
+      'Product-Led Growth by Wes Bush',
+      'Amplitude's North Star Playbook',
+      'Reforge's Product-Led Growth course',
+      'ProductLed.org resources and community'
+    ],
+    nextSteps: [
+      'Map your user journey from signup to "aha moment"',
+      'Identify and remove friction points in the onboarding flow',
+      'Implement product analytics to track key user actions',
+      'Design and test a referral mechanism within your product',
+      'Create a growth team focused on product-led acquisition and activation'
+    ]
+  },
+  salesLed: {
+    description: 'Based on your responses, a Sales-Led Growth strategy appears to be your optimal approach. Your product complexity, high contract value, and enterprise focus make a sales-driven model most effective.',
+    keyTactics: [
+      'Build a repeatable sales process with clear stages and conversion metrics',
+      'Develop sales enablement materials that effectively communicate value',
+      'Create a lead qualification framework to focus on high-potential prospects',
+      'Implement account-based marketing for key target accounts',
+      'Design a customer success program to drive expansion revenue'
     ],
     resources: [
       'Predictable Revenue by Aaron Ross',
       'The Sales Acceleration Formula by Mark Roberge',
       'SPIN Selling by Neil Rackham',
-      'SaaStr\'s Sales Resources'
+      'Sales Enablement PRO resources'
     ],
     nextSteps: [
-      'Document your sales process and playbook',
-      'Implement a CRM system for pipeline management',
-      'Create sales collateral and enablement materials',
-      'Develop your sales hiring and onboarding plan',
-      'Establish sales metrics and reporting'
+      'Document your sales process from lead to close',
+      'Create a sales playbook with scripts, objection handling, and resources',
+      'Implement a CRM system with proper pipeline tracking',
+      'Develop an ideal customer profile and lead scoring system',
+      'Build a sales enablement function to support your growing team'
     ]
   },
   marketingLed: {
-    title: 'Marketing-Led Growth Strategy',
-    description: 'Your assessment suggests that a Marketing-Led Growth strategy would be most effective for your business. This approach focuses on creating awareness and demand through content, advertising, and other marketing channels.',
+    description: 'Based on your responses, a Marketing-Led Growth strategy appears to be your optimal approach. Your product category, target audience, and current capabilities align well with a marketing-driven growth model.',
     keyTactics: [
-      'Develop a content marketing strategy across multiple formats',
-      'Build SEO capabilities for organic traffic growth',
-      'Implement multi-channel demand generation campaigns',
-      'Create clear messaging and positioning',
-      'Establish marketing attribution and analytics',
-      'Design lead nurturing and qualification processes'
+      'Develop a content marketing strategy to drive organic traffic',
+      'Build lead nurturing sequences to convert prospects over time',
+      'Implement conversion rate optimization across your marketing funnel',
+      'Create a channel diversification strategy to reduce acquisition risk',
+      'Design attribution models to understand marketing effectiveness'
     ],
     resources: [
       'Traction by Gabriel Weinberg and Justin Mares',
       'They Ask, You Answer by Marcus Sheridan',
-      'Content-Based Marketing by Jimmy Daly',
-      'HubSpot\'s Inbound Marketing Resources'
+      'HubSpot Academy marketing courses',
+      'Content Marketing Institute resources'
     ],
     nextSteps: [
-      'Develop your content marketing strategy and calendar',
-      'Implement marketing analytics and attribution',
-      'Create your messaging and positioning framework',
-      'Build your lead generation and nurturing process',
-      'Establish marketing KPIs and reporting'
+      'Conduct keyword research to identify content opportunities',
+      'Build a content calendar for the next quarter',
+      'Implement lead scoring and nurturing workflows',
+      'Set up proper attribution tracking across channels',
+      'Create a testing framework for landing pages and campaigns'
     ]
   },
   communityLed: {
-    title: 'Community-Led Growth Strategy',
-    description: 'Your assessment suggests that a Community-Led Growth strategy would be most effective for your business. This approach leverages community engagement, user advocacy, and network effects to drive growth.',
+    description: 'Based on your responses, a Community-Led Growth strategy appears to be your optimal approach. Your product has strong network effects and benefits significantly from user interaction and advocacy.',
     keyTactics: [
-      'Build community platforms and engagement mechanisms',
-      'Create user-generated content systems',
-      'Develop ambassador and advocacy programs',
-      'Host events and facilitate member connections',
-      'Implement community-driven product development',
-      'Design network effects into your product'
+      'Create spaces for community interaction (forums, Slack, Discord, etc.)',
+      'Develop a community engagement program with regular events',
+      'Implement an ambassador or champion program for power users',
+      'Build user-generated content mechanisms into your product',
+      'Design community onboarding to welcome and activate new members'
     ],
     resources: [
       'The Business of Belonging by David Spinks',
       'Get Together by Bailey Richardson, Kevin Huynh, and Kai Elmer Sotto',
-      'Community-Led Growth Playbook by Common Room',
-      'CMX Community Resources'
+      'CMX Hub community resources',
+      'Orbit Model for community growth'
     ],
     nextSteps: [
-      'Define your community strategy and value proposition',
-      'Select and implement community platforms',
-      'Create community guidelines and moderation processes',
-      'Develop community programming and engagement tactics',
-      'Establish community health metrics and reporting'
+      'Select and set up your community platform',
+      'Create a community engagement calendar with regular events',
+      'Develop a community playbook for moderation and engagement',
+      'Identify potential community champions among current users',
+      'Implement metrics to track community health and growth impact'
     ]
   },
   operationsLed: {
-    title: 'Operations-Led Growth Strategy',
-    description: 'Your assessment suggests that an Operations-Led Growth strategy would be most effective for your business. This approach focuses on operational excellence, efficiency, and superior execution as the primary growth driver.',
+    description: 'Based on your responses, an Operations-Led Growth strategy appears to be your optimal approach. Your business model and market position can gain significant advantage through operational excellence.',
     keyTactics: [
-      'Implement continuous process improvement methodologies',
-      'Develop superior quality control systems',
-      'Create efficient resource utilization models',
-      'Build scalable fulfillment and delivery systems',
-      'Establish operational metrics and performance tracking',
-      'Design for cost advantages through scale and efficiency'
+      'Map and optimize your core operational processes for efficiency',
+      'Implement automation for repetitive, high-volume tasks',
+      'Develop metrics and dashboards for operational performance',
+      'Create a continuous improvement system for ongoing optimization',
+      'Build operational capabilities that can be leveraged as competitive advantages'
     ],
     resources: [
-      'The Toyota Way by Jeffrey Liker',
       'The Goal by Eliyahu Goldratt',
+      'Toyota Production System principles',
       'The Lean Startup by Eric Ries',
-      'Operations Excellence Resources by McKinsey'
+      'Operations Excellence resources from McKinsey'
     ],
     nextSteps: [
-      'Map and optimize your core operational processes',
-      'Implement quality control and measurement systems',
-      'Develop operational dashboards and KPIs',
-      'Create process documentation and training',
-      'Establish continuous improvement mechanisms'
+      'Document and map your core operational processes',
+      'Identify the highest-impact areas for automation',
+      'Implement key operational metrics and dashboards',
+      'Create standard operating procedures for critical functions',
+      'Develop a continuous improvement system with regular reviews'
     ]
   }
 };
