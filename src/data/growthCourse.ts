@@ -242,7 +242,7 @@ export const pmfAssessmentInfo: Record<string, {
     ],
     interpretation: [
       'If >40% say "very disappointed," you likely have product-market fit',
-      '25-40% indicates you're on the right track but not there yet',
+      '25-40% indicates you\'re on the right track but not there yet',
       '<25% means you need significant product changes'
     ]
   },
@@ -2967,8 +2967,8 @@ export const growthStrategyRecommendationInfo: Record<string, {
     resources: [
       'Product-Led Growth by Wes Bush',
       'Intercom on Product-Led Growth',
-      'OpenView's Product-Led Growth Resources',
-      'Product-Led Institute's Playbooks'
+      'OpenView\'s Product-Led Growth Resources',
+      'Product-Led Institute\'s Playbooks'
     ],
     nextSteps: [
       'Map your user activation journey and identify friction points',
@@ -2993,7 +2993,7 @@ export const growthStrategyRecommendationInfo: Record<string, {
       'Predictable Revenue by Aaron Ross',
       'The Sales Acceleration Formula by Mark Roberge',
       'SPIN Selling by Neil Rackham',
-      'SaaStr's Sales Resources'
+      'SaaStr\'s Sales Resources'
     ],
     nextSteps: [
       'Document your sales process and playbook',
@@ -3018,7 +3018,7 @@ export const growthStrategyRecommendationInfo: Record<string, {
       'Traction by Gabriel Weinberg and Justin Mares',
       'They Ask, You Answer by Marcus Sheridan',
       'Content-Based Marketing by Jimmy Daly',
-      'HubSpot's Inbound Marketing Resources'
+      'HubSpot\'s Inbound Marketing Resources'
     ],
     nextSteps: [
       'Develop your content marketing strategy and calendar',

@@ -150,6 +150,32 @@ export function BusinessCoursesPage() {
           </div>
         </motion.div>
         
+        {/* Next Course Teaser */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+          className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-8 border border-purple-200 shadow-sm"
+        >
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <div className="flex items-center">
+                <TrendingUp className="w-6 h-6 text-purple-600 mr-2" />
+                <h3 className="text-xl font-bold text-gray-900">Ready for the next step?</h3>
+              </div>
+              <p className="text-gray-700 mt-2">
+                After forming your business, learn how to grow it strategically with our Growth Playbook course.
+              </p>
+            </div>
+            <Link to="/courses/growth">
+              <Button className="whitespace-nowrap bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
+                <Rocket className="w-5 h-5 mr-2" />
+                Explore Growth Course
+              </Button>
+            </Link>
+          </div>
+        </motion.div>
+        
         {/* Course Overview */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}

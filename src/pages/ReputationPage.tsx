@@ -526,6 +526,40 @@ const loadUserData = async (
             ]);
           }
         }
+        
+        // Check for completed growth course
+        if (userData.profile?.completedCourses?.includes('growth-playbook')) {
+          // Add growth strategist badge if not already in badges
+          const hasGrowthBadge = userBadges.some(badge => badge.id === 'growth_strategist');
+          if (!hasGrowthBadge) {
+            setBadges([...userBadges, {
+              id: 'growth_strategist',
+              name: 'Growth Strategist',
+              count: null,
+              icon: TrendingUp,
+              color: 'bg-purple-100 text-purple-600',
+              locked: false
+            }]);
+          }
+          
+          // Add course completion to contributions if not already there
+          const hasGrowthContribution = contributions.some(c => c.type === 'course' && c.title.includes('Growth Playbook'));
+          if (!hasGrowthContribution) {
+            setRecentContributions([
+              {
+                id: contributions.length + 1,
+                type: 'course',
+                title: 'Completed Growth Playbook Course',
+                description: 'Mastered strategies for sustainable business growth',
+                date: new Date(),
+                points: 150,
+                icon: TrendingUp,
+                color: 'bg-purple-100 text-purple-600'
+              },
+              ...contributions
+            ]);
+          }
+        }
 
         // Calculate reputation score
         const calculatedScore = calculateReputationScore(userData, contributions);
