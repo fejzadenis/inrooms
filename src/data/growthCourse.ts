@@ -48,61 +48,136 @@ export const growthCourseModules: CourseModule[] = [
   {
     id: 'growth-mindset',
     title: 'Growth Mindset',
-    description: 'Define your growth strategy and build for sustainable expansion',
-    order: 0,
-    content: `
-# Growth Mindset – What Scale Really Means
-
-Welcome to Build to Scale: Your Growth Playbook! Now that you've formed your business, it's time to grow it strategically. This comprehensive course will guide you through the essential frameworks and systems needed to scale sustainably.
-
-## Why Strategic Scaling Matters
-
-Growing without strategy leads to chaos. Smart scaling is about:
-
-- **Sustainable Growth**: Building systems that can handle 10x demand
-- **Market Validation**: Ensuring your product truly solves real problems
-- **Operational Excellence**: Creating processes that scale with your team
-- **Resource Optimization**: Maximizing ROI on every growth investment
-- **Foundation Building**: Establishing culture and systems for long-term success
-
-## What You'll Accomplish
-
-By completing this course, you will:
-
-- Validate true product-market fit using data-driven frameworks
-- Build repeatable growth systems across marketing, sales, and operations
-- Design scalable operational processes that work at any size
-- Create a hiring and culture framework for sustainable team growth
-- Implement key metrics and tracking systems for continuous optimization
-- Develop contingency plans for common scaling challenges
-
-## Understanding Growth Models
-
-Before diving into tactics, it's crucial to understand the different growth models available to your business:
-
-### Product-Led Growth (PLG)
-
-In this model, the product itself is the primary driver of customer acquisition, conversion, and expansion. Users discover, try, adopt, and upgrade with minimal sales intervention.
-
-**Key characteristics:**
-- Self-service onboarding
-- Freemium or free trial models
-- Expansion through product usage and value
-- Focus on user experience and product quality
-
-**Examples:** Slack, Dropbox, Notion
-
-### Sales-Led Growth (SLG)
-
-This traditional approach relies on sales teams to identify prospects, demonstrate value, and close deals. It's typically used for complex, high-value products.
-
-**Key characteristics:**
-- Outbound prospecting
-- Consultative selling
-- Relationship-based expansion
-- Focus on sales enablement and process
-
-**Examples:** Salesforce, Oracle, ServiceNow
+    content: '# Growth Mindset – What Scale Really Means',
+    sections: [
+      {
+        type: 'welcome',
+        title: 'Welcome to Build to Scale: Your Growth Journey',
+        content: 'Now that you've formed your business, it's time to grow it strategically. This comprehensive course will guide you through the essential frameworks and systems needed to scale sustainably. By the end, you'll have a clear growth strategy, validated product-market fit, and the operational foundation to handle increased demand.'
+      },
+      {
+        type: 'section',
+        title: 'Why Strategic Scaling Matters',
+        content: 'Growing without strategy leads to chaos. Smart scaling is about:',
+        items: [
+          {
+            title: 'Sustainable Growth',
+            description: 'Building systems that can handle 10x demand'
+          },
+          {
+            title: 'Market Validation',
+            description: 'Ensuring your product truly solves real problems'
+          },
+          {
+            title: 'Operational Excellence',
+            description: 'Creating processes that scale with your team'
+          },
+          {
+            title: 'Resource Optimization',
+            description: 'Maximizing ROI on every growth investment'
+          },
+          {
+            title: 'Foundation Building',
+            description: 'Establishing culture and systems for long-term success'
+          }
+        ]
+      },
+      {
+        type: 'section',
+        title: 'What You'll Accomplish',
+        content: 'By completing this course, you will:',
+        items: [
+          {
+            title: 'Validate Product-Market Fit',
+            description: 'Use data-driven frameworks to ensure market alignment'
+          },
+          {
+            title: 'Build Growth Systems',
+            description: 'Create repeatable processes across marketing, sales, and operations'
+          },
+          {
+            title: 'Design Scalable Operations',
+            description: 'Implement processes that work at any size'
+          },
+          {
+            title: 'Create Team Framework',
+            description: 'Establish hiring and culture systems for sustainable growth'
+          },
+          {
+            title: 'Implement Key Metrics',
+            description: 'Set up tracking systems for continuous optimization'
+          },
+          {
+            title: 'Develop Contingency Plans',
+            description: 'Prepare for common scaling challenges before they happen'
+          }
+        ]
+      },
+      {
+        type: 'section',
+        title: 'How to Use This Course',
+        content: 'This course is designed for active implementation. Each module includes:',
+        items: [
+          {
+            title: 'Strategic Frameworks',
+            description: 'Proven methodologies used by successful companies'
+          },
+          {
+            title: 'Assessment Tools',
+            description: 'Evaluate your current state and identify gaps'
+          },
+          {
+            title: 'Implementation Guides',
+            description: 'Step-by-step playbooks for each area'
+          },
+          {
+            title: 'Real Case Studies',
+            description: 'Learn from companies that scaled successfully'
+          },
+          {
+            title: 'Community Workshops',
+            description: 'Connect with other founders facing similar challenges'
+          },
+          {
+            title: 'Expert Mentorship',
+            description: 'Access to operators who've scaled businesses'
+          }
+        ]
+      },
+      {
+        type: 'section',
+        title: 'Before You Begin',
+        content: 'Reflect on your current situation:',
+        items: [
+          {
+            title: 'Current State',
+            description: 'What's working well? What's breaking as you grow?'
+          },
+          {
+            title: 'Growth Goals',
+            description: 'Where do you want to be in 12-18 months?'
+          },
+          {
+            title: 'Resource Constraints',
+            description: 'What are your biggest limitations (time, money, people)?'
+          },
+          {
+            title: 'Risk Tolerance',
+            description: 'How fast do you want to grow vs. how stable do you want to be?'
+          },
+          {
+            title: 'Market Opportunity',
+            description: 'How big is your addressable market really?'
+          }
+        ]
+      },
+      {
+        type: 'conclusion',
+        title: 'Your Growth Journey Starts Here',
+        content: 'You've built the foundation—now it's time to build the engine. Let's turn your formed business into a scalable growth machine that can handle whatever comes next.',
+        cta: 'Ready to scale smart? Let's begin.'
+      }
+    ],
 
 ### Marketing-Led Growth (MLG)
 
@@ -536,7 +611,7 @@ Your growth journey starts here. Let's turn your formed business into a scalable
     id: 'product-market-fit',
     title: 'Product-Market Fit Validation',
     description: 'Measure and strengthen your product-market fit',
-    order: 1,
+    description: 'Measure and strengthen your product-market fit before scaling',
     content: `
 # Product-Market Fit Validation
 
@@ -1156,7 +1231,7 @@ In the next module, we'll focus on building a team and culture that can support 
     id: 'team-culture',
     title: 'Team & Culture Foundation',
     description: 'Build a team and culture that can scale with your business',
-    order: 4,
+    description: 'Build a team structure and culture that grows with your business',
     content: `
 # Team & Culture Foundation
 
@@ -1382,7 +1457,7 @@ In the next module, we'll focus on the metrics and optimization frameworks that 
     id: 'metrics-optimization',
     title: 'Metrics & Optimization Framework',
     description: 'Implement data-driven systems for continuous improvement',
-    order: 5,
+    description: 'Implement key metrics and systems for continuous improvement',
     content: `
 # Metrics & Optimization Framework
 
