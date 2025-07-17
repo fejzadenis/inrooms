@@ -146,66 +146,66 @@ export const growthCourseModules: CourseModule[] = [
       },
       {
         type: 'section',
-// **Best For:**
-// * B2C companies with broad target markets
-// * Products with clear value propositions
-// * Companies with strong brand potential
-// * Businesses with longer sales cycles needing education
+        title: 'Before You Begin',
+        content: 'Reflect on your current situation:',
+        items: [
+          {
+            title: 'Current State',
             description: 'What\'s working well? What is breaking as you grow?'
-// **Key Metrics:**
-// * Customer Acquisition Cost (CAC)
-// * Marketing Qualified Leads (MQLs)
-// * Conversion rates across funnel stages
-// * Channel performance metrics
-// * Content engagement metrics
-            title: 'Resource Constraints',
-// ### Sales-Led Growth (SLG)
           },
-// Sales team drives growth through direct outreach, relationship building, and closing deals with a focus on larger contracts.
+          {
+            title: 'Growth Goals',
+            description: 'Where do you want to be in 12-18 months?'
+          },
+          {
+            title: 'Resource Constraints',
+            description: 'What are your biggest limitations (time, money, people)?'
+          },
+          {
             title: 'Risk Tolerance',
-// **Best For:**
-// * B2B companies with high-value products
-// * Complex solutions requiring explanation
-// * Products with longer sales cycles
-// * Enterprise-focused businesses
+            description: 'How fast do you want to grow vs. how stable do you want to be?'
+          },
+          {
+            title: 'Market Opportunity',
+            description: 'How big is your addressable market really?'
           }
-// **Key Metrics:**
-// * Sales Qualified Leads (SQLs)
-// * Conversion rate from SQL to customer
-// * Average deal size
-// * Sales cycle length
-// * Customer Lifetime Value (LTV)
+        ]
+      },
+      {
+        type: 'conclusion',
+        title: 'Your Growth Journey Starts Here',
+        content: 'You\'ve built the foundation—now it is time to build the engine. Let\'s turn your formed business into a scalable growth machine that can handle whatever comes next.',
         cta: 'Ready to scale smart? Let\'s begin.'
-// ### Product-Led Growth (PLG)
+      }
     ],
-// The product itself is the primary driver of acquisition, conversion, and expansion, often through freemium or trial models.
+  }
 ]
-// **Best For:**
-// * SaaS and digital products
-// * Products with clear immediate value
-// * Self-service capabilities
-// * Potential for viral/network effects
-**Key characteristics:**
-// **Key Metrics:**
-// * Product Qualified Leads (PQLs)
-// * Time to value
-// * Feature adoption rates
-// Building and nurturing a community around your product/brand that drives awareness, adoption, and advocacy.
-// * Net Revenue Retention
-// **Best For:**
-// * Products with strong network effects
-// * Open source projects
-// * Platforms and marketplaces
-// * Products with passionate user bases
-**Key characteristics:**
-// **Key Metrics:**
-// * Community engagement metrics
-// * User-generated content volume
-// * Referral rates
-// * Community contribution metrics
-// * Word-of-mouth attribution
 
-// ### Operations-Led Growth (OLG)
+### Marketing-Led Growth (MLG)
+
+Marketing drives awareness, lead generation, and nurturing to create demand that sales can convert or that drives direct purchases.
+
+**Key characteristics:**
+- Content marketing and SEO
+- Paid acquisition channels
+- Lead nurturing sequences
+- Focus on brand and messaging
+
+**Examples:** HubSpot, Mailchimp, Canva
+
+### Community-Led Growth (CLG)
+
+The community around your product becomes a growth engine through advocacy, support, and network effects.
+
+**Key characteristics:**
+- User communities and forums
+- Ambassador programs
+- User-generated content
+- Focus on engagement and belonging
+
+**Examples:** Figma, Roblox, Discord
+
+### Operations-Led Growth (OLG)
 
 Operational excellence and efficiency drive competitive advantage and enable sustainable growth.
 
@@ -1775,20 +1775,20 @@ export const growthStrategyInfo = {
     bestFor: 'Businesses in competitive markets with thin margins, logistics components, or complex fulfillment requirements.',
     advantages: [
       'Superior unit economics',
-// Optimizing internal processes, systems, and resource allocation to maximize efficiency and enable sustainable scaling.
+      'Ability to compete on price or service levels',
       'More capital-efficient growth',
-// **Best For:**
-// * Resource-constrained businesses
-// * Companies in competitive markets
-// * Businesses with thin margins
-// * Organizations with complex operations
+      'Better customer experience through reliability',
+      'Scalability through systems rather than people'
+    ],
+    disadvantages: [
+      'Requires significant process expertise',
       'May need substantial upfront investment',
-// **Key Metrics:**
-// * Operational efficiency ratios
-// * Resource utilization rates
-// * Process cycle times
-// * Error/defect rates
-// * Cost per unit/transaction
+      'Can lead to rigidity if overdone',
+      'Less flashy than other growth models',
+      'Requires continuous optimization'
+    ]
+  }
+};
 
 export const growthStrategyRecommendationInfo = {
   productLed: {
