@@ -707,7 +707,7 @@ export function BusinessFormationCourse() {
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-lg"
             >
               <option value="">Select a state</option>
-              {stateFilingInfo && Object.keys(stateFilingInfo).map((state) => (
+              {Object.keys(stateFilingInfo).map((state) => (
                 <option key={state} value={state}>
                   {state.charAt(0).toUpperCase() + state.slice(1)}
                 </option>
