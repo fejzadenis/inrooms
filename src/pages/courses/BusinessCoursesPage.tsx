@@ -139,7 +139,7 @@ export function BusinessCoursesPage() {
                 </Button>
               )}
               
-              <Link to="/courses/business-formation/orientation">
+              <Link to="/courses/business-formation/overview">
                 <Button 
                   variant="outline" 
                   className="border-2 border-white text-white hover:bg-white/10 px-8 py-3 text-lg"

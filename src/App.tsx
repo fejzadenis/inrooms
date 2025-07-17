@@ -75,7 +75,7 @@ function App() {
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/courses/business-formation" element={<BusinessCoursesPage />} />
             <Route path="/courses/business-formation/:moduleId" element={<BusinessFormationCourse />} />
-           <Route path="/courses/business-formation/orientation" element={<BusinessCourseOverview />} />
+           <Route path="/courses/business-formation/overview" element={<BusinessCourseOverview />} />
             <Route path="/courses/growth" element={<GrowthCoursesPage />} />
            <Route path="/courses/growth/overview" element={<GrowthCourseOverview />} />
             <Route path="/courses/growth/:moduleId" element={<GrowthCoursePage />} />
