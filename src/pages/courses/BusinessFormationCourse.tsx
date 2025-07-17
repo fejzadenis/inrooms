@@ -278,7 +278,7 @@ export function BusinessFormationCourse() {
               <p className="font-medium text-gray-900 mb-4 text-lg">{question.text}</p>
               
               <div className="space-y-3">
-                {(question.options || []).map((option) => (
+                {question.options.map((option) => (
                   <div 
                     key={option.id} 
                     className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md ${
