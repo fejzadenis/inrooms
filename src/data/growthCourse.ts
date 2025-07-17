@@ -50,87 +50,13 @@ export const growthCourseModules: CourseModule[] = [
     title: 'Growth Mindset',
     description: 'Understanding the fundamentals of strategic scaling',
     order: 0,
-    content: `
-
-export const growthCourseOverview = {
-  welcome: {
-    title: "Welcome to Build to Scale: Your Growth Journey",
-    content: "Now that you've formed your business, it is time to grow it strategically. This comprehensive course will guide you through the essential frameworks and systems needed to scale sustainably. By the end, you'll have a clear growth strategy, validated product-market fit, and the operational foundation to handle increased demand."
-  },
-  sections: [
-    {
-      title: "Why Growth Strategy Matters",
-      content: "A strategic approach to growth is essential for:",
-      items: [
-        {
-          title: "Sustainable Success",
-          description: "Avoid the common pitfalls of premature scaling"
-        },
-        {
-          title: "Resource Optimization",
-          description: "Focus your limited resources on what truly drives growth"
-        },
-        {
-          title: "Investor Confidence",
-          description: "Demonstrate a clear path to scale and returns"
-        },
-        {
-          title: "Team Alignment",
-          description: "Get everyone working toward the same growth objectives"
-        }
-      ]
-    },
-    {
-      title: "What You'll Learn",
-      content: "This course covers the essential components of a successful growth strategy:",
-      items: [
-        {
-          title: "Growth Mindset",
-          description: "Develop the mental models needed for sustainable growth"
-        },
-        {
-          title: "Product-Market Fit",
-          description: "Validate and strengthen your market position before scaling"
-        },
-        {
-          title: "Growth Engines",
-          description: "Build systems that drive predictable, repeatable growth"
-        },
-        {
-          title: "Operational Scalability",
-          description: "Create processes that can handle 10x growth without breaking"
-        }
-      ]
-    },
-    {
-      title: "How to Get the Most from This Course",
-      content: "To maximize your learning and implementation:",
-      items: [
-        {
-          title: "Complete the Exercises",
-          description: "Apply each framework directly to your business"
-        },
-        {
-          title: "Use the Tools",
-          description: "Leverage the calculators and templates provided"
-        },
-        {
-          title: "Track Your Metrics",
-          description: "Measure your progress using the provided dashboards"
-        },
-        {
-          title: "Revisit Regularly",
-          description: "Return to relevant modules as your business evolves"
-        }
-      ]
-    }
-  ],
-  conclusion: {
-    title: "Ready to Scale?",
-    content: "Growth isn't about moving fast and breaking things. It's about building systems that create sustainable value for your customers and stakeholders.",
-    cta: "Let's build your growth engine, one strategic step at a time."
+    title: 'Course Overview',
+    description: 'Understand the growth journey and set your objectives',
   }
-};
+]
+## Welcome to Build to Scale: Your Growth Journey
+
+Now that you've formed your business, it is time to grow it strategically. This comprehensive course will guide you through the essential frameworks and systems needed to scale sustainably. By the end, you\'ll have a clear growth strategy, validated product-market fit, and the operational foundation to handle increased demand.
 
 ## Why Strategic Scaling Matters
 
@@ -422,9 +348,9 @@ Operational excellence and efficiency drive competitive advantage and enable sus
 # Build to Scale: Your Growth Playbook
 
 Welcome to your comprehensive guide to sustainable business growth. This course will help you develop a strategic approach to scaling your business, from validating product-market fit to building efficient systems and processes.
-
+2. **Average contract value**: Higher ACVs justify more sales resources
 ## What You'll Learn
-
+4. **Customer acquisition cost**: How much can you afford to spend to acquire a customer?
 Throughout this course, you'll learn how to:
 
 - Validate and strengthen your product-market fit
@@ -450,12 +376,12 @@ Each module includes practical exercises, tools, and frameworks you can apply im
       {
         type: 'welcome',
         title: 'Welcome to Build to Scale: Your Growth Playbook',
-        content: 'This comprehensive course will guide you through the process of strategically scaling your business. By the end, you will have a clear growth strategy, scalable systems, and the tools to build a data-driven organization.'
+        content: 'This comprehensive course will guide you through the process of strategically scaling your business. By the end, you'll have a clear growth strategy, scalable systems, and the tools to build a data-driven organization.'
       },
       {
         type: 'section',
         title: 'Why Growth Strategy Matters',
-        content: 'A strategic approach to growth is about more than just increasing revenue—it is about:',
+        content: 'A strategic approach to growth is about more than just increasing revenue—it's about:',
         items: [
           {
             title: 'Sustainable Scaling',
@@ -477,8 +403,8 @@ Each module includes practical exercises, tools, and frameworks you can apply im
       },
       {
         type: 'section',
-        title: 'What You Will Learn',
-        content: 'Throughout this course, you will develop practical skills in:',
+        title: 'What You'll Learn',
+        content: 'Throughout this course, you'll develop practical skills in:',
         items: [
           {
             title: 'Growth Strategy',
@@ -525,7 +451,7 @@ Each module includes practical exercises, tools, and frameworks you can apply im
         type: 'conclusion',
         title: 'Ready to Scale Your Business?',
         content: 'This course will provide you with a comprehensive framework for sustainable growth, from validating product-market fit to building scalable systems and processes.',
-        cta: 'Let your growth journey begins!'
+        cta: 'Let's begin your growth journey!'
       }
     ],
     quiz: {
@@ -1996,8 +1922,11 @@ export const growthStrategyInfo = {
       "Can be difficult to monetize initially",
       "Requires strong product analytics capabilities"
     ]
+      'Can be challenging for complex products'
+    ]
   },
   salesLed: {
+    name: 'Sales-Led Growth Strategy',
     name: "Sales-Led Growth (SLG)",
     description: "A strategy where sales teams drive customer acquisition and expansion through direct outreach and relationship building.",
     bestFor: "Enterprise products with high average contract values and complex buying processes.",
@@ -2013,8 +1942,9 @@ export const growthStrategyInfo = {
       "Less scalable than product-led approaches",
       "Requires significant investment in sales teams"
     ]
+    ]
   },
-  marketingLed: {
+    advantages: [
     name: "Marketing-Led Growth (MLG)",
     description: "A strategy where marketing efforts drive customer acquisition through content, advertising, and brand building.",
     bestFor: "Consumer products with broad appeal and relatively straightforward value propositions.",
@@ -2030,8 +1960,14 @@ export const growthStrategyInfo = {
       "Less direct customer relationships",
       "Requires significant content and creative resources"
     ]
+      'Effectiveness varies widely by industry and product'
+    ]
   },
   communityLed: {
+    name: 'Community-Led Growth Strategy',
+    description: 'A growth model where the community around your product becomes a growth engine through advocacy, support, and network effects.',
+    bestFor: 'Products with strong network effects, collaborative use cases, or passionate user bases.',
+    advantages: [
     name: "Community-Led Growth (CLG)",
     description: "A strategy where an engaged community of users and advocates drives adoption and expansion.",
     bestFor: "Products with strong network effects and collaborative use cases.",
@@ -2047,8 +1983,8 @@ export const growthStrategyInfo = {
       "Can be challenging to monetize effectively",
       "Success depends on continued engagement"
     ]
-  },
-  operationsLed: {
+    name: 'Operations-Led Growth Strategy',
+    description: 'A growth model where operational excellence and efficiency drive competitive advantage and enable sustainable growth.',
     name: "Operations-Led Growth (OLG)",
     description: "A strategy where operational excellence and efficiency drive sustainable growth and profitability.",
     bestFor: "Established businesses with significant operational complexity and scale.",
