@@ -794,28 +794,28 @@ export function BusinessFormationCourse() {
           <div className="prose prose-indigo max-w-none prose-headings:text-indigo-900 prose-headings:font-bold prose-p:text-gray-700 prose-strong:text-gray-900 prose-strong:font-semibold prose-li:text-gray-700">
             <ReactMarkdown>{currentModule.content}</ReactMarkdown>
           </div>
-          
-          {/* Render formatted sections for all modules */}
+
+          {/* Enhanced Formatted Sections for All Modules */}
           {currentModule.sections && (
             <div className="mt-8 space-y-10">
               {currentModule.sections.map((section, index) => (
                 <div key={index} className="space-y-4">
                   {section.type === 'welcome' && (
-                    <>
-                      <h2 className="text-2xl font-bold text-indigo-900 mt-6">{section.title}</h2>
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-100">
+                      <h2 className="text-2xl font-bold text-indigo-900 mb-4">{section.title}</h2>
                       <p className="text-lg text-gray-700 leading-relaxed">{section.content}</p>
-                    </>
+                    </div>
                   )}
                   
                   {section.type === 'section' && (
                     <>
-                      <h2 className="text-2xl font-bold text-indigo-900 mt-6">{section.title}</h2>
-                      <p className="text-lg text-gray-700 leading-relaxed">{section.content}</p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <h2 className="text-2xl font-bold text-indigo-900 mt-8 mb-4 border-b border-indigo-100 pb-2">{section.title}</h2>
+                      <p className="text-lg text-gray-700 leading-relaxed mb-6">{section.content}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                         {section.items.map((item, itemIndex) => (
-                          <div key={itemIndex} className="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm hover:shadow-md transition-shadow duration-200">
-                            <h3 className="font-semibold text-indigo-800 mb-1">{item.title}</h3>
-                            <p className="text-gray-600">{item.description}</p>
+                          <div key={itemIndex} className="bg-white p-6 rounded-lg border border-indigo-100 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1">
+                            <h3 className="font-semibold text-indigo-800 text-lg mb-2">{item.title}</h3>
+                            <p className="text-gray-600 leading-relaxed">{item.description}</p>
                           </div>
                         ))}
                       </div>
@@ -823,10 +823,86 @@ export function BusinessFormationCourse() {
                   )}
                   
                   {section.type === 'conclusion' && (
-                    <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-xl border border-indigo-100 mt-8">
-                      <h2 className="text-2xl font-bold text-indigo-900 mb-3">{section.title}</h2>
-                      <p className="text-lg text-indigo-800 mb-4">{section.content}</p>
+                    <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-8 rounded-xl border border-indigo-100 mt-10 shadow-sm">
+                      <h2 className="text-2xl font-bold text-indigo-900 mb-4">{section.title}</h2>
+                      <p className="text-lg text-indigo-800 mb-4 leading-relaxed">{section.content}</p>
                       <p className="text-lg font-medium text-indigo-700">{section.cta}</p>
+                    </div>
+                  )}
+                  
+                  {section.type === 'table' && section.table && (
+                    <div className="mt-8 mb-10">
+                      <h2 className="text-2xl font-bold text-indigo-900 mb-4">{section.title}</h2>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full bg-white rounded-lg overflow-hidden border border-indigo-100">
+                          <thead className="bg-indigo-50">
+                            <tr>
+                              {section.table.headers.map((header, i) => (
+                                <th key={i} className="px-6 py-3 text-left text-sm font-semibold text-indigo-900">
+                                  {header}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-indigo-100">
+                            {section.table.rows.map((row, i) => (
+                              <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-indigo-50/30'}>
+                                {row.map((cell, j) => (
+                                  <td key={j} className="px-6 py-4 text-sm text-gray-700">
+                                    {cell}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {section.type === 'steps' && section.steps && (
+                    <div className="mt-8 mb-10">
+                      <h2 className="text-2xl font-bold text-indigo-900 mb-6">{section.title}</h2>
+                      <div className="space-y-6">
+                        {section.steps.map((step, i) => (
+                          <div key={i} className="flex items-start">
+                            <div className="flex-shrink-0 bg-indigo-100 rounded-full w-10 h-10 flex items-center justify-center text-indigo-700 font-bold mr-4">
+                              {i + 1}
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-semibold text-gray-900 mb-2">{step.title}</h3>
+                              <p className="text-gray-700 leading-relaxed">{step.description}</p>
+                              {step.tips && (
+                                <div className="mt-3 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                  <p className="text-blue-800 text-sm font-medium">Pro Tip: {step.tips}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {section.type === 'callout' && (
+                    <div className={`mt-8 mb-10 p-6 rounded-xl border ${
+                      section.style === 'warning' ? 'bg-amber-50 border-amber-200' :
+                      section.style === 'info' ? 'bg-blue-50 border-blue-200' :
+                      section.style === 'success' ? 'bg-green-50 border-green-200' :
+                      'bg-indigo-50 border-indigo-200'
+                    }`}>
+                      <h3 className={`text-xl font-bold mb-3 ${
+                        section.style === 'warning' ? 'text-amber-800' :
+                        section.style === 'info' ? 'text-blue-800' :
+                        section.style === 'success' ? 'text-green-800' :
+                        'text-indigo-800'
+                      }`}>{section.title}</h3>
+                      <p className={`${
+                        section.style === 'warning' ? 'text-amber-700' :
+                        section.style === 'info' ? 'text-blue-700' :
+                        section.style === 'success' ? 'text-green-700' :
+                        'text-indigo-700'
+                      } leading-relaxed`}>{section.content}</p>
                     </div>
                   )}
                 </div>
