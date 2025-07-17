@@ -99,7 +99,7 @@ export const businessCourseModules: CourseModule[] = [
       {
         type: 'section',
         title: 'Why Business Formation Matters',
-        content: 'Properly forming your business is about more than just paperwork—it's about:',
+        content: 'Properly forming your business is about more than just paperwork—it is about:',
         items: [
           {
             title: 'Legal Protection',
