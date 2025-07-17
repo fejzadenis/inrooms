@@ -1979,7 +1979,7 @@ We'd love to hear about your scaling journey and success stories. Share your exp
   }
 ];
 
-export const growthStrategyInfo = {
+export const growthCourseOverview = {
   productLed: {
     name: "Product-Led Growth (PLG)",
     description: "A strategy where the product itself is the primary driver of customer acquisition, conversion, and expansion.",
