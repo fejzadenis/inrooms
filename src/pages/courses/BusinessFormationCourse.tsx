@@ -26,6 +26,7 @@ import {
   TrendingUp,
   Rocket
 } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { businessCourseModules, entityTypeInfo, stateFilingInfo } from '../../data/businessCourse';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
@@ -795,8 +796,8 @@ export function BusinessFormationCourse() {
             <ReactMarkdown>{currentModule.content}</ReactMarkdown>
           </div>
           
-          {/* Render formatted sections for orientation module */}
-          {currentModule.id === 'orientation' && currentModule.sections && (
+          {/* Render formatted sections for all modules */}
+          {currentModule.sections && (
             <div className="mt-8 space-y-10">
               {currentModule.sections.map((section, index) => (
                 <div key={index} className="space-y-4">

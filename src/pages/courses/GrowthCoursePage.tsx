@@ -617,8 +617,8 @@ export function GrowthCoursePage() {
             <ReactMarkdown>{currentModule.content}</ReactMarkdown>
           </div>
           
-          {/* Render formatted sections for growth mindset module */}
-          {currentModule.id === 'growth-mindset' && currentModule.sections && (
+          {/* Render formatted sections for all modules */}
+          {currentModule.sections && (
             <div className="mt-8 space-y-10">
               {currentModule.sections.map((section, index) => (
                 <div key={index} className="space-y-4">
