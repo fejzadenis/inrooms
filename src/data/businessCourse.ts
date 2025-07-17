@@ -271,138 +271,132 @@ export const businessCourseModules: CourseModule[] = [
   },
   {
     id: 'entity-selection',
-  title: 'Pick the Right Entity',
-  description: 'Determine whether you need an LLC, C-Corp, S-Corp, or Sole Proprietorship',
-  order: 1,
-  sections: [
-    {
-      type: 'section',
-      title: 'Choosing Your Business Structure: A Critical Decision',
-      content: 'The legal structure you choose for your business will impact your taxes, personal liability, paperwork, ability to raise money, and more. This decision affects nearly every aspect of your business operations, so it\'s worth taking the time to make an informed choice.'
-    },
-    {
-      type: 'section',
-      title: 'Common Business Structures',
-      items: [
-        {
-          title: 'Sole Proprietorship',
-          description: 'A business owned and operated by one person with no legal distinction between the owner and the business.',
-          content: `**Best for**: Freelancers, consultants, and low-risk businesses.\n\n**Pros**:\n- Simple to form\n- Full control\n- Minimal paperwork\n- Pass-through taxation\n- Low cost\n\n**Cons**:\n- Unlimited personal liability\n- Hard to raise capital\n- Limited lifespan\n- Less professional appearance\n- Fewer tax deductions`
-        },
-        {
-          title: 'Limited Liability Company (LLC)',
-          description: 'A hybrid structure that provides liability protection with the tax benefits of a partnership.',
-          content: `**Best for**: Small to medium businesses seeking liability protection.\n\n**Pros**:\n- Liability protection\n- Pass-through taxation\n- Flexible management\n- Fewer formalities\n- Flexible profit distribution\n\n**Cons**:\n- Higher setup costs\n- Self-employment tax\n- Possible franchise tax\n- VC funding challenges\n- Publication requirements in some states`
-        },
-        {
-          title: 'C Corporation',
-          description: 'A legal entity separate from its owners with its own rights and responsibilities.',
-          content: `**Best for**: High-growth startups seeking investment or going public.\n\n**Pros**:\n- Liability protection\n- Multiple classes of stock\n- Attractive to investors\n- Perpetual existence\n- Tax-deductible benefits\n- Unlimited shareholders\n\n**Cons**:\n- Double taxation\n- Complex and costly\n- More regulation\n- Required board activities\n- Less flexible management`
-        },
-        {
-          title: 'S Corporation',
-          description: 'A corporation that passes income through to shareholders for tax purposes.',
-          content: `**Best for**: Profitable small businesses seeking to reduce self-employment taxes.\n\n**Pros**:\n- Liability protection\n- Pass-through taxation\n- Tax savings on self-employment\n- Perpetual existence\n\n**Cons**:\n- Strict rules (e.g., 100 shareholders max)\n- U.S. citizen requirement\n- One class of stock\n- More formalities than LLC\n- Cannot be owned by entities`
-        },
-        {
-          title: 'Partnership',
-          description: 'A business owned by two or more people working together.',
-          content: `**Best for**: Professional groups like law or accounting firms.\n\n**Pros**:\n- Easy setup\n- Shared risk and workload\n- Pass-through taxation\n- Complementary skills\n- Flexible structure\n\n**Cons**:\n- Personal liability (in general partnerships)\n- Shared profits\n- Potential conflicts\n- Limited lifespan\n- Each partner can bind the business`
-        }
-      ]
-    },
-    {
-      type: 'section',
-      title: 'Key Factors to Consider',
-      items: [
-        {
-          title: 'Liability Protection',
-          description: 'How much personal protection do you need based on your industry’s risks?'
-        },
-        {
-          title: 'Taxation',
-          description: 'Which tax structure benefits your situation and projected income?'
-        },
-        {
-          title: 'Ownership Structure',
-          description: 'Solo founder or multiple owners? How will ownership change over time?'
-        },
-        {
-          title: 'Investment Plans',
-          description: 'Will you seek outside funding from angels, VCs, or other sources?'
-        },
-        {
-          title: 'Administrative Complexity',
-          description: 'How much paperwork and compliance can you handle or afford?'
-        },
-        {
-          title: 'Growth Plans',
-          description: 'What are your long-term goals for the business?'
-        },
-        {
-          title: 'Industry Norms',
-          description: 'What structures are common in your industry?'
-        },
-        {
-          title: 'State-Specific Considerations',
-          description: 'How do state laws and taxes affect your choice?'
-        }
-      ]
-    },
-    {
-      type: 'section',
-      title: 'Industry-Specific Considerations',
-      items: [
-        {
-          title: 'Technology Startups',
-          description: 'Often choose C-Corps to attract VC funding.'
-        },
-        {
-          title: 'Real Estate',
-          description: 'Usually prefer LLCs for tax and liability reasons.'
-        },
-        {
-          title: 'Professional Services',
-          description: 'Commonly use LLCs or LLPs for flexibility and protection.'
-        },
-        {
-          title: 'Retail / E-commerce',
-          description: 'Typically go with LLCs, especially in early stages.'
-        },
-        {
-          title: 'Freelancers / Creators',
-          description: 'Often begin as Sole Proprietors and later switch to LLCs.'
-        }
-      ]
-    },
-    {
-      type: 'section',
-      title: 'State-Specific Considerations',
-      items: [
-        {
-          title: 'Delaware',
-          description: 'Business-friendly laws and privacy advantages.'
-        },
-        {
-          title: 'Nevada',
-          description: 'No state income tax and strong asset protection.'
-        },
-        {
-          title: 'Wyoming',
-          description: 'Low fees and privacy benefits.'
-        },
-        {
-          title: 'Home State',
-          description: 'Often cheapest and simplest if you’re only operating locally.'
-        }
-      ]
-    },
-    {
-      type: 'conclusion',
-      title: 'Take the Quiz to Choose the Right Entity',
-      content: 'Based on your answers, we’ll help match you with the best structure for your situation.'
-    }
-  ],
+    title: 'Pick the Right Entity',
+    description: 'Determine whether you need an LLC, C-Corp, S-Corp, or Sole Proprietorship',
+    order: 1,
+    content: `
+# Choosing Your Business Structure: A Critical Decision
+
+The legal structure you choose for your business will impact your taxes, personal liability, paperwork, ability to raise money, and more. This decision affects nearly every aspect of your business operations, so it's worth taking the time to make an informed choice.
+
+## Common Business Structures
+
+### Sole Proprietorship
+- **Definition**: A business owned and operated by one person with no legal distinction between the owner and the business. This is the default structure when you start a business without filing any paperwork.
+- **Best for**: Freelancers, consultants, and low-risk businesses just starting out with minimal startup capital.
+- **Pros**: 
+  - Simple to form with no filing requirements
+  - Complete control over all decisions
+  - Minimal paperwork and regulatory requirements
+  - Pass-through taxation (business income reported on personal taxes)
+  - Lowest cost option to start and maintain
+- **Cons**: 
+  - Unlimited personal liability for all business debts and legal issues
+  - Difficult to raise capital from investors
+  - Limited life (ends with owner)
+  - May appear less professional to clients and partners
+  - Limited tax deduction opportunities
+
+### Limited Liability Company (LLC)
+- **Definition**: A hybrid structure that provides the liability protection of a corporation with the tax benefits of a partnership. LLCs have become the most popular entity choice for small businesses.
+- **Best for**: Small to medium businesses seeking liability protection without corporate complexity, including service businesses, real estate holdings, and startups not seeking venture capital.
+- **Pros**: 
+  - Limited personal liability protection
+  - Pass-through taxation (no double taxation)
+  - Management flexibility (member-managed or manager-managed)
+  - Fewer formalities than corporations
+  - Flexible profit distribution not tied to ownership percentage
+- **Cons**: 
+  - More expensive to form than sole proprietorships
+  - Self-employment taxes for active members
+  - May have franchise taxes in some states
+  - Can be harder to raise venture capital
+  - Some states have publication requirements
+
+### C Corporation
+- **Definition**: A legal entity completely separate from its owners, with its own rights and liabilities. This is the traditional corporate structure used by most large companies.
+- **Best for**: Businesses planning to go public, raise significant venture capital, or scale significantly with multiple investors.
+- **Pros**: 
+  - Limited personal liability protection
+  - Ability to issue multiple classes of stock
+  - Attractive to venture capital and investors
+  - Perpetual existence independent of owners
+  - Tax deductible business expenses and benefits
+  - No limit on number of shareholders
+- **Cons**: 
+  - Double taxation (corporate and dividend income)
+  - More expensive to form and maintain
+  - Extensive recordkeeping requirements
+  - More regulatory oversight
+  - Less management flexibility
+  - Required board meetings and minutes
+
+### S Corporation
+- **Definition**: A corporation that elects to pass corporate income, losses, deductions, and credits through to shareholders for federal tax purposes. It's essentially a tax election rather than a distinct entity type.
+- **Best for**: Small to medium businesses that would benefit from corporate structure but want pass-through taxation, particularly those with significant profits that could benefit from reduced self-employment taxes.
+- **Pros**: 
+  - Limited personal liability protection
+  - Pass-through taxation (avoids double taxation)
+  - Potential tax savings on self-employment taxes
+  - Separate legal entity from owners
+  - Perpetual existence
+- **Cons**: 
+  - Strict qualification requirements
+  - Limited to 100 shareholders
+  - Only one class of stock allowed
+  - All shareholders must be U.S. citizens/residents
+  - More formalities than an LLC
+  - Cannot be owned by other corporations or partnerships
+
+### Partnership
+- **Definition**: A business relationship between two or more people who conduct business together. There are several types: General Partnerships, Limited Partnerships (LP), and Limited Liability Partnerships (LLP).
+- **Best for**: Professional groups like law firms, medical practices, accounting firms, or joint ventures between existing businesses.
+- **Pros**: 
+  - Easy to establish with minimal paperwork
+  - Shared financial commitment and workload
+  - Pass-through taxation
+  - Complementary skills and resources
+  - Flexible management structure
+- **Cons**: 
+  - Unlimited personal liability in general partnerships
+  - Joint and several liability (responsible for partner actions)
+  - Shared profits regardless of contribution (unless specified otherwise)
+  - Potential for conflicts between partners
+  - Limited life (can end if a partner leaves)
+  - Each general partner can bind the partnership
+
+## Key Factors to Consider
+
+1. **Liability Protection**: How much personal protection do you need based on your industry's risks?
+2. **Taxation**: Which tax structure benefits your situation and projected income?
+3. **Ownership Structure**: Solo founder or multiple owners? How will ownership change over time?
+4. **Investment Plans**: Will you seek outside funding from angels, VCs, or other sources?
+5. **Administrative Complexity**: How much paperwork and compliance can you handle or afford?
+6. **Growth Plans**: What are your long-term goals for the business (lifestyle, acquisition, IPO)?
+7. **Industry Norms**: What structures are common in your industry?
+8. **State-Specific Considerations**: How do state laws and taxes affect your choice?
+
+## Industry-Specific Considerations
+
+Different industries often favor certain business structures:
+
+- **Technology Startups**: Often C-Corps (especially if seeking VC funding)
+- **Real Estate**: Commonly LLCs for liability protection and tax benefits
+- **Professional Services**: Often LLCs or LLPs (law, accounting, consulting)
+- **Retail/E-commerce**: Varies, but LLCs are common for smaller operations
+- **Freelancers/Creators**: Often start as Sole Proprietors, then transition to LLCs
+
+## State-Specific Considerations
+
+Your state of formation matters significantly:
+
+- **Delaware**: Business-friendly laws, specialized business court, privacy advantages
+- **Nevada**: No state income tax, strong liability protection, privacy benefits
+- **Wyoming**: Low fees, no state income tax, strong asset protection
+- **Home State**: Often simplest and most cost-effective if operating locally
+
+Take the quiz below to get a personalized recommendation based on your specific situation.
+    `,
     quiz: {
       id: 'entity-quiz',
       title: 'Business Entity Selector',
