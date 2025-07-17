@@ -37,6 +37,7 @@ import { RefundPolicyPage } from './pages/legal/RefundPolicyPage';
 import { TermsPage } from './pages/legal/TermsPage';
 import { BusinessCoursesPage } from './pages/courses/BusinessCoursesPage'; 
 import { BusinessFormationCourse } from './pages/courses/BusinessFormationCourse'; 
+import { BusinessCourseOverview } from './pages/courses/BusinessCourseOverview';
 import { GrowthCoursesPage } from './pages/courses/GrowthCoursesPage';
 import { GrowthCoursePage } from './pages/courses/GrowthCoursePage';
 import { GrowthCourseOverview } from './pages/courses/GrowthCourseOverview';
