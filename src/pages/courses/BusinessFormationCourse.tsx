@@ -22,7 +22,8 @@ import {
   Shield,
   DollarSign,
   Zap,
-  Search
+  Search,
+  TrendingUp
 } from 'lucide-react';
 import { businessCourseModules, entityTypeInfo, stateFilingInfo } from '../../data/businessCourse';
 import { useAuth } from '../../contexts/AuthContext';
