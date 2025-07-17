@@ -229,7 +229,7 @@ export function GrowthCoursesPage() {
                 key={module.id} 
                 onClick={() => navigate(`/courses/growth/${module.id}`)}
                 className="cursor-pointer"
-              >
+              onClick={() => navigate('/courses/growth/overview')}>
                 <div className={`bg-white rounded-xl shadow-sm p-6 border-2 transition-all duration-200 ${
                   progress[`${module.id}Completed`]
                     ? 'border-green-200 hover:border-green-300 hover:shadow-md'

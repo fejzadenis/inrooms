@@ -74,6 +74,7 @@ function App() {
             <Route path="/courses/business-formation" element={<BusinessCoursesPage />} />
             <Route path="/courses/business-formation/:moduleId" element={<BusinessFormationCourse />} />
             <Route path="/courses/growth" element={<GrowthCoursesPage />} />
+           <Route path="/courses/growth/overview" element={<GrowthCourseOverview />} />
             <Route path="/courses/growth/:moduleId" element={<GrowthCoursePage />} />
             <Route
               path="/profile"
