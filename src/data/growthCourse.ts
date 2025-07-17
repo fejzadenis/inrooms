@@ -44,19 +44,20 @@ export interface CourseModule {
   }[];
 }
 
+// Module content
+export const growthCourseContent = `
+## Welcome to Build to Scale: Your Growth Journey
+
+Now that you've formed your business, it is time to grow it strategically. This comprehensive course will guide you through the essential frameworks and systems needed to scale sustainably. By the end, you\'ll have a clear growth strategy, validated product-market fit, and the operational foundation to handle increased demand.
+`;
+
 export const growthCourseModules: CourseModule[] = [
   {
     id: 'orientation',
     title: 'Growth Mindset',
     description: 'Understanding the fundamentals of strategic scaling',
     order: 0,
-    title: 'Course Overview',
-    description: 'Understand the growth journey and set your objectives',
-  }
-]
-## Welcome to Build to Scale: Your Growth Journey
-
-Now that you've formed your business, it is time to grow it strategically. This comprehensive course will guide you through the essential frameworks and systems needed to scale sustainably. By the end, you\'ll have a clear growth strategy, validated product-market fit, and the operational foundation to handle increased demand.
+    content: growthCourseContent + `
 
 ## Why Strategic Scaling Matters
 
@@ -1922,11 +1923,8 @@ export const growthStrategyInfo = {
       "Can be difficult to monetize initially",
       "Requires strong product analytics capabilities"
     ]
-      'Can be challenging for complex products'
-    ]
   },
   salesLed: {
-    name: 'Sales-Led Growth Strategy',
     name: "Sales-Led Growth (SLG)",
     description: "A strategy where sales teams drive customer acquisition and expansion through direct outreach and relationship building.",
     bestFor: "Enterprise products with high average contract values and complex buying processes.",
@@ -1942,9 +1940,8 @@ export const growthStrategyInfo = {
       "Less scalable than product-led approaches",
       "Requires significant investment in sales teams"
     ]
-    ]
   },
-    advantages: [
+  marketingLed: {
     name: "Marketing-Led Growth (MLG)",
     description: "A strategy where marketing efforts drive customer acquisition through content, advertising, and brand building.",
     bestFor: "Consumer products with broad appeal and relatively straightforward value propositions.",
@@ -1960,14 +1957,8 @@ export const growthStrategyInfo = {
       "Less direct customer relationships",
       "Requires significant content and creative resources"
     ]
-      'Effectiveness varies widely by industry and product'
-    ]
   },
   communityLed: {
-    name: 'Community-Led Growth Strategy',
-    description: 'A growth model where the community around your product becomes a growth engine through advocacy, support, and network effects.',
-    bestFor: 'Products with strong network effects, collaborative use cases, or passionate user bases.',
-    advantages: [
     name: "Community-Led Growth (CLG)",
     description: "A strategy where an engaged community of users and advocates drives adoption and expansion.",
     bestFor: "Products with strong network effects and collaborative use cases.",
@@ -1983,8 +1974,8 @@ export const growthStrategyInfo = {
       "Can be challenging to monetize effectively",
       "Success depends on continued engagement"
     ]
-    name: 'Operations-Led Growth Strategy',
-    description: 'A growth model where operational excellence and efficiency drive competitive advantage and enable sustainable growth.',
+  },
+  operationsLed: {
     name: "Operations-Led Growth (OLG)",
     description: "A strategy where operational excellence and efficiency drive sustainable growth and profitability.",
     bestFor: "Established businesses with significant operational complexity and scale.",
