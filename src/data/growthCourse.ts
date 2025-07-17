@@ -1907,59 +1907,59 @@ We'd love to hear about your scaling journey and success stories. Share your exp
 
 export const growthStrategyInfo = {
   productLed: {
-    name: 'Product-Led Growth Strategy',
-    description: 'A growth model where the product itself is the primary driver of customer acquisition, conversion, and expansion.',
-    bestFor: 'Products with immediate value, intuitive interfaces, and potential for viral/network effects.',
+    name: "Product-Led Growth (PLG)",
+    description: "A strategy where the product itself is the primary driver of customer acquisition, conversion, and expansion.",
+    bestFor: "SaaS products with strong product-market fit and a clear value proposition that can be experienced quickly.",
     advantages: [
-      'Lower customer acquisition costs',
-      'Faster scaling potential',
-      'More efficient conversion funnel',
-      'Better user experience focus',
-      'Data-rich environment for optimization'
+      "Lower customer acquisition costs",
+      "Faster sales cycles",
+      "More organic growth through word-of-mouth",
+      "Better user experience and retention"
     ],
     disadvantages: [
-      'Requires exceptional product experience',
-      'May leave money on table with enterprise customers',
-      'Less relationship-building with customers',
-      'Requires strong product and engineering teams',
+      "Requires exceptional product design and UX",
+      "May be challenging for complex enterprise products",
+      "Can be difficult to monetize initially",
+      "Requires strong product analytics capabilities"
+    ]
       'Can be challenging for complex products'
     ]
   },
   salesLed: {
     name: 'Sales-Led Growth Strategy',
-    description: 'A growth model that relies on sales teams to identify prospects, demonstrate value, and close deals.',
-    bestFor: 'Complex, high-value products with longer sales cycles, especially in B2B and enterprise markets.',
+    name: "Sales-Led Growth (SLG)",
+    description: "A strategy where sales teams drive customer acquisition and expansion through direct outreach and relationship building.",
+    bestFor: "Enterprise products with high average contract values and complex buying processes.",
     advantages: [
-      'Higher average contract values',
-      'Better for complex products requiring explanation',
-      'Stronger customer relationships',
-      'More control over the pipeline',
-      'Easier to enter enterprise markets'
+      "Higher average contract values",
+      "More controlled customer journey",
+      "Better for complex products requiring education",
+      "Builds stronger customer relationships"
     ],
     disadvantages: [
-      'Higher customer acquisition costs',
-      'Slower scaling due to human dependency',
-      'Requires significant investment in sales talent',
-      'More challenging to maintain consistent quality',
-      'Harder to create predictable growth models'
+      "Higher customer acquisition costs",
+      "Longer sales cycles",
+      "Less scalable than product-led approaches",
+      "Requires significant investment in sales teams"
+    ]
     ]
   },
-  marketingLed: {
-    name: 'Marketing-Led Growth Strategy',
-    description: 'A growth model where marketing drives awareness, lead generation, and nurturing to create demand.',
-    bestFor: 'Products with clear value propositions, defined target audiences, and moderate complexity.',
     advantages: [
-      'Scalable customer acquisition',
-      'Brand building alongside acquisition',
-      'Works well for both B2B and B2C',
-      'Can be more predictable with proper attribution',
-      'Supports other growth models effectively'
+    name: "Marketing-Led Growth (MLG)",
+    description: "A strategy where marketing efforts drive customer acquisition through content, advertising, and brand building.",
+    bestFor: "Consumer products with broad appeal and relatively straightforward value propositions.",
+    advantages: [
+      "Scalable customer acquisition",
+      "Strong brand awareness and positioning",
+      "Good for products with clear market fit",
+      "Can reach large audiences efficiently"
     ],
     disadvantages: [
-      'Increasingly competitive and expensive channels',
-      'Requires continuous content and creative production',
-      'Attribution can be challenging',
-      'May generate lower-quality leads than other methods',
+      "Increasing costs of digital advertising",
+      "Difficulty standing out in crowded markets",
+      "Less direct customer relationships",
+      "Requires significant content and creative resources"
+    ]
       'Effectiveness varies widely by industry and product'
     ]
   },
@@ -1968,155 +1968,155 @@ export const growthStrategyInfo = {
     description: 'A growth model where the community around your product becomes a growth engine through advocacy, support, and network effects.',
     bestFor: 'Products with strong network effects, collaborative use cases, or passionate user bases.',
     advantages: [
-      'High trust and authentic advocacy',
-      'Lower customer acquisition costs',
-      'Valuable product feedback and ideas',
-      'Strong retention through social bonds',
-      'Defensibility through network effects'
+    name: "Community-Led Growth (CLG)",
+    description: "A strategy where an engaged community of users and advocates drives adoption and expansion.",
+    bestFor: "Products with strong network effects and collaborative use cases.",
+    advantages: [
+      "High trust and authentic advocacy",
+      "Lower customer acquisition costs",
+      "Valuable product feedback loop",
+      "Creates defensible moat through network effects"
     ],
     disadvantages: [
-      'Slower to build initially',
-      'Requires dedicated community management',
-      'Less direct control over messaging',
-      'Can be challenging to monetize effectively',
-      'Requires ongoing nurturing and attention'
+      "Slow to build initially",
+      "Requires dedicated community management",
+      "Can be challenging to monetize effectively",
+      "Success depends on continued engagement"
     ]
-  },
-  operationsLed: {
     name: 'Operations-Led Growth Strategy',
     description: 'A growth model where operational excellence and efficiency drive competitive advantage and enable sustainable growth.',
-    bestFor: 'Businesses in competitive markets with thin margins, logistics components, or complex fulfillment requirements.',
+    name: "Operations-Led Growth (OLG)",
+    description: "A strategy where operational excellence and efficiency drive sustainable growth and profitability.",
+    bestFor: "Established businesses with significant operational complexity and scale.",
     advantages: [
-      'Superior unit economics',
-      'Ability to compete on price or service levels',
-      'More capital-efficient growth',
-      'Better customer experience through reliability',
-      'Scalability through systems rather than people'
+      "Improved unit economics and profitability",
+      "Better customer experience through reliability",
+      "More sustainable long-term growth",
+      "Competitive advantage through efficiency"
     ],
     disadvantages: [
-      'Requires significant process expertise',
-      'May need substantial upfront investment',
-      'Can lead to rigidity if overdone',
-      'Less flashy than other growth models',
-      'Requires continuous optimization'
+      "Less focus on rapid customer acquisition",
+      "Requires significant process optimization",
+      "Can lead to risk aversion and slower innovation",
+      "Needs strong cross-functional alignment"
     ]
   }
 };
 
 export const growthStrategyRecommendationInfo = {
   productLed: {
-    description: 'Based on your responses, a Product-Led Growth strategy appears to be your optimal approach. Your product has the characteristics that enable users to discover, try, adopt, and expand usage with minimal sales intervention.',
+    description: "Based on your answers, a Product-Led Growth strategy would be most effective for your business. This approach leverages your product as the primary driver of acquisition, conversion, and expansion.",
     keyTactics: [
-      'Optimize your self-service onboarding to deliver value in minutes',
-      'Implement a freemium or free trial model to reduce adoption friction',
-      'Build in-product prompts to guide users to "aha moments"',
-      'Create viral loops and referral mechanisms within the product',
-      'Use product analytics to identify and remove friction points'
+      "Implement a frictionless onboarding process that showcases value quickly",
+      "Offer a free tier or trial that provides meaningful value",
+      "Build viral and network effects directly into your product",
+      "Use product analytics to identify and optimize conversion points",
+      "Create expansion opportunities through additional features or usage"
     ],
     resources: [
-      'Product-Led Growth by Wes Bush',
-      'Amplitude\'s North Star Playbook',
-      'Reforge\'s Product-Led Growth course',
-      'ProductLed.org resources and community'
+      "Product-Led Growth by Wes Bush",
+      "Amplitude's Product-Led Growth Playbook",
+      "OpenView's Product-Led Growth Resources",
+      "ProductLed.org Community"
     ],
     nextSteps: [
-      'Map your user journey from signup to "aha moment"',
-      'Identify and remove friction points in the onboarding flow',
-      'Implement product analytics to track key user actions',
-      'Design and test a referral mechanism within your product',
-      'Create a growth team focused on product-led acquisition and activation'
+      "Map your user journey and identify key 'aha moments'",
+      "Implement product analytics to track user behavior",
+      "Develop a self-service onboarding process",
+      "Create a growth team focused on product-led metrics",
+      "Test different pricing models that align with product usage"
     ]
   },
   salesLed: {
-    description: 'Based on your responses, a Sales-Led Growth strategy appears to be your optimal approach. Your product complexity, high contract value, and enterprise focus make a sales-driven model most effective.',
+    description: "Based on your answers, a Sales-Led Growth strategy would be most effective for your business. This approach leverages direct sales efforts to drive customer acquisition and expansion.",
     keyTactics: [
-      'Build a repeatable sales process with clear stages and conversion metrics',
-      'Develop sales enablement materials that effectively communicate value',
-      'Create a lead qualification framework to focus on high-potential prospects',
-      'Implement account-based marketing for key target accounts',
-      'Design a customer success program to drive expansion revenue'
+      "Build a structured sales process from prospecting to closing",
+      "Develop compelling sales collateral and case studies",
+      "Implement account-based marketing for high-value prospects",
+      "Create a consultative sales approach focused on customer needs",
+      "Establish clear handoffs between marketing, sales, and customer success"
     ],
     resources: [
-      'Predictable Revenue by Aaron Ross',
-      'The Sales Acceleration Formula by Mark Roberge',
-      'SPIN Selling by Neil Rackham',
-      'Sales Enablement PRO resources'
+      "Predictable Revenue by Aaron Ross",
+      "SPIN Selling by Neil Rackham",
+      "Sales Enablement by Cory Bray and Hilmon Sorey",
+      "SalesHacker Community"
     ],
     nextSteps: [
-      'Document your sales process from lead to close',
-      'Create a sales playbook with scripts, objection handling, and resources',
-      'Implement a CRM system with proper pipeline tracking',
-      'Develop an ideal customer profile and lead scoring system',
-      'Build a sales enablement function to support your growing team'
+      "Define your ideal customer profile and buyer personas",
+      "Build or refine your sales playbook and process",
+      "Implement a CRM system for tracking opportunities",
+      "Develop a sales enablement program with training and resources",
+      "Create a compensation plan that incentivizes desired outcomes"
     ]
   },
   marketingLed: {
-    description: 'Based on your responses, a Marketing-Led Growth strategy appears to be your optimal approach. Your product category, target audience, and current capabilities align well with a marketing-driven growth model.',
+    description: "Based on your answers, a Marketing-Led Growth strategy would be most effective for your business. This approach leverages content, advertising, and brand building to drive customer acquisition.",
     keyTactics: [
-      'Develop a content marketing strategy to drive organic traffic',
-      'Build lead nurturing sequences to convert prospects over time',
-      'Implement conversion rate optimization across your marketing funnel',
-      'Create a channel diversification strategy to reduce acquisition risk',
-      'Design attribution models to understand marketing effectiveness'
+      "Develop a comprehensive content marketing strategy",
+      "Implement multi-channel digital advertising campaigns",
+      "Build a strong brand identity and messaging framework",
+      "Create a lead nurturing process with marketing automation",
+      "Optimize conversion rates through continuous testing"
     ],
     resources: [
-      'Traction by Gabriel Weinberg and Justin Mares',
-      'They Ask, You Answer by Marcus Sheridan',
-      'HubSpot Academy marketing courses',
-      'Content Marketing Institute resources'
+      "This Is Marketing by Seth Godin",
+      "Content-Based Marketing by Joe Pulizzi",
+      "Marketing Made Simple by Donald Miller",
+      "Growth Hackers Community"
     ],
     nextSteps: [
-      'Conduct keyword research to identify content opportunities',
-      'Build a content calendar for the next quarter',
-      'Implement lead scoring and nurturing workflows',
-      'Set up proper attribution tracking across channels',
-      'Create a testing framework for landing pages and campaigns'
+      "Conduct market research to understand your audience",
+      "Develop a content calendar and production process",
+      "Set up analytics to track marketing performance",
+      "Build a lead scoring system to prioritize prospects",
+      "Create a marketing tech stack for automation and scale"
     ]
   },
   communityLed: {
-    description: 'Based on your responses, a Community-Led Growth strategy appears to be your optimal approach. Your product has strong network effects and benefits significantly from user interaction and advocacy.',
+    description: "Based on your answers, a Community-Led Growth strategy would be most effective for your business. This approach leverages an engaged community to drive adoption, retention, and advocacy.",
     keyTactics: [
-      'Create spaces for community interaction (forums, Slack, Discord, etc.)',
-      'Develop a community engagement program with regular events',
-      'Implement an ambassador or champion program for power users',
-      'Build user-generated content mechanisms into your product',
-      'Design community onboarding to welcome and activate new members'
+      "Create spaces for community interaction and collaboration",
+      "Develop community programs like champions or ambassadors",
+      "Facilitate user-generated content and knowledge sharing",
+      "Host virtual and in-person community events",
+      "Integrate community feedback into your product roadmap"
     ],
     resources: [
-      'The Business of Belonging by David Spinks',
-      'Get Together by Bailey Richardson, Kevin Huynh, and Kai Elmer Sotto',
-      'CMX Hub community resources',
-      'Orbit Model for community growth'
+      "The Business of Belonging by David Spinks",
+      "Get Together by Bailey Richardson, Kevin Huynh, and Kai Elmer Sotto",
+      "Building Brand Communities by Carrie Melissa Jones and Charles Vogl",
+      "CMX Community"
     ],
     nextSteps: [
-      'Select and set up your community platform',
-      'Create a community engagement calendar with regular events',
-      'Develop a community playbook for moderation and engagement',
-      'Identify potential community champions among current users',
-      'Implement metrics to track community health and growth impact'
+      "Define your community purpose and value proposition",
+      "Select and set up community platforms and tools",
+      "Create community guidelines and moderation processes",
+      "Develop an engagement strategy with regular activities",
+      "Build metrics to measure community health and impact"
     ]
   },
   operationsLed: {
-    description: 'Based on your responses, an Operations-Led Growth strategy appears to be your optimal approach. Your business model and market position can gain significant advantage through operational excellence.',
+    description: "Based on your answers, an Operations-Led Growth strategy would be most effective for your business. This approach leverages operational excellence to drive efficiency, quality, and sustainable growth.",
     keyTactics: [
-      'Map and optimize your core operational processes for efficiency',
-      'Implement automation for repetitive, high-volume tasks',
-      'Develop metrics and dashboards for operational performance',
-      'Create a continuous improvement system for ongoing optimization',
-      'Build operational capabilities that can be leveraged as competitive advantages'
+      "Implement process optimization and automation",
+      "Develop robust quality assurance systems",
+      "Create scalable operational infrastructure",
+      "Build data-driven decision making processes",
+      "Establish clear metrics and KPIs for all functions"
     ],
     resources: [
-      'The Goal by Eliyahu Goldratt',
-      'Toyota Production System principles',
-      'The Lean Startup by Eric Ries',
-      'Operations Excellence resources from McKinsey'
+      "The Goal by Eliyahu Goldratt",
+      "Lean Thinking by James Womack and Daniel Jones",
+      "The Toyota Way by Jeffrey Liker",
+      "Operations Excellence Community"
     ],
     nextSteps: [
-      'Document and map your core operational processes',
-      'Identify the highest-impact areas for automation',
-      'Implement key operational metrics and dashboards',
-      'Create standard operating procedures for critical functions',
-      'Develop a continuous improvement system with regular reviews'
+      "Conduct an operational audit to identify bottlenecks",
+      "Implement process documentation and standardization",
+      "Develop a data infrastructure for operational insights",
+      "Create cross-functional alignment on operational goals",
+      "Build a continuous improvement culture and process"
     ]
   }
 };
