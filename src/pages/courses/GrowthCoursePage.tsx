@@ -37,7 +37,9 @@ export function GrowthCoursePage() {
   const { moduleId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [currentModule, setCurrentModule] = useState(growthCourseModules[0]);
+  const [currentModule, setCurrentModule] = useState<typeof growthCourseModules[0] | null>(
+    growthCourseModules.length > 0 ? growthCourseModules[0] : null
+  );
   const [progress, setProgress] = useState<Record<string, any>>({});
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string[]>>({});
   const [checklistItems, setChecklistItems] = useState<string[]>([]);
@@ -47,6 +49,11 @@ export function GrowthCoursePage() {
 
   // Load the specified module or default to the first one
   useEffect(() => {
+    if (growthCourseModules.length === 0) {
+      navigate('/courses/growth');
+      return;
+    }
+
     if (moduleId) {
       const module = growthCourseModules.find(m => m.id === moduleId);
       if (module) {
@@ -58,6 +65,22 @@ export function GrowthCoursePage() {
       setCurrentModule(growthCourseModules[0]);
     }
   }, [moduleId, navigate]);
+
+  // Early return if currentModule is not loaded yet
+  if (!currentModule) {
+    return (
+      <MainLayout>
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading course content...</p>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   // Load progress from localStorage
   useEffect(() => {
