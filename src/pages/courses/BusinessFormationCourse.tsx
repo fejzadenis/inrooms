@@ -26,7 +26,6 @@ import {
   TrendingUp,
   Rocket
 } from 'lucide-react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
 import { businessCourseModules, entityTypeInfo, stateFilingInfo } from '../../data/businessCourse';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
