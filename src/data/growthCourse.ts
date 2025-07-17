@@ -53,7 +53,7 @@ export const growthCourseModules: CourseModule[] = [
       {
         type: 'welcome',
         title: 'Welcome to Build to Scale: Your Growth Journey',
-        content: 'Now that you've formed your business, it's time to grow it strategically. This comprehensive course will guide you through the essential frameworks and systems needed to scale sustainably. By the end, you'll have a clear growth strategy, validated product-market fit, and the operational foundation to handle increased demand.'
+        content: 'Now that you\'ve formed your business, it's time to grow it strategically. This comprehensive course will guide you through the essential frameworks and systems needed to scale sustainably. By the end, you\'ll have a clear growth strategy, validated product-market fit, and the operational foundation to handle increased demand.'
       },
       {
         type: 'section',
@@ -84,7 +84,7 @@ export const growthCourseModules: CourseModule[] = [
       },
       {
         type: 'section',
-        title: 'What You'll Accomplish',
+        title: 'What You\'ll Accomplish',
         content: 'By completing this course, you will:',
         items: [
           {
@@ -140,7 +140,7 @@ export const growthCourseModules: CourseModule[] = [
           },
           {
             title: 'Expert Mentorship',
-            description: 'Access to operators who've scaled businesses'
+            description: 'Access to operators who\'ve scaled businesses'
           }
         ]
       },
@@ -151,7 +151,7 @@ export const growthCourseModules: CourseModule[] = [
         items: [
           {
             title: 'Current State',
-            description: 'What's working well? What's breaking as you grow?'
+            description: 'What\'s working well? What's breaking as you grow?'
           },
           {
             title: 'Growth Goals',
@@ -174,10 +174,12 @@ export const growthCourseModules: CourseModule[] = [
       {
         type: 'conclusion',
         title: 'Your Growth Journey Starts Here',
-        content: 'You've built the foundation—now it's time to build the engine. Let's turn your formed business into a scalable growth machine that can handle whatever comes next.',
-        cta: 'Ready to scale smart? Let's begin.'
+        content: 'You\'ve built the foundation—now it's time to build the engine. Let\'s turn your formed business into a scalable growth machine that can handle whatever comes next.',
+        cta: 'Ready to scale smart? Let\'s begin.'
       }
     ],
+  }
+]
 
 ### Marketing-Led Growth (MLG)
 
@@ -231,7 +233,7 @@ In the next module, we'll help you validate your product-market fit, which is th
 
 Take a moment to reflect on your current situation:
 
-- **Current State**: What's working well? What's breaking as you grow?
+- **Current State**: What's working well? What\'s breaking as you grow?
 - **Growth Goals**: Where do you want to be in 12-18 months?
 - **Resource Constraints**: What are your biggest limitations (time, money, people)?
 - **Risk Tolerance**: How fast do you want to grow vs. how stable do you want to be?
@@ -647,7 +649,7 @@ Ask your users: "How would you feel if you could no longer use [product]?"
 - Not disappointed
 - N/A - I no longer use the product
 
-If over 40% say "very disappointed," you likely have PMF. Below 40%, you have work to do.
+If over 40% say "very disappointed,\" you likely have PMF. Below 40%, you have work to do.
 
 ### 2. Net Promoter Score (NPS)
 
@@ -665,13 +667,13 @@ A score above 50 is excellent. Below 0 indicates serious problems.
 
 Track how many users from each acquisition cohort remain active over time. A flattening retention curve (where it stops declining) indicates PMF.
 
-### 4. The "Why Now" Test
+### 4. The "Why Now\" Test
 
 Can you clearly articulate why your solution is needed now, not 5 years ago or 5 years from now? If market timing is right, PMF is more likely.
 
 ## Strengthening Your Product-Market Fit
 
-If your PMF metrics aren't strong enough, here's how to improve:
+If your PMF metrics aren't strong enough, here\'s how to improve:
 
 ### 1. Customer Development Interviews
 
@@ -723,7 +725,7 @@ You're ready to scale when:
 
 Don't rush this step. Premature scaling is one of the primary reasons startups fail.
 
-In the next module, we'll build your growth engine—but only after you've validated your product-market fit.
+In the next module, we'll build your growth engine—but only after you\'ve validated your product-market fit.
 `,
     checklist: {
       title: 'Product-Market Fit Validation Checklist',
@@ -801,7 +803,7 @@ In the next module, we'll build your growth engine—but only after you've valid
     content: `
 # Building Your Growth Engine
 
-Now that you've validated your product-market fit, it's time to build a systematic approach to growth. A growth engine is a repeatable, scalable system for acquiring, retaining, and expanding your customer base.
+Now that you've validated your product-market fit, it\'s time to build a systematic approach to growth. A growth engine is a repeatable, scalable system for acquiring, retaining, and expanding your customer base.
 
 ## The AARRR Framework: Your Growth Engine Blueprint
 
