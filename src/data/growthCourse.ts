@@ -53,7 +53,7 @@ export const growthCourseModules: CourseModule[] = [
       {
         type: 'welcome',
         title: 'Welcome to Build to Scale: Your Growth Journey',
-        content: 'Now that you\'ve formed your business, it's time to grow it strategically. This comprehensive course will guide you through the essential frameworks and systems needed to scale sustainably. By the end, you\'ll have a clear growth strategy, validated product-market fit, and the operational foundation to handle increased demand.'
+        content: 'Now that you\'ve formed your business, it is time to grow it strategically. This comprehensive course will guide you through the essential frameworks and systems needed to scale sustainably. By the end, you\'ll have a clear growth strategy, validated product-market fit, and the operational foundation to handle increased demand.'
       },
       {
         type: 'section',
