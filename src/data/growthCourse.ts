@@ -52,9 +52,11 @@ export const growthCourseModules: CourseModule[] = [
     order: 0,
     title: 'Course Overview',
     description: 'Understand the growth journey and set your objectives',
+  }
+]
 ## Welcome to Build to Scale: Your Growth Journey
 
-Now that you've formed your business, it is time to grow it strategically. This comprehensive course will guide you through the essential frameworks and systems needed to scale sustainably. By the end, you'll have a clear growth strategy, validated product-market fit, and the operational foundation to handle increased demand.
+Now that you've formed your business, it is time to grow it strategically. This comprehensive course will guide you through the essential frameworks and systems needed to scale sustainably. By the end, you\'ll have a clear growth strategy, validated product-market fit, and the operational foundation to handle increased demand.
 
 ## Why Strategic Scaling Matters
 
@@ -191,9 +193,9 @@ export const growthStrategyRecommendationInfo = {
     resources: [
       '"Product-Led Growth" by Wes Bush',
       'ProductLed.org resources and community',
-      'Amplitude's Product Intelligence platform',
+      'Amplitude\'s Product Intelligence platform',
       '"Hooked" by Nir Eyal',
-      'Pendo's product adoption tools'
+      'Pendo\'s product adoption tools'
     ],
     nextSteps: [
       'Map your user journey and identify key activation points',
@@ -218,7 +220,7 @@ export const growthStrategyRecommendationInfo = {
       'SalesHacker resources and community',
       '"SPIN Selling" by Neil Rackham',
       'Sandler Training methodology',
-      'Salesforce's sales management platform'
+      'Salesforce\'s sales management platform'
     ],
     nextSteps: [
       'Document your sales process and create playbooks',
