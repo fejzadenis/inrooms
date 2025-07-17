@@ -377,7 +377,7 @@ Each module includes practical exercises, tools, and frameworks you can apply im
       {
         type: 'welcome',
         title: 'Welcome to Build to Scale: Your Growth Playbook',
-        content: 'This comprehensive course will guide you through the process of strategically scaling your business. By the end, you'll have a clear growth strategy, scalable systems, and the tools to build a data-driven organization.'
+        content: `This comprehensive course will guide you through the process of strategically scaling your business. By the end, you'll have a clear growth strategy, scalable systems, and the tools to build a data-driven organization.`
       },
       {
         type: 'section',
