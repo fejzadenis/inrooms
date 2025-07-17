@@ -23,7 +23,8 @@ import {
   DollarSign,
   Zap,
   Search,
-  TrendingUp
+  TrendingUp,
+  Rocket
 } from 'lucide-react';
 import { businessCourseModules, entityTypeInfo, stateFilingInfo } from '../../data/businessCourse';
 import { useAuth } from '../../contexts/AuthContext';
