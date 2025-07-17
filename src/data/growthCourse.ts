@@ -132,7 +132,7 @@ export const growthCourseOverview = {
   }
 };
 
-## Why Strategic Scaling Matters
+export const growthStrategyInfo = {
 
 Growing without strategy leads to chaos. Smart scaling is about:
 
