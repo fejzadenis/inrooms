@@ -151,7 +151,7 @@ export const growthCourseModules: CourseModule[] = [
         items: [
           {
             title: 'Current State',
-            description: 'What\'s working well? What's breaking as you grow?'
+            description: 'What\'s working well? What is breaking as you grow?'
           },
           {
             title: 'Growth Goals',
