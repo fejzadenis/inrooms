@@ -174,7 +174,7 @@ export const growthCourseModules: CourseModule[] = [
       {
         type: 'conclusion',
         title: 'Your Growth Journey Starts Here',
-        content: 'You\'ve built the foundation—now it's time to build the engine. Let\'s turn your formed business into a scalable growth machine that can handle whatever comes next.',
+        content: 'You\'ve built the foundation—now it is time to build the engine. Let\'s turn your formed business into a scalable growth machine that can handle whatever comes next.',
         cta: 'Ready to scale smart? Let\'s begin.'
       }
     ],
