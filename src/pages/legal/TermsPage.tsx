@@ -228,8 +228,6 @@ export function TermsPage() {
                 <p>If you have questions about these terms, please contact us:</p>
                 <div className="space-y-2">
                   <p><strong>Email:</strong> legal@inrooms.com</p>
-                  <p><strong>Phone:</strong> +1 (555) 123-4567</p>
-                  <p><strong>Address:</strong> [Your Business Address]</p>
                 </div>
               </div>
             </section>
