@@ -143,8 +143,8 @@ export function GrowthCoursesPage() {
                   variant="outline" 
                   className="border-2 border-white text-white hover:bg-white/10 px-8 py-3 text-lg"
                 >
-                <FileText className="w-5 h-5 mr-2" />
-                Course Overview
+                  <FileText className="w-5 h-5 mr-2" />
+                  Course Overview
                 </Button>
               </Link>
             </div>
@@ -226,7 +226,6 @@ export function GrowthCoursesPage() {
             {growthCourseModules.map((module) => (
               <motion.div
                 whileHover={{ x: 5 }}
-            <Link to="/courses/growth/orientation">
                 key={module.id} 
                 onClick={() => navigate(`/courses/growth/${module.id}`)}
                 className="cursor-pointer"
