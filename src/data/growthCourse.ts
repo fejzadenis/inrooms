@@ -477,7 +477,7 @@ Each module includes practical exercises, tools, and frameworks you can apply im
       },
       {
         type: 'section',
-        title: 'What You'll Learn',
+        title: 'What You Will Learn',
         content: 'Throughout this course, you will develop practical skills in:',
         items: [
           {
