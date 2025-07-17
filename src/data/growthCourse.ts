@@ -377,12 +377,12 @@ Each module includes practical exercises, tools, and frameworks you can apply im
       {
         type: 'welcome',
         title: 'Welcome to Build to Scale: Your Growth Playbook',
-        content: `This comprehensive course will guide you through the process of strategically scaling your business. By the end, you'll have a clear growth strategy, scalable systems, and the tools to build a data-driven organization.`
+        content: 'This comprehensive course will guide you through the process of strategically scaling your business. By the end, you\'ll have a clear growth strategy, scalable systems, and the tools to build a data-driven organization.'
       },
       {
         type: 'section',
         title: 'Why Growth Strategy Matters',
-        content: 'A strategic approach to growth is about more than just increasing revenue—it's about:',
+        content: 'A strategic approach to growth is about more than just increasing revenue—it\'s about:',
         items: [
           {
             title: 'Sustainable Scaling',
@@ -404,8 +404,8 @@ Each module includes practical exercises, tools, and frameworks you can apply im
       },
       {
         type: 'section',
-        title: 'What You'll Learn',
-        content: 'Throughout this course, you'll develop practical skills in:',
+        title: 'What You\'ll Learn',
+        content: 'Throughout this course, you\'ll develop practical skills in:',
         items: [
           {
             title: 'Growth Strategy',
@@ -452,7 +452,7 @@ Each module includes practical exercises, tools, and frameworks you can apply im
         type: 'conclusion',
         title: 'Ready to Scale Your Business?',
         content: 'This course will provide you with a comprehensive framework for sustainable growth, from validating product-market fit to building scalable systems and processes.',
-        cta: 'Let's begin your growth journey!'
+        cta: 'Let\'s begin your growth journey!'
       }
     ],
     quiz: {
