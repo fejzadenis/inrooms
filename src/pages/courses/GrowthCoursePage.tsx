@@ -266,12 +266,12 @@ export function GrowthCoursePage() {
       >
         <div className="flex items-center mb-4">
           <Lightbulb className="w-6 h-6 text-indigo-600 mr-3" />
-          <h3 className="text-xl font-semibold text-gray-900">{currentModule.quiz.title}</h3>
+          <h3 className="text-xl font-semibold text-gray-900">{currentModule.quiz?.title}</h3>
         </div>
-        <p className="text-gray-600 mb-6 text-lg">{currentModule.quiz.description}</p>
+        <p className="text-gray-600 mb-6 text-lg">{currentModule.quiz?.description}</p>
         
         <div className="space-y-8">
-          {currentModule.quiz.questions.map((question) => (
+          {currentModule.quiz?.questions?.map((question) => (
             <div key={question.id} className="border-b border-gray-200 pb-8 last:border-0">
               <p className="font-medium text-gray-900 mb-4 text-lg">{question.text}</p>
               
