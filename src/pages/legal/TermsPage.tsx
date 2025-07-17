@@ -187,6 +187,24 @@ export function TermsPage() {
             </section>
 
             <section>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">User Agreement & Liability Disclaimer</h2>
+              <div className="space-y-4 text-gray-700">
+                <p>
+                  By signing up, I confirm that I understand and agree to the following:
+                </p>
+                <p>
+                  I acknowledge that INROOMS LLC provides access to coaching, workshops, networking opportunities, and educational resources solely for informational and developmental purposes. I accept that any actions I take based on content or interactions on the platform are my sole responsibility.
+                </p>
+                <p>
+                  I agree that INROOMS LLC, its founders, employees, contractors, mentors, partners, and affiliates are not liable for any outcomes, including but not limited to business decisions, financial losses, legal issues, missed opportunities, or other consequences resulting from my participation in or reliance upon the platform and its content.
+                </p>
+                <p>
+                  I further understand that INROOMS LLC does not guarantee employment, investment, revenue, or any specific result. Participation is voluntary and at my own discretion.
+                </p>
+              </div>
+            </section>
+
+            <section>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Changes to Terms</h2>
               <div className="space-y-4 text-gray-700">
                 <p>
