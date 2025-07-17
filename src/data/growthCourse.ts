@@ -48,138 +48,262 @@ export const growthCourseModules: CourseModule[] = [
   {
     id: 'growth-mindset',
     title: 'Growth Mindset',
-    content: '# Growth Mindset – What Scale Really Means',
-    sections: [
-      {
-        type: 'welcome',
-        title: 'Welcome to Build to Scale: Your Growth Journey',
-        content: 'Now that you\'ve formed your business, it is time to grow it strategically. This comprehensive course will guide you through the essential frameworks and systems needed to scale sustainably. By the end, you\'ll have a clear growth strategy, validated product-market fit, and the operational foundation to handle increased demand.'
-      },
-      {
-        type: 'section',
-        title: 'Why Strategic Scaling Matters',
-        content: 'Growing without strategy leads to chaos. Smart scaling is about:',
-        items: [
-          {
-            title: 'Sustainable Growth',
-            description: 'Building systems that can handle 10x demand'
-          },
-          {
-            title: 'Market Validation',
-            description: 'Ensuring your product truly solves real problems'
-          },
-          {
-            title: 'Operational Excellence',
-            description: 'Creating processes that scale with your team'
-          },
-          {
-            title: 'Resource Optimization',
-            description: 'Maximizing ROI on every growth investment'
-          },
-          {
-            title: 'Foundation Building',
-            description: 'Establishing culture and systems for long-term success'
-          }
-        ]
-      },
-      {
-        type: 'section',
-        title: 'What You\'ll Accomplish',
-        content: 'By completing this course, you will:',
-        items: [
-          {
-            title: 'Validate Product-Market Fit',
-            description: 'Use data-driven frameworks to ensure market alignment'
-          },
-          {
-            title: 'Build Growth Systems',
-            description: 'Create repeatable processes across marketing, sales, and operations'
-          },
-          {
-            title: 'Design Scalable Operations',
-            description: 'Implement processes that work at any size'
-          },
-          {
-            title: 'Create Team Framework',
-            description: 'Establish hiring and culture systems for sustainable growth'
-          },
-          {
-            title: 'Implement Key Metrics',
-            description: 'Set up tracking systems for continuous optimization'
-          },
-          {
-            title: 'Develop Contingency Plans',
-            description: 'Prepare for common scaling challenges before they happen'
-          }
-        ]
-      },
-      {
-        type: 'section',
-        title: 'How to Use This Course',
-        content: 'This course is designed for active implementation. Each module includes:',
-        items: [
-          {
-            title: 'Strategic Frameworks',
-            description: 'Proven methodologies used by successful companies'
-          },
-          {
-            title: 'Assessment Tools',
-            description: 'Evaluate your current state and identify gaps'
-          },
-          {
-            title: 'Implementation Guides',
-            description: 'Step-by-step playbooks for each area'
-          },
-          {
-            title: 'Real Case Studies',
-            description: 'Learn from companies that scaled successfully'
-          },
-          {
-            title: 'Community Workshops',
-            description: 'Connect with other founders facing similar challenges'
-          },
-          {
-            title: 'Expert Mentorship',
-            description: 'Access to operators who\'ve scaled businesses'
-          }
-        ]
-      },
-      {
-        type: 'section',
-        title: 'Before You Begin',
-        content: 'Reflect on your current situation:',
-        items: [
-          {
-            title: 'Current State',
-            description: 'What\'s working well? What is breaking as you grow?'
-          },
-          {
-            title: 'Growth Goals',
-            description: 'Where do you want to be in 12-18 months?'
-          },
-          {
-            title: 'Resource Constraints',
-            description: 'What are your biggest limitations (time, money, people)?'
-          },
-          {
-            title: 'Risk Tolerance',
-            description: 'How fast do you want to grow vs. how stable do you want to be?'
-          },
-          {
-            title: 'Market Opportunity',
-            description: 'How big is your addressable market really?'
-          }
-        ]
-      },
-      {
-        type: 'conclusion',
-        title: 'Your Growth Journey Starts Here',
-        content: 'You\'ve built the foundation—now it is time to build the engine. Let\'s turn your formed business into a scalable growth machine that can handle whatever comes next.',
-        cta: 'Ready to scale smart? Let\'s begin.'
-      }
+    description: 'Understanding the fundamentals of strategic scaling',
+    order: 0,
+    content: `# Growth Mindset – What Scale Really Means
+
+## Welcome to Build to Scale: Your Growth Journey
+
+Now that you've formed your business, it is time to grow it strategically. This comprehensive course will guide you through the essential frameworks and systems needed to scale sustainably. By the end, you'll have a clear growth strategy, validated product-market fit, and the operational foundation to handle increased demand.
+
+## Why Strategic Scaling Matters
+
+Growing without strategy leads to chaos. Smart scaling is about:
+
+- **Sustainable Growth**: Building systems that can handle 10x demand
+- **Market Validation**: Ensuring your product truly solves real problems
+- **Operational Excellence**: Creating processes that scale with your team
+- **Resource Optimization**: Maximizing ROI on every growth investment
+- **Foundation Building**: Establishing culture and systems for long-term success
+
+## What You'll Accomplish
+
+By completing this course, you will:
+
+- **Validate Product-Market Fit**: Use data-driven frameworks to ensure market alignment
+- **Build Growth Systems**: Create repeatable processes across marketing, sales, and operations
+- **Design Scalable Operations**: Implement processes that work at any size
+- **Create Team Framework**: Establish hiring and culture systems for sustainable growth
+- **Implement Key Metrics**: Set up tracking systems for continuous optimization
+- **Develop Contingency Plans**: Prepare for common scaling challenges before they happen
+
+## How to Use This Course
+
+This course is designed for active implementation. Each module includes:
+
+- **Strategic Frameworks**: Proven methodologies used by successful companies
+- **Assessment Tools**: Evaluate your current state and identify gaps
+- **Implementation Guides**: Step-by-step playbooks for each area
+- **Real Case Studies**: Learn from companies that scaled successfully
+- **Community Workshops**: Connect with other founders facing similar challenges
+- **Expert Mentorship**: Access to operators who've scaled businesses
+
+## Understanding Growth Models
+
+Before diving into tactics, it's crucial to understand the different approaches to growth. Most successful companies use one primary growth model, often supplemented by others.
+
+### Product-Led Growth (PLG)
+
+The product itself drives customer acquisition, conversion, and expansion through superior user experience and value delivery.
+
+**Key characteristics:**
+- Self-service onboarding
+- Freemium or free trial models
+- In-product upgrade prompts
+- Focus on user experience and time-to-value
+
+**Examples:** Slack, Zoom, Dropbox
+
+### Sales-Led Growth (SLG)
+
+A dedicated sales team drives customer acquisition through relationship building, demos, and consultative selling.
+
+**Key characteristics:**
+- Direct sales outreach
+- Relationship-based selling
+- Custom demos and proposals
+- Focus on high-value accounts
+
+**Examples:** Salesforce, Oracle, ServiceNow
+
+export const growthStrategyInfo = {
+  marketingLed: {
+    name: 'Marketing-Led Growth (MLG)',
+    description: 'Focus on creating awareness and demand through marketing channels.',
+    bestFor: 'Consumer products, B2C businesses, and products with broad market appeal',
+    advantages: [
+      'Scalable customer acquisition',
+      'Brand building alongside growth',
+      'Works well for products with mass appeal',
+      'Can be highly measurable and data-driven',
+      'Effective for products with longer sales cycles'
     ],
+    disadvantages: [
+      'Can be expensive to sustain',
+      'Requires consistent content creation',
+      'Results may take time to materialize',
+      'Competitive channels with rising costs',
+      'Needs specialized marketing talent'
+    ]
+  },
+
+  communityLed: {
+    name: 'Community-Led Growth (CLG)',
+    description: 'Build a community around your product that drives adoption and advocacy.',
+    bestFor: 'Products with strong network effects, platforms, and tools for specific audiences',
+    advantages: [
+      'Creates strong brand loyalty',
+      'Reduces customer acquisition costs',
+      'Provides valuable product feedback',
+      'Builds defensible network effects',
+      'Creates organic word-of-mouth growth'
+    ],
+    disadvantages: [
+      'Takes time to build momentum',
+      'Requires dedicated community management',
+      'Can be difficult to measure ROI initially',
+      'Needs consistent engagement and nurturing',
+      'May not work for all product types'
+    ]
+  },
+
+  operationsLed: {
+    name: 'Operations-Led Growth (OLG)',
+    description: 'Focus on operational excellence and customer experience to drive retention and expansion.',
+    bestFor: 'Service businesses, subscription models, and businesses with high customer lifetime value',
+    advantages: [
+      'Improves customer retention and reduces churn',
+      'Creates predictable revenue streams',
+      'Builds strong customer relationships',
+      'Increases customer lifetime value',
+      'Creates defensible competitive advantages'
+    ],
+    disadvantages: [
+      'Requires significant process development',
+      'Can be resource-intensive initially',
+      'May slow down innovation in favor of standardization',
+      'Needs strong internal alignment',
+      'Requires specialized operations talent'
+    ]
   }
-]
+};
+
+export const growthStrategyRecommendationInfo = {
+  productLed: {
+    description: 'Your responses indicate that Product-Led Growth is your optimal strategy. This approach leverages your product itself as the primary driver of acquisition, conversion, and expansion.',
+    keyTactics: [
+      'Implement a frictionless user onboarding experience',
+      'Create a clear path to the "aha moment" where users see value',
+      'Build viral loops and sharing mechanisms into the product',
+      'Develop a freemium model or free trial that showcases core value',
+      'Use product analytics to identify conversion opportunities'
+    ],
+    resources: [
+      '"Product-Led Growth" by Wes Bush',
+      'ProductLed.org resources and community',
+      'Amplitude's Product Intelligence platform',
+      '"Hooked" by Nir Eyal',
+      'Pendo's product adoption tools'
+    ],
+    nextSteps: [
+      'Map your user journey and identify key activation points',
+      'Implement product analytics to track user behavior',
+      'Create a growth team focused on product metrics',
+      'Develop an experimentation framework for product improvements',
+      'Build a customer feedback loop to inform product development'
+    ]
+  },
+  
+  salesLed: {
+    description: 'Your responses indicate that Sales-Led Growth is your optimal strategy. This approach leverages a dedicated sales team to drive customer acquisition and expansion.',
+    keyTactics: [
+      'Build a repeatable sales process with clear stages',
+      'Develop ideal customer profiles and buyer personas',
+      'Create sales enablement content and tools',
+      'Implement account-based marketing and selling',
+      'Establish a consistent pipeline management system'
+    ],
+    resources: [
+      '"Predictable Revenue" by Aaron Ross',
+      'SalesHacker resources and community',
+      '"SPIN Selling" by Neil Rackham',
+      'Sandler Training methodology',
+      'Salesforce's sales management platform'
+    ],
+    nextSteps: [
+      'Document your sales process and create playbooks',
+      'Build a sales tech stack with CRM at the center',
+      'Develop a lead qualification framework',
+      'Create a sales onboarding and training program',
+      'Establish sales metrics and reporting cadence'
+    ]
+  },
+  
+  marketingLed: {
+    description: 'Your responses indicate that Marketing-Led Growth is your optimal strategy. This approach leverages marketing channels and content to create awareness and demand.',
+    keyTactics: [
+      'Content marketing and SEO dominance',
+      'Paid acquisition with optimized CAC',
+      'Community building and social proof',
+      'Brand development and storytelling',
+      'Marketing automation and nurture campaigns'
+    ],
+    resources: [
+      '"Traction" by Gabriel Weinberg',
+      'HubSpot Academy courses',
+      'Content Marketing Institute resources',
+      '"Building a StoryBrand" by Donald Miller',
+      '"Contagious" by Jonah Berger'
+    ],
+    nextSteps: [
+      'Audit your current marketing channels and identify top performers',
+      'Develop a content strategy aligned with your customer journey',
+      'Set up attribution tracking to measure marketing ROI',
+      'Create a brand style guide and messaging framework',
+      'Build a marketing tech stack that can scale with your business'
+    ]
+  },
+  
+  communityLed: {
+    description: 'Your responses indicate that Community-Led Growth is your optimal strategy. This approach leverages community building to drive adoption and advocacy.',
+    keyTactics: [
+      'Building engaged user communities',
+      'Creating user-generated content systems',
+      'Developing ambassador and advocacy programs',
+      'Hosting events and fostering connections',
+      'Turning customers into evangelists'
+    ],
+    resources: [
+      '"The Business of Belonging" by David Spinks',
+      '"Get Together" by Bailey Richardson',
+      'Community Club resources',
+      '"Buzzing Communities" by Richard Millington',
+      'Orbit Model framework'
+    ],
+    nextSteps: [
+      'Define your community purpose and value proposition',
+      'Choose the right platforms and tools for your community',
+      'Create a community engagement playbook',
+      'Develop a community metrics dashboard',
+      'Build a community team or identify internal champions'
+    ]
+  },
+  
+  operationsLed: {
+    description: 'Your responses indicate that Operations-Led Growth is your optimal strategy. This approach leverages operational excellence to drive retention and expansion.',
+    keyTactics: [
+      'Streamlining customer onboarding and success',
+      'Implementing proactive customer service',
+      'Building efficient operational processes',
+      'Creating customer feedback loops',
+      'Developing expansion and upsell systems'
+    ],
+    resources: [
+      '"The Effortless Experience" by Matthew Dixon',
+      '"Never Lose a Customer Again" by Joey Coleman',
+      '"The Checklist Manifesto" by Atul Gawande',
+      '"Lean Thinking" by James Womack',
+      '"The Goal" by Eliyahu Goldratt'
+    ],
+    nextSteps: [
+      'Map your customer journey and identify friction points',
+      'Implement NPS or CSAT measurement systems',
+      'Create standard operating procedures for key processes',
+      'Build a customer health scoring system',
+      'Develop a customer expansion playbook'
+    ]
+  }
+};
 
 ### Marketing-Led Growth (MLG)
 
@@ -612,8 +736,8 @@ Your growth journey starts here. Let's turn your formed business into a scalable
   {
     id: 'product-market-fit',
     title: 'Product-Market Fit Validation',
-    description: 'Measure and strengthen your product-market fit',
     description: 'Measure and strengthen your product-market fit before scaling',
+    order: 1,
     content: `
 # Product-Market Fit Validation
 
@@ -1232,8 +1356,8 @@ In the next module, we'll focus on building a team and culture that can support 
   {
     id: 'team-culture',
     title: 'Team & Culture Foundation',
-    description: 'Build a team and culture that can scale with your business',
     description: 'Build a team structure and culture that grows with your business',
+    order: 4,
     content: `
 # Team & Culture Foundation
 
@@ -1458,8 +1582,8 @@ In the next module, we'll focus on the metrics and optimization frameworks that 
   {
     id: 'metrics-optimization',
     title: 'Metrics & Optimization Framework',
-    description: 'Implement data-driven systems for continuous improvement',
     description: 'Implement key metrics and systems for continuous improvement',
+    order: 5,
     content: `
 # Metrics & Optimization Framework
 
