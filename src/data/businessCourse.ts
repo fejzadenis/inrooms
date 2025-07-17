@@ -4,9 +4,23 @@ export interface CourseModule {
   description: string;
   order: number;
   content: string;
+  sections?: CourseSection[];
   quiz?: CourseQuiz;
   checklist?: CourseChecklist;
   tools?: CourseTool[];
+}
+
+export interface CourseSection {
+  type: 'welcome' | 'section' | 'conclusion';
+  title: string;
+  content: string;
+  items?: SectionItem[];
+  cta?: string;
+}
+
+export interface SectionItem {
+  title: string;
+  description: string;
 }
 
 export interface CourseQuiz {
@@ -75,50 +89,132 @@ export const businessCourseModules: CourseModule[] = [
     title: 'Orientation – What Are You Building?',
     description: 'Define your business idea, goals, and commitment level',
     order: 0,
-    content: `## Welcome to Start to Form: Your Business Formation Journey
-
-This comprehensive course will guide you through the process of legally forming your business. By the end, you'll have chosen the right business structure, filed your entity, and set up the essential foundations for long-term success.
-
-### Why Business Formation Matters
-
-Properly forming your business is about more than just paperwork—it's about:
-
-- **Legal Protection**: Separating your personal and business assets
-- **Credibility**: Establishing legitimacy with customers and partners
-- **Tax Benefits**: Optimizing your tax situation from day one
-- **Growth Foundation**: Creating a structure that can scale with you
-
-### What You'll Accomplish
-
-By completing this course, you will:
-
-1. **Determine the ideal business structure** for your specific needs
-2. **Choose and register your business name**
-3. **File the necessary formation documents** with your state
-4. **Obtain your EIN** (Employer Identification Number)
-5. **Set up essential business systems** (banking, accounting, etc.)
-6. **Understand ongoing compliance requirements**
-
-### How to Use This Course
-
-This course is designed to be action-oriented. Each module builds on the previous one and includes:
-
-- **Learning content**: Essential information you need to know
-- **Interactive quizzes**: Help you make informed decisions
-- **Checklists**: Track your progress through required steps
-- **Tools**: Practical resources to complete each task
-- **State-specific guidance**: Tailored to your location
-
-### Before You Begin
-
-Take a moment to consider:
-
-- **Vision**: What are your business goals for the next 1-3 years?
-- **Resources**: How much time and money can you invest in formation?
-- **Protection**: What level of liability protection do you need?
-- **Taxation**: What tax situation would be most advantageous?
-
-Let's get started on your business formation journey!`,
+    content: `# Orientation – What Are You Building?`,
+    sections: [
+      {
+        type: 'welcome',
+        title: 'Welcome to Start to Form: Your Business Formation Journey',
+        content: 'This comprehensive course will guide you through the process of legally forming your business. By the end, you'll have chosen the right business structure, filed your entity, and set up the essential foundations for long-term success.'
+      },
+      {
+        type: 'section',
+        title: 'Why Business Formation Matters',
+        content: 'Properly forming your business is about more than just paperwork—it's about:',
+        items: [
+          {
+            title: 'Legal Protection',
+            description: 'Separating your personal and business assets'
+          },
+          {
+            title: 'Tax Optimization',
+            description: 'Setting up the most advantageous tax structure'
+          },
+          {
+            title: 'Credibility',
+            description: 'Establishing legitimacy with customers and partners'
+          },
+          {
+            title: 'Funding Access',
+            description: 'Creating a structure that can receive investment'
+          },
+          {
+            title: 'Growth Foundation',
+            description: 'Building on solid legal ground from day one'
+          }
+        ]
+      },
+      {
+        type: 'section',
+        title: 'What You\'ll Accomplish',
+        content: 'By completing this course, you will:',
+        items: [
+          {
+            title: 'Choose the right business structure',
+            description: 'For your specific needs and goals'
+          },
+          {
+            title: 'Register your business',
+            description: 'With the appropriate government agencies'
+          },
+          {
+            title: 'Obtain necessary tax IDs and permits',
+            description: 'To operate legally in your jurisdiction'
+          },
+          {
+            title: 'Set up proper accounting and banking',
+            description: 'To maintain financial compliance'
+          },
+          {
+            title: 'Create essential legal documents',
+            description: 'Agreements and contracts to protect your business'
+          },
+          {
+            title: 'Understand compliance requirements',
+            description: 'Ongoing obligations to maintain good standing'
+          }
+        ]
+      },
+      {
+        type: 'section',
+        title: 'How to Use This Course',
+        content: 'This course is designed for active implementation. Each module includes:',
+        items: [
+          {
+            title: 'Step-by-step instructions',
+            description: 'Clear guidance for every decision'
+          },
+          {
+            title: 'Document templates',
+            description: 'Ready-to-use forms and agreements'
+          },
+          {
+            title: 'Expert insights',
+            description: 'Learn the "why" behind each recommendation'
+          },
+          {
+            title: 'State-specific guidance',
+            description: 'Tailored to your location'
+          },
+          {
+            title: 'Implementation checklists',
+            description: 'Track your progress throughout the course'
+          }
+        ]
+      },
+      {
+        type: 'section',
+        title: 'Before You Begin',
+        content: 'Take a moment to reflect on your business vision:',
+        items: [
+          {
+            title: 'What problem does your business solve?',
+            description: 'Define your core value proposition'
+          },
+          {
+            title: 'Who are your target customers?',
+            description: 'Identify your ideal customer profile'
+          },
+          {
+            title: 'What is your revenue model?',
+            description: 'How will your business make money'
+          },
+          {
+            title: 'What are your growth goals?',
+            description: 'Short and long-term objectives'
+          },
+          {
+            title: 'How much time and money can you invest?',
+            description: 'Resources available for business formation'
+          }
+        ]
+      },
+      {
+        type: 'conclusion',
+        title: 'Your Formation Journey Starts Here',
+        content: 'Forming your business properly now will save you countless headaches and expenses later. Let\'s build your business on a solid foundation.',
+        cta: 'Ready to get started? Let\'s begin.'
+      }
+    ],
     quiz: {
       id: 'orientation-quiz',
       title: 'Business Foundation Quiz',
@@ -157,6 +253,19 @@ Let's get started on your business formation journey!`,
             { id: 'sellable', text: 'Building a sellable asset', points: { llc: 2, cCorp: 3, sCorp: 2, soleProprietorship: -2, partnership: -1 } }
           ]
         }
+      ]
+    },
+    checklist: {
+      id: 'orientation-checklist',
+      title: 'Orientation Checklist',
+      items: [
+        { id: 'business-idea', text: 'Define your business idea in one sentence', required: true, description: 'A clear, concise statement of what your business does and for whom' },
+        { id: 'problem-solution', text: 'Identify the problem your business solves', required: true, description: 'What pain point or need does your business address?' },
+        { id: 'target-market', text: 'Define your target market', required: true, description: 'Who are your ideal customers?' },
+        { id: 'revenue-model', text: 'Outline your revenue model', required: true, description: 'How will your business make money?' },
+        { id: 'formation-budget', text: 'Set a budget for business formation', required: false, description: 'How much can you spend on registration, legal fees, etc.' },
+        { id: 'time-commitment', text: 'Determine your time commitment', required: false, description: 'How many hours per week can you dedicate to your business?' },
+        { id: 'growth-goals', text: 'Establish 1-year growth goals', required: false, description: 'What do you want to achieve in your first year?' }
       ]
     }
   },
