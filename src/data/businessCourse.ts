@@ -270,8 +270,7 @@ export const businessCourseModules: CourseModule[] = [
     }
   },
   {
-    {
-  id: 'entity-selection',
+    id: 'entity-selection',
   title: 'Pick the Right Entity',
   description: 'Determine whether you need an LLC, C-Corp, S-Corp, or Sole Proprietorship',
   order: 1,
@@ -403,9 +402,7 @@ export const businessCourseModules: CourseModule[] = [
       title: 'Take the Quiz to Choose the Right Entity',
       content: 'Based on your answers, we’ll help match you with the best structure for your situation.'
     }
-  ]
-}
-,
+  ],
     quiz: {
       id: 'entity-quiz',
       title: 'Business Entity Selector',
