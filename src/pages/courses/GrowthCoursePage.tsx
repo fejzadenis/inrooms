@@ -37,7 +37,7 @@ export function GrowthCoursePage() {
   const { moduleId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [currentModule, setCurrentModule] = useState<typeof growthCourseModules[0] | null>(null);
+  const [currentModule, setCurrentModule] = useState(growthCourseModules[0]);
   const [progress, setProgress] = useState<Record<string, any>>({});
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string[]>>({});
   const [checklistItems, setChecklistItems] = useState<string[]>([]);
@@ -47,21 +47,7 @@ export function GrowthCoursePage() {
 
   // Load the specified module or default to the first one
   useEffect(() => {
-    if (growthCourseModules.length === 0) {
-      navigate('/courses/growth');
-      return;
-    }
-
-    if (moduleId === 'overview') {
-      // For overview, we'll use a special module that just shows the overview content
-      setCurrentModule({
-        id: 'overview',
-        title: 'Course Overview',
-        description: 'A comprehensive guide to sustainable business growth',
-        order: -1,
-        content: '',
-      });
-    } else if (moduleId) {
+    if (moduleId) {
       const module = growthCourseModules.find(m => m.id === moduleId);
       if (module) {
         setCurrentModule(module);
@@ -72,25 +58,6 @@ export function GrowthCoursePage() {
       setCurrentModule(growthCourseModules[0]);
     }
   }, [moduleId, navigate]);
-
-  // Special handling for overview page
-  const isOverviewPage = moduleId === 'overview';
-
-  // Early return if currentModule is not loaded yet
-  if (!currentModule) {
-    return (
-      <MainLayout>
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Loading course content...</p>
-            </div>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
 
   // Load progress from localStorage
   useEffect(() => {
@@ -276,12 +243,12 @@ export function GrowthCoursePage() {
       >
         <div className="flex items-center mb-4">
           <Lightbulb className="w-6 h-6 text-indigo-600 mr-3" />
-          <h3 className="text-xl font-semibold text-gray-900">{currentModule.quiz?.title}</h3>
+          <h3 className="text-xl font-semibold text-gray-900">{currentModule.quiz.title}</h3>
         </div>
-        <p className="text-gray-600 mb-6 text-lg">{currentModule.quiz?.description}</p>
+        <p className="text-gray-600 mb-6 text-lg">{currentModule.quiz.description}</p>
         
         <div className="space-y-8">
-          {currentModule.quiz?.questions?.map((question) => (
+          {currentModule.quiz.questions.map((question) => (
             <div key={question.id} className="border-b border-gray-200 pb-8 last:border-0">
               <p className="font-medium text-gray-900 mb-4 text-lg">{question.text}</p>
               
@@ -611,40 +578,48 @@ export function GrowthCoursePage() {
         </motion.div>
         
         {/* Module Navigation */}
-        {!isOverviewPage && (
-          <div className="flex flex-wrap gap-2 mb-8 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-            {growthCourseModules.map((module) => (
-              <button
-                key={module.id}
-                onClick={() => navigate(`/courses/growth/${module.id}`)}
-                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                  currentModule.id === module.id
-                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md'
-                    : progress[`${module.id}Completed`]
-                    ? 'bg-green-100 text-green-800 border border-green-200 shadow-sm'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm'
-                }`}
-              >
-                {module.order + 1}. {module.title}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="flex flex-wrap gap-2 mb-8 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+          {growthCourseModules.map((module) => (
+            <button
+              key={module.id}
+              onClick={() => navigate(`/courses/growth/${module.id}`)}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                currentModule.id === module.id
+                  ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md'
+                  : progress[`${module.id}Completed`]
+                  ? 'bg-green-100 text-green-800 border border-green-200 shadow-sm'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm'
+              }`}
+            >
+              {module.order + 1}. {module.title}
+            </button>
+          ))}
+        </div>
         
         {/* Module Content */}
-        {isOverviewPage ? (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-white rounded-xl shadow-md p-8 mb-8 border border-gray-200"
-          >
-            <div className="flex items-center mb-4">
-              <BookOpen className="w-8 h-8 text-indigo-600 mr-3" />
-              <h2 className="text-2xl font-bold text-gray-900">Course Overview</h2>
-            </div>
-            <p className="text-gray-600 mb-6 text-lg">A comprehensive guide to sustainable business growth</p>
-            
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="bg-white rounded-xl shadow-md p-8 mb-8 border border-gray-200"
+        >
+          <div className="flex items-center mb-4">
+            {currentModule.order === 0 && <Target className="w-8 h-8 text-indigo-600 mr-3" />}
+            {currentModule.order === 1 && <Lightbulb className="w-8 h-8 text-indigo-600 mr-3" />}
+            {currentModule.order === 2 && <Rocket className="w-8 h-8 text-indigo-600 mr-3" />}
+            {currentModule.order === 3 && <Settings className="w-8 h-8 text-indigo-600 mr-3" />}
+            {currentModule.order === 4 && <Users className="w-8 h-8 text-indigo-600 mr-3" />}
+            {currentModule.order === 5 && <BarChart className="w-8 h-8 text-indigo-600 mr-3" />}
+            <h2 className="text-2xl font-bold text-gray-900">{currentModule.title}</h2>
+          </div>
+          <p className="text-gray-600 mb-6 text-lg">{currentModule.description}</p>
+          
+          <div className="prose prose-indigo max-w-none prose-headings:text-indigo-900 prose-headings:font-bold prose-p:text-gray-700 prose-strong:text-gray-900 prose-strong:font-semibold prose-li:text-gray-700">
+            <ReactMarkdown>{currentModule.content}</ReactMarkdown>
+          </div>
+          
+          {/* Render formatted sections for orientation module */}
+          {currentModule.id === 'orientation' && (
             <div className="mt-8 space-y-10">
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold text-indigo-900 mt-6">{growthCourseOverview.welcome.title}</h2>
@@ -672,129 +647,94 @@ export function GrowthCoursePage() {
                 <p className="text-lg font-medium text-indigo-700">{growthCourseOverview.conclusion.cta}</p>
               </div>
             </div>
-          </motion.div>
-        ) : (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-white rounded-xl shadow-md p-8 mb-8 border border-gray-200"
-          >
-            <div className="flex items-center mb-4">
-              {currentModule.order === 0 && <Target className="w-8 h-8 text-indigo-600 mr-3" />}
-              {currentModule.order === 1 && <Lightbulb className="w-8 h-8 text-indigo-600 mr-3" />}
-              {currentModule.order === 2 && <Rocket className="w-8 h-8 text-indigo-600 mr-3" />}
-              {currentModule.order === 3 && <Settings className="w-8 h-8 text-indigo-600 mr-3" />}
-              {currentModule.order === 4 && <Users className="w-8 h-8 text-indigo-600 mr-3" />}
-              {currentModule.order === 5 && <BarChart className="w-8 h-8 text-indigo-600 mr-3" />}
-              <h2 className="text-2xl font-bold text-gray-900">{currentModule.title}</h2>
-            </div>
-            <p className="text-gray-600 mb-6 text-lg">{currentModule.description}</p>
-            
-            <div className="prose prose-indigo max-w-none prose-headings:text-indigo-900 prose-headings:font-bold prose-p:text-gray-700 prose-strong:text-gray-900 prose-strong:font-semibold prose-li:text-gray-700">
-              <ReactMarkdown>{currentModule.content}</ReactMarkdown>
-            </div>
-            
-            {/* Render formatted sections for growth mindset module */}
-            {currentModule.id === 'growth-mindset' && currentModule.sections && (
-              <div className="mt-8 space-y-10">
-                {currentModule.sections.map((section, index) => (
-                  <div key={index} className="space-y-4">
-                    {section.type === 'welcome' && (
-                      <>
-                        <h2 className="text-2xl font-bold text-indigo-900 mt-6">{section.title}</h2>
-                        <p className="text-lg text-gray-700 leading-relaxed">{section.content}</p>
-                      </>
-                    )}
-                    
-                    {section.type === 'section' && (
-                      <>
-                        <h2 className="text-2xl font-bold text-indigo-900 mt-6">{section.title}</h2>
-                        <p className="text-lg text-gray-700 leading-relaxed">{section.content}</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                          {section.items.map((item, itemIndex) => (
-                            <div key={itemIndex} className="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm hover:shadow-md transition-shadow duration-200">
-                              <h3 className="font-semibold text-indigo-800 mb-1">{item.title}</h3>
-                              <p className="text-gray-600">{item.description}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                    
-                    {section.type === 'conclusion' && (
-                      <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-xl border border-indigo-100 mt-8">
-                        <h2 className="text-2xl font-bold text-indigo-900 mb-3">{section.title}</h2>
-                        <p className="text-lg text-indigo-800 mb-4">{section.content}</p>
-                        <p className="text-lg font-medium text-indigo-700">{section.cta}</p>
+          )}
+          
+          {/* Render formatted sections for growth mindset module */}
+          {currentModule.id === 'growth-mindset' && currentModule.sections && (
+            <div className="mt-8 space-y-10">
+              {currentModule.sections.map((section, index) => (
+                <div key={index} className="space-y-4">
+                  {section.type === 'welcome' && (
+                    <>
+                      <h2 className="text-2xl font-bold text-indigo-900 mt-6">{section.title}</h2>
+                      <p className="text-lg text-gray-700 leading-relaxed">{section.content}</p>
+                    </>
+                  )}
+                  
+                  {section.type === 'section' && (
+                    <>
+                      <h2 className="text-2xl font-bold text-indigo-900 mt-6">{section.title}</h2>
+                      <p className="text-lg text-gray-700 leading-relaxed">{section.content}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        {section.items.map((item, itemIndex) => (
+                          <div key={itemIndex} className="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm hover:shadow-md transition-shadow duration-200">
+                            <h3 className="font-semibold text-indigo-800 mb-1">{item.title}</h3>
+                            <p className="text-gray-600">{item.description}</p>
+                          </div>
+                        ))}
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </motion.div>
-        )}
+                    </>
+                  )}
+                  
+                  {section.type === 'conclusion' && (
+                    <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-xl border border-indigo-100 mt-8">
+                      <h2 className="text-2xl font-bold text-indigo-900 mb-3">{section.title}</h2>
+                      <p className="text-lg text-indigo-800 mb-4">{section.content}</p>
+                      <p className="text-lg font-medium text-indigo-700">{section.cta}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </motion.div>
         
         {/* Quiz Component */}
-        {!isOverviewPage && renderQuiz()}
+        {renderQuiz()}
         
         {/* Growth Strategy Recommendation */}
-        {!isOverviewPage && renderRecommendation()}
+        {renderRecommendation()}
         
         {/* Checklist Component */}
-        {!isOverviewPage && renderChecklist()}
+        {renderChecklist()}
         
         {/* Tools Component */}
-        {!isOverviewPage && renderTools()}
+        {renderTools()}
         
         {/* Navigation Buttons */}
-        {!isOverviewPage ? (
-          <div className="flex justify-between mt-12 mb-8">
-            <Button
-              variant="outline"
-              onClick={goToPrevModule}
-              disabled={currentModule.order === 0}
-              className={`${currentModule.order === 0 ? 'invisible' : ''} border-2 border-gray-300 hover:bg-gray-50 px-6`}
-            >
-              <ChevronLeft className="w-4 h-4 mr-2" />
-              Previous Module
-            </Button>
-            
-            {currentModule.order < growthCourseModules.length - 1 && (
-              <Button 
-                onClick={goToNextModule}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-md px-6"
-              >
-                Next Module
-                <ChevronRight className="w-4 h-4 ml-2" />
-              </Button>
-            )}
-            
-            {currentModule.order === growthCourseModules.length - 1 && (
-              <Button 
-                onClick={awardCourseCompletion}
-                isLoading={isCompletingCourse}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md px-6"
-              >
-                <Award className="w-5 h-5 mr-2" />
-                Complete Course
-                <CheckCircle className="w-4 h-4 ml-2" />
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="flex justify-center mt-12 mb-8">
+        <div className="flex justify-between mt-12 mb-8">
+          <Button
+            variant="outline"
+            onClick={goToPrevModule}
+            disabled={currentModule.order === 0}
+            className={`${currentModule.order === 0 ? 'invisible' : ''} border-2 border-gray-300 hover:bg-gray-50 px-6`}
+          >
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Previous Module
+          </Button>
+          
+          {currentModule.order < growthCourseModules.length - 1 && (
             <Button 
-              onClick={() => navigate(`/courses/growth/${growthCourseModules[0].id}`)}
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-md px-8 py-3"
+              onClick={goToNextModule}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-md px-6"
             >
-              <Rocket className="w-5 h-5 mr-2" />
-              Start the Course
-              <ArrowRight className="ml-2 w-5 h-5" />
+              Next Module
+              <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
-          </div>
-        )}
+          )}
+          
+          {currentModule.order === growthCourseModules.length - 1 && (
+            <Button 
+              onClick={awardCourseCompletion}
+              isLoading={isCompletingCourse}
+              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md px-6"
+            >
+              <Award className="w-5 h-5 mr-2" />
+              Complete Course
+              <CheckCircle className="w-4 h-4 ml-2" />
+            </Button>
+          )}
+        </div>
       </div>
     </MainLayout>
   );
