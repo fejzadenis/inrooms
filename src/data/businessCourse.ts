@@ -94,7 +94,7 @@ export const businessCourseModules: CourseModule[] = [
       {
         type: 'welcome',
         title: 'Welcome to Start to Form: Your Business Formation Journey',
-        content: 'This comprehensive course will guide you through the process of legally forming your business. By the end, you'll have chosen the right business structure, filed your entity, and set up the essential foundations for long-term success.'
+        content: 'This comprehensive course will guide you through the process of legally forming your business. By the end, you will have chosen the right business structure, filed your entity, and set up the essential foundations for long-term success.'
       },
       {
         type: 'section',
