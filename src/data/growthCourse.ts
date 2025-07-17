@@ -46,12 +46,12 @@ export interface CourseModule {
 
 export const growthCourseModules: CourseModule[] = [
   {
-    id: 'growth-mindset',
+    id: 'orientation',
     title: 'Growth Mindset',
     description: 'Understanding the fundamentals of strategic scaling',
     order: 0,
-    content: `# Growth Mindset – What Scale Really Means
-
+    title: 'Course Overview',
+    description: 'Understand the growth journey and set your objectives',
 ## Welcome to Build to Scale: Your Growth Journey
 
 Now that you've formed your business, it is time to grow it strategically. This comprehensive course will guide you through the essential frameworks and systems needed to scale sustainably. By the end, you'll have a clear growth strategy, validated product-market fit, and the operational foundation to handle increased demand.
@@ -343,28 +343,115 @@ Operational excellence and efficiency drive competitive advantage and enable sus
 
 ## Choosing Your Primary Growth Model
 
-Most successful companies use a hybrid approach, but typically have one primary growth model. The right model for your business depends on:
+# Build to Scale: Your Growth Playbook
 
-1. **Your product complexity**: Higher complexity often requires more sales involvement
+Welcome to your comprehensive guide to sustainable business growth. This course will help you develop a strategic approach to scaling your business, from validating product-market fit to building efficient systems and processes.
 2. **Average contract value**: Higher ACVs justify more sales resources
-3. **Target market**: B2C vs. B2B, enterprise vs. SMB
+## What You'll Learn
 4. **Customer acquisition cost**: How much can you afford to spend to acquire a customer?
-5. **Time to value**: How quickly can users experience value?
+Throughout this course, you'll learn how to:
 
-In the next module, we'll help you validate your product-market fit, which is the essential foundation for any growth strategy.
+- Validate and strengthen your product-market fit
+- Design a repeatable, scalable growth engine
+- Build systems that can handle 10x growth
+- Create a data-driven culture of experimentation
+- Develop a sustainable growth strategy
 
-## Before You Continue
+## Course Structure
 
-Take a moment to reflect on your current situation:
+This course is divided into six comprehensive modules:
 
-- **Current State**: What's working well? What\'s breaking as you grow?
-- **Growth Goals**: Where do you want to be in 12-18 months?
-- **Resource Constraints**: What are your biggest limitations (time, money, people)?
-- **Risk Tolerance**: How fast do you want to grow vs. how stable do you want to be?
-- **Market Opportunity**: How big is your addressable market really?
+1. **Course Overview**: Understanding the growth journey
+2. **Growth Mindset**: Developing the right approach to sustainable growth
+3. **Product-Market Fit**: Validating and strengthening your market position
+4. **Growth Engine Design**: Building your customer acquisition system
+5. **Scaling Operations**: Creating systems that can handle rapid growth
+6. **Data-Driven Culture**: Implementing metrics and experimentation
 
-Your growth journey starts here. Let's turn your formed business into a scalable growth machine that can handle whatever comes next.
+Each module includes practical exercises, tools, and frameworks you can apply immediately to your business.
 `,
+    sections: [
+      {
+        type: 'welcome',
+        title: 'Welcome to Build to Scale: Your Growth Playbook',
+        content: 'This comprehensive course will guide you through the process of strategically scaling your business. By the end, you'll have a clear growth strategy, scalable systems, and the tools to build a data-driven organization.'
+      },
+      {
+        type: 'section',
+        title: 'Why Growth Strategy Matters',
+        content: 'A strategic approach to growth is about more than just increasing revenue—it's about:',
+        items: [
+          {
+            title: 'Sustainable Scaling',
+            description: 'Building systems that can grow without breaking down or sacrificing quality.'
+          },
+          {
+            title: 'Resource Efficiency',
+            description: 'Maximizing your return on investment for every dollar and hour spent.'
+          },
+          {
+            title: 'Market Positioning',
+            description: 'Establishing a strong, defensible position in your market.'
+          },
+          {
+            title: 'Team Alignment',
+            description: 'Getting everyone moving in the same direction with clear objectives.'
+          }
+        ]
+      },
+      {
+        type: 'section',
+        title: 'What You'll Learn',
+        content: 'Throughout this course, you'll develop practical skills in:',
+        items: [
+          {
+            title: 'Growth Strategy',
+            description: 'Designing a comprehensive plan for sustainable business growth.'
+          },
+          {
+            title: 'Customer Acquisition',
+            description: 'Building repeatable systems to attract and convert customers.'
+          },
+          {
+            title: 'Operational Scaling',
+            description: 'Creating processes that maintain quality while handling increased volume.'
+          },
+          {
+            title: 'Data-Driven Decision Making',
+            description: 'Using metrics and experimentation to guide your growth journey.'
+          }
+        ]
+      },
+      {
+        type: 'section',
+        title: 'How to Get the Most from This Course',
+        content: 'To maximize your learning experience:',
+        items: [
+          {
+            title: 'Complete All Exercises',
+            description: 'The practical applications will help you implement concepts immediately.'
+          },
+          {
+            title: 'Use the Tools Provided',
+            description: 'Each module includes frameworks and templates you can apply to your business.'
+          },
+          {
+            title: 'Track Your Progress',
+            description: 'Set goals for implementation and measure your results along the way.'
+          },
+          {
+            title: 'Revisit Modules as Needed',
+            description: 'As your business evolves, different strategies may become more relevant.'
+          }
+        ]
+      },
+      {
+        type: 'conclusion',
+        title: 'Ready to Scale Your Business?',
+        content: 'This course will provide you with a comprehensive framework for sustainable growth, from validating product-market fit to building scalable systems and processes.',
+        cta: 'Let's begin your growth journey!'
+      }
+    ],
     quiz: {
       title: 'Growth Strategy Assessment',
       description: 'Answer these questions to help determine your optimal growth strategy',

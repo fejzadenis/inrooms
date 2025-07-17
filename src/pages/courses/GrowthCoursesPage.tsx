@@ -226,7 +226,7 @@ export function GrowthCoursesPage() {
             {growthCourseModules.map((module) => (
               <motion.div
                 whileHover={{ x: 5 }}
-                transition={{ duration: 0.2 }}
+            <Link to="/courses/growth/orientation">
                 key={module.id} 
                 onClick={() => navigate(`/courses/growth/${module.id}`)}
                 className="cursor-pointer"
