@@ -30,7 +30,8 @@ import { toast } from 'react-hot-toast';
 import { doc, updateDoc, arrayUnion, increment } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import ReactMarkdown from 'react-markdown';
-import { motion } from 'framer-motion';
+import { motion } from 'framer-motion'; 
+import { growthCourseOverview } from '../../data/growthCourse';
 
 export function GrowthCoursePage() {
   const { moduleId } = useParams();
@@ -616,6 +617,37 @@ export function GrowthCoursePage() {
           <div className="prose prose-indigo max-w-none prose-headings:text-indigo-900 prose-headings:font-bold prose-p:text-gray-700 prose-strong:text-gray-900 prose-strong:font-semibold prose-li:text-gray-700">
             <ReactMarkdown>{currentModule.content}</ReactMarkdown>
           </div>
+          
+          {/* Render formatted sections for orientation module */}
+          {currentModule.id === 'orientation' && (
+            <div className="mt-8 space-y-10">
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold text-indigo-900 mt-6">{growthCourseOverview.welcome.title}</h2>
+                <p className="text-lg text-gray-700 leading-relaxed">{growthCourseOverview.welcome.content}</p>
+              </div>
+              
+              {growthCourseOverview.sections.map((section, index) => (
+                <div key={index} className="space-y-4">
+                  <h2 className="text-2xl font-bold text-indigo-900 mt-6">{section.title}</h2>
+                  <p className="text-lg text-gray-700 leading-relaxed">{section.content}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    {section.items.map((item, itemIndex) => (
+                      <div key={itemIndex} className="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <h3 className="font-semibold text-indigo-800 mb-1">{item.title}</h3>
+                        <p className="text-gray-600">{item.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              
+              <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-xl border border-indigo-100 mt-8">
+                <h2 className="text-2xl font-bold text-indigo-900 mb-3">{growthCourseOverview.conclusion.title}</h2>
+                <p className="text-lg text-indigo-800 mb-4">{growthCourseOverview.conclusion.content}</p>
+                <p className="text-lg font-medium text-indigo-700">{growthCourseOverview.conclusion.cta}</p>
+              </div>
+            </div>
+          )}
           
           {/* Render formatted sections for growth mindset module */}
           {currentModule.id === 'growth-mindset' && currentModule.sections && (
