@@ -41,6 +41,9 @@ import { BusinessCourseOverview } from './pages/courses/BusinessCourseOverview';
 import { GrowthCoursesPage } from './pages/courses/GrowthCoursesPage';
 import { GrowthCoursePage } from './pages/courses/GrowthCoursePage';
 import { GrowthCourseOverview } from './pages/courses/GrowthCourseOverview';
+import { OperateCoursesPage } from './pages/courses/OperateCoursesPage';
+import { OperateCoursePage } from './pages/courses/OperateCoursePage';
+import { OperateCourseOverview } from './pages/courses/OperateCourseOverview';
 
 
 function App() {
@@ -79,6 +82,9 @@ function App() {
             <Route path="/courses/growth" element={<GrowthCoursesPage />} />
            <Route path="/courses/growth/overview" element={<GrowthCourseOverview />} />
             <Route path="/courses/growth/:moduleId" element={<GrowthCoursePage />} />
+            <Route path="/courses/operate" element={<OperateCoursesPage />} />
+            <Route path="/courses/operate/overview" element={<OperateCourseOverview />} />
+            <Route path="/courses/operate/:moduleId" element={<OperateCoursePage />} />
             <Route
               path="/profile"
               element={
