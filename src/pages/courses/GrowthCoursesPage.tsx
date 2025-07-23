@@ -269,6 +269,32 @@ export function GrowthCoursesPage() {
           </div>
         </motion.div>
         
+        {/* Next Course Teaser */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+          className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-8 border border-emerald-200 shadow-sm"
+        >
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <div className="flex items-center">
+                <Settings className="w-6 h-6 text-emerald-600 mr-2" />
+                <h3 className="text-xl font-bold text-gray-900">Ready for the next step?</h3>
+              </div>
+              <p className="text-gray-700 mt-2">
+                After scaling your business, learn how to operate it efficiently with our Business Operations course.
+              </p>
+            </div>
+            <Link to="/courses/operate">
+              <Button className="whitespace-nowrap bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700">
+                <Settings className="w-5 h-5 mr-2" />
+                Explore Operations Course
+              </Button>
+            </Link>
+          </div>
+        </motion.div>
+        
         {/* Benefits Section */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
