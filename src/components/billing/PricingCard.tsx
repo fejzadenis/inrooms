@@ -218,12 +218,12 @@ export function PricingCard({
             </span>
           </li>
         ))}
+      </ul>
 
       <div className="space-y-3">
         <Button
           onClick={handleAction}
           disabled={isCurrentPlan || loading}
-          isLoading={loading && selectedPlan?.id === plan.id}
           isLoading={loading && selectedPlan?.id === plan.id}
           className={`w-full ${
             plan.isCustom
@@ -239,8 +239,6 @@ export function PricingCard({
                Request Quote
                <ArrowRight className="w-4 h-4 ml-2" />
              </>
-           ) : loading && selectedPlan?.id === plan.id ? (
-             'Processing...'
            ) : loading && selectedPlan?.id === plan.id ? (
              'Processing...'
            ) : (
@@ -264,6 +262,5 @@ export function PricingCard({
         )}
       </div>
     </div>
-      <ul className="space-y-3 mb-8">
   );
 }
