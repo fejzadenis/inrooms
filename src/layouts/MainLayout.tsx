@@ -107,7 +107,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const navigationItems = [
     { name: 'Events', href: '/events', dataTour: 'events' },
     { name: 'Network', href: '/network', dataTour: 'network' },
-    { name: 'Courses', href: '/courses/business-formation', dataTour: 'courses' },
+    { name: 'Courses', href: '/courses', dataTour: 'courses' },
     { name: 'Product Showcase', href: '/solutions', dataTour: 'solutions' },
     { name: 'FAQ', href: '/faq', dataTour: 'resources' },
     { name: 'Reputation', href: '/reputation', dataTour: 'reputation' }
@@ -146,7 +146,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                       key={item.name}
                       to={item.href} 
                       className={`text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium ${
-                        location.pathname === item.href ? 'text-indigo-600 font-semibold' : ''
+                        location.pathname === item.href || (item.href === '/courses' && location.pathname.startsWith('/courses')) ? 'text-indigo-600 font-semibold' : ''
                       }`}
                       data-tour={item.dataTour}
                     >
@@ -322,7 +322,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                   key={item.name}
                   to={item.href}
                   className={`block px-3 py-2 rounded-md text-base font-medium ${
-                    location.pathname === item.href
+                    location.pathname === item.href || (item.href === '/courses' && location.pathname.startsWith('/courses'))
                       ? 'bg-indigo-50 text-indigo-600'
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                   }`}

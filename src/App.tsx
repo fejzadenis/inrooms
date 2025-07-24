@@ -44,6 +44,7 @@ import { GrowthCourseOverview } from './pages/courses/GrowthCourseOverview';
 import { OperateCoursesPage } from './pages/courses/OperateCoursesPage';
 import { OperateCoursePage } from './pages/courses/OperateCoursePage';
 import { OperateCourseOverview } from './pages/courses/OperateCourseOverview';
+import { CoursesPage } from './pages/courses/CoursesPage';
 
 
 function App() {
@@ -76,6 +77,7 @@ function App() {
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
             <Route path="/refund-policy" element={<RefundPolicyPage />} />
             <Route path="/terms" element={<TermsPage />} />
+            <Route path="/courses" element={<CoursesPage />} />
             <Route path="/courses/business-formation" element={<BusinessCoursesPage />} />
             <Route path="/courses/business-formation/:moduleId" element={<BusinessFormationCourse />} />
            <Route path="/courses/business-formation/overview" element={<BusinessCourseOverview />} />
