@@ -470,15 +470,14 @@ export function CoursesPage() {
                             </span>
                           </div>
                         )
-                      )}
-                          <Button 
-                            onClick={() => navigate(course.path)}
-                            size="sm"
-                            className={`bg-gradient-to-r ${course.color} hover:opacity-90`}
-                          >
-                            {index === 0 && !progress.business?.courseCompleted ? 'Start Here' : 'Begin Course'}
-                          </Button>
-                        )}
+                        
+                        <Button 
+                          onClick={() => navigate(course.path)}
+                          size="sm"
+                          className={`bg-gradient-to-r ${course.color} hover:opacity-90`}
+                        >
+                          {index === 0 && !progress.business?.courseCompleted ? 'Start Here' : 'Begin Course'}
+                        </Button>
                       </div>
                     </div>
                   </div>
