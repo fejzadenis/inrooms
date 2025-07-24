@@ -25,13 +25,11 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { motion } from 'framer-motion';
-import { useAuth } from '../../contexts/AuthContext';
 
 export function CoursesPage() {
   const navigate = useNavigate();
   const [progress, setProgress] = React.useState<Record<string, any>>({});
   
-  const { user } = useAuth();
   // Load progress from localStorage for all courses
   React.useEffect(() => {
     const businessProgress = localStorage.getItem('businessCourseProgress');
@@ -63,7 +61,6 @@ export function CoursesPage() {
       level: 'Beginner',
       badge: 'Business Founder',
       skills: ['Entity Selection', 'Legal Filing', 'Compliance', 'Business Setup'],
-      creditsRequired: 1,
       outcomes: [
         'Choose the right business structure',
         'Complete all necessary filings',
@@ -90,7 +87,6 @@ export function CoursesPage() {
       level: 'Intermediate',
       badge: 'Growth Strategist',
       skills: ['Growth Strategy', 'Product-Market Fit', 'Team Building', 'Analytics'],
-      creditsRequired: 1,
       outcomes: [
         'Validate product-market fit',
         'Build a scalable growth engine',
@@ -117,7 +113,6 @@ export function CoursesPage() {
       level: 'Advanced',
       badge: 'Operations Expert',
       skills: ['Operations', 'Financial Management', 'Leadership', 'Risk Management'],
-      creditsRequired: 1,
       outcomes: [
         'Build strong operational foundations',
         'Master financial health and forecasting',
@@ -171,10 +166,6 @@ export function CoursesPage() {
   const recommendedCourse = getRecommendedCourse();
   const completedCourses = courses.filter(course => course.isCompleted).length;
 
-  const courseCreditsUsed = user?.subscription?.courseCreditsUsed || 0;
-  const courseCreditsQuota = user?.subscription?.courseCreditsQuota || 0;
-  const isUnlimitedCredits = courseCreditsQuota === 999;
-
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto space-y-16">
@@ -223,16 +214,6 @@ export function CoursesPage() {
                 <div className="text-2xl font-bold text-white">15+</div>
                 <div className="text-white/80">Hours of Content</div>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                <div className="text-2xl font-bold text-white">
-                  {isUnlimitedCredits ? 'Unlimited' : `${courseCreditsQuota - courseCreditsUsed}`}
-                </div>
-                <div className="text-white/80">
-                  {isUnlimitedCredits ? 'Course Credits' : 'Credits Remaining'}
-                </div>
-              </div>
-
-
             </div>
             
             <Button 
@@ -457,20 +438,6 @@ export function CoursesPage() {
                             <span className="text-sm font-medium">Completed</span>
                           </div>
                         ) : (
-                        course.creditsRequired > 0 && courseCreditsUsed >= courseCreditsQuota && !isUnlimitedCredits ? (
-                          <div className="flex items-center justify-center text-red-700 bg-red-100 px-3 py-2 rounded-lg">
-                            <DollarSign className="w-4 h-4 mr-2" />
-                            <span className="text-sm font-medium">Upgrade to Access</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center text-blue-700 bg-blue-100 px-3 py-2 rounded-lg">
-                            <Clock className="w-4 h-4 mr-2" />
-                            <span className="text-sm font-medium">
-                              {course.creditsRequired} Credit{course.creditsRequired > 1 ? 's' : ''}
-                            </span>
-                          </div>
-                        )
-                      )}
                           <Button 
                             onClick={() => navigate(course.path)}
                             size="sm"

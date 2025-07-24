@@ -1,9 +1,11 @@
 import React from 'react';
 import { toast } from 'react-hot-toast';
 import { MainLayout } from '../../layouts/MainLayout';
-import { useAuth } from '../../contexts/AuthContext'; // Keep useAuth
-import { Calendar, BookOpen, ArrowRight } from 'lucide-react'; // Add icons
-import { Link } from 'react-router-dom'; // Add Link
+import { EventCard } from '../../components/common/EventCard';
+import { useAuth } from '../../contexts/AuthContext';
+import { eventService, type Event } from '../../services/eventService';
+import { supabase } from '../../config/supabase';
+import { generateCalendarEvent } from '../../utils/calendar';
 
 export function DashboardPage() {
   const { user } = useAuth();
@@ -12,8 +14,8 @@ export function DashboardPage() {
   const [loading, setLoading] = React.useState(true);
   const [subscriptionData, setSubscriptionData] = React.useState<{
     status: string;
-    courseCreditsQuota: number;
-    courseCreditsUsed: number;
+    eventsQuota: number;
+    eventsUsed: number;
     trialEndsAt?: Date;
   } | null>(null);
 
@@ -45,7 +47,7 @@ export function DashboardPage() {
       
       // Try using the RPC function first
       const { data: rpcData, error: rpcError } = await supabase
-        .rpc('get_user_subscription_details', { user_id_param: userIdString }); // Assuming a new RPC for subscription details
+        .rpc('get_user_subscription', { user_id: userIdString });
       
       if (!rpcError && rpcData && rpcData.length > 0) {
         console.log("DASHBOARD DEBUG: RPC returned subscription data:", rpcData[0]);
@@ -53,8 +55,8 @@ export function DashboardPage() {
         
         setSubscriptionData({
           status: subscriptionData.subscription_status || 'inactive',
-          courseCreditsQuota: subscriptionData.subscription_course_credits_quota || 0,
-          courseCreditsUsed: subscriptionData.subscription_course_credits_used || 0,
+          eventsQuota: subscriptionData.subscription_events_quota || 0,
+          eventsUsed: subscriptionData.subscription_events_used || 0,
           trialEndsAt: subscriptionData.subscription_trial_ends_at ? new Date(subscriptionData.subscription_trial_ends_at) : undefined
         });
       } else {
@@ -65,7 +67,7 @@ export function DashboardPage() {
       
       // Try using the RPC function first
       const { data: rpcData, error: rpcError } = await supabase
-        .rpc('get_user_subscription_details', { user_id_param: userIdString }); // Assuming a new RPC for subscription details
+        .rpc('get_user_subscription', { user_id: userIdString });
       
       if (!rpcError && rpcData && rpcData.length > 0) {
         console.log("DASHBOARD DEBUG: RPC returned subscription data:", rpcData[0]);
@@ -73,8 +75,8 @@ export function DashboardPage() {
         
         setSubscriptionData({
           status: subscriptionData.subscription_status || 'inactive',
-          courseCreditsQuota: subscriptionData.subscription_course_credits_quota || 0,
-          courseCreditsUsed: subscriptionData.subscription_course_credits_used || 0,
+          eventsQuota: subscriptionData.subscription_events_quota || 0,
+          eventsUsed: subscriptionData.subscription_events_used || 0,
           trialEndsAt: subscriptionData.subscription_trial_ends_at ? new Date(subscriptionData.subscription_trial_ends_at) : undefined
         });
       } else {
@@ -82,8 +84,8 @@ export function DashboardPage() {
         console.log("DASHBOARD DEBUG: RPC failed, falling back to direct query. Error:", rpcError);
         
       const { data: userData, error: userError } = await supabase
-        .from('users') // Assuming 'users' is the table where subscription data is stored
-        .select('subscription_status, subscription_course_credits_quota, subscription_course_credits_used, subscription_trial_ends_at')
+        .from('users')
+        .select('subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at')
         .eq('id', userIdString)
         .maybeSingle();
         
@@ -93,8 +95,8 @@ export function DashboardPage() {
         // Store the subscription data
         setSubscriptionData({
           status: userData.subscription_status || 'inactive',
-          courseCreditsQuota: userData.subscription_course_credits_quota || 0,
-          courseCreditsUsed: userData.subscription_course_credits_used || 0,
+          eventsQuota: userData.subscription_events_quota || 0,
+          eventsUsed: userData.subscription_events_used || 0,
           trialEndsAt: userData.subscription_trial_ends_at ? new Date(userData.subscription_trial_ends_at) : undefined
         });
       } else {
@@ -103,9 +105,15 @@ export function DashboardPage() {
       }
       }
       
-      // Events are coming soon, so no need to load them
-      setUpcomingEvents([]); 
-      setRegisteredEvents([]);
+      // Load user's registered events
+      const registrations = await eventService.getUserRegistrations(user.id);
+      const registeredEventIds = registrations.map(reg => reg.eventId);
+      setRegisteredEvents(registeredEventIds);
+
+      // Load all upcoming events
+      const allEvents = await eventService.getEvents();
+      const upcoming = allEvents.filter(event => event.date > new Date());
+      setUpcomingEvents(upcoming);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
       toast.error('Failed to load dashboard data');
@@ -139,7 +147,7 @@ export function DashboardPage() {
       
       const result = await supabase
         .from('users')
-        .select('subscription_status, subscription_course_credits_quota, subscription_course_credits_used')
+        .select('subscription_status, subscription_events_quota, subscription_events_used')
         .eq('id', userIdString)
         .maybeSingle();
         
@@ -149,13 +157,15 @@ export function DashboardPage() {
       console.log("DASHBOARD DEBUG: Direct query result:", userData, userError);
     }
       
-    const courseCreditsUsed = userData?.subscription_course_credits_used || user.subscription.courseCreditsUsed;
-    const courseCreditsQuota = userData?.subscription_course_credits_quota || user.subscription.courseCreditsQuota;
+    const eventsUsed = userData?.subscription_events_used || user.subscription.eventsUsed;
+    const eventsQuota = userData?.subscription_events_quota || user.subscription.eventsQuota;
     
-    console.log("DASHBOARD DEBUG: Current usage:", courseCreditsUsed, "/", courseCreditsQuota);
+    console.log("DASHBOARD DEBUG: Current usage:", eventsUsed, "/", eventsQuota);
     
-    if (courseCreditsUsed >= courseCreditsQuota) {
-      toast.error('You have used all your course credits. Please upgrade your subscription to access more courses.');
+    console.log("DASHBOARD DEBUG: Current usage:", eventsUsed, "/", eventsQuota);
+    
+    if (eventsUsed >= eventsQuota) {
+      toast.error('You have reached your event quota. Please upgrade your subscription.');
       return;
     }
 
@@ -227,75 +237,10 @@ export function DashboardPage() {
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Events Remaining</span>
               <span className="text-lg font-medium text-gray-900">
-                {subscriptionData // Use courseCreditsQuota and courseCreditsUsed
-                  ? `${Math.max(0, subscriptionData.courseCreditsQuota - subscriptionData.courseCreditsUsed)} / ${subscriptionData.courseCreditsQuota}`
-                  : user?.subscription
-                    ? `${Math.max(0, user.subscription.courseCreditsQuota - user.subscription.courseCreditsUsed)} / ${user.subscription.courseCreditsQuota}`
-                    : '0 / 0'
-                }
-              </span>
-            </div>
-            <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-indigo-600 h-2 rounded-full"
-                style={{
-                  width: `${(() => {
-                    // Calculate percentage with safety checks
-                    if (subscriptionData && subscriptionData.courseCreditsQuota > 0) {
-                      return Math.min(100, (subscriptionData.courseCreditsUsed / subscriptionData.courseCreditsQuota) * 100);
-                    } else if (user?.subscription && user.subscription.courseCreditsQuota > 0) {
-                      return Math.min(100, (user.subscription.courseCreditsUsed / user.subscription.courseCreditsQuota) * 100);
-                    } else {
-                      return 0;
-                    }
-                  })()}%`
-                }}
-              />
-            </div>
-            <div className="mt-2 text-sm text-gray-500">
-              Subscription Status: <span className="capitalize font-medium">{subscriptionData?.status || user?.subscription.status}</span>
-              {subscriptionData?.trialEndsAt && subscriptionData.status === 'trial' && (
-                <span className="ml-2 text-blue-600">
-                  (Ends {subscriptionData.trialEndsAt.toLocaleDateString()})
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Upcoming Events (Coming Soon)</h2>
-            <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-              <Calendar className="w-16 h-16 text-indigo-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900">Events are on their way!</h3>
-              <p className="text-gray-500 mt-2">
-                We're working hard to bring you exciting new networking opportunities. Check back soon!
-              </p>
-              <Link to="/courses">
-                <Button className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Explore Our Courses
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
-
-  return (
-    <MainLayout>
-      <div className="space-y-6">
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-2xl font-semibold text-gray-900">Your Subscription</h2>
-          <div className="mt-4">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Course Credits Remaining</span>
-              <span className="text-lg font-medium text-gray-900">
                 {subscriptionData
-                  ? `${Math.max(0, subscriptionData.courseCreditsQuota - subscriptionData.courseCreditsUsed)} / ${subscriptionData.courseCreditsQuota}`
+                  ? `${Math.max(0, subscriptionData.eventsQuota - subscriptionData.eventsUsed)} / ${subscriptionData.eventsQuota}`
                   : user?.subscription
-                    ? `${Math.max(0, user.subscription.courseCreditsQuota - user.subscription.courseCreditsUsed)} / ${user.subscription.courseCreditsQuota}`
+                    ? `${Math.max(0, user.subscription.eventsQuota - user.subscription.eventsUsed)} / ${user.subscription.eventsQuota}`
                     : '0 / 0'
                 }
               </span>
@@ -306,10 +251,10 @@ export function DashboardPage() {
                 style={{
                   width: `${(() => {
                     // Calculate percentage with safety checks
-                    if (subscriptionData && subscriptionData.courseCreditsQuota > 0) {
-                      return Math.min(100, (subscriptionData.courseCreditsUsed / subscriptionData.courseCreditsQuota) * 100);
-                    } else if (user?.subscription && user.subscription.courseCreditsQuota > 0) {
-                      return Math.min(100, (user.subscription.courseCreditsUsed / user.subscription.courseCreditsUsed) * 100);
+                    if (subscriptionData && subscriptionData.eventsQuota > 0) {
+                      return Math.min(100, (subscriptionData.eventsUsed / subscriptionData.eventsQuota) * 100);
+                    } else if (user?.subscription && user.subscription.eventsQuota > 0) {
+                      return Math.min(100, (user.subscription.eventsUsed / user.subscription.eventsQuota) * 100);
                     } else {
                       return 0;
                     }
@@ -326,23 +271,33 @@ export function DashboardPage() {
               )}
             </div>
           </div>
+        </div>
 
-          <div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Upcoming Events (Coming Soon)</h2>
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Upcoming Events</h2>
+          {upcomingEvents.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-              <Calendar className="w-16 h-16 text-indigo-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900">Events are on their way!</h3>
-              <p className="text-gray-500 mt-2">
-                We're working hard to bring you exciting new networking opportunities. Check back soon!
-              </p>
-              <Link to="/courses">
-                <Button className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Explore Our Courses
-                </Button>
+              <h3 className="text-lg font-medium text-gray-900">No upcoming events</h3>
               <p className="text-gray-500 mt-2">Check back later for new networking opportunities</p>
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {upcomingEvents.slice(0, 6).map((event) => (
+                <EventCard
+                  key={event.id}
+                  title={event.title}
+                  description={event.description}
+                  date={event.date}
+                  maxParticipants={event.maxParticipants}
+                  currentParticipants={event.currentParticipants}
+                  meetLink={event.meetLink}
+                  isRegistered={registeredEvents.includes(event.id!)}
+                  onRegister={() => handleRegister(event.id!)}
+                  onJoin={() => handleJoinMeeting(event.meetLink!)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </MainLayout>

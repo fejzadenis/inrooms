@@ -27,8 +27,8 @@ export function BillingPage() {
   const [selectedAddOns, setSelectedAddOns] = React.useState<string[]>([]);
   const [subscriptionData, setSubscriptionData] = React.useState<{
     status: string;
-    courseCreditsQuota: number;
-    courseCreditsUsed: number;
+    eventsQuota: number;
+    eventsUsed: number;
     trialEndsAt?: Date;
     stripeSubscriptionStatus?: string;
     stripeCurrentPeriodEnd?: Date;
@@ -92,8 +92,8 @@ export function BillingPage() {
           console.info('[Subscription] Fallback query returned data:', userData);
           setSubscriptionData({
             status: userData.subscription_status || 'inactive',
-            courseCreditsQuota: userData.subscription_events_quota || 0,
-            courseCreditsUsed: userData.subscription_events_used || 0,
+            eventsQuota: userData.subscription_events_quota || 0,
+            eventsUsed: userData.subscription_events_used || 0,
             trialEndsAt: userData.subscription_trial_ends_at ? new Date(userData.subscription_trial_ends_at) : undefined,
             stripeSubscriptionStatus: userData.stripe_subscription_status,
             stripeCurrentPeriodEnd: userData.stripe_current_period_end ? new Date(userData.stripe_current_period_end) : undefined
@@ -105,8 +105,8 @@ export function BillingPage() {
             console.info('[Subscription] Using user.subscription as fallback:', user.subscription);
             setSubscriptionData({
               status: user.subscription.status,
-              courseCreditsQuota: user.subscription.courseCreditsQuota,
-              courseCreditsUsed: user.subscription.courseCreditsUsed
+              eventsQuota: user.subscription.eventsQuota,
+              eventsUsed: user.subscription.eventsUsed
             });
           }
         }
@@ -117,8 +117,8 @@ export function BillingPage() {
         
         setSubscriptionData({
           status: subscriptionData.subscription_status || 'inactive',
-          courseCreditsQuota: subscriptionData.subscription_course_credits_quota || 0,
-          courseCreditsUsed: subscriptionData.subscription_course_credits_used || 0,
+          eventsQuota: subscriptionData.subscription_events_quota || 0,
+          eventsUsed: subscriptionData.subscription_events_used || 0,
           trialEndsAt: subscriptionData.subscription_trial_ends_at ? new Date(subscriptionData.subscription_trial_ends_at) : undefined,
           stripeSubscriptionStatus: subscriptionData.stripe_subscription_status,
           stripeCurrentPeriodEnd: subscriptionData.stripe_current_period_end ? new Date(subscriptionData.stripe_current_period_end) : undefined
@@ -130,8 +130,8 @@ export function BillingPage() {
           console.info('[Subscription] Using user.subscription as fallback:', user.subscription);
           setSubscriptionData({
             status: user.subscription.status,
-            courseCreditsQuota: user.subscription.courseCreditsQuota,
-            courseCreditsUsed: user.subscription.courseCreditsUsed
+            eventsQuota: user.subscription.eventsQuota,
+            eventsUsed: user.subscription.eventsUsed
           });
         }
       }
@@ -170,11 +170,11 @@ export function BillingPage() {
   const currentPlan = React.useMemo(() => {
     if (!user?.subscription && !subscriptionData) return null;
   
-    const courseCredits = subscriptionData?.courseCreditsQuota || user.subscription?.courseCreditsQuota;
-    if (!courseCredits) return null;
+    const eventsQuota = subscriptionData?.eventsQuota || user.subscription?.eventsQuota;
+    if (!eventsQuota) return null;
   
     const matchingPlan = stripeService.getMonthlyPlans().find(
-      plan => plan.courseCredits === courseCredits
+      plan => plan.eventsQuota === eventsQuota
     );
   
     return matchingPlan || null;
@@ -457,12 +457,12 @@ export function BillingPage() {
                 )}
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-gray-500">Course Credits Remaining</h3>
+                <h3 className="text-sm font-medium text-gray-500">Events Remaining</h3>
                 <p className="text-lg font-semibold text-gray-900">
                   {subscriptionData 
-                    ? `${Math.max(0, subscriptionData.courseCreditsQuota - subscriptionData.courseCreditsUsed)} / ${subscriptionData.courseCreditsQuota}`
+                    ? `${Math.max(0, subscriptionData.eventsQuota - subscriptionData.eventsUsed)} / ${subscriptionData.eventsQuota}`
                     : user?.subscription 
-                      ? `${Math.max(0, user.subscription.courseCreditsQuota - user.subscription.courseCreditsUsed)} / ${user.subscription.courseCreditsQuota}`
+                      ? `${Math.max(0, user.subscription.eventsQuota - user.subscription.eventsUsed)} / ${user.subscription.eventsQuota}`
                       : '0 / 0'
                   }
                 </p>
@@ -472,10 +472,10 @@ export function BillingPage() {
                     style={{
                       width: `${(() => {
                         // Calculate percentage with safety checks
-                        if (subscriptionData && subscriptionData.courseCreditsQuota > 0) {
-                          return Math.min(100, (subscriptionData.courseCreditsUsed / subscriptionData.courseCreditsQuota) * 100);
-                        } else if (user?.subscription && user.subscription.courseCreditsQuota > 0) {
-                          return Math.min(100, (user.subscription.courseCreditsUsed / user.subscription.courseCreditsQuota) * 100);
+                        if (subscriptionData && subscriptionData.eventsQuota > 0) {
+                          return Math.min(100, (subscriptionData.eventsUsed / subscriptionData.eventsQuota) * 100);
+                        } else if (user?.subscription && user.subscription.eventsQuota > 0) {
+                          return Math.min(100, (user.subscription.eventsUsed / user.subscription.eventsQuota) * 100);
                         } else {
                           return 0;
                         }

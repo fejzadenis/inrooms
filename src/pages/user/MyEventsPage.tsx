@@ -1,6 +1,6 @@
 import React from 'react';
 import { MainLayout } from '../../layouts/MainLayout';
-import { Calendar, BookOpen, ArrowRight } from 'lucide-react'; // Import necessary icons
+import { EventCard } from '../../components/common/EventCard';
 import { useAuth } from '../../contexts/AuthContext';
 import { eventService, type Event } from '../../services/eventService';
 import { toast } from 'react-hot-toast';
@@ -115,17 +115,9 @@ export function MyEventsPage() {
               </h3>
               <p className="text-gray-500 mt-2">
                 {activeTab === 'upcoming' 
-                  ? 'Events are coming soon! Check back later for new networking opportunities.' 
+                  ? 'Register for events to see them here' 
                   : 'Your completed events will appear here'}
               </p>
-              {activeTab === 'upcoming' && (
-                <Link to="/courses">
-                  <Button className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white">
-                    <BookOpen className="w-4 h-4 mr-2" />
-                    Explore Our Courses
-                  </Button>
-                </Link>
-              )}
             </div>
           ) : (
             events[activeTab].map((event) => (

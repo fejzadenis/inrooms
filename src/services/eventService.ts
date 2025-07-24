@@ -121,15 +121,51 @@ export const eventService = {
 
   async registerForEvent(userId: string, eventId: string): Promise<void> {
   try {
-    // Store registration
+    console.log(`[Event Service] Checking quota for user ${userId} for event ${eventId}`);
+    const userIdString = userId.toString();
+
+    // 1. Fetch user's quota usage
+    const { data: userData, error: userFetchError } = await supabase
+      .from('users')
+      .select('subscription_events_used, subscription_events_quota')
+      .eq('id', userIdString)
+      .single();
+
+    if (userFetchError || !userData) {
+      throw new Error(`❌ Failed to fetch user data: ${userFetchError?.message}`);
+    }
+
+    const used = userData.subscription_events_used ?? 0;
+    const quota = userData.subscription_events_quota ?? 0;
+
+    if (used >= quota) {
+      throw new Error('🚫 You have reached your event participation limit.');
+    }
+
+    // 2. Store registration
+    const { error: registrationError } = await supabase
+      .from('registrations')
+      .insert({
+        user_id: userIdString,
+        event_id: eventId,
+        registered_at: new Date().toISOString(),
+      });
+
+    if (registrationError) {
+      throw new Error(`❌ Failed to register user: ${registrationError.message}`);
+    }
+
+    // 3. Increment current_participants in events table
     await incrementEventParticipants(eventId);
-    
-    // Update current_participants in events table
-    const { error: updateEventError } = await supabase.rpc('increment_event_participants', { event_id_param: eventId });
+    const { error: updateEventError } = await supabase
+      .from('events')
+      .update({ current_participants: supabase.rpc('increment_by_one') })
+      .eq('id', eventId);
 
     if (updateEventError) {
-      console.error(`❌ Failed to update event participants via RPC: ${updateEventError.message}`);
-      // Fallback to direct update if RPC fails or is not available
+      console.error(`❌ Failed to update event participants: ${updateEventError.message}`);
+      
+      // Fallback to direct update if RPC fails
       const { data: eventData } = await supabase
         .from('events')
         .select('current_participants')
@@ -149,18 +185,11 @@ export const eventService = {
       }
     }
 
-    // Store registration in Supabase
-    const { error: registrationError } = await supabase
-      .from('registrations')
-      .insert({
-        user_id: userId.toString(),
-        event_id: eventId,
-        registered_at: new Date().toISOString(),
-      });
-
-    if (registrationError) {
-      throw new Error(`❌ Failed to store registration: ${registrationError.message}`);
-    }
+    // 4. Increment user's quota usage
+    const { error: updateUserError } = await supabase
+      .from('users')
+      .update({ subscription_events_used: used + 1 })
+      .eq('id', userIdString);
 
     if (updateUserError) {
       throw new Error(`❌ Failed to update user's used quota: ${updateUserError.message}`);

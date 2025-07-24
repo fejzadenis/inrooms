@@ -987,7 +987,7 @@ export function ProfilePage() {
                         <div className="bg-gray-50 rounded-lg p-3">
                           <p className="text-sm font-medium text-gray-900">Events Attended</p>
                           <p className="text-2xl font-bold text-indigo-600">
-                            {currentUser?.subscription?.courseCreditsUsed || 0} {/* Display course credits used */}
+                            {currentUser?.subscription?.eventsUsed || 0}
                           </p>
                         </div>
                         <div className="bg-gray-50 rounded-lg p-3">
