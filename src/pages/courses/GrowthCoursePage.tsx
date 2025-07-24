@@ -251,7 +251,7 @@ export function GrowthCoursePage() {
     }
 
     return courseCreditsUsed < courseCreditsQuota;
-  }, [user, progress.courseCompleted, currentModule.order]);
+  };
 
   // Render quiz component
   const renderQuiz = () => {

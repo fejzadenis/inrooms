@@ -201,7 +201,8 @@ export function PricingCard({
           {plan.isCustom ? 'Unlimited course credits' : `${plan.courseCredits} course credits per month`}
         </div>
       </div>
-      <ul className="space-y-3 mb-8">
+
+          plan.isRecommended ? 'text-indigo-600' : 
         {plan.features.map((feature, index) => (
           <li key={index} className="flex items-start">
             <Check className={`w-5 h-5 mt-0.5 mr-3 flex-shrink-0 ${
@@ -218,12 +219,14 @@ export function PricingCard({
             </span>
           </li>
         ))}
+      </div>
       </ul>
 
       <div className="space-y-3">
         <Button
           onClick={handleAction}
           disabled={isCurrentPlan || loading}
+          isLoading={loading && selectedPlan?.id === plan.id}
           isLoading={loading && selectedPlan?.id === plan.id}
           className={`w-full ${
             plan.isCustom
@@ -239,6 +242,8 @@ export function PricingCard({
                Request Quote
                <ArrowRight className="w-4 h-4 ml-2" />
              </>
+           ) : loading && selectedPlan?.id === plan.id ? (
+             'Processing...'
            ) : loading && selectedPlan?.id === plan.id ? (
              'Processing...'
            ) : (

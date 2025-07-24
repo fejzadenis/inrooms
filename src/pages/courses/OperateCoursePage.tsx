@@ -250,7 +250,7 @@ export function OperateCoursePage() {
     }
 
     return courseCreditsUsed < courseCreditsQuota;
-  }, [user, progress.courseCompleted]);
+  };
 
   // Render quiz component
   const renderQuiz = () => {

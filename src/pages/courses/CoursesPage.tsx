@@ -231,6 +231,8 @@ export function CoursesPage() {
                   {isUnlimitedCredits ? 'Course Credits' : 'Credits Remaining'}
                 </div>
               </div>
+
+
             </div>
             
             <Button 
@@ -467,15 +469,16 @@ export function CoursesPage() {
                               {course.creditsRequired} Credit{course.creditsRequired > 1 ? 's' : ''}
                             </span>
                           </div>
-                        ))}
-                        
-                        <Button 
-                          onClick={() => navigate(course.path)}
-                          size="sm"
-                          className={`bg-gradient-to-r ${course.color} hover:opacity-90`}
-                        >
-                          {index === 0 && !progress.business?.courseCompleted ? 'Start Here' : 'Begin Course'}
-                        </Button>
+                        )
+                      )}
+                          <Button 
+                            onClick={() => navigate(course.path)}
+                            size="sm"
+                            className={`bg-gradient-to-r ${course.color} hover:opacity-90`}
+                          >
+                            {index === 0 && !progress.business?.courseCompleted ? 'Start Here' : 'Begin Course'}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
