@@ -23,6 +23,7 @@ import {
   Users,
   Settings,
   Zap
+  , Lock
 } from 'lucide-react';
 import { growthCourseModules, growthStrategyInfo, growthStrategyRecommendationInfo } from '../../data/growthCourse';
 import { useAuth } from '../../contexts/AuthContext';
@@ -227,6 +228,29 @@ export function GrowthCoursePage() {
     } finally {
       setIsCompletingCourse(false);
     }
+  };
+
+  // Check if user has access to the course
+  const hasAccess = React.useMemo(() => {
+    if (!user) return false; // Not logged in
+    if (user.role === 'admin') return true; // Admin has full access
+    
+    const courseCompleted = progress.courseCompleted;
+    if (courseCompleted) return true; // Already completed
+
+    const courseCreditsQuota = user.subscription?.courseCreditsQuota || 0;
+    const courseCreditsUsed = user.subscription?.courseCreditsUsed || 0;
+    const isUnlimitedCredits = courseCreditsQuota === 999; // Enterprise plan
+
+    // If user has unlimited credits, they have access
+    if (isUnlimitedCredits) return true;
+
+    // If user has a trial and this is the first module, grant access
+    if (user.subscription?.status === 'trial' && currentModule.order === 0) {
+      return true;
+    }
+
+    return courseCreditsUsed < courseCreditsQuota;
   };
 
   // Render quiz component
@@ -703,6 +727,26 @@ export function GrowthCoursePage() {
             </Button>
           )}
         </div>
+
+        {/* Access Denied Overlay */}
+        {!hasAccess && !progress.courseCompleted && (
+          <div className="absolute inset-0 bg-white bg-opacity-90 flex flex-col items-center justify-center p-8 text-center z-10">
+            <Lock className="w-24 h-24 text-red-400 mb-6" />
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Access Denied</h2>
+            <p className="text-lg text-gray-600 max-w-md mb-8">
+              You have used all your course credits. Please upgrade your subscription to continue learning.
+            </p>
+            <Link to="/subscription">
+              <Button className="bg-red-600 hover:bg-red-700 text-white text-lg px-8 py-3">
+                <CreditCard className="w-5 h-5 mr-2" />
+                Upgrade Your Plan
+              </Button>
+            </Link>
+            <Button variant="outline" onClick={() => navigate('/courses')} className="mt-4">
+              Back to Courses
+            </Button>
+          </div>
+        )}
       </div>
     </MainLayout>
   );

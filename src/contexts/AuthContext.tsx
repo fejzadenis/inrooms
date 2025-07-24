@@ -50,8 +50,8 @@ interface User {
   };
   subscription: {
     status: 'trial' | 'active' | 'inactive';
-    eventsQuota: number;
-    eventsUsed: number;
+    courseCreditsQuota: number;
+    courseCreditsUsed: number;
     trialEndsAt?: Date;
   };
   stripe_customer_id?: string;
@@ -150,8 +150,8 @@ const syncUserToSupabase = async (userData: User): Promise<void> => {
       avatar_url: userData.photoURL || null,
       email_verified: userData.emailVerified,
       subscription_status: userData.subscription.status,
-      subscription_events_quota: userData.subscription.eventsQuota,
-      subscription_events_used: userData.subscription.eventsUsed,
+      subscription_course_credits_quota: userData.subscription.courseCreditsQuota,
+      subscription_course_credits_used: userData.subscription.courseCreditsUsed,
       subscription_trial_ends_at: userData.subscription.trialEndsAt?.toISOString() || null,
       stripe_customer_id: userData.stripe_customer_id || null,
       profile_title: userData.profile?.title || null,
@@ -304,7 +304,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         const { data: supabaseUser, error } = await supabase
           .from('users')
-          .select('*, subscription_status, subscription_events_quota, subscription_events_used, subscription_trial_ends_at')
+          .select('*, subscription_status, subscription_course_credits_quota, subscription_course_credits_used, subscription_trial_ends_at')
           .eq('id', userIdString)
           .maybeSingle();
         
@@ -330,8 +330,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               email_verified: supabaseUser.email_verified || false,
               subscription: {
                 status: supabaseUser.subscription_status || 'inactive',
-                eventsQuota: supabaseUser.subscription_events_quota || 0,
-                eventsUsed: supabaseUser.subscription_events_used || 0,
+                courseCreditsQuota: supabaseUser.subscription_course_credits_quota || 0,
+                courseCreditsUsed: supabaseUser.subscription_course_credits_used || 0,
                 trialEndsAt: supabaseUser.subscription_trial_ends_at ? new Date(supabaseUser.subscription_trial_ends_at) : null
               },
               profile: {
@@ -365,8 +365,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               email_verified: supabaseUser.email_verified || false,
               subscription: {
                 status: supabaseUser.subscription_status || 'inactive',
-                eventsQuota: supabaseUser.subscription_events_quota || 0,
-                eventsUsed: supabaseUser.subscription_events_used || 0,
+                courseCreditsQuota: supabaseUser.subscription_course_credits_quota || 0,
+                courseCreditsUsed: supabaseUser.subscription_course_credits_used || 0,
                 trialEndsAt: supabaseUser.subscription_trial_ends_at ? new Date(supabaseUser.subscription_trial_ends_at) : null
               },
               profile: {
@@ -418,8 +418,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             },
             subscription: {
               status: supabaseUser.subscription_status || 'inactive',
-              eventsQuota: supabaseUser.subscription_events_quota || 0,
-              eventsUsed: supabaseUser.subscription_events_used || 0,
+              courseCreditsQuota: supabaseUser.subscription_course_credits_quota || 0,
+              courseCreditsUsed: supabaseUser.subscription_course_credits_used || 0,
               trialEndsAt
             },
             stripe_customer_id: supabaseUser.stripe_customer_id || undefined,
@@ -476,8 +476,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           profile: userData.profile || {},
           subscription: {
             status: userData.subscription?.status || 'inactive',
-            eventsQuota: userData.subscription?.eventsQuota || 0,
-            eventsUsed: userData.subscription?.eventsUsed || 0,
+            courseCreditsQuota: userData.subscription?.courseCreditsQuota || 0,
+            courseCreditsUsed: userData.subscription?.courseCreditsUsed || 0,
             trialEndsAt: trialEndsAt || undefined
           },
           stripe_customer_id: userData.stripe_customer_id,
@@ -498,8 +498,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           profile: {},
           subscription: {
             status: 'inactive',
-            eventsQuota: 0,
-            eventsUsed: 0
+            courseCreditsQuota: 0,
+            courseCreditsUsed: 0
           },
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
@@ -536,8 +536,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Get Supabase data
       const { data: supabaseUsers, error } = await supabase
-        .from('users')
-        .select('subscription_status, subscription_events_quota, stripe_subscription_id, updated_at')
+        .from('users') // Assuming 'users' is the table where subscription data is stored
+        .select('subscription_status, subscription_course_credits_quota, stripe_subscription_id, updated_at')
         .eq('id', userIdString);
       
       if (error || !supabaseUsers || supabaseUsers.length === 0) {
@@ -549,20 +549,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Check if Supabase has different subscription data
       const hasNewerSubscriptionData = 
-        supabaseUser.subscription_status !== firestoreData.subscription?.status ||
-        supabaseUser.subscription_events_quota !== firestoreData.subscription?.eventsQuota ||
+        (supabaseUser.subscription_status !== firestoreData.subscription?.status) ||
+        (supabaseUser.subscription_course_credits_quota !== firestoreData.subscription?.courseCreditsQuota) ||
         supabaseUser.stripe_subscription_id !== firestoreData.stripe_subscription_id;
       
       if (hasNewerSubscriptionData) {
         console.log("AUTH DEBUG: Supabase has newer subscription data for user", userId);
         console.log("Supabase:", {
           status: supabaseUser.subscription_status,
-          quota: supabaseUser.subscription_events_quota,
+          quota: supabaseUser.subscription_course_credits_quota,
           subId: supabaseUser.stripe_subscription_id
         });
         console.log("Firestore:", {
           status: firestoreData.subscription?.status,
-          quota: firestoreData.subscription?.eventsQuota,
+          quota: firestoreData.subscription?.courseCreditsQuota,
           subId: firestoreData.stripe_subscription_id
         });
         return true;
@@ -584,7 +584,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Get full user data from Supabase
       const { data: supabaseUser, error } = await supabase
         .from('users')
-        .select('*')
+        .select('*, subscription_course_credits_quota, subscription_course_credits_used') // Select new columns
         .eq('id', userIdString)
         .single();
       
@@ -599,8 +599,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Prepare subscription data
       const subscriptionData = {
         status: supabaseUser.subscription_status || 'inactive',
-        eventsQuota: supabaseUser.subscription_events_quota || 0,
-        eventsUsed: supabaseUser.subscription_events_used || 0,
+        courseCreditsQuota: supabaseUser.subscription_course_credits_quota || 0,
+        courseCreditsUsed: supabaseUser.subscription_course_credits_used || 0,
         trialEndsAt: supabaseUser.subscription_trial_ends_at ? new Date(supabaseUser.subscription_trial_ends_at) : undefined
       };
       
@@ -637,8 +637,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profile: updatedUserData.profile || {},
         subscription: {
           status: updatedUserData.subscription?.status || 'inactive',
-          eventsQuota: updatedUserData.subscription?.eventsQuota || 0,
-          eventsUsed: updatedUserData.subscription?.eventsUsed || 0,
+          courseCreditsQuota: updatedUserData.subscription?.courseCreditsQuota || 0,
+          courseCreditsUsed: updatedUserData.subscription?.courseCreditsUsed || 0,
           trialEndsAt: trialEndsAt || undefined
         },
         stripe_customer_id: updatedUserData.stripe_customer_id,
@@ -669,8 +669,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profile: {},
         subscription: {
           status: 'inactive',
-          eventsQuota: 0,
-          eventsUsed: 0
+          courseCreditsQuota: 0,
+          courseCreditsUsed: 0
         },
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -733,8 +733,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           profile: {},
           subscription: {
             status: 'inactive',
-            eventsQuota: 0,
-            eventsUsed: 0
+            courseCreditsQuota: 0,
+            courseCreditsUsed: 0
           },
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
@@ -884,8 +884,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Update subscription in Firestore
       await updateDoc(userRef, {
         'subscription.status': 'trial',
-        'subscription.eventsQuota': 2, 
-        'subscription.eventsUsed': 0, 
+        'subscription.courseCreditsQuota': 1, // Grant 1 course credit for trial
+        'subscription.courseCreditsUsed': 0, 
         'subscription.trialEndsAt': trialEndsAt, 
         'updatedAt': serverTimestamp()
       });
@@ -904,8 +904,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           subscription: {
             ...prev.subscription,
             status: 'trial',
-            eventsQuota: 2,
-            eventsUsed: 0,
+            courseCreditsQuota: 1, // Grant 1 course credit for trial
+            courseCreditsUsed: 0,
             trialEndsAt
           }
         };

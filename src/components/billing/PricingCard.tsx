@@ -11,7 +11,7 @@ interface PricingCardProps {
   onSelectPlan: (plan: SubscriptionPlan) => void;
   onRequestQuote?: (plan: SubscriptionPlan) => void;
   loading?: boolean;
-  billingInterval?: 'monthly' | 'yearly';
+  billingInterval: 'monthly' | 'yearly';
 }
 
 export function PricingCard({ 
@@ -86,7 +86,7 @@ export function PricingCard({
 
   return (
     <div className={`relative rounded-2xl border-2 p-8 transition-all duration-200 ${
-      plan.isPopular 
+      plan.isRecommended 
         ? 'border-indigo-500 bg-indigo-50 shadow-xl scale-105 ring-2 ring-indigo-200' 
         : isCurrentPlan
         ? 'border-green-500 bg-green-50 shadow-lg'
@@ -94,7 +94,7 @@ export function PricingCard({
         ? 'border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 shadow-lg'
         : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-lg'
     }`}>
-      {plan.isPopular && (
+      {plan.isRecommended && (
         <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
           <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-bold flex items-center shadow-lg">
             <Star className="w-4 h-4 mr-2" />
@@ -128,7 +128,7 @@ export function PricingCard({
         </div>
 
         <h3 className={`text-2xl font-bold mb-2 ${
-          plan.isPopular ? 'text-indigo-900' : 
+          plan.isRecommended ? 'text-indigo-900' : 
           isCurrentPlan ? 'text-green-900' : 
           plan.isCustom ? 'text-gray-900' : 'text-gray-900'
         }`}>
@@ -136,7 +136,7 @@ export function PricingCard({
         </h3>
 
         <p className={`text-sm mb-4 ${
-          plan.isPopular ? 'text-indigo-700' : 
+          plan.isRecommended ? 'text-indigo-700' : 
           isCurrentPlan ? 'text-green-700' : 
           plan.isCustom ? 'text-gray-700' : 'text-gray-600'
         }`}>
@@ -159,12 +159,12 @@ export function PricingCard({
             ) : (
               <>
                 <span className={`text-5xl font-bold ${
-                  plan.isPopular ? 'text-indigo-900' : isCurrentPlan ? 'text-green-900' : 'text-gray-900'
+                  plan.isRecommended ? 'text-indigo-900' : isCurrentPlan ? 'text-green-900' : 'text-gray-900'
                 }`}>
                   ${billingInterval === 'yearly' && plan.interval === 'month' ? monthlyPriceWithDiscount : pricePerMonth}
                 </span>
                 <span className={`text-lg ml-2 ${
-                  plan.isPopular ? 'text-indigo-600' : isCurrentPlan ? 'text-green-600' : 'text-gray-500'
+                  plan.isRecommended ? 'text-indigo-600' : isCurrentPlan ? 'text-green-600' : 'text-gray-500'
                 }`}>
                   /month
                 </span>
@@ -194,24 +194,24 @@ export function PricingCard({
         </div>
 
         <div className={`text-xs italic mb-6 ${
-          plan.isPopular ? 'text-indigo-600' : 
+          plan.isRecommended ? 'text-indigo-600' : 
           isCurrentPlan ? 'text-green-600' : 
           plan.isCustom ? 'text-gray-600' : 'text-gray-500'
         }`}>
-          "{plan.valueProposition}"
+          {plan.isCustom ? 'Unlimited course credits' : `${plan.courseCredits} course credits per month`}
         </div>
       </div>
 
-      <ul className="space-y-3 mb-8">
+          plan.isRecommended ? 'text-indigo-600' : 
         {plan.features.map((feature, index) => (
           <li key={index} className="flex items-start">
             <Check className={`w-5 h-5 mt-0.5 mr-3 flex-shrink-0 ${
-              plan.isPopular ? 'text-indigo-500' : 
+              plan.isRecommended ? 'text-indigo-500' : 
               isCurrentPlan ? 'text-green-500' : 
               plan.isCustom ? 'text-gray-500' : 'text-gray-400'
             }`} />
             <span className={`text-sm ${
-              plan.isPopular ? 'text-indigo-900' : 
+              plan.isRecommended ? 'text-indigo-900' : 
               isCurrentPlan ? 'text-green-900' : 
               plan.isCustom ? 'text-gray-800' : 'text-gray-700'
             }`}>
@@ -230,7 +230,7 @@ export function PricingCard({
           className={`w-full ${
             plan.isCustom
               ? 'bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-gray-950 text-white shadow-lg'
-              : plan.isPopular 
+              : plan.isRecommended 
               ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg' 
               : isCurrentPlan
               ? 'bg-green-100 text-green-800 cursor-not-allowed'
@@ -255,7 +255,7 @@ export function PricingCard({
 
         {plan.id === 'team' && (
           <p className="text-xs text-gray-500 text-center">
-            Minimum 3 users required
+            Minimum 3 users required. Course credits are per user.
           </p>
         )}
 

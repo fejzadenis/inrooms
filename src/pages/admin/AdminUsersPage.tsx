@@ -28,8 +28,8 @@ interface UserData {
   role: 'user' | 'admin';
   subscription: {
     status: 'trial' | 'active' | 'inactive';
-    eventsQuota: number;
-    eventsUsed: number;
+    courseCreditsQuota: number;
+    courseCreditsUsed: number;
     trialEndsAt?: Date;
   };
   profile: {
@@ -71,8 +71,8 @@ export function AdminUsersPage() {
           role: data.role || 'user',
           subscription: {
             status: data.subscription?.status || 'inactive',
-            eventsQuota: data.subscription?.eventsQuota || 0,
-            eventsUsed: data.subscription?.eventsUsed || 0,
+            courseCreditsQuota: data.subscription?.courseCreditsQuota || 0,
+            courseCreditsUsed: data.subscription?.courseCreditsUsed || 0,
             trialEndsAt: data.subscription?.trialEndsAt?.toDate(),
           },
           profile: {
@@ -103,15 +103,15 @@ export function AdminUsersPage() {
       const user = users.find(u => u.id === userId);
       if (!user) return;
 
-      const newQuota = Math.max(0, user.subscription.eventsQuota + adjustment);
+      const newQuota = Math.max(0, user.subscription.courseCreditsQuota + adjustment);
       
       await updateDoc(userRef, {
-        'subscription.eventsQuota': newQuota
+        'subscription.courseCreditsQuota': newQuota
       });
 
       setUsers(users.map(u => 
-        u.id === userId 
-          ? { ...u, subscription: { ...u.subscription, eventsQuota: newQuota } }
+        u.id === userId
+          ? { ...u, subscription: { ...u.subscription, courseCreditsQuota: newQuota } }
           : u
       ));
 
@@ -173,8 +173,8 @@ export function AdminUsersPage() {
         user.email,
         user.role,
         user.subscription.status,
-        user.subscription.eventsUsed.toString(),
-        user.subscription.eventsQuota.toString(),
+        user.subscription.courseCreditsUsed.toString(),
+        user.subscription.courseCreditsQuota.toString(),
         user.profile.joinedAt?.toLocaleDateString() || 'N/A'
       ])
     ].map(row => row.join(',')).join('\n');
@@ -405,13 +405,13 @@ export function AdminUsersPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {user.subscription.eventsUsed} / {user.subscription.eventsQuota} events
+                          {user.subscription.courseCreditsUsed} / {user.subscription.courseCreditsQuota} course credits
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                           <div
                             className="bg-indigo-600 h-2 rounded-full"
                             style={{
-                              width: `${user.subscription.eventsQuota > 0 ? (user.subscription.eventsUsed / user.subscription.eventsQuota) * 100 : 0}%`,
+                              width: `${user.subscription.courseCreditsQuota > 0 ? (user.subscription.courseCreditsUsed / user.subscription.courseCreditsQuota) * 100 : 0}%`,
                             }}
                           />
                         </div>

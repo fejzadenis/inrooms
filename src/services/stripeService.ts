@@ -10,7 +10,7 @@ export interface SubscriptionPlan {
   price: number;
   interval: 'month' | 'year';
   features: string[];
-  isPopular?: boolean;
+  isRecommended?: boolean;
   isCustom?: boolean;
   targetAudience: string;
   valueProposition: string;
@@ -35,21 +35,21 @@ export const stripeService = {
     return [
       {
         id: 'starter',
-        name: 'Starter',
-        description: 'For individuals just getting started',
+        name: 'Basic',
+        description: 'For individuals starting their learning journey',
         price: 39,
         interval: 'month',
         features: [
-          '3 events per month',
-          'Basic profile features',
-          'Access to recordings',
+          '1 course credit per month',
+          'Access to foundational courses',
+          'Basic learning resources',
           'Email support',
-          'Mobile app access'
+          'Community forum access'
         ],
-        isPopular: false,
-        targetAudience: 'For individuals just getting started',
-        valueProposition: 'Perfect for exploring the platform and making initial connections',
-        eventsQuota: 3,
+        isRecommended: false,
+        targetAudience: 'New founders and aspiring entrepreneurs',
+        valueProposition: 'Perfect for gaining foundational knowledge and exploring key concepts',
+        courseCredits: 1,
         stripePriceId: 'price_1Rif3UGCopIxkzs6WPBgO8wt'
       },
       {
@@ -57,18 +57,18 @@ export const stripeService = {
         name: 'Professional',
         description: 'For active networkers',
         price: 79,
-        interval: 'month',
+        interval: 'month', // Assuming this is still monthly for now
         features: [
-          '8 events per month',
-          'Enhanced profile features',
-          'Priority event registration',
-          'Advanced networking tools',
-          'Priority email support'
+          '3 course credits per month',
+          'Access to all courses',
+          'Advanced learning modules',
+          'Priority support',
+          'Downloadable templates & tools'
         ],
-        isPopular: true,
+        isRecommended: true,
         targetAudience: 'For active networkers and sales professionals',
         valueProposition: 'Our most popular plan for serious networking',
-        eventsQuota: 8,
+        courseCredits: 3,
         stripePriceId: 'price_1Rif4MGCopIxkzs6EN1InWXN'
       },
       {
@@ -76,18 +76,18 @@ export const stripeService = {
         name: 'Enterprise',
         description: 'For power users and teams',
         price: 149,
-        interval: 'month',
+        interval: 'month', // Assuming this is still monthly for now
         features: [
-          '15 events per month',
-          'Premium profile features',
-          'Custom event creation',
+          'Unlimited course credits',
+          'All Professional features',
+          'Custom learning paths',
           'Dedicated account manager',
-          'Phone support'
+          '1-on-1 expert sessions'
         ],
-        isPopular: false,
+        isRecommended: false,
         targetAudience: 'For power users and team leaders',
         valueProposition: 'Maximum networking potential with premium features',
-        eventsQuota: 15,
+        courseCredits: 999, // Represents unlimited
         stripePriceId: 'price_1Rif6HGCopIxkzs6rLt5gZQf'
       },
       {
@@ -95,18 +95,18 @@ export const stripeService = {
         name: 'Team',
         description: 'For sales teams',
         price: 99,
-        interval: 'month',
+        interval: 'month', // Assuming this is still monthly for now
         features: [
-          '10 events per user per month',
-          'Team management tools',
-          'Bulk event registration',
-          'Team analytics dashboard',
+          '5 course credits per user/month',
+          'Centralized team dashboard',
+          'Progress tracking for teams',
+          'Bulk user management',
           'Dedicated account manager'
         ],
-        isPopular: false,
+        isRecommended: false,
         targetAudience: 'For sales teams (min. 3 users)',
         valueProposition: 'Coordinate networking efforts across your entire team',
-        eventsQuota: 10,
+        courseCredits: 5,
         stripePriceId: 'price_team_monthly'
       },
       {
@@ -114,19 +114,19 @@ export const stripeService = {
         name: 'Enterprise+',
         description: 'Custom solution for large teams',
         price: 0,
-        interval: 'month',
+        interval: 'month', // Assuming this is still monthly for now
         features: [
-          'Unlimited events',
+          'Unlimited course credits',
           'Custom integrations',
           'Dedicated success manager',
           'Custom training sessions',
           'SLA guarantees'
         ],
-        isPopular: false,
+        isRecommended: false,
         isCustom: true,
         targetAudience: 'For large organizations',
         valueProposition: 'Tailored solution for your specific needs',
-        eventsQuota: 999,
+        courseCredits: 999, // Represents unlimited
         stripePriceId: 'custom'
       }
     ];
@@ -137,21 +137,21 @@ export const stripeService = {
     return [
       {
         id: 'starter_annual',
-        name: 'Starter',
-        description: 'For individuals just getting started',
+        name: 'Basic',
+        description: 'For individuals starting their learning journey',
         price: 374,
         interval: 'year',
         features: [
-          '3 events per month',
-          'Basic profile features',
-          'Access to recordings',
+          '1 course credit per month',
+          'Access to foundational courses',
+          'Basic learning resources',
           'Email support',
-          'Mobile app access'
+          'Community forum access'
         ],
-        isPopular: false,
-        targetAudience: 'For individuals just getting started',
-        valueProposition: 'Perfect for exploring the platform and making initial connections',
-        eventsQuota: 3,
+        isRecommended: false,
+        targetAudience: 'New founders and aspiring entrepreneurs',
+        valueProposition: 'Perfect for gaining foundational knowledge and exploring key concepts',
+        courseCredits: 1,
         stripePriceId: 'price_starter_annual'
       },
       {
@@ -161,16 +161,16 @@ export const stripeService = {
         price: 758,
         interval: 'year',
         features: [
-          '8 events per month',
-          'Enhanced profile features',
-          'Priority event registration',
-          'Advanced networking tools',
-          'Priority email support'
+          '3 course credits per month',
+          'Access to all courses',
+          'Advanced learning modules',
+          'Priority support',
+          'Downloadable templates & tools'
         ],
-        isPopular: true,
+        isRecommended: true,
         targetAudience: 'For active networkers and sales professionals',
         valueProposition: 'Our most popular plan for serious networking',
-        eventsQuota: 8,
+        courseCredits: 3,
         stripePriceId: 'price_professional_annual'
       },
       {
@@ -180,16 +180,16 @@ export const stripeService = {
         price: 1430,
         interval: 'year',
         features: [
-          '15 events per month',
-          'Premium profile features',
-          'Custom event creation',
+          'Unlimited course credits',
+          'All Professional features',
+          'Custom learning paths',
           'Dedicated account manager',
-          'Phone support'
+          '1-on-1 expert sessions'
         ],
-        isPopular: false,
+        isRecommended: false,
         targetAudience: 'For power users and team leaders',
         valueProposition: 'Maximum networking potential with premium features',
-        eventsQuota: 15,
+        courseCredits: 999, // Represents unlimited
         stripePriceId: 'price_enterprise_annual'
       },
       {
@@ -199,16 +199,16 @@ export const stripeService = {
         price: 950,
         interval: 'year',
         features: [
-          '10 events per user per month',
-          'Team management tools',
-          'Bulk event registration',
-          'Team analytics dashboard',
+          '5 course credits per user/month',
+          'Centralized team dashboard',
+          'Progress tracking for teams',
+          'Bulk user management',
           'Dedicated account manager'
         ],
-        isPopular: false,
+        isRecommended: false,
         targetAudience: 'For sales teams (min. 3 users)',
         valueProposition: 'Coordinate networking efforts across your entire team',
-        eventsQuota: 10,
+        courseCredits: 5,
         stripePriceId: 'price_team_annual'
       },
       {
@@ -218,17 +218,17 @@ export const stripeService = {
         price: 0,
         interval: 'year',
         features: [
-          'Unlimited events',
+          'Unlimited course credits',
           'Custom integrations',
           'Dedicated success manager',
           'Custom training sessions',
           'SLA guarantees'
         ],
-        isPopular: false,
+        isRecommended: false,
         isCustom: true,
         targetAudience: 'For large organizations',
         valueProposition: 'Tailored solution for your specific needs',
-        eventsQuota: 999,
+        courseCredits: 999, // Represents unlimited
         stripePriceId: 'custom'
       }
     ];

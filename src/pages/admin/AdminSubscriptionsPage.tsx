@@ -32,8 +32,8 @@ interface SubscriptionData {
   currentPeriodStart: Date;
   currentPeriodEnd: Date;
   trialEnd?: Date;
-  eventsQuota: number;
-  eventsUsed: number;
+  courseCreditsQuota: number;
+  courseCreditsUsed: number;
   lastPayment?: Date;
   nextPayment?: Date;
   paymentMethod: string;
@@ -69,6 +69,8 @@ export function AdminSubscriptionsPage() {
               email,
               subscription_events_quota,
               subscription_events_used
+              subscription_course_credits_quota,
+              subscription_course_credits_used
             ),
             stripe_prices (
               unit_amount,
@@ -93,10 +95,10 @@ export function AdminSubscriptionsPage() {
           
           // Determine plan type based on price
           let plan: 'starter' | 'professional' | 'enterprise' = 'starter';
-          if (sub.users?.subscription_events_quota >= 8) {
+          if (sub.users?.subscription_course_credits_quota >= 3) { // Professional plan has 3 course credits
             plan = 'professional';
           }
-          if (sub.users?.subscription_events_quota >= 12) {
+          if (sub.users?.subscription_course_credits_quota >= 999) { // Enterprise plan has unlimited course credits
             plan = 'enterprise';
           }
           
@@ -112,8 +114,8 @@ export function AdminSubscriptionsPage() {
             currentPeriodStart: new Date(sub.current_period_start),
             currentPeriodEnd: new Date(sub.current_period_end),
             trialEnd: sub.trial_end ? new Date(sub.trial_end) : undefined,
-            eventsQuota: sub.users?.subscription_events_quota || 0,
-            eventsUsed: sub.users?.subscription_events_used || 0,
+            courseCreditsQuota: sub.users?.subscription_course_credits_quota || 0,
+            courseCreditsUsed: sub.users?.subscription_course_credits_used || 0,
             lastPayment: sub.current_period_start ? new Date(sub.current_period_start) : undefined,
             nextPayment: sub.current_period_end ? new Date(sub.current_period_end) : undefined,
             paymentMethod: paymentMethod ? `**** ${paymentMethod.card_last4}` : 'Unknown'
@@ -188,7 +190,7 @@ export function AdminSubscriptionsPage() {
         `$${sub.amount}`,
         sub.billingCycle,
         sub.nextPayment?.toLocaleDateString() || 'N/A',
-        `${sub.eventsUsed}/${sub.eventsQuota}`
+        `${sub.courseCreditsUsed}/${sub.courseCreditsQuota}`
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -446,17 +448,17 @@ export function AdminSubscriptionsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {subscription.eventsUsed} / {subscription.eventsQuota} events
+                          {subscription.courseCreditsUsed} / {subscription.courseCreditsQuota} course credits
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                           <div
                             className={`h-2 rounded-full ${
-                              subscription.eventsUsed >= subscription.eventsQuota 
+                              subscription.courseCreditsUsed >= subscription.courseCreditsQuota 
                                 ? 'bg-red-500' 
                                 : 'bg-green-500'
                             }`}
-                            style={{
-                              width: `${(subscription.eventsUsed / subscription.eventsQuota) * 100}%`,
+                            style={{ // Use courseCreditsUsed and courseCreditsQuota
+                              width: `${(subscription.courseCreditsUsed / subscription.courseCreditsQuota) * 100}%`,
                             }}
                           />
                         </div>
