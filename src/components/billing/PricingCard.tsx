@@ -220,6 +220,7 @@ export function PricingCard({
           </li>
         ))}
       </ul>
+    </div>
 
       <div className="space-y-3">
         <Button
