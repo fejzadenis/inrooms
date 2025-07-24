@@ -219,8 +219,8 @@ export function PricingCard({
             </span>
           </li>
         ))}
+      </div>
       </ul>
-    </div>
 
       <div className="space-y-3">
         <Button
