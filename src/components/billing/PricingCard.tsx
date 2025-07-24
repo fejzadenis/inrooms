@@ -201,8 +201,7 @@ export function PricingCard({
           {plan.isCustom ? 'Unlimited course credits' : `${plan.courseCredits} course credits per month`}
         </div>
       </div>
-
-          plan.isRecommended ? 'text-indigo-600' : 
+      <ul className="space-y-3 mb-8">
         {plan.features.map((feature, index) => (
           <li key={index} className="flex items-start">
             <Check className={`w-5 h-5 mt-0.5 mr-3 flex-shrink-0 ${
@@ -219,7 +218,6 @@ export function PricingCard({
             </span>
           </li>
         ))}
-      </div>
       </ul>
 
       <div className="space-y-3">
