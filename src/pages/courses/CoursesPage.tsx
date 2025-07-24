@@ -231,8 +231,6 @@ export function CoursesPage() {
                   {isUnlimitedCredits ? 'Course Credits' : 'Credits Remaining'}
                 </div>
               </div>
-
-
             </div>
             
             <Button 
@@ -469,7 +467,7 @@ export function CoursesPage() {
                               {course.creditsRequired} Credit{course.creditsRequired > 1 ? 's' : ''}
                             </span>
                           </div>
-                        )
+                        ))}
                         
                         <Button 
                           onClick={() => navigate(course.path)}
